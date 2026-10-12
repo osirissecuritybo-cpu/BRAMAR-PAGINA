@@ -3,66 +3,103 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Bramar Group</title>
-<meta name="description" content="Bramar Group: administración integral de edificios y condominios en Santa Cruz, Bolivia.">
+<title>Bramar Group · Administración de edificios y condominios</title>
+<meta name="description" content="Bramar Group: administración integral de edificios y condominios en Santa Cruz, Bolivia. Transparencia, asistencia 24/7 y un solo responsable para todo su edificio.">
+<meta name="theme-color" content="#062145">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Bramar Group · Administración de edificios y condominios">
+<meta property="og:description" content="Administración integral de edificios y condominios en Santa Cruz, Bolivia.">
+<meta property="og:image" content="https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/img/torre-zafiro.jpg">
+<meta property="og:locale" content="es_BO">
+<link rel="preload" as="image" href="img/torre-zafiro.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap">
 <style>
 /* ==========================================================
-   BRAMAR GROUP · Sitio moderno en color
-   Azul marino de la marca + arena cálida + acento dorado.
-   5 páginas independientes con transición de panel.
+   BRAMAR GROUP · Sitio web
+   ----------------------------------------------------------
+   Estructura del archivo:
+   1. Variables (colores, tipografía, tiempos)
+   2. Base y utilidades
+   3. Navegación y transición entre páginas
+   4. Componentes (botones, tarjetas, formularios, modal)
+   5. Secciones por página
+   6. Animaciones de aparición (scroll reveal)
+   7. Responsive y movimiento reducido
+   Los datos de contacto se editan en el bloque SITE del script.
    ========================================================== */
+
+/* 1 · VARIABLES ------------------------------------------------ */
 :root{
   --navy:#0A335D;
   --navy-deep:#062145;
   --sand:#F4F1EB;
   --paper:#FFFFFF;
   --ink:#0E1C2C;
-  --muted:#5D6A79;
+  --muted:#56636F;
   --line:#E2DDD3;
-  --brass:#B8955A;
-  --sky:#D7E4F2;
+  --brass:#B08A4E;       /* acento; oscurecido para cumplir contraste sobre blanco */
+  --brass-soft:#C9A46A;  /* acento sobre fondos azules */
+  --sky:#DCE7F3;
+  --ok:#1F8A5B;
+  --err:#C0392B;
   --font:"Roboto",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
   --gutter:clamp(20px,5vw,72px);
   --radius:20px;
+  --radius-l:28px;
   --ease:cubic-bezier(.65,0,.25,1);
   --soft:cubic-bezier(.2,.7,.2,1);
+  --nav-space:calc(104px + env(safe-area-inset-top,0px));
   color-scheme:light;
 }
+
+/* 2 · BASE ----------------------------------------------------- */
 *{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--sand);color:var(--ink);font-family:var(--font);font-weight:400;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
-img{max-width:100%;display:block}
-h1,h2,h3{margin:0;font-weight:300;line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+body.lock{overflow:hidden}
+[hidden]{display:none!important}
+img{max-width:100%;height:auto;display:block}
+h1,h2,h3{margin:0;font-weight:300;line-height:1.1;letter-spacing:-.02em;text-wrap:balance}
+h1:focus{outline:none}
 p{margin:0}
 a{color:inherit;text-decoration:none}
 button{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+:focus-visible{outline:2px solid var(--brass);outline-offset:3px;border-radius:6px}
 .wrap{max-width:1320px;margin:0 auto;padding-inline:var(--gutter)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.skip{position:fixed;left:16px;top:-80px;z-index:200;background:var(--navy);color:#fff;padding:12px 18px;border-radius:12px;transition:top .2s}
+.skip:focus{top:16px}
 .tag{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
 .tag::before{content:"";width:28px;height:2px;background:currentColor}
+.on-dark .tag,.tag.light{color:var(--brass-soft)}
 section{padding-block:clamp(72px,9vw,128px)}
-.h2{font-size:clamp(34px,4.4vw,58px);color:var(--navy)}
+section.tight{padding-top:0}
+.h2{font-size:clamp(32px,4.4vw,56px);color:var(--navy)}
 .h2 b{font-weight:500}
 .lede{font-size:clamp(17px,1.4vw,19px);color:var(--muted);max-width:46ch}
-.head{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap;margin-bottom:clamp(40px,5vw,64px)}
-.head > div{max-width:640px}
-.head .h2{margin-top:18px}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:24px 32px;flex-wrap:wrap;margin-bottom:clamp(36px,5vw,60px)}
+.head > div:first-child{max-width:640px}
+.head .h2{margin-top:16px}
 
-/* ---------- NAVEGACIÓN ---------- */
+/* 3 · NAVEGACIÓN ------------------------------------------------ */
 .nav{position:fixed;top:0;left:0;right:0;z-index:60;padding:calc(14px + env(safe-area-inset-top,0px)) var(--gutter) 0;pointer-events:none}
-.nav-bar{pointer-events:auto;max-width:1320px;margin:0 auto;height:68px;display:flex;align-items:center;gap:20px;padding:0 10px 0 22px;background:rgba(255,255,255,.82);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border:1px solid rgba(255,255,255,.7);border-radius:999px;box-shadow:0 12px 40px -18px rgba(6,33,69,.35)}
-.brand{display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;cursor:pointer;color:var(--navy)}
+.nav-bar{pointer-events:auto;max-width:1320px;margin:0 auto;height:68px;display:flex;align-items:center;gap:16px;padding:0 10px 0 14px;background:rgba(255,255,255,.86);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border:1px solid rgba(255,255,255,.7);border-radius:999px;box-shadow:0 12px 40px -18px rgba(6,33,69,.35);transition:box-shadow .4s}
+.nav.scrolled .nav-bar{box-shadow:0 16px 44px -16px rgba(6,33,69,.45)}
+.brand{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 8px;color:var(--navy);border-radius:999px}
 .brand img{height:28px;width:auto}
 .brand span{font-size:14px;font-weight:500;letter-spacing:.28em}
 .links{position:relative;display:flex;list-style:none;margin:0 0 0 auto;padding:4px;background:var(--sand);border-radius:999px}
-.links .pill{position:absolute;top:4px;bottom:4px;left:0;width:0;background:var(--navy);border-radius:999px;transition:transform .55s var(--ease),width .55s var(--ease)}
-.links button{position:relative;z-index:1;background:none;border:0;cursor:pointer;padding:10px 18px;font-size:14px;font-weight:500;color:var(--muted);border-radius:999px;transition:color .35s}
-.links button:hover{color:var(--navy)}
-.links button[aria-current="page"]{color:#fff}
-.cta-access{display:flex;align-items:center;gap:10px;height:48px;padding:0 22px;border:0;border-radius:999px;background:var(--brass);color:#fff;font-size:14px;font-weight:500;cursor:pointer;transition:background .3s,transform .3s}
-.cta-access:hover{background:#A6834B}
+.links .pill{position:absolute;top:4px;bottom:4px;left:0;width:0;background:var(--navy);border-radius:999px;transition:transform .5s var(--ease),width .5s var(--ease)}
+.links a{position:relative;z-index:1;display:flex;align-items:center;min-height:40px;padding:0 18px;font-size:14px;font-weight:500;color:var(--muted);border-radius:999px;transition:color .3s}
+.links a:hover{color:var(--navy)}
+.links a[aria-current="page"]{color:#fff}
+.cta-access{display:inline-flex;align-items:center;gap:10px;min-height:48px;padding:0 22px;border:0;border-radius:999px;background:var(--navy);color:#fff;font-size:14px;font-weight:500;cursor:pointer;transition:background .3s,transform .2s}
+.cta-access:hover{background:var(--brass)}
+.cta-access:active{transform:scale(.97)}
 .cta-access svg{width:18px;height:18px}
 .burger{display:none;margin-left:auto;background:var(--navy);border:0;width:48px;height:48px;border-radius:50%;cursor:pointer;padding:16px 14px}
 .burger i{display:block;height:2px;background:#fff;margin:4px 0;border-radius:2px;transition:transform .4s var(--soft),opacity .3s}
@@ -73,285 +110,352 @@ section{padding-block:clamp(72px,9vw,128px)}
 @media (max-width:1000px){
   .links,.nav-bar > .cta-access{display:none}
   .burger{display:block}
-  .mobile-menu{display:flex;pointer-events:auto;position:fixed;inset:0;z-index:-1;background:var(--navy-deep);flex-direction:column;justify-content:center;padding:100px var(--gutter) 40px;opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s}
+  .mobile-menu{display:flex;pointer-events:auto;position:fixed;inset:0;z-index:-1;background:var(--navy-deep);flex-direction:column;justify-content:center;padding:110px var(--gutter) calc(40px + env(safe-area-inset-bottom,0px));opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
   .nav.open .mobile-menu{opacity:1;visibility:visible}
-  .mobile-menu button.m{background:none;border:0;text-align:left;color:#fff;font-size:clamp(34px,9vw,52px);font-weight:300;padding:10px 0;cursor:pointer;display:flex;align-items:baseline;gap:16px;opacity:.6;transition:opacity .3s}
-  .mobile-menu button.m small{font-size:13px;color:var(--brass);font-weight:500}
-  .mobile-menu button.m[aria-current="page"]{opacity:1}
-  .mobile-menu .cta-access{margin-top:32px;align-self:flex-start;height:56px}
+  .mobile-menu a.m{display:flex;align-items:baseline;gap:16px;color:#fff;font-size:clamp(32px,9vw,48px);font-weight:300;padding:8px 0;opacity:.6;transform:translateY(12px);transition:opacity .3s,transform .5s var(--soft)}
+  .nav.open .mobile-menu a.m{transform:none}
+  .nav.open .mobile-menu a.m:nth-child(2){transition-delay:.04s}.nav.open .mobile-menu a.m:nth-child(3){transition-delay:.08s}.nav.open .mobile-menu a.m:nth-child(4){transition-delay:.12s}.nav.open .mobile-menu a.m:nth-child(5){transition-delay:.16s}
+  .mobile-menu a.m small{font-size:13px;color:var(--brass-soft);font-weight:500}
+  .mobile-menu a.m[aria-current="page"],.mobile-menu a.m:hover{opacity:1}
+  .mobile-menu .cta-access{margin-top:32px;align-self:flex-start;min-height:56px;background:var(--brass)}
 }
 
-/* ---------- TRANSICIÓN ENTRE PÁGINAS ---------- */
+/* transición entre páginas */
 .wipe{position:fixed;inset:0;z-index:90;background:var(--navy);transform:translateX(100%);pointer-events:none;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.wipe span{font-size:clamp(48px,10vw,140px);font-weight:300;color:#fff;letter-spacing:-.03em;opacity:0;transform:translateY(30px);transition:opacity .35s,transform .5s var(--soft)}
-.wipe span b{color:var(--brass);font-weight:300}
-.wipe.in{animation:wIn .6s var(--ease) forwards}
-.wipe.in span{opacity:1;transform:none;transition-delay:.2s}
-.wipe.out{transform:none;animation:wOut .7s var(--ease) forwards}
-.wipe.out span{opacity:0;transform:translateY(-30px)}
+.wipe span{font-size:clamp(44px,9vw,128px);font-weight:300;color:#fff;letter-spacing:-.03em;opacity:0;transform:translateY(24px);transition:opacity .25s,transform .4s var(--soft)}
+.wipe span b{color:var(--brass-soft);font-weight:300}
+.wipe.in{animation:wIn .45s var(--ease) forwards}
+.wipe.in span{opacity:1;transform:none;transition-delay:.15s}
+.wipe.out{transform:none;animation:wOut .55s var(--ease) forwards}
+.wipe.out span{opacity:0;transform:translateY(-24px)}
 @keyframes wIn{from{transform:translateX(100%)}to{transform:none}}
 @keyframes wOut{from{transform:none}to{transform:translateX(-100%)}}
 
-/* ---------- BOTONES ---------- */
-.btn{position:relative;display:inline-flex;align-items:center;gap:14px;height:58px;padding:0 30px;border:0;border-radius:999px;font-size:15px;font-weight:500;cursor:pointer;overflow:hidden;isolation:isolate;transition:color .4s var(--soft),transform .3s var(--soft)}
-.btn::before{content:"";position:absolute;inset:0;border-radius:inherit;transform:translateY(101%);transition:transform .5s var(--ease);z-index:-1}
+/* 4 · COMPONENTES ----------------------------------------------- */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:56px;padding:0 28px;border:0;border-radius:999px;font-size:15px;font-weight:500;cursor:pointer;overflow:hidden;isolation:isolate;transition:color .35s var(--soft),transform .2s var(--soft),opacity .3s}
+.btn::before{content:"";position:absolute;inset:0;border-radius:inherit;transform:translateY(101%);transition:transform .45s var(--ease);z-index:-1}
 .btn:hover::before{transform:none}
-.btn svg{width:18px;height:18px;transition:transform .4s var(--soft)}
+.btn:active{transform:scale(.97)}
+.btn svg{width:18px;height:18px;transition:transform .35s var(--soft)}
 .btn:hover svg{transform:translateX(4px)}
+.btn[disabled]{opacity:.6;cursor:progress}
 .btn.gold{background:var(--brass);color:#fff}.btn.gold::before{background:#fff}.btn.gold:hover{color:var(--navy)}
 .btn.white{background:#fff;color:var(--navy)}.btn.white::before{background:var(--brass)}.btn.white:hover{color:#fff}
 .btn.navy{background:var(--navy);color:#fff}.btn.navy::before{background:var(--brass)}
-.btn.outline{background:transparent;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}.btn.outline::before{background:#fff}.btn.outline:hover{color:var(--navy)}
+.btn.outline{background:transparent;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.45)}.btn.outline::before{background:#fff}.btn.outline:hover{color:var(--navy)}
+.btn.light{background:var(--sand);color:var(--navy)}.btn.light::before{background:var(--line)}
+.spin{width:18px;height:18px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:rot .7s linear infinite;display:none}
+.btn.loading .spin{display:block}
+.btn.loading .arr{display:none}
+@keyframes rot{to{transform:rotate(360deg)}}
 
-/* entrada de página */
-.page.ready .rise{animation:rise 1s var(--soft) both}
-.page.ready .d1{animation-delay:.1s}.page.ready .d2{animation-delay:.2s}.page.ready .d3{animation-delay:.3s}.page.ready .d4{animation-delay:.4s}
-@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
-.page.ready .reveal-img{animation:clip 1.4s var(--ease) both .15s}
-@keyframes clip{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0 0 0 0)}}
+.card{background:var(--paper);border-radius:var(--radius);padding:32px;min-width:0;transition:transform .45s var(--soft),box-shadow .45s var(--soft),background .45s}
+.card:hover{box-shadow:0 30px 60px -30px rgba(6,33,69,.35)}
+.ico{width:56px;height:56px;border-radius:16px;background:var(--sky);display:grid;place-items:center;color:var(--navy);flex:none;transition:background .4s,color .4s}
+.ico svg{width:28px;height:28px}
 
-/* ---------- INICIO · HERO ---------- */
-.hero{padding:calc(110px + env(safe-area-inset-top,0px)) var(--gutter) 0}
+/* entrada al mostrar una página */
+.page.ready .rise{animation:rise .9s var(--soft) both}
+.page.ready .d1{animation-delay:.08s}.page.ready .d2{animation-delay:.16s}.page.ready .d3{animation-delay:.24s}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+.page.ready .reveal-img{animation:clip 1.2s var(--ease) both .1s}
+@keyframes clip{from{clip-path:inset(100% 0 0 0 round var(--radius-l))}to{clip-path:inset(0 0 0 0 round var(--radius-l))}}
+
+/* 5 · SECCIONES -------------------------------------------------- */
+/* Inicio · portada */
+.hero{padding:var(--nav-space) var(--gutter) 0}
 .hero-grid{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:1.05fr 1fr;gap:16px;min-height:min(84svh,820px)}
-.hero-copy{background:var(--navy-deep);color:#fff;border-radius:28px;padding:clamp(32px,5vw,72px);display:flex;flex-direction:column;justify-content:space-between;gap:40px;position:relative;overflow:hidden;min-width:0}
-.hero-copy::after{content:"";position:absolute;right:-120px;bottom:-120px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(184,149,90,.28),transparent 65%);pointer-events:none}
-.hero-copy h1{font-size:clamp(42px,5.6vw,80px);margin-top:28px}
-.hero-copy h1 b{font-weight:500;color:var(--brass)}
-.hero-copy p.lede{color:rgba(255,255,255,.72);margin-top:24px}
-.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
-.hero-photo{position:relative;border-radius:28px;overflow:hidden;min-height:440px;min-width:0}
-.hero-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 35%;transition:transform 1.2s var(--soft)}
-.hero-photo:hover img{transform:scale(1.03)}
-.glass{position:absolute;background:rgba(255,255,255,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:18px;padding:16px 20px;box-shadow:0 20px 40px -20px rgba(6,33,69,.4)}
-.glass.g1{left:20px;bottom:20px;display:flex;gap:14px;align-items:center}
-.glass.g1 img{position:static;width:44px;height:44px;border-radius:12px;object-fit:cover}
-.glass.g1 b{display:block;font-weight:500;color:var(--navy)}
+.hero-copy{background:var(--navy-deep);color:#fff;border-radius:var(--radius-l);padding:clamp(28px,5vw,72px);display:flex;flex-direction:column;justify-content:space-between;gap:40px;position:relative;overflow:hidden;min-width:0}
+.hero-copy::after{content:"";position:absolute;right:-120px;bottom:-120px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(201,164,106,.28),transparent 65%);pointer-events:none}
+.hero-copy h1{font-size:clamp(40px,5.6vw,80px);margin-top:24px}
+.hero-copy h1 b{font-weight:500;color:var(--brass-soft)}
+.hero-copy .lede{color:rgba(255,255,255,.78);margin-top:22px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap;position:relative;z-index:1}
+.hero-photo{position:relative;border-radius:var(--radius-l);overflow:hidden;min-height:440px;min-width:0;background:var(--sky)}
+.hero-photo > img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 35%;transition:transform 1.2s var(--soft)}
+.hero-photo:hover > img{transform:scale(1.03)}
+.glass{position:absolute;background:rgba(255,255,255,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:18px;padding:14px 18px;box-shadow:0 20px 40px -20px rgba(6,33,69,.4)}
+.glass.g1{left:16px;bottom:16px;display:flex;gap:14px;align-items:center}
+.glass.g1 img{width:44px;height:44px;border-radius:12px;object-fit:cover}
+.glass.g1 b{display:block;font-weight:500;color:var(--navy);line-height:1.3}
 .glass.g1 span{font-size:13px;color:var(--muted)}
-.glass.g2{right:20px;top:20px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:var(--navy);animation:bob 5s ease-in-out infinite}
+.glass.g2{right:16px;top:16px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:var(--navy);animation:bob 5s ease-in-out infinite}
 @keyframes bob{50%{transform:translateY(-6px)}}
-.live{width:10px;height:10px;border-radius:50%;background:#2FA36B;box-shadow:0 0 0 0 rgba(47,163,107,.6);animation:pulse 2s infinite}
-@keyframes pulse{70%{box-shadow:0 0 0 10px rgba(47,163,107,0)}100%{box-shadow:0 0 0 0 rgba(47,163,107,0)}}
+.live{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(31,138,91,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 10px rgba(31,138,91,0)}100%{box-shadow:0 0 0 0 rgba(31,138,91,0)}}
 
 /* cinta de servicios */
-.marquee{overflow:hidden;padding-block:32px;border-bottom:1px solid var(--line)}
-.marquee .track{display:flex;gap:48px;width:max-content;animation:slide 38s linear infinite}
+.marquee{overflow:hidden;padding-block:28px;border-bottom:1px solid var(--line);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.marquee .track{display:flex;gap:44px;width:max-content;animation:slide 40s linear infinite}
 .marquee:hover .track{animation-play-state:paused}
-.marquee span{display:flex;align-items:center;gap:48px;font-size:clamp(22px,2.6vw,34px);font-weight:300;color:var(--navy);white-space:nowrap}
-.marquee span::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--brass)}
+.marquee span{display:flex;align-items:center;gap:44px;font-size:clamp(20px,2.6vw,32px);font-weight:300;color:var(--navy);white-space:nowrap}
+.marquee span::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--brass)}
 @keyframes slide{to{transform:translateX(-50%)}}
 
-/* por qué Bramar (pestañas interactivas) */
+/* por qué Bramar */
 .why{display:grid;grid-template-columns:1fr 1.1fr;gap:clamp(32px,5vw,80px);align-items:stretch}
 .why > *{min-width:0}
 .why-list{display:flex;flex-direction:column}
-.why-item{background:none;border:0;border-top:1px solid var(--line);text-align:left;padding:26px 0;cursor:pointer;display:grid;grid-template-columns:48px 1fr;gap:8px 16px;position:relative}
+.why-item{background:none;border:0;border-top:1px solid var(--line);text-align:left;padding:24px 0;cursor:pointer;display:grid;grid-template-columns:44px 1fr;gap:6px 14px;position:relative}
 .why-item:last-child{border-bottom:1px solid var(--line)}
 .why-item small{font-size:13px;font-weight:500;color:var(--muted);padding-top:8px}
-.why-item h3{font-size:clamp(24px,2.4vw,32px);color:var(--muted);transition:color .3s}
-.why-item p{grid-column:2;color:var(--muted);max-height:0;overflow:hidden;opacity:0;transition:max-height .6s var(--soft),opacity .4s}
+.why-item h3{font-size:clamp(22px,2.4vw,30px);color:var(--muted);transition:color .3s}
+.why-item p{grid-column:2;color:var(--muted);max-height:0;overflow:hidden;opacity:0;transition:max-height .5s var(--soft),opacity .35s}
 .why-item .bar{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--brass)}
-.why-item.on h3{color:var(--navy)}
-.why-item.on small{color:var(--brass)}
-.why-item.on p{max-height:120px;opacity:1}
-.why-item.on .bar{animation:fill 6s linear forwards}
-.why-item:hover h3{color:var(--navy)}
+.why-item[aria-selected="true"] h3,.why-item:hover h3{color:var(--navy)}
+.why-item[aria-selected="true"] small{color:var(--brass)}
+.why-item[aria-selected="true"] p{max-height:120px;opacity:1}
+.why-item[aria-selected="true"] .bar{animation:fill 6s linear forwards}
+.why.paused .why-item .bar{animation:none;width:100%}
 @keyframes fill{to{width:100%}}
-.why-view{position:relative;border-radius:var(--radius);overflow:hidden;min-height:480px;background:var(--navy)}
-.why-view img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);transition:opacity .9s var(--soft),transform 1.6s var(--soft)}
+.why-view{position:relative;border-radius:var(--radius);overflow:hidden;min-height:460px;background:var(--navy)}
+.why-view img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);transition:opacity .8s var(--soft),transform 1.4s var(--soft)}
 .why-view img.on{opacity:1;transform:none}
-.why-view::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(6,33,69,.85))}
-.why-big{position:absolute;left:32px;right:32px;bottom:28px;z-index:2;color:#fff}
-.why-big b{display:block;font-size:clamp(64px,8vw,112px);font-weight:300;line-height:1;letter-spacing:-.04em}
-.why-big span{display:block;margin-top:8px;font-size:15px;color:rgba(255,255,255,.8)}
+.why-view::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(6,33,69,.88))}
+.why-big{position:absolute;left:28px;right:28px;bottom:26px;z-index:2;color:#fff}
+.why-big b{display:block;font-size:clamp(60px,8vw,108px);font-weight:300;line-height:1;letter-spacing:-.04em}
+.why-big span{display:block;margin-top:8px;font-size:15px;color:rgba(255,255,255,.85)}
 
 /* cifras */
-.numbers{background:var(--navy);color:#fff;border-radius:28px;padding:clamp(40px,5vw,72px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;position:relative;overflow:hidden}
-.numbers::before{content:"";position:absolute;left:-80px;top:-160px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(184,149,90,.25),transparent 65%)}
+.numbers{background:var(--navy);color:#fff;border-radius:var(--radius-l);padding:clamp(36px,5vw,72px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;position:relative;overflow:hidden}
+.numbers::before{content:"";position:absolute;left:-80px;top:-160px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(201,164,106,.25),transparent 65%)}
 .n{position:relative;min-width:0}
 .n + .n{border-left:1px solid rgba(255,255,255,.14);padding-left:24px}
 .n b{display:block;font-size:clamp(44px,5.4vw,76px);font-weight:300;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.n b small{font-size:.5em;color:var(--brass)}
-.n span{display:block;margin-top:12px;font-size:14px;color:rgba(255,255,255,.7)}
+.n b small{font-size:.5em;color:var(--brass-soft)}
+.n span{display:block;margin-top:12px;font-size:14px;color:rgba(255,255,255,.75)}
 
-/* CTA */
-.cta{display:grid;grid-template-columns:1.2fr 1fr;border-radius:28px;overflow:hidden;background:var(--paper)}
+/* llamada a la acción */
+.cta{display:grid;grid-template-columns:1.2fr 1fr;border-radius:var(--radius-l);overflow:hidden;background:var(--paper)}
 .cta > *{min-width:0}
-.cta .tx{padding:clamp(36px,5vw,72px);display:flex;flex-direction:column;justify-content:center;gap:24px}
-.cta .ph{min-height:320px;position:relative}
+.cta .tx{padding:clamp(32px,5vw,72px);display:flex;flex-direction:column;justify-content:center;gap:24px}
+.cta .ph{min-height:300px;position:relative}
 .cta .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 
-/* ---------- CABECERA DE PÁGINAS INTERNAS ---------- */
-.p-head{padding:calc(110px + env(safe-area-inset-top,0px)) var(--gutter) 0}
-.p-head .box{max-width:1320px;margin:0 auto;position:relative;border-radius:28px;overflow:hidden;min-height:min(62svh,560px);display:flex;align-items:flex-end;color:#fff}
+/* cabecera de páginas internas */
+.p-head{padding:var(--nav-space) var(--gutter) 0}
+.p-head .box{max-width:1320px;margin:0 auto;position:relative;border-radius:var(--radius-l);overflow:hidden;min-height:min(60svh,540px);display:flex;align-items:flex-end;color:#fff;background:var(--navy)}
 .p-head .box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.p-head .box::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,33,69,.9) 0%,rgba(6,33,69,.55) 50%,rgba(6,33,69,.1) 100%)}
-.p-head .in{position:relative;z-index:2;padding:clamp(32px,5vw,72px);max-width:760px}
-.p-head h1{font-size:clamp(40px,6vw,84px);margin-top:20px}
-.p-head h1 b{font-weight:500;color:var(--brass)}
-.p-head p{margin-top:20px;color:rgba(255,255,255,.8);max-width:46ch;font-size:18px}
-.crumb{display:flex;gap:10px;font-size:13px;color:rgba(255,255,255,.7)}
+.p-head .box::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,33,69,.92) 0%,rgba(6,33,69,.6) 50%,rgba(6,33,69,.12) 100%)}
+.p-head .in{position:relative;z-index:2;padding:clamp(28px,5vw,72px);max-width:760px}
+.p-head h1{font-size:clamp(38px,6vw,84px);margin-top:18px}
+.p-head h1 b{font-weight:500;color:var(--brass-soft)}
+.p-head p{margin-top:18px;color:rgba(255,255,255,.85);max-width:46ch;font-size:18px}
+.crumb{display:flex;gap:10px;font-size:13px;color:rgba(255,255,255,.75)}
+.crumb a{padding-block:10px;margin-block:-10px}
+.crumb a:hover{color:#fff}
 .crumb b{color:#fff;font-weight:500}
 
-/* ---------- NOSOTROS ---------- */
+/* nosotros */
 .about{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,6vw,96px);align-items:start}
 .about > *{min-width:0}
-.about .big{font-size:clamp(24px,2.6vw,34px);font-weight:300;color:var(--navy);line-height:1.35}
+.about .big{font-size:clamp(23px,2.6vw,34px);font-weight:300;color:var(--navy);line-height:1.35;margin-top:20px}
 .about .txt p{color:var(--muted)}
 .about .txt p + p{margin-top:16px}
 .cards3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
-.card{background:var(--paper);border-radius:var(--radius);padding:32px;min-width:0;transition:transform .5s var(--soft),box-shadow .5s var(--soft);transform-style:preserve-3d}
-.card:hover{box-shadow:0 30px 60px -30px rgba(6,33,69,.35)}
-.ico{width:56px;height:56px;border-radius:16px;background:var(--sky);display:grid;place-items:center;color:var(--navy);transition:background .4s,color .4s}
-.ico svg{width:28px;height:28px}
-.card h3{font-size:24px;font-weight:400;color:var(--navy);margin-top:24px}
-.card p{color:var(--muted);margin-top:10px;font-size:16px}
+.cards3 .card h3{font-size:24px;font-weight:400;color:var(--navy);margin-top:24px}
+.cards3 .card p{color:var(--muted);margin-top:10px;font-size:16px}
+.benefits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border-radius:var(--radius);overflow:hidden}
+.benefit{background:var(--paper);padding:28px 28px 30px;display:flex;gap:16px;align-items:flex-start;min-width:0;transition:background .35s}
+.benefit:hover{background:#FBFAF7}
+.benefit .ico{width:46px;height:46px;border-radius:14px}
+.benefit .ico svg{width:22px;height:22px}
+.benefit b{display:block;font-weight:500;color:var(--navy)}
+.benefit p span{display:block;color:var(--muted);font-size:15px;margin-top:4px}
 .mv{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.mv article{border-radius:var(--radius);padding:clamp(32px,4vw,56px);min-width:0}
+.mv article{border-radius:var(--radius);padding:clamp(28px,4vw,56px);min-width:0}
 .mv article:first-child{background:var(--navy);color:#fff}
 .mv article:last-child{background:var(--paper)}
 .mv h3{font-size:clamp(26px,3vw,40px);margin-top:18px}
 .mv article:last-child h3{color:var(--navy)}
-.mv p{margin-top:16px;opacity:.8}
+.mv p{margin-top:16px;color:rgba(255,255,255,.8)}
+.mv article:last-child p{color:var(--muted)}
 
-/* ---------- SERVICIOS ---------- */
-.chips{position:relative;display:inline-flex;padding:5px;background:var(--paper);border-radius:999px;flex-wrap:wrap}
-.chips .pill{position:absolute;top:5px;bottom:5px;left:0;background:var(--navy);border-radius:999px;transition:transform .5s var(--ease),width .5s var(--ease)}
-.chips button{position:relative;z-index:1;border:0;background:none;padding:12px 22px;border-radius:999px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;transition:color .3s}
+/* servicios */
+.chips{position:relative;display:inline-flex;padding:5px;background:var(--paper);border-radius:999px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips .pill{position:absolute;top:5px;bottom:5px;left:0;background:var(--navy);border-radius:999px;transition:transform .45s var(--ease),width .45s var(--ease)}
+.chips button{position:relative;z-index:1;border:0;background:none;min-height:44px;padding:0 20px;border-radius:999px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap;transition:color .3s}
 .chips button[aria-pressed="true"]{color:#fff}
 .svc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
-.svc .card{display:flex;flex-direction:column;min-height:260px;cursor:default;position:relative;overflow:hidden;transition:transform .5s var(--soft),box-shadow .5s,background .5s,opacity .4s}
-.svc .card .who{position:absolute;top:28px;right:28px;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;background:var(--sand);color:var(--navy);transition:background .4s,color .4s}
-.svc .card.own .who{background:var(--navy);color:#fff}
-.svc .card h3{margin-top:auto;padding-top:32px}
-.svc .card p{margin-top:8px;transition:color .4s}
+.svc .card{display:flex;flex-direction:column;min-height:250px;position:relative;overflow:hidden}
+.svc .card[hidden]{display:none}
+.svc .who{position:absolute;top:28px;right:28px;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;background:var(--sand);color:var(--navy);transition:background .4s,color .4s}
+.svc .own .who{background:var(--navy);color:#fff}
+.svc h3{font-size:23px;font-weight:400;color:var(--navy);margin-top:auto;padding-top:32px;transition:color .4s}
+.svc p{color:var(--muted);margin-top:8px;font-size:15px;transition:color .4s}
 .svc .card:hover{background:var(--navy)}
 .svc .card:hover h3{color:#fff}
-.svc .card:hover p{color:rgba(255,255,255,.75)}
+.svc .card:hover p{color:rgba(255,255,255,.78)}
 .svc .card:hover .ico{background:var(--brass);color:#fff}
-.svc .card:hover .who{background:rgba(255,255,255,.14);color:#fff}
-.svc .card.dim{opacity:.18;pointer-events:none}
-.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;counter-reset:s}
-.step{background:var(--paper);border-radius:var(--radius);padding:32px;min-width:0;position:relative;overflow:hidden;counter-increment:s}
-.step::before{content:"0" counter(s);font-size:56px;font-weight:300;color:var(--sky);line-height:1;display:block;transition:color .4s}
-.step::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--brass);transition:width .7s var(--ease)}
+.svc .card:hover .who{background:rgba(255,255,255,.16);color:#fff}
+.svc .card.enter{animation:rise .5s var(--soft) both}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;counter-reset:s;list-style:none;margin:0;padding:0}
+.step{background:var(--paper);border-radius:var(--radius);padding:30px;min-width:0;position:relative;overflow:hidden;counter-increment:s}
+.step::before{content:"0" counter(s);font-size:52px;font-weight:300;color:var(--sky);line-height:1;display:block;transition:color .4s}
+.step::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--brass);transition:width .6s var(--ease)}
 .step:hover::after{width:100%}
 .step:hover::before{color:var(--brass)}
-.step h3{font-size:24px;font-weight:400;color:var(--navy);margin-top:24px}
+.step h3{font-size:23px;font-weight:400;color:var(--navy);margin-top:22px}
 .step p{color:var(--muted);margin-top:8px;font-size:16px}
 
-/* ---------- EDIFICIOS ---------- */
-.rail-wrap{position:relative}
-.rail{display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:4px;cursor:grab;-webkit-overflow-scrolling:touch}
+/* edificios */
+.rail{display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:4px;cursor:grab;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .rail::-webkit-scrollbar{display:none}
 .rail.drag{cursor:grabbing;scroll-snap-type:none}
-.b-card{flex:0 0 clamp(280px,34vw,440px);scroll-snap-align:start;border-radius:var(--radius);overflow:hidden;position:relative;aspect-ratio:3/4;background:var(--navy);user-select:none}
-.b-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transition:transform 1.2s var(--soft)}
+.rail.drag *{pointer-events:none}
+.b-card{flex:0 0 clamp(260px,34vw,440px);scroll-snap-align:start;border-radius:var(--radius);overflow:hidden;position:relative;aspect-ratio:3/4;background:var(--navy);user-select:none;margin:0}
+.b-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--soft)}
 .b-card:hover img{transform:scale(1.05)}
-.b-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(6,33,69,.85))}
-.b-card .in{position:absolute;left:24px;right:24px;bottom:24px;z-index:2;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
-.b-card h3{font-size:26px;font-weight:400}
-.b-card span{font-size:14px;color:rgba(255,255,255,.75)}
-.b-card .chip{font-size:12px;font-weight:500;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:6px 12px;border-radius:999px;white-space:nowrap}
+.b-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(6,33,69,.88))}
+.b-card figcaption{position:absolute;left:22px;right:22px;bottom:22px;z-index:2;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.b-card h3{font-size:24px;font-weight:400}
+.b-card figcaption span{font-size:14px;color:rgba(255,255,255,.8)}
+.b-card .chip{font-size:12px;font-weight:500;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:6px 12px;border-radius:999px;white-space:nowrap;color:#fff}
 .rail-ctrl{display:flex;gap:10px}
-.round{width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--paper);cursor:pointer;display:grid;place-items:center;color:var(--navy);transition:background .3s,color .3s,border-color .3s}
-.round:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+.round{width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--paper);cursor:pointer;display:grid;place-items:center;color:var(--navy);transition:background .3s,color .3s,border-color .3s,opacity .3s}
+.round:hover:not([disabled]){background:var(--navy);color:#fff;border-color:var(--navy)}
+.round[disabled]{opacity:.35;cursor:default}
 .round svg{width:18px;height:18px}
-.progress{height:2px;background:var(--line);margin-top:28px;border-radius:2px;overflow:hidden}
+.progress{height:2px;background:var(--line);margin-top:26px;border-radius:2px;overflow:hidden}
 .progress i{display:block;height:100%;width:30%;background:var(--navy);transition:width .2s}
-.testi{background:var(--navy-deep);color:#fff;border-radius:28px;padding:clamp(36px,6vw,88px);display:grid;grid-template-columns:auto 1fr;gap:clamp(24px,5vw,72px);align-items:start;position:relative;overflow:hidden}
+.testi{background:var(--navy-deep);color:#fff;border-radius:var(--radius-l);padding:clamp(32px,6vw,88px);display:grid;grid-template-columns:auto 1fr;gap:clamp(20px,5vw,72px);align-items:start}
 .testi > *{min-width:0}
-.testi .qmark{font-size:clamp(120px,14vw,200px);line-height:.7;color:var(--brass);font-weight:300}
-.slides{position:relative;min-height:220px}
-.slide{position:absolute;inset:0;margin:0;opacity:0;transform:translateX(30px);transition:opacity .9s var(--soft),transform .9s var(--soft);pointer-events:none}
+.testi .qmark{font-size:clamp(100px,14vw,190px);line-height:.7;color:var(--brass-soft);font-weight:300}
+.slides{position:relative;min-height:200px;margin-top:26px}
+.slide{position:absolute;inset:0;margin:0;opacity:0;transform:translateX(24px);transition:opacity .8s var(--soft),transform .8s var(--soft);pointer-events:none}
 .slide.on{opacity:1;transform:none;position:relative;pointer-events:auto}
-.slide blockquote{margin:0;font-size:clamp(24px,2.8vw,38px);font-weight:300;line-height:1.35}
-.slide cite{display:flex;align-items:center;gap:14px;margin-top:32px;font-style:normal;flex-wrap:wrap}
-.slide cite .av{width:48px;height:48px;border-radius:50%;background:var(--brass);display:grid;place-items:center;font-weight:500}
-.slide cite b{display:block;font-weight:500}
-.slide cite span{font-size:14px;color:rgba(255,255,255,.65)}
-.sample{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.3);padding:4px 10px;border-radius:999px;color:rgba(255,255,255,.7)}
-.dots{display:flex;gap:8px;margin-top:36px}
-.dots button{width:10px;height:10px;border-radius:999px;border:0;background:rgba(255,255,255,.3);cursor:pointer;padding:0;transition:width .5s var(--ease),background .3s}
-.dots button.on{width:36px;background:var(--brass)}
+.slide blockquote{margin:0;font-size:clamp(22px,2.8vw,36px);font-weight:300;line-height:1.35}
+.slide figcaption{display:flex;align-items:center;gap:14px;margin-top:30px}
+.slide .av{width:48px;height:48px;border-radius:50%;background:var(--brass);display:grid;place-items:center;font-weight:500;flex:none}
+.slide figcaption b{display:block;font-weight:500}
+.slide figcaption span{font-size:14px;color:rgba(255,255,255,.7)}
+.dots{display:flex;gap:2px;margin-top:28px}
+.dots button{width:36px;height:44px;border:0;background:none;cursor:pointer;padding:0;display:grid;place-items:center}
+.dots button::before{content:"";width:10px;height:10px;border-radius:999px;background:rgba(255,255,255,.35);transition:width .45s var(--ease),background .3s}
+.dots button[aria-current="true"]::before{width:30px;background:var(--brass-soft)}
 
-/* ---------- CONTACTO ---------- */
+/* contacto */
 .contact{display:grid;grid-template-columns:.9fr 1.1fr;gap:16px}
 .contact > *{min-width:0}
-.c-info{background:var(--navy);color:#fff;border-radius:28px;padding:clamp(32px,5vw,64px);display:flex;flex-direction:column;gap:28px;position:relative;overflow:hidden}
-.c-info::after{content:"";position:absolute;right:-100px;bottom:-100px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(184,149,90,.3),transparent 65%)}
-.c-info h2{font-size:clamp(30px,3.4vw,44px)}
-.c-row{display:flex;gap:16px;align-items:center;position:relative;z-index:1}
+.c-info{background:var(--navy);color:#fff;border-radius:var(--radius-l);padding:clamp(28px,5vw,64px);display:flex;flex-direction:column;gap:22px;position:relative;overflow:hidden}
+.c-info::after{content:"";position:absolute;right:-100px;bottom:-100px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(201,164,106,.3),transparent 65%);pointer-events:none}
+.c-info h1{font-size:clamp(32px,3.6vw,48px)}
+.c-row{display:flex;gap:16px;align-items:center;position:relative;z-index:1;border-radius:16px;padding:6px;margin:-6px;transition:background .3s}
+a.c-row:hover{background:rgba(255,255,255,.07)}
 .c-row i{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.1);display:grid;place-items:center;flex:none}
 .c-row i svg{width:22px;height:22px}
-.c-row small{display:block;font-size:13px;color:rgba(255,255,255,.6)}
+.c-row small{display:block;font-size:13px;color:rgba(255,255,255,.65)}
 .c-row span{font-size:18px;word-break:break-word}
-.social{display:flex;gap:10px;margin-top:auto;position:relative;z-index:1}
+.social{display:flex;gap:10px;margin-top:auto;padding-top:8px;position:relative;z-index:1}
 .social a{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;transition:background .3s,transform .3s}
 .social a:hover{background:var(--brass);transform:translateY(-3px)}
 .social svg{width:20px;height:20px}
-form{background:var(--paper);border-radius:28px;padding:clamp(32px,5vw,64px);display:grid;grid-template-columns:1fr 1fr;gap:28px 24px;align-content:start}
+form{background:var(--paper);border-radius:var(--radius-l);padding:clamp(28px,5vw,64px);display:grid;grid-template-columns:1fr 1fr;gap:22px 20px;align-content:start}
+.form-title{grid-column:1/-1;font-size:clamp(24px,2.4vw,30px);color:var(--navy);font-weight:400}
+.form-sub{grid-column:1/-1;color:var(--muted);font-size:15px;margin-top:-12px}
 .field{position:relative;min-width:0}
 .field.full{grid-column:1/-1}
-.field input,.field textarea,.field select{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--sand);border:1px solid transparent;border-radius:14px;padding:26px 18px 10px;transition:border-color .3s,background .3s}
-.field select{appearance:none;-webkit-appearance:none;cursor:pointer}
+.field input,.field textarea,.field select{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--sand);border:1.5px solid transparent;border-radius:14px;padding:26px 18px 10px;transition:border-color .3s,background .3s}
+.field select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%230A335D' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 18px center}
 .field textarea{min-height:130px;resize:vertical}
-.field label{position:absolute;left:19px;top:18px;font-size:16px;color:var(--muted);pointer-events:none;transition:transform .35s var(--soft),font-size .35s,color .3s;transform-origin:left}
+.field label{position:absolute;left:19.5px;top:18px;font-size:16px;color:var(--muted);pointer-events:none;transition:transform .3s var(--soft),font-size .3s,color .3s;transform-origin:left}
 .field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--navy);background:#fff}
 .field input:focus + label,.field input:not(:placeholder-shown) + label,.field textarea:focus + label,.field textarea:not(:placeholder-shown) + label,.field.static label{transform:translateY(-10px);font-size:12px;color:var(--navy)}
-.form-foot{grid-column:1/-1;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.form-msg{color:var(--navy);font-size:15px}
+.field .err{display:block;font-size:13px;color:var(--err);margin-top:6px;min-height:0}
+.field.invalid input,.field.invalid textarea{border-color:var(--err);background:#FFF8F7}
+.field.invalid label{color:var(--err)!important}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.form-foot{grid-column:1/-1;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.form-msg{display:none;grid-column:1/-1;align-items:flex-start;gap:12px;padding:16px 18px;border-radius:14px;font-size:15px}
+.form-msg.show{display:flex;animation:rise .45s var(--soft)}
+.form-msg.ok{background:#EAF6F0;color:#155E3E}
+.form-msg.bad{background:#FDECEA;color:#8E2A20}
+.form-msg svg{width:20px;height:20px;flex:none;margin-top:2px}
+.privacy{grid-column:1/-1;font-size:13px;color:var(--muted)}
 
-/* ---------- PIE ---------- */
-footer{background:var(--navy-deep);color:rgba(255,255,255,.7);margin-top:clamp(40px,6vw,80px)}
+/* botón flotante de WhatsApp (solo si está configurado) */
+.wa-float{position:fixed;right:clamp(16px,3vw,32px);bottom:calc(clamp(16px,3vw,32px) + env(safe-area-inset-bottom,0px));z-index:55;width:58px;height:58px;border-radius:50%;background:#1FA855;color:#fff;display:grid;place-items:center;box-shadow:0 14px 30px -12px rgba(0,0,0,.45);transition:transform .3s var(--soft)}
+.wa-float:hover{transform:translateY(-3px) scale(1.04)}
+.wa-float svg{width:28px;height:28px}
+
+/* pie */
+footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(40px,6vw,80px)}
 .foot{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;padding-block:72px 40px}
 .foot img{height:56px;width:auto}
 .foot p{margin-top:20px;max-width:32ch}
-.foot h4{margin:0 0 16px;font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
-.foot ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
-.foot button{background:none;border:0;padding:0;cursor:pointer;color:#fff;opacity:.8}
-.foot button:hover{opacity:1}
+.foot h2{margin:0 0 14px;font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass-soft)}
+.foot ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.foot li a{display:inline-flex;align-items:center;min-height:36px;color:#fff;opacity:.85;transition:opacity .2s}
+.foot li a:hover{opacity:1}
 .foot-bottom{border-top:1px solid rgba(255,255,255,.12);padding-block:22px calc(22px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px}
 
-/* ---------- MODAL ---------- */
-.modal{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:20px;background:rgba(6,33,69,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s}
+/* modal */
+.modal{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:20px;background:rgba(6,33,69,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
 .modal.open{opacity:1;visibility:visible}
-.modal-card{width:min(100%,500px);background:#fff;border-radius:28px;padding:clamp(32px,5vw,52px);transform:translateY(20px) scale(.98);transition:transform .5s var(--soft)}
+.modal-card{width:min(100%,500px);background:#fff;border-radius:var(--radius-l);padding:clamp(28px,5vw,52px);transform:translateY(20px) scale(.98);transition:transform .45s var(--soft)}
 .modal.open .modal-card{transform:none}
-.modal h3{font-size:34px;color:var(--navy);margin-top:16px}
+.modal h2{font-size:32px;color:var(--navy);margin-top:16px}
 .modal p{color:var(--muted);margin-top:14px}
-.modal .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:32px}
-.modal .btn.light{background:var(--sand);color:var(--navy)}.modal .btn.light::before{background:var(--line)}
+.modal .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
 
-/* ---------- RESPONSIVE ---------- */
+/* 6 · APARICIÓN AL DESPLAZARSE ----------------------------------- */
+/* Solo se oculta si JavaScript está activo (clase .js) y el elemento aún no se ha visto. */
+.js [data-reveal]{opacity:0;transform:translateY(28px);transition:opacity .8s var(--soft),transform .8s var(--soft);transition-delay:var(--d,0s)}
+.js [data-reveal].seen{opacity:1;transform:none}
+
+/* 7 · RESPONSIVE -------------------------------------------------- */
 @media (max-width:1000px){
   .hero-grid,.why,.about,.contact,.cta{grid-template-columns:1fr}
-  .hero-photo{min-height:420px}
-  .why-view{min-height:380px;order:-1}
-  .numbers{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:36px}
+  .hero-grid{min-height:0}
+  .hero-photo{min-height:400px}
+  .why-view{min-height:340px;order:-1}
+  .numbers{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:32px}
   .n:nth-child(3){border-left:0;padding-left:0}
   .svc{grid-template-columns:repeat(2,minmax(0,1fr))}
   .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
   .cards3{grid-template-columns:1fr}
+  .benefits{grid-template-columns:repeat(2,minmax(0,1fr))}
   .foot{grid-template-columns:1fr 1fr}
   .foot > div:first-child{grid-column:1/-1}
 }
-@media (max-width:600px){
-  .svc,.steps,.mv,form{grid-template-columns:1fr}
-  .numbers{grid-template-columns:1fr}
-  .n + .n{border-left:0;padding-left:0;border-top:1px solid rgba(255,255,255,.14);padding-top:24px}
+@media (max-width:640px){
+  body{font-size:16px}
+  .step{padding:24px}.step::before{font-size:40px}.step h3{margin-top:14px}
+  .numbers,.steps,.mv,.benefits,form{grid-template-columns:1fr}
+  .n + .n{border-left:0;padding-left:0;border-top:1px solid rgba(255,255,255,.14);padding-top:22px}
   .testi{grid-template-columns:1fr}
-  .testi .qmark{font-size:100px}
+  .testi .qmark{font-size:90px;height:50px}
   .brand span{display:none}
   .glass.g2{display:none}
+  .hero-photo{min-height:340px}
+  /* tarjetas de servicio compactas en una columna */
+  .svc{grid-template-columns:1fr;gap:12px}
+  .svc .card{min-height:0;display:grid;grid-template-columns:56px 1fr;grid-template-areas:"ico title" "ico desc" "ico who";column-gap:16px;align-items:start;padding:22px}
+  .svc .ico{grid-area:ico}
+  .svc h3{grid-area:title;margin-top:0;padding-top:0;font-size:21px}
+  .svc p{grid-area:desc}
+  .svc .who{grid-area:who;position:static;justify-self:start;margin-top:12px}
+  .chips{display:flex;width:100%}
+  .chips button{flex:1;padding:0 12px}
+  /* portadas internas: degradado vertical para que el título se lea bien */
+  .p-head .box{min-height:440px}
+  .p-head .box::after{background:linear-gradient(180deg,rgba(6,33,69,.25) 0%,rgba(6,33,69,.7) 45%,rgba(6,33,69,.95) 100%)}
+  .rail-ctrl{display:none}
+  .foot{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .js [data-reveal]{opacity:1;transform:none}
+  .marquee .track{animation:none}
 }
 </style>
+<script>document.documentElement.classList.add('js');</script>
 </head>
 <body>
+<a class="skip" href="#main">Saltar al contenido</a>
 
-<!-- íconos -->
+<!-- Íconos (se reutilizan con <use href="#id">) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
   <symbol id="i-admin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 17v-3M12 17V10M16 17v-5"/></symbol>
   <symbol id="i-clean" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12l-1.5 10h-9zM8.5 11c0-3 1.5-5 3.5-5s3.5 2 3.5 5M19 3v3M17.5 4.5h3"/></symbol>
@@ -363,7 +467,12 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.7);margin-top:clamp(4
   <symbol id="i-maint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
   <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M7 7V5a2 2 0 012-2h6a2 2 0 012 2v2"/><circle cx="12" cy="13.5" r="2"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="3"/><circle cx="12" cy="12" r="2.5"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 20V10l8-6 8 6v10z"/><path d="M10 20v-6h4v6"/></symbol>
   <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-7 4 3 8-10M15 6h6v6"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></symbol>
   <symbol id="i-arrow-l" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4M10 6l-6 6 6 6"/></symbol>
@@ -371,60 +480,66 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.7);margin-top:clamp(4
   <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7l8 6 8-6"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></symbol>
   <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></symbol>
+  <symbol id="i-facebook" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 8h3V4h-3a4 4 0 00-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8z"/></symbol>
+  <symbol id="i-linkedin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 014 0v4M12 10v7"/></symbol>
+  <symbol id="i-whatsapp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l1.3-4A8 8 0 1112 20a8 8 0 01-3.8-1z"/><path d="M9 9c0 3 3 6 6 6l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/></symbol>
 </defs></svg>
 
+<!-- ============================ NAVEGACIÓN ============================ -->
 <header class="nav" id="nav">
-  <div class="nav-bar">
-    <button class="brand" data-go="inicio" aria-label="Bramar Group, inicio"><img src="img/isotipo-azul.png" alt=""><span>BRAMAR</span></button>
+  <nav class="nav-bar" aria-label="Principal">
+    <a class="brand" href="#inicio" data-go="inicio" aria-label="Bramar Group, ir a inicio"><img src="img/isotipo-azul.png" alt="" width="200" height="163"><span>BRAMAR</span></a>
     <ul class="links" id="links">
       <li class="pill" aria-hidden="true"></li>
-      <li><button data-go="inicio">Inicio</button></li>
-      <li><button data-go="nosotros">Nosotros</button></li>
-      <li><button data-go="servicios">Servicios</button></li>
-      <li><button data-go="edificios">Edificios</button></li>
-      <li><button data-go="contacto">Contacto</button></li>
+      <li><a href="#inicio" data-go="inicio">Inicio</a></li>
+      <li><a href="#nosotros" data-go="nosotros">Nosotros</a></li>
+      <li><a href="#servicios" data-go="servicios">Servicios</a></li>
+      <li><a href="#edificios" data-go="edificios">Edificios</a></li>
+      <li><a href="#contacto" data-go="contacto">Contacto</a></li>
     </ul>
-    <button class="cta-access" data-access><svg><use href="#i-key"/></svg>Copropietarios</button>
-    <button class="burger" id="burger" aria-label="Abrir menú" aria-expanded="false"><i></i><i></i><i></i></button>
-  </div>
-  <div class="mobile-menu" id="mmenu">
-    <button class="m" data-go="inicio"><small>01</small>Inicio</button>
-    <button class="m" data-go="nosotros"><small>02</small>Nosotros</button>
-    <button class="m" data-go="servicios"><small>03</small>Servicios</button>
-    <button class="m" data-go="edificios"><small>04</small>Edificios</button>
-    <button class="m" data-go="contacto"><small>05</small>Contacto</button>
-    <button class="cta-access" data-access><svg><use href="#i-key"/></svg>Acceso copropietarios</button>
+    <button class="cta-access" type="button" data-access><svg aria-hidden="true"><use href="#i-key"/></svg>Copropietarios</button>
+    <button class="burger" id="burger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="mmenu"><i></i><i></i><i></i></button>
+  </nav>
+  <div class="mobile-menu" id="mmenu" aria-label="Menú">
+    <a class="m" href="#inicio" data-go="inicio"><small>01</small>Inicio</a>
+    <a class="m" href="#nosotros" data-go="nosotros"><small>02</small>Nosotros</a>
+    <a class="m" href="#servicios" data-go="servicios"><small>03</small>Servicios</a>
+    <a class="m" href="#edificios" data-go="edificios"><small>04</small>Edificios</a>
+    <a class="m" href="#contacto" data-go="contacto"><small>05</small>Contacto</a>
+    <button class="cta-access" type="button" data-access><svg aria-hidden="true"><use href="#i-key"/></svg>Acceso copropietarios</button>
   </div>
 </header>
 
-<div class="wipe" id="wipe" aria-hidden="true"><span id="wipe-t">Inicio</span></div>
+<div class="wipe" id="wipe" aria-hidden="true"><span id="wipe-t"></span></div>
+<p class="sr-only" id="announce" aria-live="polite"></p>
 
-<main>
+<main id="main" tabindex="-1">
 
-<!-- ===================== INICIO ===================== -->
-<div class="page" id="inicio" data-page data-name="Inicio">
-  <section class="hero">
+<!-- ============================ 01 · INICIO ============================ -->
+<div class="page" id="inicio" data-page data-title="Inicio">
+  <section class="hero" style="padding-bottom:0">
     <div class="hero-grid">
-      <div class="hero-copy">
+      <div class="hero-copy on-dark">
         <div>
           <span class="tag rise">Administración de edificios · Santa Cruz</span>
-          <h1 class="rise d1">La gestión que <b>valoriza</b> su patrimonio.</h1>
+          <h1 class="rise d1" tabindex="-1">La gestión que <b>valoriza</b> su patrimonio.</h1>
           <p class="lede rise d2">Administramos su edificio de punta a punta. Usted trata con un solo responsable.</p>
         </div>
         <div class="hero-actions rise d3">
-          <button class="btn gold" data-go="contacto">Cotizar administración <svg><use href="#i-arrow"/></svg></button>
-          <button class="btn outline" data-access>Acceso copropietarios</button>
+          <a class="btn gold" href="#contacto" data-go="contacto">Cotizar administración <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+          <button class="btn outline" type="button" data-access>Acceso copropietarios</button>
         </div>
       </div>
       <div class="hero-photo reveal-img">
-        <img src="img/torre-zafiro.jpg" alt="Torre Zafiro II, edificio administrado por Bramar Group">
-        <div class="glass g2"><span class="live"></span>Asistencia 24/7 activa</div>
-        <div class="glass g1"><img src="img/torre-zafiro.jpg" alt=""><div><b>Torre Zafiro II</b><span>Gestionado por Bramar</span></div></div>
+        <img src="img/torre-zafiro.jpg" alt="Torre Zafiro II, edificio administrado por Bramar Group" width="1086" height="1448" fetchpriority="high">
+        <div class="glass g2"><span class="live" aria-hidden="true"></span>Asistencia 24/7</div>
+        <div class="glass g1"><img src="img/torre-zafiro-mini.jpg" alt="" width="120" height="160"><div><b>Torre Zafiro II</b><span>Gestionado por Bramar</span></div></div>
       </div>
     </div>
   </section>
 
-  <div class="marquee" aria-label="Servicios: administración, limpieza, conserjería, seguridad, ascensores, piscinas, jardinería y mantenimiento">
+  <div class="marquee" role="img" aria-label="Servicios: administración, limpieza, conserjería, seguridad, ascensores, piscinas, jardinería y mantenimiento">
     <div class="track" aria-hidden="true">
       <span>Administración</span><span>Limpieza</span><span>Conserjería</span><span>Seguridad</span><span>Ascensores</span><span>Piscinas</span><span>Jardinería</span><span>Mantenimiento</span>
       <span>Administración</span><span>Limpieza</span><span>Conserjería</span><span>Seguridad</span><span>Ascensores</span><span>Piscinas</span><span>Jardinería</span><span>Mantenimiento</span>
@@ -433,28 +548,28 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.7);margin-top:clamp(4
 
   <section>
     <div class="wrap">
-      <div class="head"><div><span class="tag">Por qué Bramar</span><h2 class="h2">Cuatro razones para <b>confiarnos</b> su edificio.</h2></div></div>
-      <div class="why">
-        <div class="why-list" id="why">
-          <button class="why-item on" data-i="0"><small>01</small><h3>Transparencia total</h3><p>Recibos digitales y un reporte mensual de todo lo ejecutado.</p><span class="bar"></span></button>
-          <button class="why-item" data-i="1"><small>02</small><h3>Un solo responsable</h3><p>Coordinamos a todas las empresas que trabajan en su edificio.</p><span class="bar"></span></button>
-          <button class="why-item" data-i="2"><small>03</small><h3>Asistencia 24/7</h3><p>Atendemos emergencias a cualquier hora del día.</p><span class="bar"></span></button>
-          <button class="why-item" data-i="3"><small>04</small><h3>Más plusvalía</h3><p>Un edificio bien cuidado protege el valor de su inversión.</p><span class="bar"></span></button>
+      <div class="head" data-reveal><div><span class="tag">Por qué Bramar</span><h2 class="h2">Cuatro razones para <b>confiarnos</b> su edificio.</h2></div></div>
+      <div class="why" id="why" data-reveal>
+        <div class="why-list" role="tablist" aria-label="Razones para elegir Bramar">
+          <button class="why-item" role="tab" id="w0" aria-controls="why-view" aria-selected="true" data-i="0"><small>01</small><h3>Transparencia total</h3><p>Recibos digitales y un reporte mensual de todo lo ejecutado.</p><span class="bar"></span></button>
+          <button class="why-item" role="tab" id="w1" aria-controls="why-view" aria-selected="false" tabindex="-1" data-i="1"><small>02</small><h3>Un solo responsable</h3><p>Coordinamos a todas las empresas que trabajan en su edificio.</p><span class="bar"></span></button>
+          <button class="why-item" role="tab" id="w2" aria-controls="why-view" aria-selected="false" tabindex="-1" data-i="2"><small>03</small><h3>Asistencia 24/7</h3><p>Atendemos emergencias a cualquier hora del día.</p><span class="bar"></span></button>
+          <button class="why-item" role="tab" id="w3" aria-controls="why-view" aria-selected="false" tabindex="-1" data-i="3"><small>04</small><h3>Más plusvalía</h3><p>Un edificio bien cuidado protege el valor de su inversión.</p><span class="bar"></span></button>
         </div>
-        <div class="why-view" id="why-view">
-          <img class="on" src="img/oficina.jpg" alt="">
-          <img src="img/edificio-fachada.jpg" alt="">
-          <img src="img/edificio-balcones.jpg" alt="">
-          <img src="img/edificio-palmeras.jpg" alt="">
+        <div class="why-view" id="why-view" role="tabpanel" aria-labelledby="w0">
+          <img class="on" src="img/oficina.jpg" alt="" width="1536" height="1024" loading="lazy" decoding="async">
+          <img src="img/edificio-fachada.jpg" alt="" width="720" height="960" loading="lazy" decoding="async">
+          <img src="img/edificio-balcones.jpg" alt="" width="671" height="896" loading="lazy" decoding="async">
+          <img src="img/edificio-palmeras.jpg" alt="" width="974" height="731" loading="lazy" decoding="async">
           <div class="why-big" id="why-big"><b>0%</b><span>de opacidad en las cuentas</span></div>
         </div>
       </div>
     </div>
   </section>
 
-  <section style="padding-top:0">
+  <section class="tight">
     <div class="wrap">
-      <div class="numbers">
+      <div class="numbers" data-reveal>
         <div class="n"><b data-to="10">10<small>+</small></b><span>años administrando</span></div>
         <div class="n"><b data-to="350">350<small>+</small></b><span>familias conformes</span></div>
         <div class="n"><b data-to="4">4<small>+</small></b><span>edificios gestionados</span></div>
@@ -463,129 +578,147 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.7);margin-top:clamp(4
     </div>
   </section>
 
-  <section style="padding-top:0">
+  <section class="tight">
     <div class="wrap">
-      <div class="cta">
-        <div class="tx"><span class="tag">Propuesta sin costo</span><h2 class="h2">¿Su edificio necesita una <b>nueva administración</b>?</h2><div><button class="btn navy" data-go="contacto">Hablemos <svg><use href="#i-arrow"/></svg></button></div></div>
-        <div class="ph"><img src="img/edificio-palmeras.jpg" alt="Edificio residencial administrado por Bramar"></div>
+      <div class="cta" data-reveal>
+        <div class="tx"><span class="tag">Propuesta sin costo</span><h2 class="h2">¿Su edificio necesita una <b>nueva administración</b>?</h2><div><a class="btn navy" href="#contacto" data-go="contacto">Solicitar visita <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div></div>
+        <div class="ph"><img src="img/edificio-palmeras.jpg" alt="Edificio residencial administrado por Bramar" width="974" height="731" loading="lazy" decoding="async"></div>
       </div>
     </div>
   </section>
 </div>
 
-<!-- ===================== NOSOTROS ===================== -->
-<div class="page" id="nosotros" data-page data-name="Nosotros" hidden>
-  <div class="p-head"><div class="box reveal-img"><img src="img/oficina.jpg" alt="Oficinas de Bramar Group">
-    <div class="in"><div class="crumb rise">Inicio <span>/</span> <b>Nosotros</b></div><h1 class="rise d1">Innovación y <b>experiencia.</b></h1><p class="rise d2">Más de 10 años administrando edificios y condominios en Santa Cruz.</p></div></div></div>
+<!-- ============================ 02 · NOSOTROS ============================ -->
+<div class="page" id="nosotros" data-page data-title="Nosotros" hidden>
+  <div class="p-head"><div class="box reveal-img"><img src="img/oficina.jpg" alt="Oficinas de Bramar Group" width="1536" height="1024" loading="lazy" decoding="async">
+    <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Nosotros</b></div><h1 class="rise d1" tabindex="-1">Innovación y <b>experiencia.</b></h1><p class="rise d2">Más de 10 años administrando edificios y condominios en Santa Cruz.</p></div></div></div>
   <section>
     <div class="wrap about">
-      <div><span class="tag">Quiénes somos</span><p class="big" style="margin-top:20px">Una empresa dedicada a la administración integral de edificios y condominios, con una estructura sólida para el mercado inmobiliario moderno.</p></div>
-      <div class="txt"><p>Cuidamos cada proceso del edificio: las finanzas, el personal, los proveedores y el estado de las áreas comunes.</p><p>Nuestro compromiso es que la directiva y los copropietarios sepan siempre en qué se usa su dinero.</p></div>
+      <div data-reveal><span class="tag">Quiénes somos</span><p class="big">Una empresa dedicada a la administración integral de edificios y condominios, con una estructura sólida para el mercado inmobiliario moderno.</p></div>
+      <div class="txt" data-reveal style="--d:.1s"><p>Cuidamos cada proceso del edificio: las finanzas, el personal, los proveedores y el estado de las áreas comunes.</p><p>Nuestro compromiso es que la directiva y los copropietarios sepan siempre en qué se usa su dinero.</p></div>
     </div>
   </section>
-  <section style="padding-top:0">
+  <section class="tight">
     <div class="wrap">
       <div class="cards3">
-        <article class="card tilt"><div class="ico"><svg><use href="#i-admin"/></svg></div><h3>Gestión estratégica</h3><p>Finanzas y operación en orden, con presupuesto bajo control.</p></article>
-        <article class="card tilt"><div class="ico"><svg><use href="#i-check"/></svg></div><h3>Proveedores supervisados</h3><p>Seleccionamos y evaluamos a cada empresa aliada.</p></article>
-        <article class="card tilt"><div class="ico"><svg><use href="#i-eye"/></svg></div><h3>Transparencia total</h3><p>Reportes y recibos digitales cada mes.</p></article>
+        <article class="card tilt" data-reveal><div class="ico"><svg aria-hidden="true"><use href="#i-admin"/></svg></div><h3>Gestión estratégica</h3><p>Finanzas y operación en orden, con el presupuesto bajo control.</p></article>
+        <article class="card tilt" data-reveal style="--d:.08s"><div class="ico"><svg aria-hidden="true"><use href="#i-check"/></svg></div><h3>Proveedores supervisados</h3><p>Seleccionamos y evaluamos a cada empresa aliada.</p></article>
+        <article class="card tilt" data-reveal style="--d:.16s"><div class="ico"><svg aria-hidden="true"><use href="#i-eye"/></svg></div><h3>Transparencia total</h3><p>Reportes y recibos digitales cada mes.</p></article>
       </div>
     </div>
   </section>
-  <section style="padding-top:0">
+  <section class="tight">
+    <div class="wrap">
+      <div class="head" data-reveal><div><span class="tag">Beneficios para copropietarios</span><h2 class="h2">Lo que cambia con <b>Bramar.</b></h2></div></div>
+      <div class="benefits" data-reveal>
+        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-wallet"/></svg></span><p><b>Fondo de contingencia</b><span>Reservas para imprevistos, sin cuotas sorpresa.</span></p></div>
+        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-cash"/></svg></span><p><b>Cobranza efectiva</b><span>Seguimiento integral de expensas.</span></p></div>
+        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-home"/></svg></span><p><b>Áreas comunes recuperadas</b><span>Espacios rehabilitados y bien cuidados.</span></p></div>
+        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-chart"/></svg></span><p><b>Más plusvalía</b><span>Su inversión mantiene y gana valor.</span></p></div>
+        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-doc"/></svg></span><p><b>Reportes mensuales</b><span>Transparencia total en cada gasto.</span></p></div>
+        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-clock"/></svg></span><p><b>Asistencia 24 horas</b><span>Control de la operatividad del edificio.</span></p></div>
+      </div>
+    </div>
+  </section>
+  <section class="tight">
     <div class="wrap mv">
-      <article><span class="tag">Misión</span><h3>Que cada edificio se mantenga como nuevo, siempre.</h3><p>En estética y en operatividad.</p></article>
-      <article><span class="tag">Filosofía</span><h3>Inversión protegida.</h3><p style="color:var(--muted);opacity:1">Una gestión rigurosa para que la plusvalía de su propiedad siga creciendo.</p></article>
+      <article class="on-dark" data-reveal><span class="tag">Misión</span><h3>Que cada edificio se mantenga como nuevo, siempre.</h3><p>En estética y en operatividad.</p></article>
+      <article data-reveal style="--d:.1s"><span class="tag">Filosofía</span><h3>Inversión protegida.</h3><p>Una gestión rigurosa y un control estricto de proveedores para que la plusvalía de su propiedad siga creciendo.</p></article>
     </div>
   </section>
 </div>
 
-<!-- ===================== SERVICIOS ===================== -->
-<div class="page" id="servicios" data-page data-name="Servicios" hidden>
-  <div class="p-head"><div class="box reveal-img"><img src="img/edificio-fachada.jpg" alt="Fachada de edificio administrado por Bramar" style="object-position:center 30%">
-    <div class="in"><div class="crumb rise">Inicio <span>/</span> <b>Servicios</b></div><h1 class="rise d1">Todo su edificio, <b>una sola gestión.</b></h1><p class="rise d2">Nuestro equipo y empresas aliadas que seleccionamos y supervisamos.</p></div></div></div>
+<!-- ============================ 03 · SERVICIOS ============================ -->
+<div class="page" id="servicios" data-page data-title="Servicios" hidden>
+  <div class="p-head"><div class="box reveal-img"><img src="img/edificio-fachada.jpg" alt="Fachada de edificio administrado por Bramar" width="720" height="960" loading="lazy" decoding="async" style="object-position:center 30%">
+    <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Servicios</b></div><h1 class="rise d1" tabindex="-1">Todo su edificio, <b>una sola gestión.</b></h1><p class="rise d2">Nuestro equipo y empresas aliadas que seleccionamos y supervisamos.</p></div></div></div>
   <section>
     <div class="wrap">
-      <div class="head"><div><span class="tag">Servicios integrales</span><h2 class="h2">Ocho servicios, <b>un responsable.</b></h2></div>
-        <div class="chips" id="chips"><span class="pill" aria-hidden="true"></span><button aria-pressed="true" data-f="all">Todos</button><button aria-pressed="false" data-f="own">Equipo Bramar</button><button aria-pressed="false" data-f="ally">Empresas aliadas</button></div>
+      <div class="head" data-reveal><div><span class="tag">Servicios integrales</span><h2 class="h2">Ocho servicios, <b>un responsable.</b></h2></div>
+        <div class="chips" id="chips" role="group" aria-label="Filtrar servicios"><span class="pill" aria-hidden="true"></span><button type="button" aria-pressed="true" data-f="all">Todos</button><button type="button" aria-pressed="false" data-f="own">Equipo Bramar</button><button type="button" aria-pressed="false" data-f="ally">Aliados</button></div>
       </div>
-      <div class="svc" id="svc"></div>
+      <div class="svc" id="svc" aria-live="polite"></div>
     </div>
   </section>
-  <section style="padding-top:0">
+  <section class="tight">
     <div class="wrap">
-      <div class="head"><div><span class="tag">Proceso</span><h2 class="h2">Cómo <b>empezamos.</b></h2></div></div>
-      <div class="steps">
-        <div class="step"><h3>Visita</h3><p>Conocemos su edificio y su presupuesto actual.</p></div>
-        <div class="step"><h3>Propuesta</h3><p>Presentamos un plan claro a la directiva.</p></div>
-        <div class="step"><h3>Transición</h3><p>Ordenamos cuentas y proveedores sin cortes.</p></div>
-        <div class="step"><h3>Gestión</h3><p>Operamos y reportamos cada mes.</p></div>
-      </div>
+      <div class="head" data-reveal><div><span class="tag">Proceso</span><h2 class="h2">Cómo <b>empezamos.</b></h2></div><a class="btn navy" href="#contacto" data-go="contacto">Solicitar visita <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+      <ol class="steps">
+        <li class="step" data-reveal><h3>Visita</h3><p>Conocemos su edificio y su presupuesto actual.</p></li>
+        <li class="step" data-reveal style="--d:.08s"><h3>Propuesta</h3><p>Presentamos un plan claro a la directiva.</p></li>
+        <li class="step" data-reveal style="--d:.16s"><h3>Transición</h3><p>Ordenamos cuentas y proveedores sin cortes.</p></li>
+        <li class="step" data-reveal style="--d:.24s"><h3>Gestión</h3><p>Operamos y reportamos cada mes.</p></li>
+      </ol>
     </div>
   </section>
 </div>
 
-<!-- ===================== EDIFICIOS ===================== -->
-<div class="page" id="edificios" data-page data-name="Edificios" hidden>
-  <div class="p-head"><div class="box reveal-img"><img src="img/edificio-palmeras.jpg" alt="Edificio residencial administrado por Bramar">
-    <div class="in"><div class="crumb rise">Inicio <span>/</span> <b>Edificios</b></div><h1 class="rise d1">Impecables y <b>operativos.</b></h1><p class="rise d2">Edificios que hoy confían en nuestra gestión.</p></div></div></div>
+<!-- ============================ 04 · EDIFICIOS ============================ -->
+<div class="page" id="edificios" data-page data-title="Edificios" hidden>
+  <div class="p-head"><div class="box reveal-img"><img src="img/edificio-palmeras.jpg" alt="Edificio residencial administrado por Bramar" width="974" height="731" loading="lazy" decoding="async">
+    <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Edificios</b></div><h1 class="rise d1" tabindex="-1">Impecables y <b>operativos.</b></h1><p class="rise d2">Edificios que hoy confían en nuestra gestión.</p></div></div></div>
   <section>
     <div class="wrap">
-      <div class="head"><div><span class="tag">Portafolio</span><h2 class="h2">Edificios <b>gestionados.</b></h2></div>
-        <div class="rail-ctrl"><button class="round" id="r-prev" aria-label="Anterior"><svg><use href="#i-arrow-l"/></svg></button><button class="round" id="r-next" aria-label="Siguiente"><svg><use href="#i-arrow"/></svg></button></div></div>
-      <div class="rail" id="rail">
-        <article class="b-card"><img src="img/torre-zafiro.jpg" alt="Torre Zafiro II"><div class="in"><div><h3>Torre Zafiro II</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></div></article>
-        <article class="b-card"><img src="img/edificio-balcones.jpg" alt="Edificio residencial con balcones"><div class="in"><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></div></article>
-        <article class="b-card"><img src="img/edificio-fachada.jpg" alt="Edificio con fachada blanca"><div class="in"><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></div></article>
-        <article class="b-card"><img src="img/edificio-palmeras.jpg" alt="Edificio con palmeras" style="object-position:30% center"><div class="in"><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></div></article>
+      <div class="head" data-reveal><div><span class="tag">Portafolio</span><h2 class="h2">Edificios <b>gestionados.</b></h2></div>
+        <div class="rail-ctrl"><button class="round" type="button" id="r-prev" aria-label="Ver edificio anterior" aria-controls="rail"><svg aria-hidden="true"><use href="#i-arrow-l"/></svg></button><button class="round" type="button" id="r-next" aria-label="Ver edificio siguiente" aria-controls="rail"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div></div>
+      <div class="rail" id="rail" tabindex="0" aria-label="Galería de edificios gestionados (use las flechas del teclado para desplazarse)" data-reveal>
+        <figure class="b-card"><img src="img/torre-zafiro.jpg" alt="Torre Zafiro II" width="1086" height="1448" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>Torre Zafiro II</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></figcaption></figure>
+        <figure class="b-card"><img src="img/edificio-balcones.jpg" alt="Edificio residencial con balcones" width="671" height="896" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></figcaption></figure>
+        <figure class="b-card"><img src="img/edificio-fachada.jpg" alt="Edificio con fachada blanca" width="720" height="960" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></figcaption></figure>
+        <figure class="b-card"><img src="img/edificio-palmeras.jpg" alt="Edificio rodeado de palmeras" width="974" height="731" loading="lazy" decoding="async" draggable="false" style="object-position:30% center"><figcaption><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></figcaption></figure>
       </div>
-      <div class="progress"><i id="r-bar"></i></div>
+      <div class="progress" aria-hidden="true"><i id="r-bar"></i></div>
     </div>
   </section>
-  <section style="padding-top:0">
+  <!-- Testimonios: se muestran solo si hay testimonios reales en SITE.testimonials -->
+  <section class="tight" id="testi-sec" hidden>
     <div class="wrap">
-      <div class="testi">
+      <div class="testi on-dark" data-reveal>
         <div class="qmark" aria-hidden="true">“</div>
         <div>
           <span class="tag">Testimonios</span>
-          <div class="slides" id="slides" style="margin-top:28px">
-            <figure class="slide on"><blockquote>Desde que Bramar administra el edificio, las cuentas son claras y las áreas comunes lucen como el primer día.</blockquote><cite><span class="av">P</span><div><b>Presidente de directiva</b><span>Nombre del edificio</span></div><span class="sample">Ejemplo</span></cite></figure>
-            <figure class="slide"><blockquote>Con el mismo presupuesto recibimos un servicio mucho más ordenado. El reporte mensual nos da tranquilidad.</blockquote><cite><span class="av">P</span><div><b>Presidenta de comisión</b><span>Nombre del condominio</span></div><span class="sample">Ejemplo</span></cite></figure>
-            <figure class="slide"><blockquote>Cuando surge una emergencia, responden a cualquier hora.</blockquote><cite><span class="av">P</span><div><b>Presidente de directiva</b><span>Nombre del edificio</span></div><span class="sample">Ejemplo</span></cite></figure>
-          </div>
-          <div class="dots" id="dots"></div>
+          <div class="slides" id="slides" aria-live="polite"></div>
+          <div class="dots" id="dots" role="group" aria-label="Elegir testimonio"></div>
         </div>
+      </div>
+    </div>
+  </section>
+  <section class="tight">
+    <div class="wrap">
+      <div class="cta" data-reveal>
+        <div class="tx"><span class="tag">Su edificio puede ser el próximo</span><h2 class="h2">Conozcamos <b>su edificio.</b></h2><div><a class="btn navy" href="#contacto" data-go="contacto">Solicitar visita <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div></div>
+        <div class="ph"><img src="img/edificio-balcones.jpg" alt="" width="671" height="896" loading="lazy" decoding="async"></div>
       </div>
     </div>
   </section>
 </div>
 
-<!-- ===================== CONTACTO ===================== -->
-<div class="page" id="contacto" data-page data-name="Contacto" hidden>
-  <section style="padding-top:calc(110px + env(safe-area-inset-top,0px))">
+<!-- ============================ 05 · CONTACTO ============================ -->
+<div class="page" id="contacto" data-page data-title="Contacto" hidden>
+  <section style="padding-top:var(--nav-space)">
     <div class="wrap contact">
-      <div class="c-info rise">
+      <div class="c-info on-dark rise">
         <span class="tag">Contacto</span>
-        <h2>Conversemos sobre su edificio.</h2>
-        <div class="c-row"><i><svg><use href="#i-phone"/></svg></i><div><small>Teléfono / WhatsApp</small><span>+591 7000 0000</span></div></div>
-        <div class="c-row"><i><svg><use href="#i-mail"/></svg></i><div><small>Correo</small><span>contacto@bramargroup.com</span></div></div>
-        <div class="c-row"><i><svg><use href="#i-pin"/></svg></i><div><small>Oficina</small><span>Santa Cruz de la Sierra</span></div></div>
-        <div class="c-row"><i><svg><use href="#i-clock"/></svg></i><div><small>Emergencias</small><span>24 horas, 7 días</span></div></div>
-        <div class="social">
-          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg></a>
-          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 8h3V4h-3a4 4 0 00-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8z"/></svg></a>
-          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 014 0v4M12 10v7"/></svg></a>
-          <a href="#" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l1.3-4A8 8 0 1112 20a8 8 0 01-3.8-1z"/><path d="M9 9c0 3 3 6 6 6l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/></svg></a>
-        </div>
+        <h1 tabindex="-1">Conversemos sobre su edificio.</h1>
+        <a class="c-row" data-link="tel"><i><svg aria-hidden="true"><use href="#i-phone"/></svg></i><div><small>Teléfono</small><span data-bind="phone"></span></div></a>
+        <a class="c-row" data-link="mail"><i><svg aria-hidden="true"><use href="#i-mail"/></svg></i><div><small>Correo</small><span data-bind="email"></span></div></a>
+        <div class="c-row"><i><svg aria-hidden="true"><use href="#i-pin"/></svg></i><div><small>Oficina</small><span data-bind="address"></span></div></div>
+        <div class="c-row"><i><svg aria-hidden="true"><use href="#i-clock"/></svg></i><div><small>Emergencias</small><span>24 horas, 7 días</span></div></div>
+        <div class="social" id="social"></div>
       </div>
       <form id="form" class="rise d1" novalidate>
-        <div class="field"><input id="f-name" placeholder=" " autocomplete="name"><label for="f-name">Nombre</label></div>
-        <div class="field"><input id="f-phone" type="tel" placeholder=" " autocomplete="tel"><label for="f-phone">Teléfono</label></div>
-        <div class="field full"><input id="f-mail" type="email" placeholder=" " autocomplete="email"><label for="f-mail">Correo</label></div>
-        <div class="field full"><input id="f-bld" placeholder=" "><label for="f-bld">Edificio o condominio</label></div>
-        <div class="field full static"><select id="f-role"><option>Presidente o miembro de directiva</option><option>Copropietario</option><option>Desarrollador inmobiliario</option><option>Otro</option></select><label for="f-role">Usted es</label></div>
-        <div class="field full"><textarea id="f-msg" placeholder=" "></textarea><label for="f-msg">Mensaje</label></div>
-        <div class="form-foot"><button class="btn navy" type="submit">Enviar mensaje <svg><use href="#i-arrow"/></svg></button><span class="form-msg" id="form-msg" role="status"></span></div>
+        <h2 class="form-title">Solicite una propuesta</h2>
+        <p class="form-sub">Respondemos en un plazo de un día hábil.</p>
+        <div class="field"><input id="f-name" name="nombre" placeholder=" " autocomplete="name" required aria-describedby="e-name"><label for="f-name">Nombre *</label><span class="err" id="e-name"></span></div>
+        <div class="field"><input id="f-phone" name="telefono" type="tel" placeholder=" " autocomplete="tel" inputmode="tel" aria-describedby="e-phone"><label for="f-phone">Teléfono</label><span class="err" id="e-phone"></span></div>
+        <div class="field full"><input id="f-mail" name="correo" type="email" placeholder=" " autocomplete="email" required aria-describedby="e-mail"><label for="f-mail">Correo *</label><span class="err" id="e-mail"></span></div>
+        <div class="field full"><input id="f-bld" name="edificio" placeholder=" "><label for="f-bld">Edificio o condominio</label></div>
+        <div class="field full static"><select id="f-role" name="perfil"><option>Miembro de la directiva</option><option>Copropietario</option><option>Desarrollador inmobiliario</option><option>Otro</option></select><label for="f-role">Usted es</label></div>
+        <div class="field full"><textarea id="f-msg" name="mensaje" placeholder=" " required aria-describedby="e-msg"></textarea><label for="f-msg">Mensaje *</label><span class="err" id="e-msg"></span></div>
+        <div class="hp" aria-hidden="true"><label for="f-web">No llenar</label><input id="f-web" name="web" tabindex="-1" autocomplete="off"></div>
+        <div class="form-msg" id="form-msg" role="status"></div>
+        <div class="form-foot"><button class="btn navy" type="submit" id="f-send"><span id="f-send-t">Enviar mensaje</span><span class="spin" aria-hidden="true"></span><svg class="arr" aria-hidden="true"><use href="#i-arrow"/></svg></button></div>
+        <p class="privacy">* Campos obligatorios. Usamos sus datos solo para responder su consulta.</p>
       </form>
     </div>
   </section>
@@ -595,87 +728,174 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.7);margin-top:clamp(4
 
 <footer>
   <div class="wrap foot">
-    <div><img src="img/logo-blanco.png" alt="Bramar Group"><p>Administración integral de edificios y condominios en Santa Cruz.</p></div>
-    <div><h4>Páginas</h4><ul><li><button data-go="inicio">Inicio</button></li><li><button data-go="nosotros">Nosotros</button></li><li><button data-go="servicios">Servicios</button></li><li><button data-go="edificios">Edificios</button></li><li><button data-go="contacto">Contacto</button></li></ul></div>
-    <div><h4>Contacto</h4><ul><li>+591 7000 0000</li><li>contacto@bramargroup.com</li><li>Santa Cruz de la Sierra</li></ul></div>
+    <div><img src="img/logo-blanco.png" alt="Bramar Group" width="420" height="265" loading="lazy"><p>Administración integral de edificios y condominios en Santa Cruz.</p></div>
+    <div><h2>Páginas</h2><ul><li><a href="#inicio" data-go="inicio">Inicio</a></li><li><a href="#nosotros" data-go="nosotros">Nosotros</a></li><li><a href="#servicios" data-go="servicios">Servicios</a></li><li><a href="#edificios" data-go="edificios">Edificios</a></li><li><a href="#contacto" data-go="contacto">Contacto</a></li></ul></div>
+    <div><h2>Contacto</h2><ul><li><a data-link="tel"><span data-bind="phone"></span></a></li><li><a data-link="mail"><span data-bind="email"></span></a></li><li><span style="display:inline-flex;min-height:36px;align-items:center" data-bind="address"></span></li></ul></div>
   </div>
   <div class="wrap foot-bottom"><span>© <span id="yr">2026</span> Bramar Group</span><span>Gestión integral de edificios y condominios</span></div>
 </footer>
 
-<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
+<a class="wa-float" id="wa-float" hidden target="_blank" rel="noopener" aria-label="Escribir por WhatsApp"><svg aria-hidden="true"><use href="#i-whatsapp"/></svg></a>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-title" aria-hidden="true">
   <div class="modal-card">
     <span class="tag">Copropietarios</span>
-    <h3 id="m-title">Portal en preparación</h3>
-    <p>Muy pronto podrá ver sus expensas, recibos y reportes en línea. Mientras tanto, escríbanos y le enviamos su información.</p>
-    <div class="row"><button class="btn navy" data-go="contacto" data-close>Escribirnos</button><button class="btn light" data-close>Cerrar</button></div>
+    <h2 id="m-title">Portal en preparación</h2>
+    <p>Muy pronto podrá consultar sus expensas, recibos y reportes en línea. Mientras tanto, escríbanos y le enviamos su información.</p>
+    <div class="row"><a class="btn navy" href="#contacto" data-go="contacto" data-close>Escribirnos</a><button class="btn light" type="button" data-close>Cerrar</button></div>
   </div>
 </div>
 
 <script>
+/* ================================================================
+   CONFIGURACIÓN DEL SITIO — edite solo este bloque
+   ----------------------------------------------------------------
+   · phone / email / address: se muestran en Contacto y en el pie.
+   · whatsapp: número con código de país, sin + ni espacios
+     (ej. "59170000000"). Si está vacío, no se muestra el botón.
+   · social: pegue la URL de cada red. Las vacías no se muestran.
+   · formEndpoint: URL de un servicio de formularios (Formspree,
+     Getform, Basin…). Si está vacío, el formulario abre WhatsApp
+     (si hay número) o el correo del visitante con el mensaje listo.
+   · testimonials: agregue testimonios reales con permiso del autor.
+     Si la lista está vacía, la sección no aparece.
+   ================================================================ */
+const SITE = {
+  phone:   "+591 7000 0000",          // PENDIENTE: teléfono real
+  email:   "contacto@bramargroup.com",// PENDIENTE: confirmar correo
+  address: "Santa Cruz de la Sierra, Bolivia",
+  whatsapp: "",                       // PENDIENTE: ej. "59170000000"
+  social: { instagram:"", facebook:"", linkedin:"" },
+  formEndpoint: "",                   // PENDIENTE: ej. "https://formspree.io/f/xxxxxx"
+  testimonials: [
+    // { quote:"Texto del testimonio", name:"Nombre Apellido", role:"Presidente de directiva · Edificio X" }
+  ]
+};
+
 (function(){
-  const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+  "use strict";
+  const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>[...c.querySelectorAll(s)];
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const pages=$$('[data-page]'),ids=pages.map(p=>p.id);
-  const nav=$('#nav'),burger=$('#burger'),wipe=$('#wipe'),wipeT=$('#wipe-t');
-  let current=null,busy=false;
+  const pages=$$('[data-page]'), ids=pages.map(p=>p.id);
+  const nav=$('#nav'), burger=$('#burger'), wipe=$('#wipe'), wipeT=$('#wipe-t');
+  let current=null, busy=false;
 
-  /* ---------- indicador deslizante del menú ---------- */
+  /* ---------- 1. Datos de contacto desde la configuración ---------- */
+  const telHref='tel:'+SITE.phone.replace(/[^\d+]/g,'');
+  $$('[data-bind]').forEach(el=>el.textContent=SITE[el.dataset.bind]||'');
+  $$('[data-link="tel"]').forEach(a=>a.href=telHref);
+  $$('[data-link="mail"]').forEach(a=>a.href='mailto:'+SITE.email);
+  const waURL=t=>'https://wa.me/'+SITE.whatsapp+(t?'?text='+encodeURIComponent(t):'');
+  const soc=$('#social');
+  Object.entries(SITE.social).forEach(([k,url])=>{ if(!url) return;
+    const a=document.createElement('a');a.href=url;a.target='_blank';a.rel='noopener';a.setAttribute('aria-label',k[0].toUpperCase()+k.slice(1));
+    a.innerHTML=`<svg aria-hidden="true"><use href="#i-${k}"/></svg>`;soc.appendChild(a);});
+  if(SITE.whatsapp){
+    const a=document.createElement('a');a.href=waURL();a.target='_blank';a.rel='noopener';a.setAttribute('aria-label','WhatsApp');a.innerHTML='<svg aria-hidden="true"><use href="#i-whatsapp"/></svg>';soc.appendChild(a);
+    const f=$('#wa-float');f.href=waURL('Hola, quisiera información sobre la administración de mi edificio.');f.hidden=false;
+  }
+  if(!soc.children.length) soc.remove();
+
+  /* ---------- 2. Indicador deslizante (menú y filtros) ---------- */
   function movePill(container,btn){
-    const pill=container.querySelector('.pill');if(!pill||!btn)return;
-    const c=container.getBoundingClientRect(),b=btn.getBoundingClientRect();
-    pill.style.width=b.width+'px';pill.style.transform=`translateX(${b.left-c.left}px)`;
+    const pill=container&&container.querySelector('.pill'); if(!pill||!btn) return;
+    const c=container.getBoundingClientRect(), b=btn.getBoundingClientRect();
+    pill.style.width=b.width+'px'; pill.style.transform=`translateX(${b.left-c.left+container.scrollLeft}px)`;
   }
+  const navPill=()=>movePill($('#links'),$('#links [aria-current="page"]'));
+  const chipPill=()=>movePill($('#chips'),$('#chips [aria-pressed="true"]'));
 
-  /* ---------- páginas ---------- */
-  function show(id){
+  /* ---------- 3. Páginas independientes ---------- */
+  function show(id,focus){
     pages.forEach(p=>{p.hidden=p.id!==id;p.classList.remove('ready');});
-    const pg=document.getElementById(id);window.scrollTo(0,0);void pg.offsetWidth;pg.classList.add('ready');
-    $$('[data-go]').forEach(b=>{if(b.closest('.links,.mobile-menu'))b.dataset.go===id?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current');});
-    movePill($('#links'),$('#links [aria-current="page"]'));
-    current=id;
-    if(id==='inicio'){countUp();startWhy();}else stopWhy();
-    if(id==='edificios'){startSlides();updateBar();}else stopSlides();
-    if(id==='servicios')requestAnimationFrame(()=>movePill($('#chips'),$('#chips [aria-pressed="true"]')));
+    const pg=document.getElementById(id);
+    window.scrollTo(0,0); void pg.offsetWidth; pg.classList.add('ready');
+    $$('[data-go]').forEach(a=>{ if(a.closest('.links,.mobile-menu')) a.dataset.go===id?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current'); });
+    document.title=(id==='inicio'?'Bramar Group · Administración de edificios y condominios':pg.dataset.title+' · Bramar Group');
+    current=id; navPill(); watchReveal(pg);
+    if(focus){ const h=$('h1',pg); h&&h.focus({preventScroll:true}); $('#announce').textContent='Página '+pg.dataset.title; }
+    id==='inicio'?(countUp(),startWhy()):stopWhy();
+    id==='edificios'?(startSlides(),updateRail()):stopSlides();
+    if(id==='servicios') requestAnimationFrame(chipPill);
   }
-  function go(id,push){
-    if(!ids.includes(id))id='inicio';
-    nav.classList.remove('open');burger.setAttribute('aria-expanded','false');
-    if(id===current||busy)return;
-    if(push!==false){try{history.pushState(null,'','#'+id);}catch(e){}}
-    if(reduce||!current){show(id);return;}
+  function go(id,push=true){
+    if(!ids.includes(id)) id='inicio';
+    closeMenu(false);
+    if(id===current){ window.scrollTo({top:0,behavior:reduce?'auto':'smooth'}); return; }
+    if(busy) return;
+    if(push){ try{history.pushState({id},'','#'+id);}catch(e){} }
+    if(reduce||!current){ show(id,!!current); return; }
     busy=true;
-    const name=document.getElementById(id).dataset.name;
-    wipeT.innerHTML=name+'<b>.</b>';
+    wipeT.innerHTML=document.getElementById(id).dataset.title+'<b>.</b>';
     wipe.className='wipe in';
-    setTimeout(()=>{show(id);wipe.className='wipe out';setTimeout(()=>{wipe.className='wipe';busy=false;},720);},900);
+    setTimeout(()=>{ show(id,true); wipe.className='wipe out';
+      setTimeout(()=>{wipe.className='wipe';busy=false;},560); },470);
   }
-  document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){e.preventDefault();go(b.dataset.go);}});
+  document.addEventListener('click',e=>{
+    const a=e.target.closest('[data-go]'); if(!a) return;
+    if(e.metaKey||e.ctrlKey||e.shiftKey||e.button===1) return; // permitir abrir en otra pestaña
+    e.preventDefault(); go(a.dataset.go);
+  });
   addEventListener('popstate',()=>go(location.hash.slice(1)||'inicio',false));
-  burger.addEventListener('click',()=>{const o=nav.classList.toggle('open');burger.setAttribute('aria-expanded',o);});
-  addEventListener('resize',()=>{movePill($('#links'),$('#links [aria-current="page"]'));movePill($('#chips'),$('#chips [aria-pressed="true"]'));});
 
-  /* ---------- contadores ---------- */
-  function countUp(){
-    if(reduce)return;
-    $$('#inicio [data-to]').forEach(el=>{
-      const to=+el.dataset.to,sm=el.querySelector('small').outerHTML,t0=performance.now()+400;
-      (function step(t){const k=Math.max(0,Math.min((t-t0)/1800,1));el.innerHTML=Math.round(to*(1-Math.pow(1-k,4)))+sm;if(k<1)requestAnimationFrame(step);})(performance.now());
+  /* ---------- 4. Menú móvil ---------- */
+  function closeMenu(returnFocus){ if(!nav.classList.contains('open')) return;
+    nav.classList.remove('open'); burger.setAttribute('aria-expanded','false'); burger.setAttribute('aria-label','Abrir menú'); document.body.classList.remove('lock');
+    if(returnFocus) burger.focus(); }
+  burger.addEventListener('click',()=>{
+    if(nav.classList.contains('open')) return closeMenu(true);
+    nav.classList.add('open'); burger.setAttribute('aria-expanded','true'); burger.setAttribute('aria-label','Cerrar menú'); document.body.classList.add('lock');
+    setTimeout(()=>{const f=$('#mmenu a');f&&f.focus();},50);
+  });
+  addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>20),{passive:true});
+  let rz; addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{navPill();chipPill();updateRail(); if(innerWidth>1000) closeMenu(false);},120);});
+
+  /* ---------- 5. Aparición al desplazarse ---------- */
+  const io=('IntersectionObserver' in window)?new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){const el=e.target;el.classList.add('seen');io.unobserve(el);setTimeout(()=>{el.removeAttribute('data-reveal');el.classList.remove('seen');},1400);} }),{rootMargin:'0px 0px -8% 0px',threshold:.08}):null;
+  // Respaldo: si el usuario salta rápido (tecla Fin, enlace), revela lo que ya pasó por pantalla.
+  let rv=0; addEventListener('scroll',()=>{ if(rv) return; rv=requestAnimationFrame(()=>{ rv=0;
+    $$('.page:not([hidden]) [data-reveal]:not(.seen)').forEach(el=>{ if(el.getBoundingClientRect().top<innerHeight*.92){ io&&io.unobserve(el); el.classList.add('seen'); setTimeout(()=>{el.removeAttribute('data-reveal');el.classList.remove('seen');},1400);} }); }); },{passive:true});
+  function watchReveal(pg){
+    $$('[data-reveal]',pg).forEach(el=>{
+      if(reduce||!io){el.removeAttribute('data-reveal');return;}
+      if(el.classList.contains('seen')) return;
+      io.observe(el);
     });
   }
 
-  /* ---------- por qué Bramar ---------- */
-  const big=[['0%','de opacidad en las cuentas'],['1','solo responsable para todo'],['24/7','atención de emergencias'],['+','valor para su propiedad']];
-  const items=$$('.why-item'),imgs=$$('#why-view img'),bigEl=$('#why-big');let wi=0,wt=null;
-  function setWhy(i){
-    wi=i;items.forEach((it,n)=>{it.classList.remove('on');void it.offsetWidth;if(n===i)it.classList.add('on');});
-    imgs.forEach((im,n)=>im.classList.toggle('on',n===i));
-    bigEl.innerHTML=`<b>${big[i][0]}</b><span>${big[i][1]}</span>`;
-    clearTimeout(wt);if(!reduce&&current==='inicio')wt=setTimeout(()=>setWhy((wi+1)%items.length),6000);
+  /* ---------- 6. Contadores ---------- */
+  function countUp(){
+    if(reduce) return;
+    $$('#inicio [data-to]').forEach(el=>{
+      const to=+el.dataset.to, sm=el.querySelector('small').outerHTML;
+      const run=()=>{const t0=performance.now();(function step(t){const k=Math.min((t-t0)/1600,1);el.innerHTML=Math.round(to*(1-Math.pow(1-k,4)))+sm;if(k<1)requestAnimationFrame(step);})(t0);};
+      if(!io) return run();
+      const o=new IntersectionObserver(es=>{ if(es[0].isIntersecting){o.disconnect();run();} },{threshold:.5}); o.observe(el);
+    });
   }
-  items.forEach(it=>it.addEventListener('click',()=>setWhy(+it.dataset.i)));
-  function startWhy(){setWhy(0);}function stopWhy(){clearTimeout(wt);}
 
-  /* ---------- servicios ---------- */
+  /* ---------- 7. Por qué Bramar (pestañas con rotación) ---------- */
+  const big=[['0%','de opacidad en las cuentas'],['1','solo responsable para todo'],['24/7','atención de emergencias'],['+valor','para su propiedad']];
+  const items=$$('.why-item'), imgs=$$('#why-view img'), bigEl=$('#why-big'), whyBox=$('#why');
+  let wi=0, wt=null, whyPaused=false;
+  function setWhy(i,user){
+    wi=i;
+    items.forEach((it,n)=>{const on=n===i;it.setAttribute('aria-selected',on);it.tabIndex=on?0:-1;});
+    const bar=items[i].querySelector('.bar'); bar.style.animation='none'; void bar.offsetWidth; bar.style.animation='';
+    imgs.forEach((im,n)=>im.classList.toggle('on',n===i));
+    $('#why-view').setAttribute('aria-labelledby','w'+i);
+    bigEl.innerHTML=`<b>${big[i][0]}</b><span>${big[i][1]}</span>`;
+    if(user){whyPaused=true;whyBox.classList.add('paused');}
+    clearTimeout(wt); if(!reduce&&!whyPaused&&current==='inicio') wt=setTimeout(()=>setWhy((wi+1)%items.length),6000);
+  }
+  items.forEach(it=>{
+    it.addEventListener('click',()=>setWhy(+it.dataset.i,true));
+    it.addEventListener('keydown',e=>{ const k={ArrowDown:1,ArrowRight:1,ArrowUp:-1,ArrowLeft:-1}[e.key]; if(!k) return; e.preventDefault(); const n=(wi+k+items.length)%items.length; setWhy(n,true); items[n].focus(); });
+  });
+  function startWhy(){whyPaused=false;whyBox.classList.remove('paused');setWhy(0);}
+  function stopWhy(){clearTimeout(wt);}
+
+  /* ---------- 8. Servicios con filtro ---------- */
   const S=[
     ['own','admin','Administración','Gestión estratégica y contable.'],
     ['own','clean','Limpieza','Higiene premium en áreas comunes.'],
@@ -686,61 +906,118 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.7);margin-top:clamp(4
     ['ally','garden','Jardinería','Paisajismo y mantenimiento.'],
     ['ally','maint','Mantenimiento','Acciones preventivas constantes.']
   ];
-  $('#svc').innerHTML=S.map(([k,i,t,d])=>`<article class="card tilt ${k}" data-k="${k}"><span class="who">${k==='own'?'Bramar':'Aliado'}</span><div class="ico"><svg><use href="#i-${i}"/></svg></div><h3>${t}</h3><p>${d}</p></article>`).join('');
+  $('#svc').innerHTML=S.map(([k,i,t,d],n)=>`<article class="card tilt ${k}" data-k="${k}" data-reveal style="--d:${(n%4)*.06}s"><span class="who">${k==='own'?'Bramar':'Aliado'}</span><div class="ico"><svg aria-hidden="true"><use href="#i-${i}"/></svg></div><h3>${t}</h3><p>${d}</p></article>`).join('');
   $('#chips').addEventListener('click',e=>{
-    const b=e.target.closest('button');if(!b)return;
-    $$('#chips button').forEach(x=>x.setAttribute('aria-pressed',x===b));movePill($('#chips'),b);
-    $$('#svc .card').forEach(c=>c.classList.toggle('dim',!(b.dataset.f==='all'||c.dataset.k===b.dataset.f)));
+    const b=e.target.closest('button'); if(!b) return;
+    $$('#chips button').forEach(x=>x.setAttribute('aria-pressed',x===b)); chipPill();
+    $$('#svc .card').forEach(c=>{ const show=b.dataset.f==='all'||c.dataset.k===b.dataset.f; c.hidden=!show; if(show){c.classList.remove('enter');void c.offsetWidth;c.classList.add('enter');} });
   });
 
-  /* ---------- tarjetas con inclinación ---------- */
-  if(!reduce&&matchMedia('(hover:hover)').matches){
-    document.addEventListener('pointermove',e=>{
-      const c=e.target.closest('.tilt');
-      $$('.tilt').forEach(t=>{if(t!==c)t.style.transform='';});
-      if(!c)return;const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
-      c.style.transform=`perspective(800px) rotateY(${x*6}deg) rotateX(${-y*6}deg) translateY(-6px)`;
-    });
+  /* ---------- 9. Inclinación suave en tarjetas (solo con mouse) ---------- */
+  if(!reduce&&matchMedia('(hover:hover) and (pointer:fine)').matches){
+    let last=null, raf=0;
+    document.addEventListener('pointermove',e=>{ if(raf) return; raf=requestAnimationFrame(()=>{ raf=0;
+      const c=e.target.closest&&e.target.closest('.tilt');
+      if(last&&last!==c) last.style.transform='';
+      last=c; if(!c) return;
+      const r=c.getBoundingClientRect(), x=(e.clientX-r.left)/r.width-.5, y=(e.clientY-r.top)/r.height-.5;
+      c.style.transform=`perspective(800px) rotateY(${x*5}deg) rotateX(${-y*5}deg) translateY(-6px)`; }); });
   }
 
-  /* ---------- carrusel de edificios (arrastrable) ---------- */
-  const rail=$('#rail'),bar=$('#r-bar');
-  function updateBar(){const max=rail.scrollWidth-rail.clientWidth;const vis=rail.clientWidth/rail.scrollWidth;bar.style.width=Math.max(vis,(max?rail.scrollLeft/max:1)*(1-vis)+vis)*100+'%';}
-  rail.addEventListener('scroll',updateBar,{passive:true});
-  const step=()=>rail.querySelector('.b-card').offsetWidth+20;
-  $('#r-next').onclick=()=>rail.scrollBy({left:step(),behavior:'smooth'});
-  $('#r-prev').onclick=()=>rail.scrollBy({left:-step(),behavior:'smooth'});
-  let down=false,sx=0,sl=0;
-  rail.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;down=true;sx=e.clientX;sl=rail.scrollLeft;rail.classList.add('drag');});
-  addEventListener('pointermove',e=>{if(down)rail.scrollLeft=sl-(e.clientX-sx);});
-  addEventListener('pointerup',()=>{if(down){down=false;rail.classList.remove('drag');}});
+  /* ---------- 10. Galería de edificios ---------- */
+  const rail=$('#rail'), bar=$('#r-bar'), rp=$('#r-prev'), rn=$('#r-next');
+  function updateRail(){ const max=rail.scrollWidth-rail.clientWidth, vis=rail.clientWidth/rail.scrollWidth||1;
+    bar.style.width=Math.min(100,(vis+(max?rail.scrollLeft/max:1)*(1-vis))*100)+'%';
+    rp.disabled=rail.scrollLeft<4; rn.disabled=rail.scrollLeft>max-4; }
+  rail.addEventListener('scroll',updateRail,{passive:true});
+  const stepW=()=>rail.querySelector('.b-card').offsetWidth+20;
+  rn.onclick=()=>rail.scrollBy({left:stepW(),behavior:reduce?'auto':'smooth'});
+  rp.onclick=()=>rail.scrollBy({left:-stepW(),behavior:reduce?'auto':'smooth'});
+  rail.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'){e.preventDefault();rn.click();} if(e.key==='ArrowLeft'){e.preventDefault();rp.click();} });
+  let down=false, sx=0, sl=0, moved=false;
+  rail.addEventListener('pointerdown',e=>{ if(e.pointerType!=='mouse') return; down=true;moved=false;sx=e.clientX;sl=rail.scrollLeft; });
+  addEventListener('pointermove',e=>{ if(!down) return; const dx=e.clientX-sx; if(Math.abs(dx)>4){moved=true;rail.classList.add('drag');} rail.scrollLeft=sl-dx; });
+  addEventListener('pointerup',()=>{ if(!down) return; down=false; rail.classList.remove('drag'); });
 
-  /* ---------- testimonios ---------- */
-  const slides=$$('.slide'),dots=$('#dots');let si=0,st=null,run=false;
-  slides.forEach((_,k)=>{const b=document.createElement('button');b.setAttribute('aria-label','Testimonio '+(k+1));b.onclick=()=>slide(k);dots.appendChild(b);});
-  function slide(k){si=(k+slides.length)%slides.length;slides.forEach((s,n)=>s.classList.toggle('on',n===si));[...dots.children].forEach((d,n)=>d.classList.toggle('on',n===si));clearTimeout(st);if(run&&!reduce)st=setTimeout(()=>slide(si+1),7000);}
-  function startSlides(){run=true;slide(0);}function stopSlides(){run=false;clearTimeout(st);}
+  /* ---------- 11. Testimonios (solo si existen) ---------- */
+  const T=SITE.testimonials.filter(t=>t&&t.quote);
+  let si=0, st=null, run=false;
+  const slides=$('#slides'), dots=$('#dots');
+  if(T.length){
+    $('#testi-sec').hidden=false;
+    slides.innerHTML=T.map((t,n)=>`<figure class="slide${n?'':' on'}"><blockquote>${esc(t.quote)}</blockquote><figcaption><span class="av" aria-hidden="true">${esc((t.name||'?')[0])}</span><div><b>${esc(t.name||'')}</b><span>${esc(t.role||'')}</span></div></figcaption></figure>`).join('');
+    if(T.length>1) T.forEach((_,k)=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-label','Testimonio '+(k+1));b.onclick=()=>{slide(k);run=false;clearTimeout(st);};dots.appendChild(b);});
+  }
+  function slide(k){ const S2=$$('.slide',slides); if(!S2.length) return;
+    si=(k+S2.length)%S2.length; S2.forEach((s,n)=>s.classList.toggle('on',n===si));
+    [...dots.children].forEach((d,n)=>d.setAttribute('aria-current',n===si));
+    clearTimeout(st); if(run&&!reduce&&S2.length>1) st=setTimeout(()=>slide(si+1),7000); }
+  function startSlides(){ run=true; slide(0); }
+  function stopSlides(){ run=false; clearTimeout(st); }
+  function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-  /* ---------- modal ---------- */
-  const modal=$('#modal');
-  $$('[data-access]').forEach(b=>b.addEventListener('click',()=>{nav.classList.remove('open');modal.classList.add('open');}));
-  $$('[data-close]').forEach(b=>b.addEventListener('click',()=>modal.classList.remove('open')));
-  modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
-  addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open');});
-
-  /* ---------- formulario (conectar a correo o CRM) ---------- */
-  $('#form').addEventListener('submit',e=>{
-    e.preventDefault();
-    const n=$('#f-name'),m=$('#f-mail'),out=$('#form-msg');
-    if(!n.value.trim()){out.textContent='Escriba su nombre.';n.focus();return;}
-    if(!/^\S+@\S+\.\S+$/.test(m.value)){out.textContent='Revise el correo.';m.focus();return;}
-    out.textContent='Gracias, '+n.value.trim().split(' ')[0]+'. Le contactaremos pronto.';
-    e.target.reset();
+  /* ---------- 12. Modal de acceso para copropietarios ---------- */
+  const modal=$('#modal'); let lastFocus=null;
+  function openModal(){ lastFocus=document.activeElement; closeMenu(false); modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); document.body.classList.add('lock'); setTimeout(()=>$('.btn',modal).focus(),60); }
+  function closeModal(){ if(!modal.classList.contains('open')) return; modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); document.body.classList.remove('lock'); lastFocus&&lastFocus.focus&&lastFocus.focus(); }
+  $$('[data-access]').forEach(b=>b.addEventListener('click',openModal));
+  $$('[data-close]',modal).forEach(b=>b.addEventListener('click',closeModal));
+  modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
+  addEventListener('keydown',e=>{
+    if(e.key==='Escape'){ closeModal(); closeMenu(true); }
+    if(e.key==='Tab'&&modal.classList.contains('open')){ const f=$$('a,button',modal), first=f[0], last=f[f.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();} else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();} }
   });
 
+  /* ---------- 13. Formulario de contacto ---------- */
+  const form=$('#form'), msg=$('#form-msg'), send=$('#f-send'), sendT=$('#f-send-t');
+  const rules={
+    'f-name':v=>v.trim().length>=2||'Escriba su nombre.',
+    'f-mail':v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim())||'Escriba un correo válido, por ejemplo nombre@correo.com.',
+    'f-phone':v=>!v.trim()||/^[\d\s+()-]{7,}$/.test(v.trim())||'Revise el número: use solo dígitos.',
+    'f-msg':v=>v.trim().length>=10||'Cuéntenos un poco más (mínimo 10 caracteres).'
+  };
+  function check(id){ const el=$('#'+id), r=rules[id](el.value), f=el.closest('.field'), e=f.querySelector('.err');
+    const ok=r===true; f.classList.toggle('invalid',!ok); el.setAttribute('aria-invalid',!ok); if(e) e.textContent=ok?'':r; return ok; }
+  Object.keys(rules).forEach(id=>{ const el=$('#'+id);
+    el.addEventListener('blur',()=>{ if(el.value) check(id); });
+    el.addEventListener('input',()=>{ if(el.closest('.field').classList.contains('invalid')) check(id); }); });
+  function notify(type,text){ msg.className='form-msg show '+type; msg.innerHTML=`<svg aria-hidden="true"><use href="#i-${type==='ok'?'check':'alert'}"/></svg><span>${text}</span>`; }
+  function setLoading(on){ send.disabled=on; send.classList.toggle('loading',on); sendT.textContent=on?'Enviando…':'Enviar mensaje'; }
+  form.addEventListener('submit',async e=>{
+    e.preventDefault(); msg.className='form-msg';
+    if($('#f-web').value) return; // trampa anti-spam
+    const bad=Object.keys(rules).filter(id=>!check(id));
+    if(bad.length){ $('#'+bad[0]).focus(); notify('bad','Revise los campos marcados.'); return; }
+    const d=Object.fromEntries(new FormData(form)); delete d.web;
+    const text=`Hola Bramar, soy ${d.nombre} (${d.perfil}).\nEdificio: ${d.edificio||'—'}\nTeléfono: ${d.telefono||'—'}\nCorreo: ${d.correo}\n\n${d.mensaje}`;
+    if(SITE.formEndpoint){
+      setLoading(true);
+      try{
+        const r=await fetch(SITE.formEndpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(d)});
+        if(!r.ok) throw new Error(r.status);
+        notify('ok',`Gracias, ${esc(d.nombre.split(' ')[0])}. Recibimos su mensaje y le responderemos pronto.`); form.reset();
+      }catch(err){ notify('bad','No pudimos enviar el mensaje. Intente de nuevo o escríbanos a '+esc(SITE.email)+'.'); }
+      finally{ setLoading(false); }
+    } else if(SITE.whatsapp){
+      window.open(waURL(text),'_blank','noopener');
+      notify('ok','Abrimos WhatsApp con su mensaje listo. Solo presione enviar.');
+    } else {
+      location.href='mailto:'+SITE.email+'?subject='+encodeURIComponent('Solicitud de propuesta · '+(d.edificio||d.nombre))+'&body='+encodeURIComponent(text);
+      notify('ok','Abrimos su aplicación de correo con el mensaje listo. Si no se abrió, escríbanos a '+esc(SITE.email)+'.');
+    }
+  });
+
+  /* ---------- Precarga discreta de las fotos de otras páginas ---------- */
+  addEventListener('load',()=>{ const idle=window.requestIdleCallback||(f=>setTimeout(f,1500));
+    idle(()=>$$('img[loading="lazy"]').forEach(i=>{ i.loading='eager'; })); });
+
+  /* ---------- Inicio ---------- */
   $('#yr').textContent=new Date().getFullYear();
-  show(ids.includes(location.hash.slice(1))?location.hash.slice(1):'inicio');
-  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>movePill($('#links'),$('#links [aria-current="page"]')));
+  const first=ids.includes(location.hash.slice(1))?location.hash.slice(1):'inicio';
+  try{history.replaceState({id:first},'','#'+first);}catch(e){}
+  show(first,false);
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{navPill();chipPill();});
 })();
 </script>
 </body>
