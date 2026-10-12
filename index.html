@@ -120,16 +120,11 @@ section.tight{padding-top:0}
   .mobile-menu .cta-access{margin-top:32px;align-self:flex-start;min-height:56px;background:var(--brass)}
 }
 
-/* transición entre páginas */
-.wipe{position:fixed;inset:0;z-index:90;background:var(--navy);transform:translateX(100%);pointer-events:none;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.wipe span{font-size:clamp(44px,9vw,128px);font-weight:300;color:#fff;letter-spacing:-.03em;opacity:0;transform:translateY(24px);transition:opacity .25s,transform .4s var(--soft)}
-.wipe span b{color:var(--brass-soft);font-weight:300}
-.wipe.in{animation:wIn .45s var(--ease) forwards}
-.wipe.in span{opacity:1;transform:none;transition-delay:.15s}
-.wipe.out{transform:none;animation:wOut .55s var(--ease) forwards}
-.wipe.out span{opacity:0;transform:translateY(-24px)}
-@keyframes wIn{from{transform:translateX(100%)}to{transform:none}}
-@keyframes wOut{from{transform:none}to{transform:translateX(-100%)}}
+/* transición entre páginas: fundido suave con leve desenfoque */
+main{transition:opacity .42s var(--soft),transform .42s var(--soft),filter .42s var(--soft)}
+main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
+.page.ready{animation:pageIn .75s var(--soft) both}
+@keyframes pageIn{from{opacity:0;transform:translateY(14px);filter:blur(4px)}to{opacity:1;transform:none;filter:none}}
 
 /* 4 · COMPONENTES ----------------------------------------------- */
 .btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:56px;padding:0 28px;border:0;border-radius:999px;font-size:15px;font-weight:500;cursor:pointer;overflow:hidden;isolation:isolate;transition:color .35s var(--soft),transform .2s var(--soft),opacity .3s}
@@ -157,7 +152,7 @@ section.tight{padding-top:0}
 /* entrada al mostrar una página */
 .page.ready .rise{animation:rise .9s var(--soft) both}
 .page.ready .d1{animation-delay:.08s}.page.ready .d2{animation-delay:.16s}.page.ready .d3{animation-delay:.24s}
-@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .page.ready .reveal-img{animation:clip 1.2s var(--ease) both .1s}
 @keyframes clip{from{clip-path:inset(100% 0 0 0 round var(--radius-l))}to{clip-path:inset(0 0 0 0 round var(--radius-l))}}
 
@@ -390,14 +385,6 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
 .foot li a:hover{opacity:1}
 .foot-bottom{border-top:1px solid rgba(255,255,255,.12);padding-block:22px calc(22px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px}
 
-/* modal */
-.modal{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:20px;background:rgba(6,33,69,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
-.modal.open{opacity:1;visibility:visible}
-.modal-card{width:min(100%,500px);background:#fff;border-radius:var(--radius-l);padding:clamp(28px,5vw,52px);transform:translateY(20px) scale(.98);transition:transform .45s var(--soft)}
-.modal.open .modal-card{transform:none}
-.modal h2{font-size:32px;color:var(--navy);margin-top:16px}
-.modal p{color:var(--muted);margin-top:14px}
-.modal .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:30px}
 
 /* 6 · APARICIÓN AL DESPLAZARSE ----------------------------------- */
 /* Solo se oculta si JavaScript está activo (clase .js) y el elemento aún no se ha visto. */
@@ -498,7 +485,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
       <li><a href="#edificios" data-go="edificios">Edificios</a></li>
       <li><a href="#contacto" data-go="contacto">Contacto</a></li>
     </ul>
-    <button class="cta-access" type="button" data-access><svg aria-hidden="true"><use href="#i-key"/></svg>Copropietarios</button>
+    <a class="cta-access" href="copropietarios.html"><svg aria-hidden="true"><use href="#i-key"/></svg>Copropietarios</a>
     <button class="burger" id="burger" type="button" aria-label="Abrir menú" aria-expanded="false" aria-controls="mmenu"><i></i><i></i><i></i></button>
   </nav>
   <div class="mobile-menu" id="mmenu" aria-label="Menú">
@@ -507,11 +494,10 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
     <a class="m" href="#servicios" data-go="servicios"><small>03</small>Servicios</a>
     <a class="m" href="#edificios" data-go="edificios"><small>04</small>Edificios</a>
     <a class="m" href="#contacto" data-go="contacto"><small>05</small>Contacto</a>
-    <button class="cta-access" type="button" data-access><svg aria-hidden="true"><use href="#i-key"/></svg>Acceso copropietarios</button>
+    <a class="cta-access" href="copropietarios.html"><svg aria-hidden="true"><use href="#i-key"/></svg>Acceso copropietarios</a>
   </div>
 </header>
 
-<div class="wipe" id="wipe" aria-hidden="true"><span id="wipe-t"></span></div>
 <p class="sr-only" id="announce" aria-live="polite"></p>
 
 <main id="main" tabindex="-1">
@@ -528,7 +514,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
         </div>
         <div class="hero-actions rise d3">
           <a class="btn gold" href="#contacto" data-go="contacto">Cotizar administración <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
-          <button class="btn outline" type="button" data-access>Acceso copropietarios</button>
+          <a class="btn outline" href="copropietarios.html">Acceso copropietarios</a>
         </div>
       </div>
       <div class="hero-photo reveal-img">
@@ -700,7 +686,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
       <div class="c-info on-dark rise">
         <span class="tag">Contacto</span>
         <h1 tabindex="-1">Conversemos sobre su edificio.</h1>
-        <a class="c-row" data-link="tel"><i><svg aria-hidden="true"><use href="#i-phone"/></svg></i><div><small>Teléfono</small><span data-bind="phone"></span></div></a>
+        <a class="c-row" data-link="tel"><i><svg aria-hidden="true"><use href="#i-phone"/></svg></i><div><small>Teléfono / WhatsApp</small><span data-bind="phone"></span></div></a>
         <a class="c-row" data-link="mail"><i><svg aria-hidden="true"><use href="#i-mail"/></svg></i><div><small>Correo</small><span data-bind="email"></span></div></a>
         <div class="c-row"><i><svg aria-hidden="true"><use href="#i-pin"/></svg></i><div><small>Oficina</small><span data-bind="address"></span></div></div>
         <div class="c-row"><i><svg aria-hidden="true"><use href="#i-clock"/></svg></i><div><small>Emergencias</small><span>24 horas, 7 días</span></div></div>
@@ -737,15 +723,6 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
 
 <a class="wa-float" id="wa-float" hidden target="_blank" rel="noopener" aria-label="Escribir por WhatsApp"><svg aria-hidden="true"><use href="#i-whatsapp"/></svg></a>
 
-<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-title" aria-hidden="true">
-  <div class="modal-card">
-    <span class="tag">Copropietarios</span>
-    <h2 id="m-title">Portal en preparación</h2>
-    <p>Muy pronto podrá consultar sus expensas, recibos y reportes en línea. Mientras tanto, escríbanos y le enviamos su información.</p>
-    <div class="row"><a class="btn navy" href="#contacto" data-go="contacto" data-close>Escribirnos</a><button class="btn light" type="button" data-close>Cerrar</button></div>
-  </div>
-</div>
-
 <script>
 /* ================================================================
    CONFIGURACIÓN DEL SITIO — edite solo este bloque
@@ -761,11 +738,11 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
      Si la lista está vacía, la sección no aparece.
    ================================================================ */
 const SITE = {
-  phone:   "+591 7000 0000",          // PENDIENTE: teléfono real
-  email:   "contacto@bramargroup.com",// PENDIENTE: confirmar correo
+  phone:   "+591 78155275",
+  email:   "bramargroupsrl@gmail.com",
   address: "Santa Cruz de la Sierra, Bolivia",
-  whatsapp: "",                       // PENDIENTE: ej. "59170000000"
-  social: { instagram:"", facebook:"", linkedin:"" },
+  whatsapp: "59178155275",
+  social: { instagram:"", facebook:"", linkedin:"" }, // PENDIENTE: pegar la URL de la página de Facebook
   formEndpoint: "",                   // PENDIENTE: ej. "https://formspree.io/f/xxxxxx"
   testimonials: [
     // { quote:"Texto del testimonio", name:"Nombre Apellido", role:"Presidente de directiva · Edificio X" }
@@ -777,7 +754,7 @@ const SITE = {
   const $=(s,c=document)=>c.querySelector(s), $$=(s,c=document)=>[...c.querySelectorAll(s)];
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const pages=$$('[data-page]'), ids=pages.map(p=>p.id);
-  const nav=$('#nav'), burger=$('#burger'), wipe=$('#wipe'), wipeT=$('#wipe-t');
+  const nav=$('#nav'), burger=$('#burger'), mainEl=$('#main');
   let current=null, busy=false;
 
   /* ---------- 1. Datos de contacto desde la configuración ---------- */
@@ -826,10 +803,8 @@ const SITE = {
     if(push){ try{history.pushState({id},'','#'+id);}catch(e){} }
     if(reduce||!current){ show(id,!!current); return; }
     busy=true;
-    wipeT.innerHTML=document.getElementById(id).dataset.title+'<b>.</b>';
-    wipe.className='wipe in';
-    setTimeout(()=>{ show(id,true); wipe.className='wipe out';
-      setTimeout(()=>{wipe.className='wipe';busy=false;},560); },470);
+    mainEl.classList.add('leaving');
+    setTimeout(()=>{ show(id,true); mainEl.classList.remove('leaving'); busy=false; },430);
   }
   document.addEventListener('click',e=>{
     const a=e.target.closest('[data-go]'); if(!a) return;
@@ -956,18 +931,7 @@ const SITE = {
   function stopSlides(){ run=false; clearTimeout(st); }
   function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 
-  /* ---------- 12. Modal de acceso para copropietarios ---------- */
-  const modal=$('#modal'); let lastFocus=null;
-  function openModal(){ lastFocus=document.activeElement; closeMenu(false); modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); document.body.classList.add('lock'); setTimeout(()=>$('.btn',modal).focus(),60); }
-  function closeModal(){ if(!modal.classList.contains('open')) return; modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); document.body.classList.remove('lock'); lastFocus&&lastFocus.focus&&lastFocus.focus(); }
-  $$('[data-access]').forEach(b=>b.addEventListener('click',openModal));
-  $$('[data-close]',modal).forEach(b=>b.addEventListener('click',closeModal));
-  modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
-  addEventListener('keydown',e=>{
-    if(e.key==='Escape'){ closeModal(); closeMenu(true); }
-    if(e.key==='Tab'&&modal.classList.contains('open')){ const f=$$('a,button',modal), first=f[0], last=f[f.length-1];
-      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();} else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();} }
-  });
+  addEventListener('keydown',e=>{ if(e.key==='Escape') closeMenu(true); });
 
   /* ---------- 13. Formulario de contacto ---------- */
   const form=$('#form'), msg=$('#form-msg'), send=$('#f-send'), sendT=$('#f-send-t');

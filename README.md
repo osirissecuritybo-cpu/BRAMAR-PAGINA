@@ -1,65 +1,94 @@
-# Bramar Group · Sitio web
+# Bramar Group · Sitio web y portal de copropietarios
 
-Sitio de una sola página (HTML, CSS y JavaScript puro, sin dependencias) para Bramar Group, administración integral de edificios y condominios en Santa Cruz, Bolivia.
+Sitio de Bramar Group, administración integral de edificios y condominios en Santa Cruz, Bolivia. HTML, CSS y JavaScript puro, sin servidor propio: se publica con GitHub Pages.
 
-Publicado con GitHub Pages: https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/
+- Sitio: https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/
+- Portal: https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/copropietarios.html
 
 ## Estructura
 
 ```
-index.html                  Todo el sitio (estilos, contenido y scripts)
-img/
-  torre-zafiro.jpg          Foto principal (portada de Inicio)
-  torre-zafiro-mini.jpg     Miniatura para la tarjeta flotante
-  oficina.jpg               Oficinas (portada de Nosotros)
-  edificio-*.jpg            Edificios gestionados
-  isotipo-azul.png          Logo del menú
-  isotipo-blanco.png
-  logo-blanco.png           Logo del pie de página
-  favicon.png               Ícono de la pestaña
-  apple-touch-icon.png      Ícono al guardar en el celular
+index.html                    Sitio público (5 páginas: inicio, nosotros, servicios, edificios, contacto)
+copropietarios.html           Portal de copropietarios (perfil, estado de cuenta, pago, comprobantes)
+generador.html                Herramienta interna: convierte el Excel en los datos del portal
+js/portal-crypto.js           Cifrado de los datos del portal (lo usan el portal y el generador)
+data/edificios.json           Lista de edificios que aparece en el portal (solo id y nombre)
+data/u/*.json                 Un archivo cifrado por departamento
+herramientas/
+  plantilla-copropietarios.xlsx   Plantilla de Excel para cargar los datos
+  apps-script-comprobantes.gs     Script de Google para recibir comprobantes en Drive
+vendor/                       Librerías del generador (lectura de Excel y ZIP)
+img/                          Fotos, logos e íconos
+img/qr/                       Imágenes de QR de pago (una por edificio)
 ```
 
-El sitio tiene 5 páginas independientes dentro de `index.html`: `#inicio`, `#nosotros`, `#servicios`, `#edificios` y `#contacto`. Cada enlace del menú cambia de página con una transición, actualiza la dirección y el título de la pestaña, y funciona con el botón "atrás" del navegador.
+## Sitio público
 
-## Cómo editar los datos de contacto
+Cada opción del menú es una página independiente: al cambiar, la página actual se desvanece con un leve desenfoque y la nueva aparece suavemente. La dirección y el título de la pestaña cambian, y funciona el botón "atrás".
 
-Abra `index.html` y busque el bloque `const SITE = { ... }` (al inicio del script, cerca del final del archivo):
+Los datos de contacto se editan en `index.html`, en el bloque `const SITE = { ... }`:
 
 | Campo | Qué hace |
 |---|---|
-| `phone` | Teléfono que se muestra en Contacto y en el pie (enlace para llamar). |
+| `phone` | Teléfono de Contacto y del pie (enlace para llamar). |
 | `email` | Correo que se muestra y al que llegan los mensajes si no hay `formEndpoint`. |
-| `address` | Dirección de la oficina. |
-| `whatsapp` | Número con código de país, sin `+` ni espacios (ej. `59170000000`). Activa el botón flotante de WhatsApp y el ícono en Contacto. Vacío = no se muestran. |
+| `whatsapp` | Número con código de país, sin `+` ni espacios. Activa el botón flotante de WhatsApp. |
 | `social` | URL de Instagram, Facebook y LinkedIn. Las vacías no se muestran. |
-| `formEndpoint` | URL de un servicio de formularios (ver abajo). |
-| `testimonials` | Lista de testimonios reales. Vacía = la sección no aparece. |
+| `formEndpoint` | URL de un servicio de formularios (Formspree, Getform, Basin). Si está vacío, el formulario abre WhatsApp con el mensaje escrito. |
+| `testimonials` | Testimonios reales. Si la lista está vacía, la sección no aparece. |
 
-## Formulario de contacto
+## Portal de copropietarios
 
-El formulario valida los campos y envía el mensaje de una de estas tres formas, según lo configurado:
+### Qué ve cada propietario
+Entra eligiendo su edificio, escribiendo su departamento y su **código de acceso** personal (10 caracteres, ej. `K7MF2-Q9XPR`). Ve:
 
-1. **`formEndpoint` con valor**: envía los datos por internet a ese servicio y muestra "Enviando…", luego éxito o error. Recomendado. Opciones gratuitas: [Formspree](https://formspree.io), [Getform](https://getform.io) o [Basin](https://usebasin.com). Cree un formulario allí, copie su URL y péguela en `formEndpoint`.
-2. **Sin `formEndpoint` pero con `whatsapp`**: abre WhatsApp con el mensaje ya escrito.
-3. **Sin ninguno de los dos**: abre la aplicación de correo del visitante con el mensaje listo para enviar a `email`.
+- Estado: al día, con deuda o saldo a favor.
+- Deuda total, expensa mensual, vencimiento y fecha de actualización.
+- Datos para el pago: banco, titular, número de cuenta (con botón copiar), NIT y QR para descargar.
+- Estado de cuenta con cargos, abonos y saldo.
+- Envío de comprobante: foto o PDF, monto, fecha y nota.
 
-Incluye un campo oculto anti-spam.
+### Cómo se protegen los datos
+GitHub Pages es público, por eso cada departamento tiene un archivo **cifrado** (AES-256). El nombre del archivo y la clave se calculan con el edificio, el departamento y el código del propietario: sin el código no se puede encontrar ni leer. El código no se guarda en ningún lado del sitio.
+
+### Actualización mensual (paso a paso)
+1. Complete la plantilla `herramientas/plantilla-copropietarios.xlsx` (hojas Edificios, Unidades y Movimientos). La primera vez deje vacía la columna `codigo_acceso`.
+2. Abra `generador.html` (en el sitio publicado o en su computadora), cargue el Excel, revise el resumen y presione **Generar archivos**. Se descarga `bramar-portal.zip`.
+3. Del ZIP:
+   - `subir-a-github/data/` → reemplace la carpeta `data` del repositorio por esta (borre la anterior y suba la nueva).
+   - `NO-SUBIR-codigos-de-acceso.xlsx` → **guárdelo en privado**. Tiene el código de cada propietario y un mensaje listo para enviarle por WhatsApp. El mes siguiente use **este** Excel como base, para que cada propietario conserve su código.
+4. Suba los QR a `img/qr/` con el nombre indicado en la columna `qr_archivo`.
+
+Con 20 edificios de 100–110 departamentos (unos 2.200 perfiles) la generación tarda alrededor de un minuto y los datos pesan unos 9 MB.
+
+**Importante para subir a GitHub:** la carga desde la página web de GitHub acepta como máximo 100 archivos por vez. Para subir la carpeta `data` completa use **GitHub Desktop** (gratis): arrastre la carpeta al repositorio, escriba un mensaje y presione "Commit" y "Push".
+
+### Recepción de comprobantes
+- **Recomendado:** instale el script `herramientas/apps-script-comprobantes.gs` en la cuenta de Google de Bramar (las instrucciones están al inicio del archivo) y pegue su URL en `copropietarios.html`, en `PORTAL.uploadEndpoint`. Cada comprobante se guarda en Google Drive, en una carpeta por edificio, y se anota en la hoja "Registro de comprobantes" con el estado "Pendiente de verificar".
+- **Mientras no esté instalado:** en el celular, el portal ofrece compartir el archivo directamente a WhatsApp. En computadora, abre WhatsApp con los datos del pago y el propietario adjunta el archivo.
+
+### Prueba con el edificio de ejemplo
+El repositorio incluye "Edificio Demo (ejemplo)" con estos accesos:
+
+| Depto | Código | Situación |
+|---|---|---|
+| 1A | `5YYAG-ESRCE` | Al día |
+| 2B | `XD2F4-A4VS3` | Con deuda de Bs 1.040 |
+| 3C | `X3EUF-2XV6G` | Con deuda de Bs 530 |
+
+Al generar los datos reales, el edificio de ejemplo desaparece (salvo que deje sus filas en el Excel).
 
 ## Pendientes
 
-- [ ] Teléfono real (`phone`). El actual `+591 7000 0000` es provisional.
-- [ ] Confirmar el correo (`email`).
-- [ ] Número de WhatsApp (`whatsapp`).
-- [ ] Enlaces de redes sociales (`social`).
-- [ ] Servicio de formularios (`formEndpoint`) para recibir mensajes sin depender del correo del visitante.
-- [ ] Testimonios reales con permiso de sus autores (`testimonials`).
-- [ ] Nombres de los edificios de la galería (hoy dicen "Edificio gestionado").
-- [ ] Portal de copropietarios: el botón "Copropietarios" muestra un aviso de "Portal en preparación" hasta que exista el portal.
-- [ ] El archivo `Bramar Group2.html` es una versión anterior y ya no se usa; puede borrarse del repositorio.
+- [ ] URL de la página de Facebook (`SITE.social.facebook` en `index.html`).
+- [ ] Instalar el script de comprobantes y pegar su URL en `PORTAL.uploadEndpoint`.
+- [ ] Cargar el Excel real de cada edificio, generar los datos y subir los QR.
+- [ ] Servicio de formularios (`SITE.formEndpoint`) para el formulario de contacto (opcional).
+- [ ] Testimonios reales y nombres de los edificios de la galería.
+- [ ] Borrar `Bramar Group2.html` (versión anterior que ya no se usa).
 
 ## Accesibilidad y rendimiento
 
-- Respeta la preferencia del sistema "reducir movimiento" (desactiva animaciones).
-- Navegación completa con teclado: enlace "Saltar al contenido", foco visible, menú y ventana modal cerrables con Esc, pestañas y galería manejables con flechas.
-- Las imágenes declaran su tamaño (evita saltos de diseño) y las que no se ven al inicio se cargan después.
+- Respeta la opción del sistema "reducir movimiento".
+- Navegación completa con teclado y foco visible; menú cerrable con Esc.
+- Imágenes con tamaño declarado y carga diferida.

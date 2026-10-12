@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generador del portal · Bramar (uso interno)</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<style>
+/* Herramienta interna de Bramar: convierte el Excel en los archivos del portal.
+   Todo ocurre en este navegador: el Excel no se sube a ningún lado. */
+:root{--navy:#0A335D;--navy-deep:#062145;--sand:#F4F1EB;--paper:#fff;--ink:#0E1C2C;--muted:#56636F;--line:#E2DDD3;--brass:#B08A4E;--sky:#DCE7F3;--ok:#1F8A5B;--ok-bg:#EAF6F0;--err:#C0392B;--err-bg:#FDECEA;--warn:#8A5A00;--warn-bg:#FFF4DC;
+  --font:"Roboto",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sand);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6}
+[hidden]{display:none!important}
+h1,h2,h3{margin:0;font-weight:400;line-height:1.2}
+.wrap{max-width:980px;margin:0 auto;padding:32px 20px 64px}
+header{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+header img{height:30px}
+header b{color:var(--navy);letter-spacing:.2em;font-weight:500}
+header span{color:var(--muted);font-size:14px;border-left:1px solid var(--line);padding-left:14px}
+.card{background:var(--paper);border-radius:20px;padding:28px;margin-bottom:16px}
+.card h2{color:var(--navy);font-size:22px;display:flex;align-items:center;gap:12px}
+.card h2 i{font-style:normal;width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-size:14px;flex:none}
+.card p{color:var(--muted);margin-top:8px}
+.note{background:var(--warn-bg);color:var(--warn);border-radius:14px;padding:14px 16px;font-size:15px;margin-top:14px}
+.drop{margin-top:18px;border:1.5px dashed #BFC9D4;border-radius:16px;padding:32px;text-align:center;cursor:pointer;display:block;background:#FBFAF7;transition:background .2s,border-color .2s}
+.drop:hover,.drop.over{background:var(--sky);border-color:var(--navy)}
+.drop b{color:var(--navy);display:block;font-weight:500}
+.drop small{color:var(--muted)}
+.btn{display:inline-flex;align-items:center;gap:10px;min-height:50px;padding:0 24px;border:0;border-radius:999px;font:inherit;font-weight:500;cursor:pointer;text-decoration:none}
+.btn.navy{background:var(--navy);color:#fff}.btn.navy:hover{background:var(--navy-deep)}
+.btn.light{background:var(--sand);color:var(--navy)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:18px}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:14px;color:var(--muted)}
+label.f input{font:inherit;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:#fff}
+table{width:100%;border-collapse:collapse;margin-top:16px;font-size:15px;font-variant-numeric:tabular-nums}
+th{text-align:left;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500;border-bottom:1px solid var(--line);padding:8px}
+td{border-bottom:1px solid var(--line);padding:10px 8px}
+td.n{text-align:right}
+.list{margin:14px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow:auto}
+.list li{padding:8px 12px;border-radius:10px;font-size:14px}
+.list .e{background:var(--err-bg);color:#8E2A20}
+.list .w{background:var(--warn-bg);color:var(--warn)}
+.ok{background:var(--ok-bg);color:#155E3E;border-radius:14px;padding:14px 16px;margin-top:14px}
+.prog{height:8px;background:var(--line);border-radius:8px;overflow:hidden;margin-top:16px}
+.prog i{display:block;height:100%;width:0;background:var(--navy);transition:width .2s}
+code{background:var(--sand);padding:2px 6px;border-radius:6px;font-size:.92em}
+ol.steps{margin:10px 0 0;padding-left:20px;color:var(--ink)}
+ol.steps li{margin:6px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="img/isotipo-azul.png" alt=""><b>BRAMAR</b><span>Generador del portal de copropietarios · uso interno</span></header>
+
+  <section class="card">
+    <h2><i>1</i>Cargue el Excel de copropietarios</h2>
+    <p>Use la plantilla <a href="herramientas/plantilla-copropietarios.xlsx" download>plantilla-copropietarios.xlsx</a> (hojas <code>Edificios</code>, <code>Unidades</code> y <code>Movimientos</code>). El archivo se procesa solo en este navegador; no se envía a ningún servidor.</p>
+    <label class="drop" id="drop" for="xl"><b>Toque para elegir el Excel o arrástrelo aquí</b><small>.xlsx</small></label>
+    <input type="file" id="xl" accept=".xlsx,.xls" hidden>
+    <div id="parse-out"></div>
+  </section>
+
+  <section class="card" id="step2" hidden>
+    <h2><i>2</i>Revise el resumen</h2>
+    <div id="summary"></div>
+    <ul class="list" id="issues"></ul>
+  </section>
+
+  <section class="card" id="step3" hidden>
+    <h2><i>3</i>Genere los archivos</h2>
+    <div class="row">
+      <label class="f">Datos actualizados al<input type="date" id="upd"></label>
+      <label class="f">Dirección del portal (para los mensajes)<input id="url" value="https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/copropietarios.html" size="46"></label>
+    </div>
+    <div class="row"><button class="btn navy" id="gen" type="button">Generar archivos</button><span id="gen-st" style="color:var(--muted)"></span></div>
+    <div class="prog" id="prog" hidden><i></i></div>
+    <div id="done" hidden>
+      <div class="ok">Listo. Se descargó <b>bramar-portal.zip</b>. Contiene:</div>
+      <ol class="steps">
+        <li><b>subir-a-github/data/</b>: reemplace la carpeta <code>data</code> del repositorio por esta. Contiene solo datos cifrados.</li>
+        <li><b>NO-SUBIR-codigos-de-acceso.xlsx</b>: su Excel con los códigos completados y un mensaje listo para enviar a cada propietario. <b>Guárdelo en privado y úselo como base el próximo mes</b>, así cada propietario conserva su código.</li>
+      </ol>
+      <div class="note">Si agrega fotos de QR, súbalas a <code>img/qr/</code> con el mismo nombre que puso en la columna <code>qr_archivo</code>.</div>
+    </div>
+  </section>
+</div>
+
+<script src="vendor/xlsx-0.18.5.full.min.js"></script>
+<script src="vendor/jszip-3.10.1.min.js"></script>
+<script src="js/portal-crypto.js"></script>
+<script>
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s), C=window.BramarCrypto;
+  let wb=null, model=null;
+  $('#upd').value=new Date().toISOString().slice(0,10);
+
+  const key=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').trim().toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+  const pick=(row,...names)=>{ for(const n of names){ if(row[n]!==undefined&&row[n]!=='') return row[n]; } return ''; };
+  const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  function num(v){ if(v===''||v==null) return null; if(typeof v==='number') return v;
+    let s=String(v).replace(/[^\d,.\-]/g,''); if(s.includes(',')&&s.includes('.')) s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,''); else s=s.replace(',','.');
+    const n=Number(s); return isNaN(n)?NaN:n; }
+  function date(v){ if(v===''||v==null) return '';
+    if(v instanceof Date&&!isNaN(v)) return `${v.getFullYear()}-${String(v.getMonth()+1).padStart(2,'0')}-${String(v.getDate()).padStart(2,'0')}`;
+    const s=String(v).trim(); let m=s.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/); if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+    m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); return m?m[0]:s; }
+  function sheet(name){ const n=wb.SheetNames.find(s=>key(s)===key(name)); if(!n) return null;
+    return XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:'',raw:true}).map(r=>{const o={};for(const k in r)o[key(k)]=typeof r[k]==='string'?r[k].trim():r[k];o.__row=r.__rowNum__;return o;}); }
+
+  /* ---------- 1. Leer Excel ---------- */
+  const drop=$('#drop'), inp=$('#xl');
+  inp.addEventListener('change',()=>inp.files[0]&&load(inp.files[0]));
+  ['dragenter','dragover'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.add('over');}));
+  ['dragleave','drop'].forEach(e=>drop.addEventListener(e,ev=>{ev.preventDefault();drop.classList.remove('over');}));
+  drop.addEventListener('drop',ev=>ev.dataTransfer.files[0]&&load(ev.dataTransfer.files[0]));
+
+  async function load(f){
+    $('#parse-out').innerHTML=''; $('#done').hidden=true;
+    try{ wb=XLSX.read(await f.arrayBuffer(),{cellDates:true}); }
+    catch(e){ $('#parse-out').innerHTML='<div class="note">No se pudo leer el archivo. Verifique que sea un Excel (.xlsx).</div>'; return; }
+    build(f.name);
+  }
+
+  /* ---------- 2. Validar y armar el modelo ---------- */
+  function build(fname){
+    const errors=[], warns=[];
+    const E=sheet('Edificios'), U=sheet('Unidades'), M=sheet('Movimientos')||[];
+    if(!E) errors.push('Falta la hoja "Edificios".'); if(!U) errors.push('Falta la hoja "Unidades".');
+    const bld=new Map(), units=new Map();
+    (E||[]).forEach(r=>{ const id=C.normId(pick(r,'id','edificio_id')); if(!id&&!r.nombre) return;
+      if(!id) return errors.push(`Edificios, fila ${r.__row+1}: falta el id.`);
+      if(!/^[a-z0-9-]+$/.test(id)) return errors.push(`Edificios, fila ${r.__row+1}: el id "${id}" solo puede tener letras minúsculas, números y guiones.`);
+      if(bld.has(id)) return errors.push(`Edificios: el id "${id}" está repetido.`);
+      const qr=String(pick(r,'qr_archivo','qr'));
+      bld.set(id,{id,nombre:String(pick(r,'nombre')||id),direccion:String(pick(r,'direccion')),banco:String(pick(r,'banco')),titular:String(pick(r,'titular','titular_cuenta')),
+        cuenta:String(pick(r,'numero_cuenta','cuenta','n_de_cuenta')),tipo_cuenta:String(pick(r,'tipo_cuenta')),moneda:String(pick(r,'moneda')||'Bs'),nit:String(pick(r,'nit','nit_ci')),
+        qr:qr?(/^https?:/.test(qr)?qr:'img/qr/'+qr):''});
+      if(!pick(r,'numero_cuenta','cuenta')) warns.push(`Edificio "${id}": no tiene número de cuenta.`);
+      if(!qr) warns.push(`Edificio "${id}": no tiene QR (columna qr_archivo).`);
+    });
+    (U||[]).forEach(r=>{ const b=C.normId(pick(r,'edificio_id','edificio')), d=C.normDepto(pick(r,'depto','departamento'));
+      if(!b&&!d) return;
+      const where=`Unidades, fila ${r.__row+1}`;
+      if(!bld.has(b)) return errors.push(`${where}: el edificio "${b}" no existe en la hoja Edificios.`);
+      if(!d) return errors.push(`${where}: falta el departamento.`);
+      const k=b+'|'+d; if(units.has(k)) return errors.push(`${where}: el departamento ${d} de "${b}" está repetido.`);
+      let code=C.normCode(pick(r,'codigo_acceso','codigo'));
+      if(code&&code.length!==10){ warns.push(`${where}: el código de ${d} no tiene 10 caracteres; se generará uno nuevo.`); code=''; }
+      const exp=num(pick(r,'expensa_mensual','expensa')), deu=num(pick(r,'deuda','deuda_total'));
+      if(Number.isNaN(exp)) errors.push(`${where}: la expensa no es un número.`);
+      if(Number.isNaN(deu)) errors.push(`${where}: la deuda no es un número.`);
+      const qr=String(pick(r,'qr_archivo','qr'));
+      units.set(k,{edificio:b,depto:d,propietario:String(pick(r,'propietario','nombre')),expensa:exp,deuda:deu,vencimiento:date(pick(r,'vencimiento')),
+        codigo:code,nuevo:!code,telefono:String(pick(r,'telefono','celular')),qr:qr?(/^https?:/.test(qr)?qr:'img/qr/'+qr):'',row:r,mov:[]});
+      if(!pick(r,'propietario','nombre')) warns.push(`${where}: falta el nombre del propietario.`);
+    });
+    M.forEach(r=>{ const b=C.normId(pick(r,'edificio_id','edificio')), d=C.normDepto(pick(r,'depto','departamento')); if(!b&&!d) return;
+      const u=units.get(b+'|'+d); const where=`Movimientos, fila ${r.__row+1}`;
+      if(!u) return warns.push(`${where}: no existe el departamento ${d} en "${b}"; se omite.`);
+      const cargo=num(pick(r,'cargo')), abono=num(pick(r,'abono','pago'));
+      if(Number.isNaN(cargo)||Number.isNaN(abono)) return errors.push(`${where}: cargo o abono no es un número.`);
+      u.mov.push({fecha:date(pick(r,'fecha')),concepto:String(pick(r,'concepto','detalle')),cargo:cargo||0,abono:abono||0});
+    });
+    units.forEach(u=>{ if(u.deuda==null) u.deuda=u.mov.reduce((s,m)=>s+m.cargo-m.abono,0); });
+    model={bld,units,errors,warns,fname};
+    // resumen
+    const per=[...bld.values()].map(b=>{const us=[...units.values()].filter(u=>u.edificio===b.id);return {b,n:us.length,deuda:us.reduce((s,u)=>s+(u.deuda>0?u.deuda:0),0),con:us.filter(u=>u.deuda>0.009).length,nuevos:us.filter(u=>u.nuevo).length};});
+    $('#summary').innerHTML=`<p>${esc(fname)}: <b>${bld.size}</b> edificio(s), <b>${units.size}</b> departamento(s).</p>
+      <table><thead><tr><th>Edificio</th><th class="n">Deptos</th><th class="n">Con deuda</th><th class="n">Deuda total</th><th class="n">Códigos nuevos</th></tr></thead>
+      <tbody>${per.map(p=>`<tr><td>${esc(p.b.nombre)} <small style="color:var(--muted)">(${esc(p.b.id)})</small></td><td class="n">${p.n}</td><td class="n">${p.con}</td><td class="n">${p.b.moneda} ${p.deuda.toLocaleString('es-BO',{minimumFractionDigits:2})}</td><td class="n">${p.nuevos}</td></tr>`).join('')}</tbody></table>`;
+    $('#issues').innerHTML=errors.map(e=>`<li class="e">Error: ${esc(e)}</li>`).join('')+warns.map(w=>`<li class="w">Aviso: ${esc(w)}</li>`).join('');
+    $('#step2').hidden=false; $('#step3').hidden=false;
+    $('#gen').disabled=errors.length>0||units.size===0;
+    $('#gen-st').textContent=errors.length?'Corrija los errores en el Excel y vuelva a cargarlo.':'';
+  }
+
+  /* ---------- 3. Generar ---------- */
+  $('#gen').addEventListener('click',async()=>{
+    const btn=$('#gen'); btn.disabled=true; $('#prog').hidden=false; $('#done').hidden=true;
+    const bar=$('#prog i'), upd=$('#upd').value, url=$('#url').value.trim();
+    const zip=new JSZip(), dir=zip.folder('subir-a-github').folder('data'), udir=dir.folder('u');
+    const list=[...model.units.values()]; let i=0;
+    dir.file('edificios.json',JSON.stringify([...model.bld.values()].map(b=>({id:b.id,nombre:b.nombre})).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')),null,1));
+    for(const u of list){
+      if(!u.codigo) u.codigo=C.newCode();
+      const b=model.bld.get(u.edificio);
+      const payload={v:1,edificio:{id:b.id,nombre:b.nombre,direccion:b.direccion,banco:b.banco,titular:b.titular,cuenta:b.cuenta,tipo_cuenta:b.tipo_cuenta,moneda:b.moneda,nit:b.nit,qr:b.qr},
+        unidad:{depto:u.depto,propietario:u.propietario,expensa:u.expensa,qr:u.qr||undefined},
+        resumen:{deuda:Math.round((u.deuda||0)*100)/100,vencimiento:u.vencimiento,actualizado:upd},
+        movimientos:u.mov};
+      const id=await C.fileId(u.edificio,u.depto,u.codigo);
+      udir.file(id+'.json',JSON.stringify(await C.encrypt(payload,u.codigo)));
+      i++; if(i%5===0||i===list.length){ bar.style.width=(i/list.length*100)+'%'; $('#gen-st').textContent=`Cifrando ${i} de ${list.length}…`; await new Promise(r=>setTimeout(r)); }
+    }
+    // Excel privado con códigos
+    const out=XLSX.utils.book_new();
+    wb.SheetNames.forEach(n=>{
+      if(key(n)==='unidades'){
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[n],{defval:'',raw:true});
+        const ck=Object.keys(rows[0]||{}).find(k=>['codigo_acceso','codigo'].includes(key(k)))||'codigo_acceso';
+        rows.forEach(r=>{ const u=model.units.get(C.normId(r[Object.keys(r).find(k=>['edificio_id','edificio'].includes(key(k)))])+'|'+C.normDepto(r[Object.keys(r).find(k=>['depto','departamento'].includes(key(k)))])); if(u) r[ck]=C.formatCode(u.codigo); });
+        XLSX.utils.book_append_sheet(out,XLSX.utils.json_to_sheet(rows),n);
+      } else if(key(n)!=='codigos') XLSX.utils.book_append_sheet(out,wb.Sheets[n],n);
+    });
+    const codes=list.map(u=>{const b=model.bld.get(u.edificio);return {Edificio:b.nombre,Depto:u.depto,Propietario:u.propietario,Telefono:u.telefono,'Código de acceso':C.formatCode(u.codigo),'Código nuevo':u.nuevo?'Sí':'',
+      'Mensaje para enviar':`Hola ${String(u.propietario).split(' ')[0]||''}, desde ahora puede ver su estado de cuenta y enviar sus comprobantes en el portal de Bramar Group: ${url} . Edificio: ${b.nombre} · Depto: ${u.depto} · Su código de acceso: ${C.formatCode(u.codigo)} (no lo comparta).`};});
+    XLSX.utils.book_append_sheet(out,XLSX.utils.json_to_sheet(codes),'Codigos');
+    zip.file('NO-SUBIR-codigos-de-acceso.xlsx',XLSX.write(out,{type:'array',bookType:'xlsx'}));
+    $('#gen-st').textContent='Comprimiendo…';
+    const blob=await zip.generateAsync({type:'blob'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='bramar-portal.zip'; document.body.appendChild(a); a.click(); a.remove();
+    $('#gen-st').textContent=`${list.length} perfiles generados.`; $('#done').hidden=false; btn.disabled=false;
+    model.units.forEach(u=>u.nuevo=false);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Portal de copropietarios · Bramar Group</title>
+<meta name="description" content="Consulte su estado de cuenta, datos de pago y envíe su comprobante a Bramar Group.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#062145">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap">
+<style>
+/* ==========================================================
+   BRAMAR · Portal de copropietarios
+   Mismo sistema visual que el sitio principal.
+   ========================================================== */
+:root{
+  --navy:#0A335D;--navy-deep:#062145;--sand:#F4F1EB;--paper:#FFFFFF;--ink:#0E1C2C;--muted:#56636F;--line:#E2DDD3;
+  --brass:#B08A4E;--brass-soft:#C9A46A;--sky:#DCE7F3;--ok:#1F8A5B;--ok-bg:#EAF6F0;--err:#C0392B;--err-bg:#FDECEA;--warn-bg:#FFF6E6;
+  --font:"Roboto",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --gutter:clamp(16px,4vw,48px);--radius:20px;--radius-l:28px;--soft:cubic-bezier(.2,.7,.2,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sand);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+[hidden]{display:none!important}
+img{max-width:100%;display:block}
+h1,h2,h3{margin:0;font-weight:300;line-height:1.15;letter-spacing:-.015em;text-wrap:balance}
+p{margin:0}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brass);outline-offset:3px;border-radius:6px}
+.wrap{width:100%;max-width:1120px;margin:0 auto;padding-inline:var(--gutter)}
+.tag{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.tag::before{content:"";width:24px;height:2px;background:currentColor}
+.muted{color:var(--muted)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+/* encabezado */
+.top{padding:calc(14px + env(safe-area-inset-top,0px)) var(--gutter) 0}
+.top-bar{max-width:1120px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 10px 0 16px;background:rgba(255,255,255,.9);border-radius:999px;box-shadow:0 12px 40px -20px rgba(6,33,69,.35)}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--navy);min-height:44px}
+.brand img{height:26px;width:auto}
+.brand b{font-weight:500;letter-spacing:.24em;font-size:13px}
+.brand span{font-size:13px;color:var(--muted);padding-left:12px;border-left:1px solid var(--line)}
+.top-actions{display:flex;gap:8px;align-items:center}
+.pill-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:0;background:var(--sand);color:var(--navy);font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;transition:background .25s}
+.pill-btn:hover{background:var(--line)}
+.pill-btn svg{width:18px;height:18px}
+
+/* botones */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:0 26px;border:0;border-radius:999px;font-size:15px;font-weight:500;cursor:pointer;text-decoration:none;transition:background .3s,transform .15s,opacity .3s}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.6;cursor:progress}
+.btn.navy{background:var(--navy);color:#fff}.btn.navy:hover{background:var(--navy-deep)}
+.btn.gold{background:var(--brass);color:#fff}.btn.gold:hover{background:#97753F}
+.btn.light{background:var(--sand);color:var(--navy)}.btn.light:hover{background:var(--line)}
+.btn.block{width:100%}
+.btn svg{width:18px;height:18px}
+.spin{width:18px;height:18px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:rot .7s linear infinite;display:none}
+.btn.loading .spin{display:block}.btn.loading .ic{display:none}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* campos */
+.field{position:relative;min-width:0}
+.field input,.field select,.field textarea{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--sand);border:1.5px solid transparent;border-radius:14px;padding:26px 16px 10px;transition:border-color .25s,background .25s}
+.field select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%230A335D' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
+.field label{position:absolute;left:17.5px;top:8px;font-size:12px;color:var(--navy);pointer-events:none}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--navy);background:#fff}
+.field textarea{min-height:80px;resize:vertical}
+.field.code input{letter-spacing:.18em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+.field .hint{display:block;font-size:13px;color:var(--muted);margin-top:6px}
+.alert{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;font-size:15px;animation:in .4s var(--soft)}
+.alert svg{width:20px;height:20px;flex:none;margin-top:2px}
+.alert.ok{background:var(--ok-bg);color:#155E3E}
+.alert.bad{background:var(--err-bg);color:#8E2A20}
+.alert.info{background:var(--sky);color:var(--navy)}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ------------- INGRESO ------------- */
+.login{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1120px;margin:16px auto 0;width:calc(100% - 2*var(--gutter));padding-bottom:40px}
+.login-side{background:var(--navy-deep);color:#fff;border-radius:var(--radius-l);padding:clamp(28px,5vw,56px);display:flex;flex-direction:column;justify-content:space-between;gap:32px;position:relative;overflow:hidden;min-width:0}
+.login-side::after{content:"";position:absolute;right:-110px;bottom:-110px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(201,164,106,.3),transparent 65%);pointer-events:none}
+.login-side .tag{color:var(--brass-soft)}
+.login-side h1{font-size:clamp(34px,4.4vw,54px);margin-top:18px}
+.login-side h1 b{font-weight:500;color:var(--brass-soft)}
+.login-side ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;position:relative;z-index:1}
+.login-side li{display:flex;gap:14px;align-items:center;color:rgba(255,255,255,.85)}
+.login-side li i{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.1);display:grid;place-items:center;flex:none}
+.login-side li svg{width:20px;height:20px}
+.login-card{background:var(--paper);border-radius:var(--radius-l);padding:clamp(28px,5vw,56px);display:flex;flex-direction:column;gap:18px;justify-content:center;min-width:0}
+.login-card h2{font-size:clamp(26px,2.6vw,32px);color:var(--navy);font-weight:400}
+.check{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--muted);cursor:pointer;min-height:44px}
+.check input{width:20px;height:20px;accent-color:var(--navy)}
+.help{font-size:14px;color:var(--muted);text-align:center}
+.help a{color:var(--navy);font-weight:500}
+
+/* ------------- PERFIL ------------- */
+.profile{flex:1;padding-block:24px 48px}
+.hello{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.hello h1{font-size:clamp(30px,4vw,46px);color:var(--navy);margin-top:10px}
+.hello p{color:var(--muted);margin-top:6px}
+.status{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;font-weight:500;font-size:14px}
+.status i{width:9px;height:9px;border-radius:50%;background:currentColor}
+.status.ok{background:var(--ok-bg);color:var(--ok)}
+.status.debt{background:var(--err-bg);color:var(--err)}
+.status.credit{background:var(--sky);color:var(--navy)}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.panel{background:var(--paper);border-radius:var(--radius);padding:clamp(22px,3vw,32px);min-width:0;animation:in .6s var(--soft) both}
+.panel h2{font-size:22px;color:var(--navy);font-weight:400}
+.panel .sub{color:var(--muted);font-size:14px;margin-top:4px}
+.p-debt{grid-column:span 5;background:var(--navy);color:#fff;position:relative;overflow:hidden}
+.p-debt::after{content:"";position:absolute;right:-90px;top:-90px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(201,164,106,.28),transparent 65%)}
+.p-debt small{display:block;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.p-debt .amount{font-size:clamp(42px,5vw,60px);font-weight:300;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums;line-height:1.1}
+.p-debt .amount span{font-size:.45em;color:var(--brass-soft);margin-right:6px}
+.p-debt .meta{display:flex;gap:24px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.15);position:relative;z-index:1}
+.p-debt .meta b{display:block;font-weight:500;font-size:17px}
+.p-debt .meta span{font-size:13px;color:rgba(255,255,255,.65)}
+.p-debt .btn{margin-top:24px;position:relative;z-index:1}
+.p-pay{grid-column:span 7;display:grid;grid-template-columns:1fr auto;gap:20px 28px}
+.p-pay .bank{display:flex;flex-direction:column;gap:2px;min-width:0}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);align-items:center}
+.kv:last-child{border-bottom:0}
+.kv dt{font-size:14px;color:var(--muted)}
+.kv dd{margin:0;font-weight:500;color:var(--ink);word-break:break-word;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.copy{border:0;background:var(--sand);color:var(--navy);border-radius:999px;min-height:34px;padding:0 12px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .25s}
+.copy:hover{background:var(--line)}
+.copy svg{width:15px;height:15px}
+.copy.done{background:var(--ok-bg);color:var(--ok)}
+.qr{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:0}
+.qr .box{width:190px;max-width:100%;aspect-ratio:1;border-radius:16px;background:var(--sand);display:grid;place-items:center;overflow:hidden;padding:10px}
+.qr .box img{width:100%;height:100%;object-fit:contain;border-radius:8px}
+.qr .box .none{font-size:13px;color:var(--muted);text-align:center;padding:12px}
+.p-up{grid-column:span 5}
+.p-mov{grid-column:span 7}
+.drop{margin-top:18px;border:1.5px dashed #BFC9D4;border-radius:16px;padding:26px 18px;text-align:center;cursor:pointer;transition:border-color .25s,background .25s;display:flex;flex-direction:column;align-items:center;gap:8px;background:#FBFAF7}
+.drop:hover,.drop.over{border-color:var(--navy);background:var(--sky)}
+.drop svg{width:34px;height:34px;color:var(--navy)}
+.drop b{color:var(--navy);font-weight:500}
+.drop small{color:var(--muted);font-size:13px}
+.file{margin-top:18px;display:none;gap:14px;align-items:center;padding:12px;border-radius:14px;background:var(--sand)}
+.file.show{display:flex;animation:in .35s var(--soft)}
+.file .thumb{width:56px;height:56px;border-radius:10px;background:#fff;display:grid;place-items:center;overflow:hidden;flex:none}
+.file .thumb img{width:100%;height:100%;object-fit:cover}
+.file .thumb svg{width:26px;height:26px;color:var(--err)}
+.file .nm{flex:1;min-width:0}
+.file .nm b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file .nm span{font-size:13px;color:var(--muted)}
+.file .x{border:0;background:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;display:grid;place-items:center;flex:none}
+.file .x svg{width:16px;height:16px}
+.up-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.up-fields .full{grid-column:1/-1}
+.up-actions{margin-top:16px;display:flex;flex-direction:column;gap:12px}
+.bar{height:4px;border-radius:4px;background:var(--line);overflow:hidden;display:none}
+.bar.show{display:block}
+.bar i{display:block;height:100%;width:30%;background:var(--navy);border-radius:4px;animation:load 1.2s ease-in-out infinite}
+@keyframes load{0%{transform:translateX(-100%)}100%{transform:translateX(340%)}}
+
+/* tabla de movimientos */
+.mov-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.table{width:100%;border-collapse:collapse;margin-top:18px;font-variant-numeric:tabular-nums}
+.table th{text-align:left;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 8px;border-bottom:1px solid var(--line)}
+.table td{padding:13px 8px;border-bottom:1px solid var(--line);font-size:15px;vertical-align:top}
+.table .num{text-align:right;white-space:nowrap}
+.table td.c{color:var(--err)}
+.table td.a{color:var(--ok)}
+.table tr{animation:in .4s var(--soft) both}
+.empty{padding:28px 8px;text-align:center;color:var(--muted)}
+.more{margin-top:14px}
+
+footer{padding:24px var(--gutter) calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:13px;color:var(--muted)}
+footer a{color:var(--navy)}
+
+@media (max-width:900px){
+  .login{grid-template-columns:1fr}
+  .login-side{order:2}
+  .p-debt,.p-pay,.p-up,.p-mov{grid-column:1/-1}
+}
+@media (max-width:600px){
+  .brand span{display:none}
+  .p-pay{grid-template-columns:1fr}
+  .kv{grid-template-columns:1fr;gap:2px}
+  .up-fields{grid-template-columns:1fr}
+  .table thead{display:none}
+  .table,.table tbody,.table tr,.table td{display:block;width:100%}
+  .table tr{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .table td{border:0;padding:0}
+  .table td.f{grid-column:1/-1;font-size:13px;color:var(--muted)}
+  .table td.s{grid-column:1/-1;font-size:13px;color:var(--muted);text-align:left}
+  .table td.s::before{content:"Saldo: "}
+  .table td:empty{display:none}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4M10 6l-6 6 6 6"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></symbol>
+  <symbol id="i-pdf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l1.3-4A8 8 0 1112 20a8 8 0 01-3.8-1z"/><path d="M9 9c0 3 3 6 6 6l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-7 4 3 8-10M15 6h6v6"/></symbol>
+</defs></svg>
+
+<header class="top">
+  <div class="top-bar">
+    <a class="brand" href="index.html"><img src="img/isotipo-azul.png" alt="" width="200" height="163"><b>BRAMAR</b><span>Copropietarios</span></a>
+    <div class="top-actions">
+      <a class="pill-btn" id="back" href="index.html"><svg aria-hidden="true"><use href="#i-back"/></svg><span>Sitio web</span></a>
+      <button class="pill-btn" id="logout" type="button" hidden><svg aria-hidden="true"><use href="#i-out"/></svg><span>Salir</span></button>
+    </div>
+  </div>
+</header>
+
+<!-- ======================= INGRESO ======================= -->
+<main class="login" id="view-login">
+  <section class="login-side">
+    <div>
+      <span class="tag">Portal de copropietarios</span>
+      <h1>Su departamento, <b>al día</b> y a la vista.</h1>
+    </div>
+    <ul>
+      <li><i><svg aria-hidden="true"><use href="#i-chart"/></svg></i>Estado de cuenta y deudas</li>
+      <li><i><svg aria-hidden="true"><use href="#i-qr"/></svg></i>Número de cuenta y QR de pago</li>
+      <li><i><svg aria-hidden="true"><use href="#i-upload"/></svg></i>Envío de comprobantes</li>
+      <li><i><svg aria-hidden="true"><use href="#i-lock"/></svg></i>Sus datos protegidos con su código</li>
+    </ul>
+  </section>
+
+  <form class="login-card" id="login-form" novalidate>
+    <h2>Ingrese a su perfil</h2>
+    <p class="muted" style="margin-top:-8px">Use el código de acceso que le entregó Bramar.</p>
+    <div class="field"><select id="l-bld" required><option value="">Cargando edificios…</option></select><label for="l-bld">Edificio</label></div>
+    <div class="field"><input id="l-dep" required autocomplete="off" placeholder="Ej. 4B o 401"><label for="l-dep">Departamento</label></div>
+    <div class="field code"><input id="l-code" required autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX" maxlength="11"><label for="l-code">Código de acceso</label></div>
+    <label class="check"><input type="checkbox" id="l-remember"> Recordar edificio y departamento en este dispositivo</label>
+    <div id="l-msg" role="alert"></div>
+    <button class="btn navy block" type="submit" id="l-btn"><span id="l-btn-t">Ingresar</span><span class="spin" aria-hidden="true"></span><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+    <p class="help">¿No tiene su código? <a id="l-ask" target="_blank" rel="noopener">Solicítelo por WhatsApp</a></p>
+  </form>
+</main>
+
+<!-- ======================= PERFIL ======================= -->
+<main class="profile" id="view-profile" hidden>
+  <div class="wrap">
+    <div class="hello">
+      <div>
+        <span class="tag" id="p-bld"></span>
+        <h1 id="p-name" tabindex="-1"></h1>
+        <p id="p-sub"></p>
+      </div>
+      <span class="status" id="p-status"><i></i><span></span></span>
+    </div>
+
+    <div class="grid">
+      <section class="panel p-debt" aria-labelledby="h-debt">
+        <small id="h-debt">Deuda total</small>
+        <div class="amount" id="p-debt"></div>
+        <div class="meta">
+          <div><b id="p-fee"></b><span>Expensa mensual</span></div>
+          <div><b id="p-due"></b><span>Vencimiento</span></div>
+          <div><b id="p-upd"></b><span>Actualizado al</span></div>
+        </div>
+        <a class="btn gold" href="#comprobante"><svg aria-hidden="true"><use href="#i-upload"/></svg>Enviar comprobante</a>
+      </section>
+
+      <section class="panel p-pay" aria-labelledby="h-pay" style="animation-delay:.06s">
+        <div class="bank">
+          <h2 id="h-pay">Datos para el pago</h2>
+          <p class="sub">Deposite o transfiera a la cuenta del edificio.</p>
+          <dl id="p-bank" style="margin:12px 0 0"></dl>
+        </div>
+        <div class="qr">
+          <div class="box" id="p-qr"></div>
+          <a class="copy" id="p-qr-dl" download hidden><svg aria-hidden="true"><use href="#i-down"/></svg>Descargar QR</a>
+        </div>
+      </section>
+
+      <section class="panel p-up" id="comprobante" aria-labelledby="h-up" style="animation-delay:.12s">
+        <h2 id="h-up">Enviar comprobante</h2>
+        <p class="sub">Foto o PDF de su depósito o transferencia.</p>
+        <form id="up-form" novalidate>
+          <label class="drop" id="drop" for="up-file">
+            <svg aria-hidden="true"><use href="#i-upload"/></svg>
+            <b>Toque para elegir o arrastre aquí</b>
+            <small>JPG, PNG o PDF · máximo 8 MB</small>
+          </label>
+          <input type="file" id="up-file" accept="image/*,application/pdf" class="sr-only">
+          <div class="file" id="up-preview">
+            <div class="thumb" id="up-thumb"></div>
+            <div class="nm"><b id="up-name"></b><span id="up-size"></span></div>
+            <button class="x" type="button" id="up-clear" aria-label="Quitar archivo"><svg aria-hidden="true"><use href="#i-x"/></svg></button>
+          </div>
+          <div class="up-fields">
+            <div class="field"><input id="up-amount" inputmode="decimal" placeholder="0.00"><label for="up-amount">Monto pagado</label></div>
+            <div class="field"><input id="up-date" type="date"><label for="up-date">Fecha del pago</label></div>
+            <div class="field full"><input id="up-note" placeholder="Opcional"><label for="up-note">Nota (ej. expensa de octubre)</label></div>
+          </div>
+          <div class="up-actions">
+            <div class="bar" id="up-bar"><i></i></div>
+            <div id="up-msg" role="status"></div>
+            <button class="btn navy block" type="submit" id="up-btn"><span id="up-btn-t">Enviar comprobante</span><span class="spin" aria-hidden="true"></span><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel p-mov" aria-labelledby="h-mov" style="animation-delay:.18s">
+        <div class="mov-head"><div><h2 id="h-mov">Estado de cuenta</h2><p class="sub" id="p-mov-sub"></p></div></div>
+        <table class="table" id="p-table">
+          <thead><tr><th>Fecha</th><th>Concepto</th><th class="num">Cargo</th><th class="num">Abono</th><th class="num">Saldo</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <button class="btn light more" type="button" id="p-more" hidden>Ver todos los movimientos</button>
+      </section>
+    </div>
+  </div>
+</main>
+
+<footer>© <span id="yr">2026</span> Bramar Group · <a href="index.html">Volver al sitio</a></footer>
+
+<script src="js/portal-crypto.js"></script>
+<script>
+/* ================================================================
+   CONFIGURACIÓN DEL PORTAL
+   · whatsapp: número de Bramar (código de país, sin + ni espacios).
+   · uploadEndpoint: URL de la aplicación web de Google Apps Script
+     que guarda los comprobantes en Google Drive (ver README).
+     Si está vacío, el comprobante se comparte por WhatsApp.
+   ================================================================ */
+const PORTAL = {
+  whatsapp: "59178155275",
+  uploadEndpoint: ""   // PENDIENTE: ej. "https://script.google.com/macros/s/XXXX/exec"
+};
+
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  const C=window.BramarCrypto;
+  const MAX=8*1024*1024;
+  let data=null, file=null, showAll=false;
+
+  const money=(n,cur)=>(cur||'Bs')+' '+Number(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fdate=s=>{ if(!s) return '—'; const d=new Date(s+'T00:00:00'); return isNaN(d)?s:d.toLocaleDateString('es-BO',{day:'2-digit',month:'short',year:'numeric'}); };
+  const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const wa=t=>'https://wa.me/'+PORTAL.whatsapp+(t?'?text='+encodeURIComponent(t):'');
+  function alertBox(el,type,text){ const ic={ok:'check',bad:'alert',info:'info'}[type]; el.innerHTML=`<div class="alert ${type}"><svg aria-hidden="true"><use href="#i-${ic}"/></svg><span>${text}</span></div>`; }
+  const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+
+  $('#yr').textContent=new Date().getFullYear();
+  $('#l-ask').href=wa('Hola Bramar, necesito mi código de acceso al portal de copropietarios. Edificio: ___ Depto: ___');
+
+  /* ---------- Lista de edificios ---------- */
+  const sel=$('#l-bld');
+  fetch('data/edificios.json',{cache:'no-cache'}).then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(list=>{
+    sel.innerHTML='<option value="">Seleccione su edificio</option>'+list.map(b=>`<option value="${esc(b.id)}">${esc(b.nombre)}</option>`).join('');
+    const rb=store.get('bramar.bld'), rd=store.get('bramar.dep');
+    if(rb&&list.some(b=>b.id===rb)){ sel.value=rb; $('#l-dep').value=rd||''; $('#l-remember').checked=true; (rd?$('#l-code'):$('#l-dep')).focus(); }
+  }).catch(()=>{ sel.innerHTML='<option value="">No se pudo cargar la lista</option>'; alertBox($('#l-msg'),'bad','No pudimos cargar la lista de edificios. Revise su conexión e intente de nuevo.'); });
+
+  /* ---------- Código: formato XXXXX-XXXXX al escribir ---------- */
+  $('#l-code').addEventListener('input',e=>{ const p=e.target.selectionStart===e.target.value.length; e.target.value=C.formatCode(e.target.value).slice(0,11); if(p) e.target.selectionStart=e.target.selectionEnd=e.target.value.length; });
+
+  /* ---------- Ingreso ---------- */
+  $('#login-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const b=sel.value, d=$('#l-dep').value, c=$('#l-code').value, msg=$('#l-msg'), btn=$('#l-btn');
+    msg.innerHTML='';
+    if(!b) return alertBox(msg,'bad','Seleccione su edificio.'),sel.focus();
+    if(!C.normDepto(d)) return alertBox(msg,'bad','Escriba su número de departamento.'),$('#l-dep').focus();
+    if(C.normCode(c).length<10) return alertBox(msg,'bad','El código tiene 10 caracteres, por ejemplo K7MF2-Q9XPR.'),$('#l-code').focus();
+    btn.disabled=true; btn.classList.add('loading'); $('#l-btn-t').textContent='Verificando…';
+    try{
+      const id=await C.fileId(b,d,c);
+      const r=await fetch('data/u/'+id+'.json',{cache:'no-cache'});
+      if(r.status===404) throw new Error('nf');
+      if(!r.ok) throw new Error('net');
+      data=await C.decrypt(await r.json(),c);
+      if($('#l-remember').checked){ store.set('bramar.bld',b); store.set('bramar.dep',C.normDepto(d)); } else { store.del('bramar.bld'); store.del('bramar.dep'); }
+      $('#l-code').value='';
+      renderProfile();
+    }catch(err){
+      alertBox(msg,'bad',err.message==='net'
+        ?'No pudimos conectarnos. Revise su internet e intente otra vez.'
+        :'Los datos no coinciden. Revise el edificio, el departamento y el código. Si el problema sigue, <a href="'+wa('Hola Bramar, no puedo ingresar al portal. Edificio: '+(sel.selectedOptions[0]||{}).text+' Depto: '+d)+'" target="_blank" rel="noopener">escríbanos por WhatsApp</a>.');
+    }finally{ btn.disabled=false; btn.classList.remove('loading'); $('#l-btn-t').textContent='Ingresar'; }
+  });
+
+  /* ---------- Perfil ---------- */
+  function renderProfile(){
+    const E=data.edificio||{}, U=data.unidad||{}, R=data.resumen||{}, cur=E.moneda||'Bs';
+    document.title=`${U.propietario||'Mi perfil'} · Portal Bramar`;
+    $('#p-bld').textContent=E.nombre||'';
+    $('#p-name').textContent='Hola, '+(String(U.propietario||'').split(' ')[0]||'copropietario');
+    $('#p-sub').textContent=`${U.propietario||''} · Departamento ${U.depto||''}`;
+    const debt=Number(R.deuda||0), st=$('#p-status');
+    st.className='status '+(debt>0.009?'debt':debt<-0.009?'credit':'ok');
+    st.querySelector('span').textContent=debt>0.009?'Con deuda pendiente':debt<-0.009?'Saldo a favor':'Al día';
+    $('#p-debt').innerHTML=`<span>${esc(cur)}</span>${Math.abs(debt).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    $('#h-debt').textContent=debt<-0.009?'Saldo a favor':'Deuda total';
+    $('#p-fee').textContent=U.expensa!=null?money(U.expensa,cur):'—';
+    $('#p-due').textContent=fdate(R.vencimiento);
+    $('#p-upd').textContent=fdate(R.actualizado);
+    if(debt>0.009) $('#up-amount').value=debt.toFixed(2);
+    // banco
+    const rows=[['Banco',E.banco],['Titular',E.titular],['N.º de cuenta',E.cuenta,true],['Tipo',E.tipo_cuenta],['Moneda',E.moneda_cuenta||E.moneda],['NIT / CI',E.nit,true]].filter(r=>r[1]);
+    $('#p-bank').innerHTML=rows.length?rows.map(([k,v,cp])=>`<div class="kv"><dt>${k}</dt><dd>${esc(v)}${cp?` <button type="button" class="copy" data-copy="${esc(v)}"><svg aria-hidden="true"><use href="#i-copy"/></svg>Copiar</button>`:''}</dd></div>`).join('')
+      :'<p class="muted" style="padding:12px 0">Consulte los datos de pago con la administración.</p>';
+    const qr=U.qr||E.qr, box=$('#p-qr'), dl=$('#p-qr-dl');
+    if(qr){ box.innerHTML=`<img src="${esc(qr)}" alt="Código QR de pago de ${esc(E.nombre)}">`; dl.href=qr; dl.hidden=false;
+      box.querySelector('img').onerror=()=>{box.innerHTML='<p class="none">QR no disponible por ahora.</p>';dl.hidden=true;}; }
+    else { box.innerHTML='<p class="none">Este edificio aún no tiene un QR cargado.</p>'; dl.hidden=true; }
+    renderTable();
+    $('#up-date').value=new Date().toISOString().slice(0,10);
+    $('#view-login').hidden=true; $('#view-profile').hidden=false; $('#logout').hidden=false; $('#back').hidden=true;
+    window.scrollTo(0,0); $('#p-name').focus({preventScroll:true});
+  }
+  function renderTable(){
+    const cur=(data.edificio||{}).moneda||'Bs';
+    const mv=(data.movimientos||[]).slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+    let bal=0; const withBal=mv.map(m=>{bal+=Number(m.cargo||0)-Number(m.abono||0);return {...m,saldo:bal};}).reverse();
+    const list=showAll?withBal:withBal.slice(0,12);
+    const tb=$('#p-table tbody');
+    tb.innerHTML=list.length?list.map((m,i)=>`<tr style="animation-delay:${Math.min(i,10)*.03}s"><td class="f">${fdate(m.fecha)}</td><td>${esc(m.concepto)}</td><td class="num c">${m.cargo?money(m.cargo,cur):''}</td><td class="num a">${m.abono?money(m.abono,cur):''}</td><td class="num s">${money(m.saldo,cur)}</td></tr>`).join('')
+      :'<tr><td colspan="5" class="empty">Aún no hay movimientos registrados.</td></tr>';
+    $('#p-mov-sub').textContent=mv.length?`${mv.length} movimiento${mv.length>1?'s':''} · del más reciente al más antiguo`:'';
+    $('#p-more').hidden=showAll||withBal.length<=12;
+  }
+  $('#p-more').addEventListener('click',()=>{showAll=true;renderTable();});
+  document.addEventListener('click',async e=>{ const b=e.target.closest('[data-copy]'); if(!b) return;
+    const v=b.dataset.copy; let ok=false;
+    try{ await navigator.clipboard.writeText(v); ok=true; }catch(err){ const t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();try{ok=document.execCommand('copy');}catch(e2){}t.remove(); }
+    if(ok){ b.classList.add('done'); b.lastChild.textContent='Copiado'; setTimeout(()=>{b.classList.remove('done');b.lastChild.textContent='Copiar';},1800); } });
+
+  $('#logout').addEventListener('click',()=>{
+    data=null; file=null; showAll=false; clearFile(); $('#up-msg').innerHTML='';
+    $('#view-profile').hidden=true; $('#view-login').hidden=false; $('#logout').hidden=true; $('#back').hidden=false;
+    document.title='Portal de copropietarios · Bramar Group'; $('#l-code').focus();
+  });
+
+  /* ---------- Comprobante ---------- */
+  const inp=$('#up-file'), drop=$('#drop');
+  function setFile(f){
+    $('#up-msg').innerHTML='';
+    if(!f) return;
+    const okType=/^image\//.test(f.type)||f.type==='application/pdf';
+    if(!okType) return alertBox($('#up-msg'),'bad','Elija una imagen (JPG o PNG) o un PDF.');
+    if(f.size>MAX) return alertBox($('#up-msg'),'bad','El archivo pesa más de 8 MB. Pruebe con una foto más liviana.');
+    file=f;
+    $('#up-name').textContent=f.name; $('#up-size').textContent=f.size<1024*1024?Math.max(1,Math.round(f.size/1024))+' KB':(f.size/1024/1024).toFixed(1)+' MB';
+    const th=$('#up-thumb');
+    if(f.type==='application/pdf') th.innerHTML='<svg aria-hidden="true"><use href="#i-pdf"/></svg>';
+    else { const u=URL.createObjectURL(f); th.innerHTML=`<img src="${u}" alt="">`; }
+    $('#up-preview').classList.add('show'); drop.hidden=true;
+  }
+  function clearFile(){ file=null; inp.value=''; $('#up-preview').classList.remove('show'); drop.hidden=false; }
+  inp.addEventListener('change',()=>setFile(inp.files[0]));
+  $('#up-clear').addEventListener('click',clearFile);
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+  drop.addEventListener('drop',e=>setFile(e.dataTransfer.files[0]));
+
+  // reduce fotos grandes antes de enviarlas (máx. 1800 px, JPEG)
+  async function prepare(f){
+    if(!/^image\/(jpeg|png|webp|heic|heif)/.test(f.type)||f.size<700*1024) return f;
+    try{
+      const bmp=await createImageBitmap(f); const s=Math.min(1,1800/Math.max(bmp.width,bmp.height));
+      const cv=document.createElement('canvas'); cv.width=Math.round(bmp.width*s); cv.height=Math.round(bmp.height*s);
+      cv.getContext('2d').drawImage(bmp,0,0,cv.width,cv.height);
+      const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',.85));
+      return blob&&blob.size<f.size?new File([blob],f.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'}):f;
+    }catch(e){ return f; }
+  }
+  const toB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});
+
+  $('#up-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const msg=$('#up-msg'), btn=$('#up-btn');
+    msg.innerHTML='';
+    if(!file) return alertBox(msg,'bad','Primero elija la foto o el PDF del comprobante.');
+    const amount=$('#up-amount').value.replace(',','.').trim();
+    if(amount&&!(Number(amount)>0)) return alertBox(msg,'bad','Revise el monto: use solo números, por ejemplo 450.50.'),$('#up-amount').focus();
+    const E=data.edificio||{}, U=data.unidad||{};
+    const info={edificio:E.nombre||E.id, edificio_id:E.id, depto:U.depto, propietario:U.propietario, monto:amount, fecha:$('#up-date').value, nota:$('#up-note').value.trim()};
+    const text=`Comprobante de pago\nEdificio: ${info.edificio}\nDepto: ${info.depto}\nPropietario: ${info.propietario}\nMonto: ${amount||'—'}\nFecha: ${info.fecha||'—'}${info.nota?'\nNota: '+info.nota:''}`;
+
+    if(PORTAL.uploadEndpoint){
+      btn.disabled=true; btn.classList.add('loading'); $('#up-btn-t').textContent='Enviando…'; $('#up-bar').classList.add('show');
+      try{
+        const f=await prepare(file);
+        const body=JSON.stringify({...info, filename:f.name, mimeType:f.type, data:await toB64(f)});
+        const r=await fetch(PORTAL.uploadEndpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok||j.ok===false) throw new Error(j.error||r.status);
+        alertBox(msg,'ok','Recibimos su comprobante. Lo verificaremos y actualizaremos su estado de cuenta.');
+        clearFile(); $('#up-note').value='';
+      }catch(err){
+        alertBox(msg,'bad','No pudimos enviar el comprobante. Intente de nuevo o <a href="'+wa(text)+'" target="_blank" rel="noopener">envíelo por WhatsApp</a>.');
+      }finally{ btn.disabled=false; btn.classList.remove('loading'); $('#up-btn-t').textContent='Enviar comprobante'; $('#up-bar').classList.remove('show'); }
+      return;
+    }
+    // Sin servidor configurado: compartir el archivo (celular) o abrir WhatsApp con el texto
+    try{
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],text,title:'Comprobante Bramar'});
+        alertBox(msg,'ok','Elija WhatsApp y envíelo al número de Bramar. Verificaremos su pago y actualizaremos su estado de cuenta.');
+        return;
+      }
+    }catch(err){ if(err&&err.name==='AbortError') return; }
+    window.open(wa(text),'_blank','noopener');
+    alertBox(msg,'info','Abrimos WhatsApp con los datos del pago. Adjunte allí la foto o el PDF del comprobante (ícono del clip) y envíelo.');
+  });
+})();
+</script>
+</body>
+</html>
