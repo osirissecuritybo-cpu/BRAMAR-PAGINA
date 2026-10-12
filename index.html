@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bramar Group</title>
+<meta name="description" content="Bramar Group: administración integral de edificios y condominios en Santa Cruz, Bolivia.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;0,700;1,300&display=swap">
+<style>
+/* ==========================================================
+   BRAMAR GROUP · Sitio moderno en color
+   Azul marino de la marca + arena cálida + acento dorado.
+   5 páginas independientes con transición de panel.
+   ========================================================== */
+:root{
+  --navy:#0A335D;
+  --navy-deep:#062145;
+  --sand:#F4F1EB;
+  --paper:#FFFFFF;
+  --ink:#0E1C2C;
+  --muted:#5D6A79;
+  --line:#E2DDD3;
+  --brass:#B8955A;
+  --sky:#D7E4F2;
+  --font:"Roboto",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --gutter:clamp(20px,5vw,72px);
+  --radius:20px;
+  --ease:cubic-bezier(.65,0,.25,1);
+  --soft:cubic-bezier(.2,.7,.2,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sand);color:var(--ink);font-family:var(--font);font-weight:400;font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+h1,h2,h3{margin:0;font-weight:300;line-height:1.08;letter-spacing:-.02em;text-wrap:balance}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+.wrap{max-width:1320px;margin:0 auto;padding-inline:var(--gutter)}
+.tag{display:inline-flex;align-items:center;gap:10px;font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.tag::before{content:"";width:28px;height:2px;background:currentColor}
+section{padding-block:clamp(72px,9vw,128px)}
+.h2{font-size:clamp(34px,4.4vw,58px);color:var(--navy)}
+.h2 b{font-weight:500}
+.lede{font-size:clamp(17px,1.4vw,19px);color:var(--muted);max-width:46ch}
+.head{display:flex;justify-content:space-between;align-items:flex-end;gap:32px;flex-wrap:wrap;margin-bottom:clamp(40px,5vw,64px)}
+.head > div{max-width:640px}
+.head .h2{margin-top:18px}
+
+/* ---------- NAVEGACIÓN ---------- */
+.nav{position:fixed;top:0;left:0;right:0;z-index:60;padding:calc(14px + env(safe-area-inset-top,0px)) var(--gutter) 0;pointer-events:none}
+.nav-bar{pointer-events:auto;max-width:1320px;margin:0 auto;height:68px;display:flex;align-items:center;gap:20px;padding:0 10px 0 22px;background:rgba(255,255,255,.82);backdrop-filter:blur(16px) saturate(1.4);-webkit-backdrop-filter:blur(16px) saturate(1.4);border:1px solid rgba(255,255,255,.7);border-radius:999px;box-shadow:0 12px 40px -18px rgba(6,33,69,.35)}
+.brand{display:flex;align-items:center;gap:12px;background:none;border:0;padding:0;cursor:pointer;color:var(--navy)}
+.brand img{height:28px;width:auto}
+.brand span{font-size:14px;font-weight:500;letter-spacing:.28em}
+.links{position:relative;display:flex;list-style:none;margin:0 0 0 auto;padding:4px;background:var(--sand);border-radius:999px}
+.links .pill{position:absolute;top:4px;bottom:4px;left:0;width:0;background:var(--navy);border-radius:999px;transition:transform .55s var(--ease),width .55s var(--ease)}
+.links button{position:relative;z-index:1;background:none;border:0;cursor:pointer;padding:10px 18px;font-size:14px;font-weight:500;color:var(--muted);border-radius:999px;transition:color .35s}
+.links button:hover{color:var(--navy)}
+.links button[aria-current="page"]{color:#fff}
+.cta-access{display:flex;align-items:center;gap:10px;height:48px;padding:0 22px;border:0;border-radius:999px;background:var(--brass);color:#fff;font-size:14px;font-weight:500;cursor:pointer;transition:background .3s,transform .3s}
+.cta-access:hover{background:#A6834B}
+.cta-access svg{width:18px;height:18px}
+.burger{display:none;margin-left:auto;background:var(--navy);border:0;width:48px;height:48px;border-radius:50%;cursor:pointer;padding:16px 14px}
+.burger i{display:block;height:2px;background:#fff;margin:4px 0;border-radius:2px;transition:transform .4s var(--soft),opacity .3s}
+.nav.open .burger i:nth-child(1){transform:translateY(6px) rotate(45deg)}
+.nav.open .burger i:nth-child(2){opacity:0}
+.nav.open .burger i:nth-child(3){transform:translateY(-6px) rotate(-45deg)}
+.mobile-menu{display:none}
+@media (max-width:1000px){
+  .links,.nav-bar > .cta-access{display:none}
+  .burger{display:block}
+  .mobile-menu{display:flex;pointer-events:auto;position:fixed;inset:0;z-index:-1;background:var(--navy-deep);flex-direction:column;justify-content:center;padding:100px var(--gutter) 40px;opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s}
+  .nav.open .mobile-menu{opacity:1;visibility:visible}
+  .mobile-menu button.m{background:none;border:0;text-align:left;color:#fff;font-size:clamp(34px,9vw,52px);font-weight:300;padding:10px 0;cursor:pointer;display:flex;align-items:baseline;gap:16px;opacity:.6;transition:opacity .3s}
+  .mobile-menu button.m small{font-size:13px;color:var(--brass);font-weight:500}
+  .mobile-menu button.m[aria-current="page"]{opacity:1}
+  .mobile-menu .cta-access{margin-top:32px;align-self:flex-start;height:56px}
+}
+
+/* ---------- TRANSICIÓN ENTRE PÁGINAS ---------- */
+.wipe{position:fixed;inset:0;z-index:90;background:var(--navy);transform:translateX(100%);pointer-events:none;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.wipe span{font-size:clamp(48px,10vw,140px);font-weight:300;color:#fff;letter-spacing:-.03em;opacity:0;transform:translateY(30px);transition:opacity .35s,transform .5s var(--soft)}
+.wipe span b{color:var(--brass);font-weight:300}
+.wipe.in{animation:wIn .6s var(--ease) forwards}
+.wipe.in span{opacity:1;transform:none;transition-delay:.2s}
+.wipe.out{transform:none;animation:wOut .7s var(--ease) forwards}
+.wipe.out span{opacity:0;transform:translateY(-30px)}
+@keyframes wIn{from{transform:translateX(100%)}to{transform:none}}
+@keyframes wOut{from{transform:none}to{transform:translateX(-100%)}}
+
+/* ---------- BOTONES ---------- */
+.btn{position:relative;display:inline-flex;align-items:center;gap:14px;height:58px;padding:0 30px;border:0;border-radius:999px;font-size:15px;font-weight:500;cursor:pointer;overflow:hidden;isolation:isolate;transition:color .4s var(--soft),transform .3s var(--soft)}
+.btn::before{content:"";position:absolute;inset:0;border-radius:inherit;transform:translateY(101%);transition:transform .5s var(--ease);z-index:-1}
+.btn:hover::before{transform:none}
+.btn svg{width:18px;height:18px;transition:transform .4s var(--soft)}
+.btn:hover svg{transform:translateX(4px)}
+.btn.gold{background:var(--brass);color:#fff}.btn.gold::before{background:#fff}.btn.gold:hover{color:var(--navy)}
+.btn.white{background:#fff;color:var(--navy)}.btn.white::before{background:var(--brass)}.btn.white:hover{color:#fff}
+.btn.navy{background:var(--navy);color:#fff}.btn.navy::before{background:var(--brass)}
+.btn.outline{background:transparent;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}.btn.outline::before{background:#fff}.btn.outline:hover{color:var(--navy)}
+
+/* entrada de página */
+.page.ready .rise{animation:rise 1s var(--soft) both}
+.page.ready .d1{animation-delay:.1s}.page.ready .d2{animation-delay:.2s}.page.ready .d3{animation-delay:.3s}.page.ready .d4{animation-delay:.4s}
+@keyframes rise{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+.page.ready .reveal-img{animation:clip 1.4s var(--ease) both .15s}
+@keyframes clip{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0 0 0 0)}}
+
+/* ---------- INICIO · HERO ---------- */
+.hero{padding:calc(110px + env(safe-area-inset-top,0px)) var(--gutter) 0}
+.hero-grid{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:1.05fr 1fr;gap:16px;min-height:min(84svh,820px)}
+.hero-copy{background:var(--navy-deep);color:#fff;border-radius:28px;padding:clamp(32px,5vw,72px);display:flex;flex-direction:column;justify-content:space-between;gap:40px;position:relative;overflow:hidden;min-width:0}
+.hero-copy::after{content:"";position:absolute;right:-120px;bottom:-120px;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(184,149,90,.28),transparent 65%);pointer-events:none}
+.hero-copy h1{font-size:clamp(42px,5.6vw,80px);margin-top:28px}
+.hero-copy h1 b{font-weight:500;color:var(--brass)}
+.hero-copy p.lede{color:rgba(255,255,255,.72);margin-top:24px}
+.hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+.hero-photo{position:relative;border-radius:28px;overflow:hidden;min-height:440px;min-width:0}
+.hero-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 35%;transition:transform 1.2s var(--soft)}
+.hero-photo:hover img{transform:scale(1.03)}
+.glass{position:absolute;background:rgba(255,255,255,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-radius:18px;padding:16px 20px;box-shadow:0 20px 40px -20px rgba(6,33,69,.4)}
+.glass.g1{left:20px;bottom:20px;display:flex;gap:14px;align-items:center}
+.glass.g1 img{position:static;width:44px;height:44px;border-radius:12px;object-fit:cover}
+.glass.g1 b{display:block;font-weight:500;color:var(--navy)}
+.glass.g1 span{font-size:13px;color:var(--muted)}
+.glass.g2{right:20px;top:20px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:var(--navy);animation:bob 5s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-6px)}}
+.live{width:10px;height:10px;border-radius:50%;background:#2FA36B;box-shadow:0 0 0 0 rgba(47,163,107,.6);animation:pulse 2s infinite}
+@keyframes pulse{70%{box-shadow:0 0 0 10px rgba(47,163,107,0)}100%{box-shadow:0 0 0 0 rgba(47,163,107,0)}}
+
+/* cinta de servicios */
+.marquee{overflow:hidden;padding-block:32px;border-bottom:1px solid var(--line)}
+.marquee .track{display:flex;gap:48px;width:max-content;animation:slide 38s linear infinite}
+.marquee:hover .track{animation-play-state:paused}
+.marquee span{display:flex;align-items:center;gap:48px;font-size:clamp(22px,2.6vw,34px);font-weight:300;color:var(--navy);white-space:nowrap}
+.marquee span::after{content:"";width:10px;height:10px;border-radius:50%;background:var(--brass)}
+@keyframes slide{to{transform:translateX(-50%)}}
+
+/* por qué Bramar (pestañas interactivas) */
+.why{display:grid;grid-template-columns:1fr 1.1fr;gap:clamp(32px,5vw,80px);align-items:stretch}
+.why > *{min-width:0}
+.why-list{display:flex;flex-direction:column}
+.why-item{background:none;border:0;border-top:1px solid var(--line);text-align:left;padding:26px 0;cursor:pointer;display:grid;grid-template-columns:48px 1fr;gap:8px 16px;position:relative}
+.why-item:last-child{border-bottom:1px solid var(--line)}
+.why-item small{font-size:13px;font-weight:500;color:var(--muted);padding-top:8px}
+.why-item h3{font-size:clamp(24px,2.4vw,32px);color:var(--muted);transition:color .3s}
+.why-item p{grid-column:2;color:var(--muted);max-height:0;overflow:hidden;opacity:0;transition:max-height .6s var(--soft),opacity .4s}
+.why-item .bar{position:absolute;left:0;bottom:-1px;height:2px;width:0;background:var(--brass)}
+.why-item.on h3{color:var(--navy)}
+.why-item.on small{color:var(--brass)}
+.why-item.on p{max-height:120px;opacity:1}
+.why-item.on .bar{animation:fill 6s linear forwards}
+.why-item:hover h3{color:var(--navy)}
+@keyframes fill{to{width:100%}}
+.why-view{position:relative;border-radius:var(--radius);overflow:hidden;min-height:480px;background:var(--navy)}
+.why-view img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transform:scale(1.06);transition:opacity .9s var(--soft),transform 1.6s var(--soft)}
+.why-view img.on{opacity:1;transform:none}
+.why-view::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(6,33,69,.85))}
+.why-big{position:absolute;left:32px;right:32px;bottom:28px;z-index:2;color:#fff}
+.why-big b{display:block;font-size:clamp(64px,8vw,112px);font-weight:300;line-height:1;letter-spacing:-.04em}
+.why-big span{display:block;margin-top:8px;font-size:15px;color:rgba(255,255,255,.8)}
+
+/* cifras */
+.numbers{background:var(--navy);color:#fff;border-radius:28px;padding:clamp(40px,5vw,72px);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px;position:relative;overflow:hidden}
+.numbers::before{content:"";position:absolute;left:-80px;top:-160px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,rgba(184,149,90,.25),transparent 65%)}
+.n{position:relative;min-width:0}
+.n + .n{border-left:1px solid rgba(255,255,255,.14);padding-left:24px}
+.n b{display:block;font-size:clamp(44px,5.4vw,76px);font-weight:300;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.n b small{font-size:.5em;color:var(--brass)}
+.n span{display:block;margin-top:12px;font-size:14px;color:rgba(255,255,255,.7)}
+
+/* CTA */
+.cta{display:grid;grid-template-columns:1.2fr 1fr;border-radius:28px;overflow:hidden;background:var(--paper)}
+.cta > *{min-width:0}
+.cta .tx{padding:clamp(36px,5vw,72px);display:flex;flex-direction:column;justify-content:center;gap:24px}
+.cta .ph{min-height:320px;position:relative}
+.cta .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+/* ---------- CABECERA DE PÁGINAS INTERNAS ---------- */
+.p-head{padding:calc(110px + env(safe-area-inset-top,0px)) var(--gutter) 0}
+.p-head .box{max-width:1320px;margin:0 auto;position:relative;border-radius:28px;overflow:hidden;min-height:min(62svh,560px);display:flex;align-items:flex-end;color:#fff}
+.p-head .box img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.p-head .box::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(6,33,69,.9) 0%,rgba(6,33,69,.55) 50%,rgba(6,33,69,.1) 100%)}
+.p-head .in{position:relative;z-index:2;padding:clamp(32px,5vw,72px);max-width:760px}
+.p-head h1{font-size:clamp(40px,6vw,84px);margin-top:20px}
+.p-head h1 b{font-weight:500;color:var(--brass)}
+.p-head p{margin-top:20px;color:rgba(255,255,255,.8);max-width:46ch;font-size:18px}
+.crumb{display:flex;gap:10px;font-size:13px;color:rgba(255,255,255,.7)}
+.crumb b{color:#fff;font-weight:500}
+
+/* ---------- NOSOTROS ---------- */
+.about{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,6vw,96px);align-items:start}
+.about > *{min-width:0}
+.about .big{font-size:clamp(24px,2.6vw,34px);font-weight:300;color:var(--navy);line-height:1.35}
+.about .txt p{color:var(--muted)}
+.about .txt p + p{margin-top:16px}
+.cards3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.card{background:var(--paper);border-radius:var(--radius);padding:32px;min-width:0;transition:transform .5s var(--soft),box-shadow .5s var(--soft);transform-style:preserve-3d}
+.card:hover{box-shadow:0 30px 60px -30px rgba(6,33,69,.35)}
+.ico{width:56px;height:56px;border-radius:16px;background:var(--sky);display:grid;place-items:center;color:var(--navy);transition:background .4s,color .4s}
+.ico svg{width:28px;height:28px}
+.card h3{font-size:24px;font-weight:400;color:var(--navy);margin-top:24px}
+.card p{color:var(--muted);margin-top:10px;font-size:16px}
+.mv{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.mv article{border-radius:var(--radius);padding:clamp(32px,4vw,56px);min-width:0}
+.mv article:first-child{background:var(--navy);color:#fff}
+.mv article:last-child{background:var(--paper)}
+.mv h3{font-size:clamp(26px,3vw,40px);margin-top:18px}
+.mv article:last-child h3{color:var(--navy)}
+.mv p{margin-top:16px;opacity:.8}
+
+/* ---------- SERVICIOS ---------- */
+.chips{position:relative;display:inline-flex;padding:5px;background:var(--paper);border-radius:999px;flex-wrap:wrap}
+.chips .pill{position:absolute;top:5px;bottom:5px;left:0;background:var(--navy);border-radius:999px;transition:transform .5s var(--ease),width .5s var(--ease)}
+.chips button{position:relative;z-index:1;border:0;background:none;padding:12px 22px;border-radius:999px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;transition:color .3s}
+.chips button[aria-pressed="true"]{color:#fff}
+.svc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.svc .card{display:flex;flex-direction:column;min-height:260px;cursor:default;position:relative;overflow:hidden;transition:transform .5s var(--soft),box-shadow .5s,background .5s,opacity .4s}
+.svc .card .who{position:absolute;top:28px;right:28px;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;background:var(--sand);color:var(--navy);transition:background .4s,color .4s}
+.svc .card.own .who{background:var(--navy);color:#fff}
+.svc .card h3{margin-top:auto;padding-top:32px}
+.svc .card p{margin-top:8px;transition:color .4s}
+.svc .card:hover{background:var(--navy)}
+.svc .card:hover h3{color:#fff}
+.svc .card:hover p{color:rgba(255,255,255,.75)}
+.svc .card:hover .ico{background:var(--brass);color:#fff}
+.svc .card:hover .who{background:rgba(255,255,255,.14);color:#fff}
+.svc .card.dim{opacity:.18;pointer-events:none}
+.steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;counter-reset:s}
+.step{background:var(--paper);border-radius:var(--radius);padding:32px;min-width:0;position:relative;overflow:hidden;counter-increment:s}
+.step::before{content:"0" counter(s);font-size:56px;font-weight:300;color:var(--sky);line-height:1;display:block;transition:color .4s}
+.step::after{content:"";position:absolute;left:0;bottom:0;height:3px;width:0;background:var(--brass);transition:width .7s var(--ease)}
+.step:hover::after{width:100%}
+.step:hover::before{color:var(--brass)}
+.step h3{font-size:24px;font-weight:400;color:var(--navy);margin-top:24px}
+.step p{color:var(--muted);margin-top:8px;font-size:16px}
+
+/* ---------- EDIFICIOS ---------- */
+.rail-wrap{position:relative}
+.rail{display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:4px;cursor:grab;-webkit-overflow-scrolling:touch}
+.rail::-webkit-scrollbar{display:none}
+.rail.drag{cursor:grabbing;scroll-snap-type:none}
+.b-card{flex:0 0 clamp(280px,34vw,440px);scroll-snap-align:start;border-radius:var(--radius);overflow:hidden;position:relative;aspect-ratio:3/4;background:var(--navy);user-select:none}
+.b-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;transition:transform 1.2s var(--soft)}
+.b-card:hover img{transform:scale(1.05)}
+.b-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(6,33,69,.85))}
+.b-card .in{position:absolute;left:24px;right:24px;bottom:24px;z-index:2;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.b-card h3{font-size:26px;font-weight:400}
+.b-card span{font-size:14px;color:rgba(255,255,255,.75)}
+.b-card .chip{font-size:12px;font-weight:500;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:6px 12px;border-radius:999px;white-space:nowrap}
+.rail-ctrl{display:flex;gap:10px}
+.round{width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:var(--paper);cursor:pointer;display:grid;place-items:center;color:var(--navy);transition:background .3s,color .3s,border-color .3s}
+.round:hover{background:var(--navy);color:#fff;border-color:var(--navy)}
+.round svg{width:18px;height:18px}
+.progress{height:2px;background:var(--line);margin-top:28px;border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;width:30%;background:var(--navy);transition:width .2s}
+.testi{background:var(--navy-deep);color:#fff;border-radius:28px;padding:clamp(36px,6vw,88px);display:grid;grid-template-columns:auto 1fr;gap:clamp(24px,5vw,72px);align-items:start;position:relative;overflow:hidden}
+.testi > *{min-width:0}
+.testi .qmark{font-size:clamp(120px,14vw,200px);line-height:.7;color:var(--brass);font-weight:300}
+.slides{position:relative;min-height:220px}
+.slide{position:absolute;inset:0;margin:0;opacity:0;transform:translateX(30px);transition:opacity .9s var(--soft),transform .9s var(--soft);pointer-events:none}
+.slide.on{opacity:1;transform:none;position:relative;pointer-events:auto}
+.slide blockquote{margin:0;font-size:clamp(24px,2.8vw,38px);font-weight:300;line-height:1.35}
+.slide cite{display:flex;align-items:center;gap:14px;margin-top:32px;font-style:normal;flex-wrap:wrap}
+.slide cite .av{width:48px;height:48px;border-radius:50%;background:var(--brass);display:grid;place-items:center;font-weight:500}
+.slide cite b{display:block;font-weight:500}
+.slide cite span{font-size:14px;color:rgba(255,255,255,.65)}
+.sample{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;border:1px solid rgba(255,255,255,.3);padding:4px 10px;border-radius:999px;color:rgba(255,255,255,.7)}
+.dots{display:flex;gap:8px;margin-top:36px}
+.dots button{width:10px;height:10px;border-radius:999px;border:0;background:rgba(255,255,255,.3);cursor:pointer;padding:0;transition:width .5s var(--ease),background .3s}
+.dots button.on{width:36px;background:var(--brass)}
+
+/* ---------- CONTACTO ---------- */
+.contact{display:grid;grid-template-columns:.9fr 1.1fr;gap:16px}
+.contact > *{min-width:0}
+.c-info{background:var(--navy);color:#fff;border-radius:28px;padding:clamp(32px,5vw,64px);display:flex;flex-direction:column;gap:28px;position:relative;overflow:hidden}
+.c-info::after{content:"";position:absolute;right:-100px;bottom:-100px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(184,149,90,.3),transparent 65%)}
+.c-info h2{font-size:clamp(30px,3.4vw,44px)}
+.c-row{display:flex;gap:16px;align-items:center;position:relative;z-index:1}
+.c-row i{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.1);display:grid;place-items:center;flex:none}
+.c-row i svg{width:22px;height:22px}
+.c-row small{display:block;font-size:13px;color:rgba(255,255,255,.6)}
+.c-row span{font-size:18px;word-break:break-word}
+.social{display:flex;gap:10px;margin-top:auto;position:relative;z-index:1}
+.social a{width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.1);display:grid;place-items:center;transition:background .3s,transform .3s}
+.social a:hover{background:var(--brass);transform:translateY(-3px)}
+.social svg{width:20px;height:20px}
+form{background:var(--paper);border-radius:28px;padding:clamp(32px,5vw,64px);display:grid;grid-template-columns:1fr 1fr;gap:28px 24px;align-content:start}
+.field{position:relative;min-width:0}
+.field.full{grid-column:1/-1}
+.field input,.field textarea,.field select{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--sand);border:1px solid transparent;border-radius:14px;padding:26px 18px 10px;transition:border-color .3s,background .3s}
+.field select{appearance:none;-webkit-appearance:none;cursor:pointer}
+.field textarea{min-height:130px;resize:vertical}
+.field label{position:absolute;left:19px;top:18px;font-size:16px;color:var(--muted);pointer-events:none;transition:transform .35s var(--soft),font-size .35s,color .3s;transform-origin:left}
+.field input:focus,.field textarea:focus,.field select:focus{outline:none;border-color:var(--navy);background:#fff}
+.field input:focus + label,.field input:not(:placeholder-shown) + label,.field textarea:focus + label,.field textarea:not(:placeholder-shown) + label,.field.static label{transform:translateY(-10px);font-size:12px;color:var(--navy)}
+.form-foot{grid-column:1/-1;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.form-msg{color:var(--navy);font-size:15px}
+
+/* ---------- PIE ---------- */
+footer{background:var(--navy-deep);color:rgba(255,255,255,.7);margin-top:clamp(40px,6vw,80px)}
+.foot{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px;padding-block:72px 40px}
+.foot img{height:56px;width:auto}
+.foot p{margin-top:20px;max-width:32ch}
+.foot h4{margin:0 0 16px;font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.foot ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.foot button{background:none;border:0;padding:0;cursor:pointer;color:#fff;opacity:.8}
+.foot button:hover{opacity:1}
+.foot-bottom{border-top:1px solid rgba(255,255,255,.12);padding-block:22px calc(22px + env(safe-area-inset-bottom,0px));display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:14px}
+
+/* ---------- MODAL ---------- */
+.modal{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:20px;background:rgba(6,33,69,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .4s,visibility .4s}
+.modal.open{opacity:1;visibility:visible}
+.modal-card{width:min(100%,500px);background:#fff;border-radius:28px;padding:clamp(32px,5vw,52px);transform:translateY(20px) scale(.98);transition:transform .5s var(--soft)}
+.modal.open .modal-card{transform:none}
+.modal h3{font-size:34px;color:var(--navy);margin-top:16px}
+.modal p{color:var(--muted);margin-top:14px}
+.modal .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:32px}
+.modal .btn.light{background:var(--sand);color:var(--navy)}.modal .btn.light::before{background:var(--line)}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width:1000px){
+  .hero-grid,.why,.about,.contact,.cta{grid-template-columns:1fr}
+  .hero-photo{min-height:420px}
+  .why-view{min-height:380px;order:-1}
+  .numbers{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:36px}
+  .n:nth-child(3){border-left:0;padding-left:0}
+  .svc{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cards3{grid-template-columns:1fr}
+  .foot{grid-template-columns:1fr 1fr}
+  .foot > div:first-child{grid-column:1/-1}
+}
+@media (max-width:600px){
+  .svc,.steps,.mv,form{grid-template-columns:1fr}
+  .numbers{grid-template-columns:1fr}
+  .n + .n{border-left:0;padding-left:0;border-top:1px solid rgba(255,255,255,.14);padding-top:24px}
+  .testi{grid-template-columns:1fr}
+  .testi .qmark{font-size:100px}
+  .brand span{display:none}
+  .glass.g2{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+</style>
+</head>
+<body>
+
+<!-- íconos -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-admin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 17v-3M12 17V10M16 17v-5"/></symbol>
+  <symbol id="i-clean" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12l-1.5 10h-9zM8.5 11c0-3 1.5-5 3.5-5s3.5 2 3.5 5M19 3v3M17.5 4.5h3"/></symbol>
+  <symbol id="i-concierge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 17a8 8 0 0116 0M2 20h20M12 7v2"/><circle cx="12" cy="6" r="1"/></symbol>
+  <symbol id="i-security" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+  <symbol id="i-lift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M12 6v15M8 11l1.5-2 1.5 2M13 9l1.5 2 1.5-2"/></symbol>
+  <symbol id="i-pool" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 17c2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5M8 15V5a2 2 0 014 0M14 15V5a2 2 0 014 0M8 8h6M8 11h6"/></symbol>
+  <symbol id="i-garden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V11M12 13c0-5 3-8 8-8 0 5-3 8-8 8zM12 16c0-4-3-6.5-7-7 0 4 3 6.5 7 7zM7 21h10"/></symbol>
+  <symbol id="i-maint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-7 4 3 8-10M15 6h6v6"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></symbol>
+  <symbol id="i-arrow-l" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4M10 6l-6 6 6 6"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7l8 6 8-6"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+</defs></svg>
+
+<header class="nav" id="nav">
+  <div class="nav-bar">
+    <button class="brand" data-go="inicio" aria-label="Bramar Group, inicio"><img src="img/isotipo-azul.png" alt=""><span>BRAMAR</span></button>
+    <ul class="links" id="links">
+      <li class="pill" aria-hidden="true"></li>
+      <li><button data-go="inicio">Inicio</button></li>
+      <li><button data-go="nosotros">Nosotros</button></li>
+      <li><button data-go="servicios">Servicios</button></li>
+      <li><button data-go="edificios">Edificios</button></li>
+      <li><button data-go="contacto">Contacto</button></li>
+    </ul>
+    <button class="cta-access" data-access><svg><use href="#i-key"/></svg>Copropietarios</button>
+    <button class="burger" id="burger" aria-label="Abrir menú" aria-expanded="false"><i></i><i></i><i></i></button>
+  </div>
+  <div class="mobile-menu" id="mmenu">
+    <button class="m" data-go="inicio"><small>01</small>Inicio</button>
+    <button class="m" data-go="nosotros"><small>02</small>Nosotros</button>
+    <button class="m" data-go="servicios"><small>03</small>Servicios</button>
+    <button class="m" data-go="edificios"><small>04</small>Edificios</button>
+    <button class="m" data-go="contacto"><small>05</small>Contacto</button>
+    <button class="cta-access" data-access><svg><use href="#i-key"/></svg>Acceso copropietarios</button>
+  </div>
+</header>
+
+<div class="wipe" id="wipe" aria-hidden="true"><span id="wipe-t">Inicio</span></div>
+
+<main>
+
+<!-- ===================== INICIO ===================== -->
+<div class="page" id="inicio" data-page data-name="Inicio">
+  <section class="hero">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <div>
+          <span class="tag rise">Administración de edificios · Santa Cruz</span>
+          <h1 class="rise d1">La gestión que <b>valoriza</b> su patrimonio.</h1>
+          <p class="lede rise d2">Administramos su edificio de punta a punta. Usted trata con un solo responsable.</p>
+        </div>
+        <div class="hero-actions rise d3">
+          <button class="btn gold" data-go="contacto">Cotizar administración <svg><use href="#i-arrow"/></svg></button>
+          <button class="btn outline" data-access>Acceso copropietarios</button>
+        </div>
+      </div>
+      <div class="hero-photo reveal-img">
+        <img src="img/torre-zafiro.jpg" alt="Torre Zafiro II, edificio administrado por Bramar Group">
+        <div class="glass g2"><span class="live"></span>Asistencia 24/7 activa</div>
+        <div class="glass g1"><img src="img/torre-zafiro.jpg" alt=""><div><b>Torre Zafiro II</b><span>Gestionado por Bramar</span></div></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="marquee" aria-label="Servicios: administración, limpieza, conserjería, seguridad, ascensores, piscinas, jardinería y mantenimiento">
+    <div class="track" aria-hidden="true">
+      <span>Administración</span><span>Limpieza</span><span>Conserjería</span><span>Seguridad</span><span>Ascensores</span><span>Piscinas</span><span>Jardinería</span><span>Mantenimiento</span>
+      <span>Administración</span><span>Limpieza</span><span>Conserjería</span><span>Seguridad</span><span>Ascensores</span><span>Piscinas</span><span>Jardinería</span><span>Mantenimiento</span>
+    </div>
+  </div>
+
+  <section>
+    <div class="wrap">
+      <div class="head"><div><span class="tag">Por qué Bramar</span><h2 class="h2">Cuatro razones para <b>confiarnos</b> su edificio.</h2></div></div>
+      <div class="why">
+        <div class="why-list" id="why">
+          <button class="why-item on" data-i="0"><small>01</small><h3>Transparencia total</h3><p>Recibos digitales y un reporte mensual de todo lo ejecutado.</p><span class="bar"></span></button>
+          <button class="why-item" data-i="1"><small>02</small><h3>Un solo responsable</h3><p>Coordinamos a todas las empresas que trabajan en su edificio.</p><span class="bar"></span></button>
+          <button class="why-item" data-i="2"><small>03</small><h3>Asistencia 24/7</h3><p>Atendemos emergencias a cualquier hora del día.</p><span class="bar"></span></button>
+          <button class="why-item" data-i="3"><small>04</small><h3>Más plusvalía</h3><p>Un edificio bien cuidado protege el valor de su inversión.</p><span class="bar"></span></button>
+        </div>
+        <div class="why-view" id="why-view">
+          <img class="on" src="img/oficina.jpg" alt="">
+          <img src="img/edificio-fachada.jpg" alt="">
+          <img src="img/edificio-balcones.jpg" alt="">
+          <img src="img/edificio-palmeras.jpg" alt="">
+          <div class="why-big" id="why-big"><b>0%</b><span>de opacidad en las cuentas</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="numbers">
+        <div class="n"><b data-to="10">10<small>+</small></b><span>años administrando</span></div>
+        <div class="n"><b data-to="350">350<small>+</small></b><span>familias conformes</span></div>
+        <div class="n"><b data-to="4">4<small>+</small></b><span>edificios gestionados</span></div>
+        <div class="n"><b>24/7</b><span>atención de emergencias</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="cta">
+        <div class="tx"><span class="tag">Propuesta sin costo</span><h2 class="h2">¿Su edificio necesita una <b>nueva administración</b>?</h2><div><button class="btn navy" data-go="contacto">Hablemos <svg><use href="#i-arrow"/></svg></button></div></div>
+        <div class="ph"><img src="img/edificio-palmeras.jpg" alt="Edificio residencial administrado por Bramar"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===================== NOSOTROS ===================== -->
+<div class="page" id="nosotros" data-page data-name="Nosotros" hidden>
+  <div class="p-head"><div class="box reveal-img"><img src="img/oficina.jpg" alt="Oficinas de Bramar Group">
+    <div class="in"><div class="crumb rise">Inicio <span>/</span> <b>Nosotros</b></div><h1 class="rise d1">Innovación y <b>experiencia.</b></h1><p class="rise d2">Más de 10 años administrando edificios y condominios en Santa Cruz.</p></div></div></div>
+  <section>
+    <div class="wrap about">
+      <div><span class="tag">Quiénes somos</span><p class="big" style="margin-top:20px">Una empresa dedicada a la administración integral de edificios y condominios, con una estructura sólida para el mercado inmobiliario moderno.</p></div>
+      <div class="txt"><p>Cuidamos cada proceso del edificio: las finanzas, el personal, los proveedores y el estado de las áreas comunes.</p><p>Nuestro compromiso es que la directiva y los copropietarios sepan siempre en qué se usa su dinero.</p></div>
+    </div>
+  </section>
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="cards3">
+        <article class="card tilt"><div class="ico"><svg><use href="#i-admin"/></svg></div><h3>Gestión estratégica</h3><p>Finanzas y operación en orden, con presupuesto bajo control.</p></article>
+        <article class="card tilt"><div class="ico"><svg><use href="#i-check"/></svg></div><h3>Proveedores supervisados</h3><p>Seleccionamos y evaluamos a cada empresa aliada.</p></article>
+        <article class="card tilt"><div class="ico"><svg><use href="#i-eye"/></svg></div><h3>Transparencia total</h3><p>Reportes y recibos digitales cada mes.</p></article>
+      </div>
+    </div>
+  </section>
+  <section style="padding-top:0">
+    <div class="wrap mv">
+      <article><span class="tag">Misión</span><h3>Que cada edificio se mantenga como nuevo, siempre.</h3><p>En estética y en operatividad.</p></article>
+      <article><span class="tag">Filosofía</span><h3>Inversión protegida.</h3><p style="color:var(--muted);opacity:1">Una gestión rigurosa para que la plusvalía de su propiedad siga creciendo.</p></article>
+    </div>
+  </section>
+</div>
+
+<!-- ===================== SERVICIOS ===================== -->
+<div class="page" id="servicios" data-page data-name="Servicios" hidden>
+  <div class="p-head"><div class="box reveal-img"><img src="img/edificio-fachada.jpg" alt="Fachada de edificio administrado por Bramar" style="object-position:center 30%">
+    <div class="in"><div class="crumb rise">Inicio <span>/</span> <b>Servicios</b></div><h1 class="rise d1">Todo su edificio, <b>una sola gestión.</b></h1><p class="rise d2">Nuestro equipo y empresas aliadas que seleccionamos y supervisamos.</p></div></div></div>
+  <section>
+    <div class="wrap">
+      <div class="head"><div><span class="tag">Servicios integrales</span><h2 class="h2">Ocho servicios, <b>un responsable.</b></h2></div>
+        <div class="chips" id="chips"><span class="pill" aria-hidden="true"></span><button aria-pressed="true" data-f="all">Todos</button><button aria-pressed="false" data-f="own">Equipo Bramar</button><button aria-pressed="false" data-f="ally">Empresas aliadas</button></div>
+      </div>
+      <div class="svc" id="svc"></div>
+    </div>
+  </section>
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="head"><div><span class="tag">Proceso</span><h2 class="h2">Cómo <b>empezamos.</b></h2></div></div>
+      <div class="steps">
+        <div class="step"><h3>Visita</h3><p>Conocemos su edificio y su presupuesto actual.</p></div>
+        <div class="step"><h3>Propuesta</h3><p>Presentamos un plan claro a la directiva.</p></div>
+        <div class="step"><h3>Transición</h3><p>Ordenamos cuentas y proveedores sin cortes.</p></div>
+        <div class="step"><h3>Gestión</h3><p>Operamos y reportamos cada mes.</p></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===================== EDIFICIOS ===================== -->
+<div class="page" id="edificios" data-page data-name="Edificios" hidden>
+  <div class="p-head"><div class="box reveal-img"><img src="img/edificio-palmeras.jpg" alt="Edificio residencial administrado por Bramar">
+    <div class="in"><div class="crumb rise">Inicio <span>/</span> <b>Edificios</b></div><h1 class="rise d1">Impecables y <b>operativos.</b></h1><p class="rise d2">Edificios que hoy confían en nuestra gestión.</p></div></div></div>
+  <section>
+    <div class="wrap">
+      <div class="head"><div><span class="tag">Portafolio</span><h2 class="h2">Edificios <b>gestionados.</b></h2></div>
+        <div class="rail-ctrl"><button class="round" id="r-prev" aria-label="Anterior"><svg><use href="#i-arrow-l"/></svg></button><button class="round" id="r-next" aria-label="Siguiente"><svg><use href="#i-arrow"/></svg></button></div></div>
+      <div class="rail" id="rail">
+        <article class="b-card"><img src="img/torre-zafiro.jpg" alt="Torre Zafiro II"><div class="in"><div><h3>Torre Zafiro II</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></div></article>
+        <article class="b-card"><img src="img/edificio-balcones.jpg" alt="Edificio residencial con balcones"><div class="in"><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></div></article>
+        <article class="b-card"><img src="img/edificio-fachada.jpg" alt="Edificio con fachada blanca"><div class="in"><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></div></article>
+        <article class="b-card"><img src="img/edificio-palmeras.jpg" alt="Edificio con palmeras" style="object-position:30% center"><div class="in"><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></div></article>
+      </div>
+      <div class="progress"><i id="r-bar"></i></div>
+    </div>
+  </section>
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="testi">
+        <div class="qmark" aria-hidden="true">“</div>
+        <div>
+          <span class="tag">Testimonios</span>
+          <div class="slides" id="slides" style="margin-top:28px">
+            <figure class="slide on"><blockquote>Desde que Bramar administra el edificio, las cuentas son claras y las áreas comunes lucen como el primer día.</blockquote><cite><span class="av">P</span><div><b>Presidente de directiva</b><span>Nombre del edificio</span></div><span class="sample">Ejemplo</span></cite></figure>
+            <figure class="slide"><blockquote>Con el mismo presupuesto recibimos un servicio mucho más ordenado. El reporte mensual nos da tranquilidad.</blockquote><cite><span class="av">P</span><div><b>Presidenta de comisión</b><span>Nombre del condominio</span></div><span class="sample">Ejemplo</span></cite></figure>
+            <figure class="slide"><blockquote>Cuando surge una emergencia, responden a cualquier hora.</blockquote><cite><span class="av">P</span><div><b>Presidente de directiva</b><span>Nombre del edificio</span></div><span class="sample">Ejemplo</span></cite></figure>
+          </div>
+          <div class="dots" id="dots"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ===================== CONTACTO ===================== -->
+<div class="page" id="contacto" data-page data-name="Contacto" hidden>
+  <section style="padding-top:calc(110px + env(safe-area-inset-top,0px))">
+    <div class="wrap contact">
+      <div class="c-info rise">
+        <span class="tag">Contacto</span>
+        <h2>Conversemos sobre su edificio.</h2>
+        <div class="c-row"><i><svg><use href="#i-phone"/></svg></i><div><small>Teléfono / WhatsApp</small><span>+591 7000 0000</span></div></div>
+        <div class="c-row"><i><svg><use href="#i-mail"/></svg></i><div><small>Correo</small><span>contacto@bramargroup.com</span></div></div>
+        <div class="c-row"><i><svg><use href="#i-pin"/></svg></i><div><small>Oficina</small><span>Santa Cruz de la Sierra</span></div></div>
+        <div class="c-row"><i><svg><use href="#i-clock"/></svg></i><div><small>Emergencias</small><span>24 horas, 7 días</span></div></div>
+        <div class="social">
+          <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></svg></a>
+          <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 8h3V4h-3a4 4 0 00-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8z"/></svg></a>
+          <a href="#" aria-label="LinkedIn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 014 0v4M12 10v7"/></svg></a>
+          <a href="#" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l1.3-4A8 8 0 1112 20a8 8 0 01-3.8-1z"/><path d="M9 9c0 3 3 6 6 6l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/></svg></a>
+        </div>
+      </div>
+      <form id="form" class="rise d1" novalidate>
+        <div class="field"><input id="f-name" placeholder=" " autocomplete="name"><label for="f-name">Nombre</label></div>
+        <div class="field"><input id="f-phone" type="tel" placeholder=" " autocomplete="tel"><label for="f-phone">Teléfono</label></div>
+        <div class="field full"><input id="f-mail" type="email" placeholder=" " autocomplete="email"><label for="f-mail">Correo</label></div>
+        <div class="field full"><input id="f-bld" placeholder=" "><label for="f-bld">Edificio o condominio</label></div>
+        <div class="field full static"><select id="f-role"><option>Presidente o miembro de directiva</option><option>Copropietario</option><option>Desarrollador inmobiliario</option><option>Otro</option></select><label for="f-role">Usted es</label></div>
+        <div class="field full"><textarea id="f-msg" placeholder=" "></textarea><label for="f-msg">Mensaje</label></div>
+        <div class="form-foot"><button class="btn navy" type="submit">Enviar mensaje <svg><use href="#i-arrow"/></svg></button><span class="form-msg" id="form-msg" role="status"></span></div>
+      </form>
+    </div>
+  </section>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap foot">
+    <div><img src="img/logo-blanco.png" alt="Bramar Group"><p>Administración integral de edificios y condominios en Santa Cruz.</p></div>
+    <div><h4>Páginas</h4><ul><li><button data-go="inicio">Inicio</button></li><li><button data-go="nosotros">Nosotros</button></li><li><button data-go="servicios">Servicios</button></li><li><button data-go="edificios">Edificios</button></li><li><button data-go="contacto">Contacto</button></li></ul></div>
+    <div><h4>Contacto</h4><ul><li>+591 7000 0000</li><li>contacto@bramargroup.com</li><li>Santa Cruz de la Sierra</li></ul></div>
+  </div>
+  <div class="wrap foot-bottom"><span>© <span id="yr">2026</span> Bramar Group</span><span>Gestión integral de edificios y condominios</span></div>
+</footer>
+
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
+  <div class="modal-card">
+    <span class="tag">Copropietarios</span>
+    <h3 id="m-title">Portal en preparación</h3>
+    <p>Muy pronto podrá ver sus expensas, recibos y reportes en línea. Mientras tanto, escríbanos y le enviamos su información.</p>
+    <div class="row"><button class="btn navy" data-go="contacto" data-close>Escribirnos</button><button class="btn light" data-close>Cerrar</button></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
+  const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const pages=$$('[data-page]'),ids=pages.map(p=>p.id);
+  const nav=$('#nav'),burger=$('#burger'),wipe=$('#wipe'),wipeT=$('#wipe-t');
+  let current=null,busy=false;
+
+  /* ---------- indicador deslizante del menú ---------- */
+  function movePill(container,btn){
+    const pill=container.querySelector('.pill');if(!pill||!btn)return;
+    const c=container.getBoundingClientRect(),b=btn.getBoundingClientRect();
+    pill.style.width=b.width+'px';pill.style.transform=`translateX(${b.left-c.left}px)`;
+  }
+
+  /* ---------- páginas ---------- */
+  function show(id){
+    pages.forEach(p=>{p.hidden=p.id!==id;p.classList.remove('ready');});
+    const pg=document.getElementById(id);window.scrollTo(0,0);void pg.offsetWidth;pg.classList.add('ready');
+    $$('[data-go]').forEach(b=>{if(b.closest('.links,.mobile-menu'))b.dataset.go===id?b.setAttribute('aria-current','page'):b.removeAttribute('aria-current');});
+    movePill($('#links'),$('#links [aria-current="page"]'));
+    current=id;
+    if(id==='inicio'){countUp();startWhy();}else stopWhy();
+    if(id==='edificios'){startSlides();updateBar();}else stopSlides();
+    if(id==='servicios')requestAnimationFrame(()=>movePill($('#chips'),$('#chips [aria-pressed="true"]')));
+  }
+  function go(id,push){
+    if(!ids.includes(id))id='inicio';
+    nav.classList.remove('open');burger.setAttribute('aria-expanded','false');
+    if(id===current||busy)return;
+    if(push!==false){try{history.pushState(null,'','#'+id);}catch(e){}}
+    if(reduce||!current){show(id);return;}
+    busy=true;
+    const name=document.getElementById(id).dataset.name;
+    wipeT.innerHTML=name+'<b>.</b>';
+    wipe.className='wipe in';
+    setTimeout(()=>{show(id);wipe.className='wipe out';setTimeout(()=>{wipe.className='wipe';busy=false;},720);},900);
+  }
+  document.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b){e.preventDefault();go(b.dataset.go);}});
+  addEventListener('popstate',()=>go(location.hash.slice(1)||'inicio',false));
+  burger.addEventListener('click',()=>{const o=nav.classList.toggle('open');burger.setAttribute('aria-expanded',o);});
+  addEventListener('resize',()=>{movePill($('#links'),$('#links [aria-current="page"]'));movePill($('#chips'),$('#chips [aria-pressed="true"]'));});
+
+  /* ---------- contadores ---------- */
+  function countUp(){
+    if(reduce)return;
+    $$('#inicio [data-to]').forEach(el=>{
+      const to=+el.dataset.to,sm=el.querySelector('small').outerHTML,t0=performance.now()+400;
+      (function step(t){const k=Math.max(0,Math.min((t-t0)/1800,1));el.innerHTML=Math.round(to*(1-Math.pow(1-k,4)))+sm;if(k<1)requestAnimationFrame(step);})(performance.now());
+    });
+  }
+
+  /* ---------- por qué Bramar ---------- */
+  const big=[['0%','de opacidad en las cuentas'],['1','solo responsable para todo'],['24/7','atención de emergencias'],['+','valor para su propiedad']];
+  const items=$$('.why-item'),imgs=$$('#why-view img'),bigEl=$('#why-big');let wi=0,wt=null;
+  function setWhy(i){
+    wi=i;items.forEach((it,n)=>{it.classList.remove('on');void it.offsetWidth;if(n===i)it.classList.add('on');});
+    imgs.forEach((im,n)=>im.classList.toggle('on',n===i));
+    bigEl.innerHTML=`<b>${big[i][0]}</b><span>${big[i][1]}</span>`;
+    clearTimeout(wt);if(!reduce&&current==='inicio')wt=setTimeout(()=>setWhy((wi+1)%items.length),6000);
+  }
+  items.forEach(it=>it.addEventListener('click',()=>setWhy(+it.dataset.i)));
+  function startWhy(){setWhy(0);}function stopWhy(){clearTimeout(wt);}
+
+  /* ---------- servicios ---------- */
+  const S=[
+    ['own','admin','Administración','Gestión estratégica y contable.'],
+    ['own','clean','Limpieza','Higiene premium en áreas comunes.'],
+    ['own','concierge','Conserjería','Atención personalizada al residente.'],
+    ['ally','security','Seguridad','Vigilancia las 24 horas.'],
+    ['ally','lift','Ascensores','Mantenimiento técnico garantizado.'],
+    ['ally','pool','Piscinas','Cuidado químico y funcional.'],
+    ['ally','garden','Jardinería','Paisajismo y mantenimiento.'],
+    ['ally','maint','Mantenimiento','Acciones preventivas constantes.']
+  ];
+  $('#svc').innerHTML=S.map(([k,i,t,d])=>`<article class="card tilt ${k}" data-k="${k}"><span class="who">${k==='own'?'Bramar':'Aliado'}</span><div class="ico"><svg><use href="#i-${i}"/></svg></div><h3>${t}</h3><p>${d}</p></article>`).join('');
+  $('#chips').addEventListener('click',e=>{
+    const b=e.target.closest('button');if(!b)return;
+    $$('#chips button').forEach(x=>x.setAttribute('aria-pressed',x===b));movePill($('#chips'),b);
+    $$('#svc .card').forEach(c=>c.classList.toggle('dim',!(b.dataset.f==='all'||c.dataset.k===b.dataset.f)));
+  });
+
+  /* ---------- tarjetas con inclinación ---------- */
+  if(!reduce&&matchMedia('(hover:hover)').matches){
+    document.addEventListener('pointermove',e=>{
+      const c=e.target.closest('.tilt');
+      $$('.tilt').forEach(t=>{if(t!==c)t.style.transform='';});
+      if(!c)return;const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+      c.style.transform=`perspective(800px) rotateY(${x*6}deg) rotateX(${-y*6}deg) translateY(-6px)`;
+    });
+  }
+
+  /* ---------- carrusel de edificios (arrastrable) ---------- */
+  const rail=$('#rail'),bar=$('#r-bar');
+  function updateBar(){const max=rail.scrollWidth-rail.clientWidth;const vis=rail.clientWidth/rail.scrollWidth;bar.style.width=Math.max(vis,(max?rail.scrollLeft/max:1)*(1-vis)+vis)*100+'%';}
+  rail.addEventListener('scroll',updateBar,{passive:true});
+  const step=()=>rail.querySelector('.b-card').offsetWidth+20;
+  $('#r-next').onclick=()=>rail.scrollBy({left:step(),behavior:'smooth'});
+  $('#r-prev').onclick=()=>rail.scrollBy({left:-step(),behavior:'smooth'});
+  let down=false,sx=0,sl=0;
+  rail.addEventListener('pointerdown',e=>{if(e.pointerType!=='mouse')return;down=true;sx=e.clientX;sl=rail.scrollLeft;rail.classList.add('drag');});
+  addEventListener('pointermove',e=>{if(down)rail.scrollLeft=sl-(e.clientX-sx);});
+  addEventListener('pointerup',()=>{if(down){down=false;rail.classList.remove('drag');}});
+
+  /* ---------- testimonios ---------- */
+  const slides=$$('.slide'),dots=$('#dots');let si=0,st=null,run=false;
+  slides.forEach((_,k)=>{const b=document.createElement('button');b.setAttribute('aria-label','Testimonio '+(k+1));b.onclick=()=>slide(k);dots.appendChild(b);});
+  function slide(k){si=(k+slides.length)%slides.length;slides.forEach((s,n)=>s.classList.toggle('on',n===si));[...dots.children].forEach((d,n)=>d.classList.toggle('on',n===si));clearTimeout(st);if(run&&!reduce)st=setTimeout(()=>slide(si+1),7000);}
+  function startSlides(){run=true;slide(0);}function stopSlides(){run=false;clearTimeout(st);}
+
+  /* ---------- modal ---------- */
+  const modal=$('#modal');
+  $$('[data-access]').forEach(b=>b.addEventListener('click',()=>{nav.classList.remove('open');modal.classList.add('open');}));
+  $$('[data-close]').forEach(b=>b.addEventListener('click',()=>modal.classList.remove('open')));
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open');});
+  addEventListener('keydown',e=>{if(e.key==='Escape')modal.classList.remove('open');});
+
+  /* ---------- formulario (conectar a correo o CRM) ---------- */
+  $('#form').addEventListener('submit',e=>{
+    e.preventDefault();
+    const n=$('#f-name'),m=$('#f-mail'),out=$('#form-msg');
+    if(!n.value.trim()){out.textContent='Escriba su nombre.';n.focus();return;}
+    if(!/^\S+@\S+\.\S+$/.test(m.value)){out.textContent='Revise el correo.';m.focus();return;}
+    out.textContent='Gracias, '+n.value.trim().split(' ')[0]+'. Le contactaremos pronto.';
+    e.target.reset();
+  });
+
+  $('#yr').textContent=new Date().getFullYear();
+  show(ids.includes(location.hash.slice(1))?location.hash.slice(1):'inicio');
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>movePill($('#links'),$('#links [aria-current="page"]')));
+})();
+</script>
+</body>
+</html>
