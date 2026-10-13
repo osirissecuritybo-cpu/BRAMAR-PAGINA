@@ -174,18 +174,13 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .glass.g1 img{width:44px;height:44px;border-radius:12px;object-fit:cover}
 .glass.g1 b{display:block;font-weight:500;color:var(--navy);line-height:1.3}
 .glass.g1 span{font-size:13px;color:var(--muted)}
-.glass.g2{right:16px;top:16px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:500;color:var(--navy);animation:bob 5s ease-in-out infinite}
-@keyframes bob{50%{transform:translateY(-6px)}}
-.live{width:10px;height:10px;border-radius:50%;background:var(--ok);box-shadow:0 0 0 0 rgba(31,138,91,.6);animation:pulse 2s infinite}
-@keyframes pulse{70%{box-shadow:0 0 0 10px rgba(31,138,91,0)}100%{box-shadow:0 0 0 0 rgba(31,138,91,0)}}
 
 /* cinta de servicios */
 .marquee{overflow:hidden;padding-block:28px;border-bottom:1px solid var(--line);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
-.marquee .track{display:flex;gap:44px;width:max-content;animation:slide 40s linear infinite}
-.marquee:hover .track{animation-play-state:paused}
-.marquee span{display:flex;align-items:center;gap:44px;font-size:clamp(20px,2.6vw,32px);font-weight:300;color:var(--navy);white-space:nowrap}
+.marquee .track{display:flex;width:max-content;animation:slide 40s linear infinite;will-change:transform;backface-visibility:hidden}
+.marquee span{display:flex;align-items:center;gap:44px;padding-right:44px;font-size:clamp(20px,2.6vw,32px);font-weight:300;color:var(--navy);white-space:nowrap}
 .marquee span::after{content:"";width:9px;height:9px;border-radius:50%;background:var(--brass)}
-@keyframes slide{to{transform:translateX(-50%)}}
+@keyframes slide{from{transform:translate3d(0,0,0)}to{transform:translate3d(-50%,0,0)}}
 
 /* por qué Bramar */
 .why{display:grid;grid-template-columns:1fr 1.1fr;gap:clamp(32px,5vw,80px);align-items:stretch}
@@ -217,7 +212,7 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .n{position:relative;min-width:0}
 .n + .n{border-left:1px solid rgba(255,255,255,.14);padding-left:24px}
 .n b{display:block;font-size:clamp(44px,5.4vw,76px);font-weight:300;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
-.n b small{font-size:.5em;color:var(--brass-soft)}
+.n b small{font-size:.5em;color:var(--brass-soft);vertical-align:.45em;margin-right:2px}
 .n span{display:block;margin-top:12px;font-size:14px;color:rgba(255,255,255,.75)}
 
 /* llamada a la acción */
@@ -414,7 +409,6 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   .testi{grid-template-columns:1fr}
   .testi .qmark{font-size:90px;height:50px}
   .brand span{display:none}
-  .glass.g2{display:none}
   .hero-photo{min-height:340px}
   /* tarjetas de servicio compactas en una columna */
   .svc{grid-template-columns:1fr;gap:12px}
@@ -518,8 +512,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
         </div>
       </div>
       <div class="hero-photo reveal-img">
-        <img src="img/torre-zafiro.jpg" alt="Torre Zafiro II, edificio administrado por Bramar Group" width="1086" height="1448" fetchpriority="high">
-        <div class="glass g2"><span class="live" aria-hidden="true"></span>Asistencia 24/7</div>
+        <img src="img/torre-zafiro.jpg" alt="Torre Zafiro II, edificio administrado por Bramar Group" width="1000" height="1333" fetchpriority="high">
         <div class="glass g1"><img src="img/torre-zafiro-mini.jpg" alt="" width="120" height="160"><div><b>Torre Zafiro II</b><span>Gestionado por Bramar</span></div></div>
       </div>
     </div>
@@ -544,9 +537,9 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
         </div>
         <div class="why-view" id="why-view" role="tabpanel" aria-labelledby="w0">
           <img class="on" src="img/oficina.jpg" alt="" width="1536" height="1024" loading="lazy" decoding="async">
-          <img src="img/edificio-fachada.jpg" alt="" width="720" height="960" loading="lazy" decoding="async">
-          <img src="img/edificio-balcones.jpg" alt="" width="671" height="896" loading="lazy" decoding="async">
-          <img src="img/edificio-palmeras.jpg" alt="" width="974" height="731" loading="lazy" decoding="async">
+          <img src="img/san-nicolas.jpg" alt="" width="985" height="1230" loading="lazy" decoding="async">
+          <img src="img/rise-1.jpg" alt="" width="1000" height="1333" loading="lazy" decoding="async">
+          <img src="img/hub-diamante-norte.jpg" alt="" width="1000" height="1155" loading="lazy" decoding="async">
           <div class="why-big" id="why-big"><b>0%</b><span>de opacidad en las cuentas</span></div>
         </div>
       </div>
@@ -556,10 +549,10 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   <section class="tight">
     <div class="wrap">
       <div class="numbers" data-reveal>
-        <div class="n"><b data-to="10">10<small>+</small></b><span>años administrando</span></div>
-        <div class="n"><b data-to="350">350<small>+</small></b><span>familias conformes</span></div>
-        <div class="n"><b data-to="4">4<small>+</small></b><span>edificios gestionados</span></div>
-        <div class="n"><b>24/7</b><span>atención de emergencias</span></div>
+        <div class="n"><b data-to="6"><small>+</small>6</b><span>años administrando</span></div>
+        <div class="n"><b data-to="400"><small>+</small>400</b><span>familias conformes</span></div>
+        <div class="n"><b data-to="5"><small>+</small>5</b><span>edificios gestionados</span></div>
+        <div class="n"><b>24/7</b><span>soporte</span></div>
       </div>
     </div>
   </section>
@@ -568,7 +561,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
     <div class="wrap">
       <div class="cta" data-reveal>
         <div class="tx"><span class="tag">Propuesta sin costo</span><h2 class="h2">¿Su edificio necesita una <b>nueva administración</b>?</h2><div><a class="btn navy" href="#contacto" data-go="contacto">Solicitar visita <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div></div>
-        <div class="ph"><img src="img/edificio-palmeras.jpg" alt="Edificio residencial administrado por Bramar" width="974" height="731" loading="lazy" decoding="async"></div>
+        <div class="ph"><img src="img/limco-ii.jpg" alt="Edificio Limco II, administrado por Bramar" width="1200" height="900" loading="lazy" decoding="async"></div>
       </div>
     </div>
   </section>
@@ -577,7 +570,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
 <!-- ============================ 02 · NOSOTROS ============================ -->
 <div class="page" id="nosotros" data-page data-title="Nosotros" hidden>
   <div class="p-head"><div class="box reveal-img"><img src="img/oficina.jpg" alt="Oficinas de Bramar Group" width="1536" height="1024" loading="lazy" decoding="async">
-    <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Nosotros</b></div><h1 class="rise d1" tabindex="-1">Innovación y <b>experiencia.</b></h1><p class="rise d2">Más de 10 años administrando edificios y condominios en Santa Cruz.</p></div></div></div>
+    <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Nosotros</b></div><h1 class="rise d1" tabindex="-1">Innovación y <b>experiencia.</b></h1><p class="rise d2">Más de 6 años administrando edificios y condominios en Santa Cruz.</p></div></div></div>
   <section>
     <div class="wrap about">
       <div data-reveal><span class="tag">Quiénes somos</span><p class="big">Una empresa dedicada a la administración integral de edificios y condominios, con una estructura sólida para el mercado inmobiliario moderno.</p></div>
@@ -616,7 +609,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
 
 <!-- ============================ 03 · SERVICIOS ============================ -->
 <div class="page" id="servicios" data-page data-title="Servicios" hidden>
-  <div class="p-head"><div class="box reveal-img"><img src="img/edificio-fachada.jpg" alt="Fachada de edificio administrado por Bramar" width="720" height="960" loading="lazy" decoding="async" style="object-position:center 30%">
+  <div class="p-head"><div class="box reveal-img"><img src="img/san-nicolas.jpg" alt="San Nicolás Residences, administrado por Bramar" width="985" height="1230" loading="lazy" decoding="async" style="object-position:center 35%">
     <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Servicios</b></div><h1 class="rise d1" tabindex="-1">Todo su edificio, <b>una sola gestión.</b></h1><p class="rise d2">Nuestro equipo y empresas aliadas que seleccionamos y supervisamos.</p></div></div></div>
   <section>
     <div class="wrap">
@@ -641,17 +634,18 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
 
 <!-- ============================ 04 · EDIFICIOS ============================ -->
 <div class="page" id="edificios" data-page data-title="Edificios" hidden>
-  <div class="p-head"><div class="box reveal-img"><img src="img/edificio-palmeras.jpg" alt="Edificio residencial administrado por Bramar" width="974" height="731" loading="lazy" decoding="async">
+  <div class="p-head"><div class="box reveal-img"><img src="img/hub-diamante-norte.jpg" alt="Hub Diamante Norte, administrado por Bramar" width="1000" height="1155" loading="lazy" decoding="async" style="object-position:center 30%">
     <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Edificios</b></div><h1 class="rise d1" tabindex="-1">Impecables y <b>operativos.</b></h1><p class="rise d2">Edificios que hoy confían en nuestra gestión.</p></div></div></div>
   <section>
     <div class="wrap">
       <div class="head" data-reveal><div><span class="tag">Portafolio</span><h2 class="h2">Edificios <b>gestionados.</b></h2></div>
         <div class="rail-ctrl"><button class="round" type="button" id="r-prev" aria-label="Ver edificio anterior" aria-controls="rail"><svg aria-hidden="true"><use href="#i-arrow-l"/></svg></button><button class="round" type="button" id="r-next" aria-label="Ver edificio siguiente" aria-controls="rail"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div></div>
       <div class="rail" id="rail" tabindex="0" aria-label="Galería de edificios gestionados (use las flechas del teclado para desplazarse)" data-reveal>
-        <figure class="b-card"><img src="img/torre-zafiro.jpg" alt="Torre Zafiro II" width="1086" height="1448" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>Torre Zafiro II</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></figcaption></figure>
-        <figure class="b-card"><img src="img/edificio-balcones.jpg" alt="Edificio residencial con balcones" width="671" height="896" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></figcaption></figure>
-        <figure class="b-card"><img src="img/edificio-fachada.jpg" alt="Edificio con fachada blanca" width="720" height="960" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></figcaption></figure>
-        <figure class="b-card"><img src="img/edificio-palmeras.jpg" alt="Edificio rodeado de palmeras" width="974" height="731" loading="lazy" decoding="async" draggable="false" style="object-position:30% center"><figcaption><div><h3>Edificio gestionado</h3><span>Santa Cruz</span></div><span class="chip">Gestionado</span></figcaption></figure>
+        <figure class="b-card"><img src="img/torre-zafiro.jpg" alt="Torre Zafiro II" width="1000" height="1333" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>Torre Zafiro II</h3><span>Santa Cruz</span></div></figcaption></figure>
+        <figure class="b-card"><img src="img/rise-1.jpg" alt="Edificio Rise 1" width="1000" height="1333" loading="lazy" decoding="async" draggable="false" style="object-position:center 30%"><figcaption><div><h3>Rise 1</h3><span>Santa Cruz</span></div></figcaption></figure>
+        <figure class="b-card"><img src="img/san-nicolas.jpg" alt="San Nicolás Residences" width="985" height="1230" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>San Nicolás Residences</h3><span>Santa Cruz</span></div></figcaption></figure>
+        <figure class="b-card"><img src="img/hub-diamante-norte.jpg" alt="Hub Diamante Norte" width="1000" height="1155" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>Hub Diamante Norte</h3><span>Santa Cruz</span></div></figcaption></figure>
+        <figure class="b-card"><img src="img/limco-ii.jpg" alt="Edificio Limco II" width="1200" height="900" loading="lazy" decoding="async" draggable="false" style="object-position:45% center"><figcaption><div><h3>Limco II</h3><span>Santa Cruz</span></div></figcaption></figure>
       </div>
       <div class="progress" aria-hidden="true"><i id="r-bar"></i></div>
     </div>
@@ -673,7 +667,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
     <div class="wrap">
       <div class="cta" data-reveal>
         <div class="tx"><span class="tag">Su edificio puede ser el próximo</span><h2 class="h2">Conozcamos <b>su edificio.</b></h2><div><a class="btn navy" href="#contacto" data-go="contacto">Solicitar visita <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div></div>
-        <div class="ph"><img src="img/edificio-balcones.jpg" alt="" width="671" height="896" loading="lazy" decoding="async"></div>
+        <div class="ph"><img src="img/rise-1.jpg" alt="" width="1000" height="1333" loading="lazy" decoding="async" style="object-position:center 30%"></div>
       </div>
     </div>
   </section>
@@ -843,14 +837,14 @@ const SITE = {
     if(reduce) return;
     $$('#inicio [data-to]').forEach(el=>{
       const to=+el.dataset.to, sm=el.querySelector('small').outerHTML;
-      const run=()=>{const t0=performance.now();(function step(t){const k=Math.min((t-t0)/1600,1);el.innerHTML=Math.round(to*(1-Math.pow(1-k,4)))+sm;if(k<1)requestAnimationFrame(step);})(t0);};
+      const run=()=>{const t0=performance.now();(function step(t){const k=Math.min((t-t0)/1600,1);el.innerHTML=sm+Math.round(to*(1-Math.pow(1-k,4)));if(k<1)requestAnimationFrame(step);})(t0);};
       if(!io) return run();
       const o=new IntersectionObserver(es=>{ if(es[0].isIntersecting){o.disconnect();run();} },{threshold:.5}); o.observe(el);
     });
   }
 
   /* ---------- 7. Por qué Bramar (pestañas con rotación) ---------- */
-  const big=[['0%','de opacidad en las cuentas'],['1','solo responsable para todo'],['24/7','atención de emergencias'],['+valor','para su propiedad']];
+  const big=[['0%','de opacidad en las cuentas'],['1','solo responsable para todo'],['24/7','de soporte'],['+valor','para su propiedad']];
   const items=$$('.why-item'), imgs=$$('#why-view img'), bigEl=$('#why-big'), whyBox=$('#why');
   let wi=0, wt=null, whyPaused=false;
   function setWhy(i,user){

@@ -488,7 +488,7 @@ const PORTAL = {
     if(debt>0.009) $('#up-amount').value=debt.toFixed(2);
     // banco
     const rows=[['Banco',E.banco],['Titular',E.titular],['N.º de cuenta',E.cuenta,true],['Tipo',E.tipo_cuenta],['Moneda',E.moneda_cuenta||E.moneda],['NIT / CI',E.nit,true]].filter(r=>r[1]);
-    $('#p-bank').innerHTML=rows.length?rows.map(([k,v,cp])=>`<div class="kv"><dt>${k}</dt><dd>${esc(v)}${cp?` <button type="button" class="copy" data-copy="${esc(v)}"><svg aria-hidden="true"><use href="#i-copy"/></svg>Copiar</button>`:''}</dd></div>`).join('')
+    $('#p-bank').innerHTML=rows.length?rows.map(([k,v])=>`<div class="kv"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')
       :'<p class="muted" style="padding:12px 0">Consulte los datos de pago con la administración.</p>';
     const qr=U.qr||E.qr, box=$('#p-qr'), dl=$('#p-qr-dl');
     if(qr){ box.innerHTML=`<img src="${esc(qr)}" alt="Código QR de pago de ${esc(E.nombre)}">`; dl.href=qr; dl.hidden=false;
