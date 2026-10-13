@@ -68,7 +68,7 @@ Con 20 edificios de 100–110 departamentos (unos 2.200 perfiles) la generación
 **Importante para subir a GitHub:** la carga desde la página web de GitHub acepta como máximo 100 archivos por vez. Para subir la carpeta `data` completa use **GitHub Desktop** (gratis): arrastre la carpeta al repositorio, escriba un mensaje y presione "Commit" y "Push".
 
 ### Recepción de comprobantes
-- **Recomendado:** instale el script `herramientas/apps-script-comprobantes.gs` en la cuenta de Google de Bramar (las instrucciones están al inicio del archivo) y pegue su URL en `copropietarios.html`, en `PORTAL.endpoint`. Ese mismo script también activa las contraseñas personales. Cada comprobante se guarda en Google Drive, en una carpeta por edificio, y se anota en la hoja "Registro de comprobantes" con el estado "Pendiente de verificar".
+- **Recomendado:** instale el script `herramientas/apps-script-comprobantes.gs` en la cuenta de Google de Bramar (las instrucciones están al inicio del archivo) y pegue su URL en `copropietarios.html`, en `PORTAL.endpoint`. Ese mismo script también activa las contraseñas personales. Cada comprobante se guarda en Google Drive ordenado por edificio, mes y departamento (`Comprobantes Bramar / EDIFICIO / 2026-10 Octubre / Depto 2B`), y se anota en la hoja "Registro de comprobantes" con el estado "Pendiente de verificar".
 - **Mientras no esté instalado:** en el celular, el portal ofrece compartir el archivo directamente a WhatsApp. En computadora, abre WhatsApp con los datos del pago y el propietario adjunta el archivo.
 
 ### Prueba

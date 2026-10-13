@@ -1,8 +1,9 @@
 /**
  * BRAMAR · Servidor del portal de copropietarios
  * ---------------------------------------------------------------
- * 1. Comprobantes: guarda cada uno en Google Drive (una carpeta por
- *    edificio) y lo anota en la hoja "Registro de comprobantes".
+ * 1. Comprobantes: guarda cada uno en Google Drive, ordenado así:
+ *      Comprobantes Bramar / EDIFICIO / 2026-10 Octubre / Depto 2B / archivo
+ *    y lo anota en la hoja "Registro de comprobantes".
  * 2. Contraseñas personales: guarda, por departamento, el código
  *    original cifrado con la contraseña del propietario. Este servidor
  *    nunca recibe ni la contraseña ni el código en texto legible.
@@ -28,6 +29,7 @@
 const CARPETA_RAIZ = 'Comprobantes Bramar';
 const HOJA_REGISTRO = 'Registro de comprobantes';
 const MAX_BYTES = 10 * 1024 * 1024;
+const MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
 const TIPOS = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/pdf'];
 
 function doPost(e) {
@@ -39,14 +41,17 @@ function doPost(e) {
     const bytes = Utilities.base64Decode(d.data);
     if (bytes.length > MAX_BYTES) return json({ ok: false, error: 'El archivo es demasiado grande.' });
 
+    const ahora = new Date();
     const raiz = carpeta_(DriveApp.getRootFolder(), CARPETA_RAIZ);
     const edificio = carpeta_(raiz, limpiar_(d.edificio || d.edificio_id || 'Sin edificio'));
-    const fecha = Utilities.formatDate(new Date(), 'America/La_Paz', 'yyyy-MM-dd HH.mm');
-    const nombre = `${limpiar_(d.depto)} · ${fecha} · ${limpiar_(d.filename)}`;
-    const archivo = edificio.createFile(Utilities.newBlob(bytes, d.mimeType, nombre));
+    const mes = carpeta_(edificio, Utilities.formatDate(ahora, 'America/La_Paz', 'yyyy-MM') + ' ' + MESES[Number(Utilities.formatDate(ahora, 'America/La_Paz', 'M')) - 1]);
+    const depto = carpeta_(mes, 'Depto ' + limpiar_(d.depto || 'sin número'));
+    const fecha = Utilities.formatDate(ahora, 'America/La_Paz', 'yyyy-MM-dd HH.mm');
+    const nombre = `${fecha} · ${limpiar_(d.filename)}`;
+    const archivo = depto.createFile(Utilities.newBlob(bytes, d.mimeType, nombre));
 
     registro_().appendRow([
-      new Date(), d.edificio || '', d.depto || '', d.propietario || '',
+      ahora, d.edificio || '', d.depto || '', d.propietario || '',
       d.monto || '', d.fecha || '', d.nota || '', archivo.getUrl(), 'Pendiente de verificar'
     ]);
     return json({ ok: true });
