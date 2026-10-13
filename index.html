@@ -146,8 +146,8 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 
 .card{background:var(--paper);border-radius:var(--radius);padding:32px;min-width:0;transition:transform .45s var(--soft),box-shadow .45s var(--soft),background .45s}
 .card:hover{box-shadow:0 30px 60px -30px rgba(6,33,69,.35)}
-.ico{width:56px;height:56px;border-radius:16px;background:var(--sky);display:grid;place-items:center;color:var(--navy);flex:none;transition:background .4s,color .4s}
-.ico svg{width:28px;height:28px}
+.ico{display:block;color:var(--navy);flex:none;line-height:0;transition:color .4s}
+.ico svg{width:36px;height:36px;display:block}
 
 /* entrada al mostrar una página */
 .page.ready .rise{animation:rise .9s var(--soft) both}
@@ -248,8 +248,8 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .benefits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border-radius:var(--radius);overflow:hidden}
 .benefit{background:var(--paper);padding:28px 28px 30px;display:flex;gap:16px;align-items:flex-start;min-width:0;transition:background .35s}
 .benefit:hover{background:#FBFAF7}
-.benefit .ico{width:46px;height:46px;border-radius:14px}
-.benefit .ico svg{width:22px;height:22px}
+.benefit .ico{margin-top:1px}
+.benefit .ico svg{width:26px;height:26px}
 .benefit b{display:block;font-weight:500;color:var(--navy)}
 .benefit p span{display:block;color:var(--muted);font-size:15px;margin-top:4px}
 .mv{display:grid;grid-template-columns:1fr 1fr;gap:20px}
@@ -262,12 +262,34 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .mv article:last-child p{color:var(--muted)}
 
 /* servicios */
-.chips{position:relative;display:inline-flex;padding:5px;background:var(--paper);border-radius:999px;max-width:100%;overflow-x:auto;scrollbar-width:none}
-.chips::-webkit-scrollbar{display:none}
-.chips .pill{position:absolute;top:5px;bottom:5px;left:0;background:var(--navy);border-radius:999px;transition:transform .45s var(--ease),width .45s var(--ease)}
-.chips button{position:relative;z-index:1;border:0;background:none;min-height:44px;padding:0 20px;border-radius:999px;font-size:14px;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap;transition:color .3s}
-.chips button[aria-pressed="true"]{color:#fff}
 .svc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
+.svc-own{grid-template-columns:repeat(3,minmax(0,1fr))}
+.head .lede{max-width:52ch}
+/* desarrolladores */
+.dev{background:var(--navy-deep);color:#fff;border-radius:var(--radius-l);padding:clamp(28px,5vw,72px);display:grid;grid-template-columns:1fr 1.05fr;gap:clamp(32px,5vw,72px);position:relative;overflow:hidden}
+.dev .h2{color:#fff;margin-top:16px}
+.dev-lede{color:rgba(255,255,255,.78);margin-top:20px;font-size:clamp(16px,1.3vw,18px);max-width:48ch}
+.dev-offer{margin-top:32px;padding:22px 0 0;border-top:1px solid rgba(255,255,255,.16)}
+.dev-offer span{font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass-soft)}
+.dev-offer p{margin-top:8px;color:#fff;font-size:17px;font-weight:300;line-height:1.5;max-width:46ch}
+.dev-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+.dev-phases{display:grid;align-self:start}
+.phase{padding:28px 0;border-top:1px solid rgba(255,255,255,.16)}
+.phase:first-child{border-top:0;padding-top:0}
+.ph-top{display:flex;align-items:center;gap:14px}
+.ph-top .ico{color:var(--brass-soft)}
+.ph-top .ico svg{width:30px;height:30px}
+.ph-k{font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.phase h3{font-size:clamp(22px,2vw,26px);font-weight:400;margin-top:16px}
+.phase ul{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
+.phase li{position:relative;padding-left:22px;color:rgba(255,255,255,.8);font-size:16px}
+.phase li::before{content:"";position:absolute;left:0;top:.72em;width:10px;height:1px;background:var(--brass-soft)}
+.dev-fix{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.16);padding-top:28px}
+.dev-fix p{font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.dev-fix ul{list-style:none;margin:20px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.dev-fix li{display:flex;flex-direction:column;gap:14px;font-size:16px;color:#fff;padding:20px;border:1px solid rgba(255,255,255,.14);border-radius:16px;transition:border-color .4s,background .4s}
+.dev-fix li:hover{border-color:var(--brass-soft);background:rgba(255,255,255,.04)}
+.dev-fix svg{width:30px;height:30px;color:var(--brass-soft)}
 .svc .card{display:flex;flex-direction:column;min-height:250px;position:relative;overflow:hidden}
 .svc .card[hidden]{display:none}
 .svc .who{position:absolute;top:28px;right:28px;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;background:var(--sand);color:var(--navy);transition:background .4s,color .4s}
@@ -277,7 +299,7 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .svc .card:hover{background:var(--navy)}
 .svc .card:hover h3{color:#fff}
 .svc .card:hover p{color:rgba(255,255,255,.78)}
-.svc .card:hover .ico{background:var(--brass);color:#fff}
+.svc .card:hover .ico{color:var(--brass-soft)}
 .svc .card:hover .who{background:rgba(255,255,255,.16);color:#fff}
 .svc .card.enter{animation:rise .5s var(--soft) both}
 .svc a.card{text-decoration:none;color:inherit;cursor:pointer}
@@ -306,7 +328,7 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .svc .card.ally:not(.osiris):hover{background:var(--paper)}
 .svc .card.ally:not(.osiris):hover h3{color:var(--navy)}
 .svc .card.ally:not(.osiris):hover p{color:var(--muted)}
-.svc .card.ally:not(.osiris):hover .ico{background:var(--sky);color:var(--navy)}
+.svc .card.ally:not(.osiris):hover .ico{color:var(--navy)}
 .svc .card.ally:not(.osiris):hover .who{background:var(--sand);color:var(--navy)}
 /* ventana de detalle de servicio */
 .sd{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:16px;background:rgba(6,33,69,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
@@ -315,7 +337,7 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .sd.open .sd-card{transform:none}
 .sd-side{background:var(--navy-deep);color:#fff;padding:clamp(28px,4vw,44px);display:flex;flex-direction:column;gap:18px;position:relative;overflow:hidden}
 .sd-side::after{content:"";position:absolute;right:-90px;bottom:-90px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(201,164,106,.28),transparent 65%);pointer-events:none}
-.sd-side .ico{background:rgba(255,255,255,.1);color:#fff}
+.sd-side .ico{color:var(--brass-soft)}
 .sd-side h2{font-size:clamp(28px,3.2vw,40px);font-weight:300}
 .sd-side .pitch{color:rgba(255,255,255,.85);font-size:18px;line-height:1.5}
 .sd-side .result{margin-top:auto;padding-top:18px;border-top:1px solid rgba(255,255,255,.15);font-size:15px;color:rgba(255,255,255,.8);position:relative;z-index:1}
@@ -356,8 +378,12 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .slider-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:24px}
 .b-dots{display:flex;gap:4px}
 .b-dots button{width:30px;height:36px;border:0;background:none;padding:0;cursor:pointer;display:grid;place-items:center}
-.b-dots button::before{content:"";width:100%;height:3px;border-radius:3px;background:var(--line);transition:background .3s}
-.b-dots button[aria-current="true"]::before{background:var(--navy)}
+.b-dots button{position:relative}
+.b-dots button::before{content:"";width:100%;height:3px;border-radius:3px;background:var(--line)}
+.b-dots button::after{content:"";position:absolute;left:0;top:50%;height:3px;margin-top:-1.5px;width:0;border-radius:3px;background:var(--navy)}
+.b-dots button[aria-current="true"]::after{width:100%}
+.slider-foot.play .b-dots button[aria-current="true"]::after{animation:dotfill var(--bdur,4.2s) linear both}
+@keyframes dotfill{from{width:0}to{width:100%}}
 .foot-r{display:flex;align-items:center;gap:18px}
 .b-count{white-space:nowrap;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.06em}
 .b-count b{color:var(--navy);font-weight:500}
@@ -454,7 +480,9 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   .why-view{min-height:340px;order:-1}
   .numbers{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:32px}
   .n:nth-child(3){border-left:0;padding-left:0}
-  .svc{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .svc,.svc-own{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dev{grid-template-columns:1fr}
+  .dev-fix ul{grid-template-columns:repeat(3,minmax(0,1fr))}
   .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
   .cards3{grid-template-columns:1fr}
   .benefits{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -471,8 +499,11 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   .brand span{display:none}
   .hero-photo{min-height:340px}
   /* tarjetas de servicio compactas en una columna */
-  .svc{grid-template-columns:1fr;gap:12px}
-  .svc .card{min-height:0;display:grid;grid-template-columns:56px 1fr;grid-template-areas:"ico title" "ico desc" "ico who";column-gap:16px;align-items:start;padding:22px}
+  .svc,.svc-own{grid-template-columns:1fr;gap:12px}
+  .dev-fix ul{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .dev-fix li{padding:16px;font-size:15px}
+  .dev-actions .btn{width:100%}
+  .svc .card{min-height:0;display:grid;grid-template-columns:44px 1fr;grid-template-areas:"ico title" "ico desc" "ico who";column-gap:16px;align-items:start;padding:22px}
   .svc .ico{grid-area:ico}
   .svc h3{grid-area:title;margin-top:0;padding-top:0;font-size:21px}
   .svc p{grid-area:desc}
@@ -482,9 +513,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   .svc .card.osiris .who{position:absolute;top:24px;right:24px;margin:0}
   .svc .card.osiris h3{margin-top:22px}
   .svc .card.osiris .os-btn{margin-top:16px}
-  .chips{display:flex;width:100%}
-  .chips button{flex:1;padding:0 12px}
-  /* portadas internas: degradado vertical para que el título se lea bien */
+      /* portadas internas: degradado vertical para que el título se lea bien */
   .p-head .box{min-height:440px}
   .p-head .box::after{background:linear-gradient(180deg,rgba(6,33,69,.25) 0%,rgba(6,33,69,.7) 45%,rgba(6,33,69,.95) 100%)}
   .b-card{flex-basis:82%}
@@ -504,23 +533,29 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
 
 <!-- Íconos (se reutilizan con <use href="#id">) -->
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <symbol id="i-admin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 17v-3M12 17V10M16 17v-5"/></symbol>
-  <symbol id="i-clean" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 11h12l-1.5 10h-9zM8.5 11c0-3 1.5-5 3.5-5s3.5 2 3.5 5M19 3v3M17.5 4.5h3"/></symbol>
-  <symbol id="i-concierge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 17a8 8 0 0116 0M2 20h20M12 7v2"/><circle cx="12" cy="6" r="1"/></symbol>
-  <symbol id="i-security" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></symbol>
-  <symbol id="i-lift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M12 6v15M8 11l1.5-2 1.5 2M13 9l1.5 2 1.5-2"/></symbol>
-  <symbol id="i-pool" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M2 17c2 0 2 1.5 4 1.5s2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5M8 15V5a2 2 0 014 0M14 15V5a2 2 0 014 0M8 8h6M8 11h6"/></symbol>
-  <symbol id="i-garden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V11M12 13c0-5 3-8 8-8 0 5-3 8-8 8zM12 16c0-4-3-6.5-7-7 0 4 3 6.5 7 7zM7 21h10"/></symbol>
-  <symbol id="i-maint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></symbol>
-  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
-  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+  <symbol id="i-admin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20.5h16M7 20.5v-6M12 20.5V7.5M17 20.5v-10"/></symbol>
+  <symbol id="i-clean" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3l-3.2 10.5M7.5 13.5h9l1.5 7H6z"/><path d="M10 16.5v4M14 16.5v4"/></symbol>
+  <symbol id="i-concierge" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17.5a7 7 0 0114 0zM3 20.5h18M12 8v2.5M10.5 8h3"/></symbol>
+  <symbol id="i-security" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 2.6v5.9c0 4.4-3 7.7-7 9.5-4-1.8-7-5.1-7-9.5V5.6z"/><circle cx="12" cy="11" r="1.6"/><path d="M12 12.6V15"/></symbol>
+  <symbol id="i-lift" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M5 7h14M12 7v14M10.6 5.6L12 4.6l1.4 1"/></symbol>
+  <symbol id="i-pool" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M8 15V6.2A2.2 2.2 0 0111.4 4.4M15 15V6.2a2.2 2.2 0 013.4-1.8M8 9h7M8 12h7"/><path d="M3 18.5c1.5 0 1.5 1 3 1s1.5-1 3-1 1.5 1 3 1 1.5-1 3-1 1.5 1 3 1 1.5-1 3-1"/></symbol>
+  <symbol id="i-garden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19C5 10.5 10.5 5 19 5c0 8.5-5.5 14-14 14zM5 19l7.5-7.5"/></symbol>
+  <symbol id="i-maint" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M14.6 4.4a4.2 4.2 0 00-5 5.6L4 15.6 6.4 18l5.6-5.6a4.2 4.2 0 005.6-5L15 10l-2.6-.4L12 7z"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></symbol>
   <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></symbol>
-  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M7 7V5a2 2 0 012-2h6a2 2 0 012 2v2"/><circle cx="12" cy="13.5" r="2"/></symbol>
-  <symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="6" width="20" height="12" rx="3"/><circle cx="12" cy="12" r="2.5"/></symbol>
-  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 20V10l8-6 8 6v10z"/><path d="M10 20v-6h4v6"/></symbol>
-  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-7 4 3 8-10M15 6h6v6"/></symbol>
-  <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6.5" width="18" height="13" rx="1.5"/><path d="M3 10h18M16 15h2"/></symbol>
+  <symbol id="i-cash" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6" width="19" height="12" rx="1.5"/><circle cx="12" cy="12" r="2.4"/><path d="M6 9v.01M18 15v.01"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20.5V10l8-6 8 6v10.5zM10 20.5V14h4v6.5"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 19.5l6-6.5 4 3.2 7-8.2M15.5 8h5v5"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8.5L19 7.5V21H6z"/><path d="M14 3v5h5M9 12.5h7M9 16h5"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></symbol>
+  <symbol id="i-clip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4.5" width="14" height="16.5" rx="1"/><path d="M9 4.5V3h6v1.5M8.5 11l2 2 4-4M8.5 17h7"/></symbol>
+  <symbol id="i-drop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5s5.5 6 5.5 10.5a5.5 5.5 0 01-11 0C6.5 9.5 12 3.5 12 3.5z"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5.5 13.5H11L10 21l7.5-10.5H12z"/></symbol>
+  <symbol id="i-roller" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="13" height="5" rx="1"/><path d="M17 6.5h2.5v5H11v3M10 14.5h2v6h-2z"/></symbol>
+  <symbol id="i-window" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3" width="15" height="18" rx=".5"/><path d="M12 3v18M10.2 11v2"/></symbol>
+  <symbol id="i-level" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="1"/><path d="M10 12h4M7 8.5v2M17 8.5v2"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 9.5"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></symbol>
@@ -529,7 +564,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/></symbol>
   <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M4 7l8 6 8-6"/></symbol>
   <symbol id="i-pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-7-6.5-7-12a7 7 0 0114 0c0 5.5-7 12-7 12z"/><circle cx="12" cy="9" r="2.5"/></symbol>
-  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
   <symbol id="i-instagram" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".8" fill="currentColor"/></symbol>
   <symbol id="i-facebook" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 8h3V4h-3a4 4 0 00-4 4v3H7v4h3v6h4v-6h3l1-4h-4V8z"/></symbol>
   <symbol id="i-linkedin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 10v7M8 7v.01M12 17v-4a2 2 0 014 0v4M12 10v7"/></symbol>
@@ -587,10 +622,10 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
     </div>
   </section>
 
-  <div class="marquee" role="img" aria-label="Servicios: administración, limpieza, conserjería, seguridad, ascensores, piscinas, jardinería y mantenimiento">
+  <div class="marquee" role="img" aria-label="Servicios: administración, limpieza, conserjería, seguridad, ascensores, piscinas, jardinería y asistencia pre y post entrega">
     <div class="track" aria-hidden="true">
-      <span>Administración</span><span>Limpieza</span><span>Conserjería</span><span>Seguridad</span><span>Ascensores</span><span>Piscinas</span><span>Jardinería</span><span>Mantenimiento</span>
-      <span>Administración</span><span>Limpieza</span><span>Conserjería</span><span>Seguridad</span><span>Ascensores</span><span>Piscinas</span><span>Jardinería</span><span>Mantenimiento</span>
+      <span>Administración</span><span>Limpieza</span><span>Conserjería</span><span>Seguridad</span><span>Ascensores</span><span>Piscinas</span><span>Jardinería</span><span>Pre y post entrega</span>
+      <span>Administración</span><span>Limpieza</span><span>Conserjería</span><span>Seguridad</span><span>Ascensores</span><span>Piscinas</span><span>Jardinería</span><span>Pre y post entrega</span>
     </div>
   </div>
 
@@ -682,10 +717,43 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
     <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Servicios</b></div><h1 class="rise d1" tabindex="-1">Todo su edificio, <b>una sola gestión.</b></h1><p class="rise d2">Nuestro equipo y empresas aliadas que seleccionamos y supervisamos.</p></div></div></div>
   <section>
     <div class="wrap">
-      <div class="head" data-reveal><div><span class="tag">Servicios integrales</span><h2 class="h2">Ocho servicios, <b>un responsable.</b></h2></div>
-        <div class="chips" id="chips" role="group" aria-label="Filtrar servicios"><span class="pill" aria-hidden="true"></span><button type="button" aria-pressed="true" data-f="all">Todos</button><button type="button" aria-pressed="false" data-f="own">Equipo Bramar</button><button type="button" aria-pressed="false" data-f="ally">Aliados</button></div>
+      <div class="head" data-reveal><div><span class="tag">Equipo Bramar</span><h2 class="h2">Lo hacemos <b>nosotros.</b></h2></div><p class="lede">Personal propio, capacitado y supervisado. Toque un servicio para ver qué incluye.</p></div>
+      <div class="svc svc-own" id="svc-own"></div>
+    </div>
+  </section>
+  <section class="tight">
+    <div class="wrap">
+      <div class="head" data-reveal><div><span class="tag">Aliados</span><h2 class="h2">Proveedores <b>bajo nuestra supervisión.</b></h2></div><p class="lede">Bramar se encarga de la gestión y supervisión de todos los proveedores necesarios para la mejor operatividad del edificio. Usted no coordina con nadie más.</p></div>
+      <div class="svc svc-ally" id="svc-ally"></div>
+    </div>
+  </section>
+  <section class="tight" id="desarrolladores">
+    <div class="wrap">
+      <div class="dev on-dark" data-reveal>
+        <div class="dev-intro">
+          <span class="tag light">Para desarrolladores inmobiliarios</span>
+          <h2 class="h2">Entregue su edificio <b>y no vuelva por ajustes.</b></h2>
+          <p class="dev-lede">Acompañamos su proyecto antes y después de la entrega. Un conserje técnico de Bramar resuelve en el edificio los detalles que hoy obligan a su equipo a regresar.</p>
+          <div class="dev-offer"><span>Descuento exclusivo</span><p>Tarifa preferencial para desarrolladores que nos confían la administración desde la entrega, con un costo bastante menor que sostener su propia cuadrilla de post entrega.</p></div>
+          <div class="dev-actions"><a class="btn gold" href="#contacto" data-go="contacto" data-role="Desarrollador inmobiliario">Solicitar plan para desarrolladores <svg aria-hidden="true"><use href="#i-arrow"/></svg></a><a class="btn outline" id="dev-wa" target="_blank" rel="noopener" hidden>Escribir por WhatsApp</a></div>
+        </div>
+        <div class="dev-phases">
+          <article class="phase"><div class="ph-top"><span class="ico"><svg aria-hidden="true"><use href="#i-clip"/></svg></span><span class="ph-k">Antes de entregar</span></div><h3>Asistencia pre entrega</h3>
+            <ul><li>Revisión de cada departamento y de las áreas comunes</li><li>Lista de observaciones por unidad para sus contratistas</li><li>Puesta en marcha de equipos, accesos y servicios</li><li>Administración, personal y proveedores listos desde el primer día</li></ul></article>
+          <article class="phase"><div class="ph-top"><span class="ico"><svg aria-hidden="true"><use href="#i-key"/></svg></span><span class="ph-k">Después de entregar</span></div><h3>Asistencia post entrega</h3>
+            <ul><li>Conserje técnico en el edificio que atiende los reclamos de los propietarios</li><li>Registro ordenado de cada reclamo de garantía y su solución</li><li>Reporte periódico al desarrollador</li><li>Su equipo se concentra en el próximo proyecto</li></ul></article>
+        </div>
+        <div class="dev-fix">
+          <p>Ajustes que resolvemos en el sitio</p>
+          <ul>
+            <li><svg aria-hidden="true"><use href="#i-drop"/></svg>Plomería</li>
+            <li><svg aria-hidden="true"><use href="#i-bolt"/></svg>Electricidad</li>
+            <li><svg aria-hidden="true"><use href="#i-roller"/></svg>Detalles de pintura</li>
+            <li><svg aria-hidden="true"><use href="#i-window"/></svg>Perfilería de aluminio</li>
+            <li><svg aria-hidden="true"><use href="#i-level"/></svg>Terminaciones en general</li>
+          </ul>
+        </div>
       </div>
-      <div class="svc" id="svc" aria-live="polite"></div>
     </div>
   </section>
   <section class="tight">
@@ -865,7 +933,6 @@ const SITE = {
     pill.style.width=b.width+'px'; pill.style.transform=`translateX(${b.left-c.left+container.scrollLeft}px)`;
   }
   const navPill=()=>movePill($('#links'),$('#links [aria-current="page"]'));
-  const chipPill=()=>movePill($('#chips'),$('#chips [aria-pressed="true"]'));
 
   /* ---------- 3. Páginas independientes ---------- */
   function show(id,focus){
@@ -878,7 +945,6 @@ const SITE = {
     if(focus){ const h=$('h1',pg); h&&h.focus({preventScroll:true}); $('#announce').textContent='Página '+pg.dataset.title; }
     id==='inicio'?(countUp(),startWhy()):stopWhy();
     id==='edificios'?(startSlides(),startSlider()):(stopSlides(),stopSlider());
-    if(id==='servicios') requestAnimationFrame(chipPill);
   }
   function go(id,push=true){
     if(!ids.includes(id)) id='inicio';
@@ -908,7 +974,7 @@ const SITE = {
     setTimeout(()=>{const f=$('#mmenu a');f&&f.focus();},50);
   });
   addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>20),{passive:true});
-  let rz; addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{navPill();chipPill();if(current==='edificios')goSlide(Math.min(bi,maxIdx()),true); if(innerWidth>1000) closeMenu(false);},120);});
+  let rz; addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{navPill();if(current==='edificios')goSlide(Math.min(bi,maxIdx()),true); if(innerWidth>1000) closeMenu(false);},120);});
 
   /* ---------- 5. Aparición al desplazarse ---------- */
   const io=('IntersectionObserver' in window)?new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){const el=e.target;el.classList.add('seen');io.unobserve(el);setTimeout(()=>{el.removeAttribute('data-reveal');el.classList.remove('seen');},1400);} }),{rootMargin:'0px 0px -8% 0px',threshold:.08}):null;
@@ -963,8 +1029,7 @@ const SITE = {
     ['ally','security','Seguridad','Vigilancia las 24 horas a cargo de Osiris Security.','https://www.osirissecurity.com.bo','Osiris Security'],
     ['ally','lift','Mantenimiento de ascensores','Revisiones periódicas y atención de fallas.'],
     ['ally','pool','Piscinas','Cuidado químico y funcional.'],
-    ['ally','garden','Jardinería','Paisajismo y mantenimiento.'],
-    ['ally','maint','Asistencia post entrega','Seguimiento de garantías y detalles tras la entrega del edificio.']
+    ['ally','garden','Jardinería','Paisajismo y mantenimiento.']
   ];
   const DETAIL={
     admin:{pitch:'Su edificio con las cuentas en orden y un responsable que responde.',
@@ -977,17 +1042,14 @@ const SITE = {
       items:['Atención a residentes y visitas','Control de ingreso de visitas y proveedores','Recepción de correspondencia y paquetes','Registro y reporte de novedades a la administración','Cobertura de turnos y reemplazos','Personal capacitado en atención y protocolo'],
       result:'Los residentes se sienten atendidos y seguros desde que cruzan la puerta.'}
   };
-  $('#svc').innerHTML=S.map(([k,i,t,d,url,partner],n)=>{
+  const card=([k,i,t,d,url,partner],n)=>{
     const own=k==='own';
     const tag=url?'a':own?'button':'article', attrs=url?` href="${url}" target="_blank" rel="noopener" aria-label="${t}: ${partner} (abre su sitio web)"`:own?` type="button" data-svc="${i}" aria-haspopup="dialog"`:'';
     if(url) return `<a class="card tilt ${k} osiris" data-k="${k}"${attrs} data-reveal style="--d:${(n%4)*.06}s"><img class="os-mark" src="img/osiris-ojo.png" alt="" aria-hidden="true" width="540" height="160" loading="lazy"><span class="who">Aliado</span><img class="os-logo" src="img/osiris-logo.png" alt="Osiris Security" width="360" height="169" loading="lazy"><h3>${t}</h3><p>${d}</p><span class="os-btn">Visitar Osiris Security <svg aria-hidden="true"><use href="#i-ext"/></svg></span></a>`;
     return `<${tag} class="card ${own||url?'tilt ':''}${k}${url?' osiris':''}" data-k="${k}"${attrs} data-reveal style="--d:${(n%4)*.06}s"><span class="who">${partner||(k==='own'?'Bramar':'Aliado')}</span><div class="ico"><svg aria-hidden="true"><use href="#i-${i}"/></svg></div><h3>${t}</h3><p>${d}</p>${url?`<span class="partner">Conocer Osiris Security <svg aria-hidden="true"><use href="#i-ext"/></svg></span>`:own?`<span class="partner">Ver qué incluye <svg aria-hidden="true"><use href="#i-arrow"/></svg></span>`:''}</${tag}>`;
-  }).join('');
-  $('#chips').addEventListener('click',e=>{
-    const b=e.target.closest('button'); if(!b) return;
-    $$('#chips button').forEach(x=>x.setAttribute('aria-pressed',x===b)); chipPill();
-    $$('#svc .card').forEach(c=>{ const show=b.dataset.f==='all'||c.dataset.k===b.dataset.f; c.hidden=!show; if(show){c.classList.remove('enter');void c.offsetWidth;c.classList.add('enter');} });
-  });
+  };
+  $('#svc-own').innerHTML=S.filter(x=>x[0]==='own').map(card).join('');
+  $('#svc-ally').innerHTML=S.filter(x=>x[0]==='ally').map(card).join('');
 
   /* ---------- Detalle de servicios propios ---------- */
   const sd=$('#sd'); let sdLast=null;
@@ -1003,8 +1065,12 @@ const SITE = {
     setTimeout(()=>$('#sd-close').focus(),50);
   }
   function closeSvc(){ if(!sd.classList.contains('open')) return; sd.classList.remove('open'); sd.setAttribute('aria-hidden','true'); document.body.classList.remove('lock'); sdLast&&sdLast.focus&&sdLast.focus(); }
-  $('#svc').addEventListener('click',e=>{ const b=e.target.closest('[data-svc]'); if(b) openSvc(b.dataset.svc); });
+  $('#svc-own').addEventListener('click',e=>{ const b=e.target.closest('[data-svc]'); if(b) openSvc(b.dataset.svc); });
   $('#sd-close').addEventListener('click',closeSvc);
+  /* Desarrolladores: WhatsApp y formulario con el perfil ya elegido */
+  if(SITE.whatsapp){ const w=$('#dev-wa'); w.href=waURL('Hola Bramar, soy desarrollador inmobiliario y quisiera conocer el plan de asistencia pre y post entrega.'); w.hidden=false; }
+  document.addEventListener('click',e=>{ const a=e.target.closest('[data-role]'); if(!a) return;
+    $('#f-role').value=a.dataset.role; const m=$('#f-msg'); if(!m.value) m.value='Quisiera conocer el plan de asistencia pre y post entrega para desarrolladores.'; });
   $('#sd-cta').addEventListener('click',closeSvc);
   sd.addEventListener('click',e=>{ if(e.target===sd) closeSvc(); });
   addEventListener('keydown',e=>{ if(e.key==='Escape') closeSvc();
@@ -1040,22 +1106,23 @@ const SITE = {
     [...bdots.children].forEach((d,n)=>d.setAttribute('aria-current',n===bi));
     bcount.innerHTML=`<b>${String(bi+1).padStart(2,'0')}</b> / ${String(cards.length).padStart(2,'0')}`;
   }
-  function tick(){ clearTimeout(bTimer); if(bRun&&!bHover&&!reduce) bTimer=setTimeout(()=>{goSlide(bi+1);tick();},4200); }
+  // avance automático siempre activo; solo se detiene mientras se arrastra o si la pestaña está oculta
+  const B_DUR=4200, bfoot=$('.slider-foot');
+  function tick(){ clearTimeout(bTimer); bfoot.classList.remove('play'); if(!bRun||bHover||document.hidden) return;
+    void bfoot.offsetWidth; bfoot.classList.add('play'); bTimer=setTimeout(()=>{goSlide(bi+1);tick();},B_DUR); }
   function restart(){ tick(); }
   function startSlider(){ bRun=true; goSlide(bi,true); tick(); }
   function stopSlider(){ bRun=false; clearTimeout(bTimer); }
   rn.onclick=()=>{goSlide(bi+1);restart();};
   rp.onclick=()=>{goSlide(bi-1);restart();};
   slider.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'){e.preventDefault();rn.click();} if(e.key==='ArrowLeft'){e.preventDefault();rp.click();} });
-  slider.addEventListener('mouseenter',()=>{bHover=true;clearTimeout(bTimer);});
-  slider.addEventListener('mouseleave',()=>{bHover=false;tick();});
   // arrastrar con el mouse o deslizar con el dedo
   let dx0=null, dxl=0;
-  slider.addEventListener('pointerdown',e=>{ dx0=e.clientX; dxl=0; slider.setPointerCapture(e.pointerId); clearTimeout(bTimer); });
+  slider.addEventListener('pointerdown',e=>{ dx0=e.clientX; dxl=0; slider.setPointerCapture(e.pointerId); bHover=true; tick(); });
   slider.addEventListener('pointermove',e=>{ if(dx0===null) return; dxl=e.clientX-dx0; if(Math.abs(dxl)>6){ slider.classList.add('drag'); track.style.transform=`translate3d(${-bi*cardW()+dxl}px,0,0)`; } });
   const endDrag=()=>{ if(dx0===null) return; slider.classList.remove('drag'); const th=Math.min(80,cardW()/4);
     if(dxl<-th) goSlide(bi+1>maxIdx()?maxIdx():bi+1); else if(dxl>th) goSlide(bi-1<0?0:bi-1); else goSlide(bi);
-    dx0=null; tick(); };
+    dx0=null; bHover=false; tick(); };
   slider.addEventListener('pointerup',endDrag); slider.addEventListener('pointercancel',endDrag);
   document.addEventListener('visibilitychange',()=>document.hidden?clearTimeout(bTimer):tick());
 
@@ -1126,7 +1193,7 @@ const SITE = {
   const first=ids.includes(location.hash.slice(1))?location.hash.slice(1):'inicio';
   try{history.replaceState({id:first},'','#'+first);}catch(e){}
   show(first,false);
-  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{navPill();chipPill();});
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{navPill();});
 })();
 </script>
 </body>
