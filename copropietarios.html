@@ -121,11 +121,7 @@ button{font:inherit;color:inherit}
 .hello{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
 .hello h1{font-size:clamp(30px,4vw,46px);color:var(--navy);margin-top:10px}
 .hello p{color:var(--muted);margin-top:6px}
-.status{display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:999px;font-weight:500;font-size:14px}
-.status i{width:9px;height:9px;border-radius:50%;background:currentColor}
-.status.ok{background:var(--ok-bg);color:var(--ok)}
-.status.debt{background:var(--err-bg);color:var(--err)}
-.status.credit{background:var(--sky);color:var(--navy)}
+.hello p b{font-weight:500;color:var(--ink)}
 .grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
 .panel{background:var(--paper);border-radius:var(--radius);padding:clamp(22px,3vw,32px);min-width:0;animation:in .6s var(--soft) both}
 .panel h2{font-size:22px;color:var(--navy);font-weight:400}
@@ -184,8 +180,13 @@ button{font:inherit;color:inherit}
 .table th{text-align:left;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 8px;border-bottom:1px solid var(--line)}
 .table td{padding:13px 8px;border-bottom:1px solid var(--line);font-size:15px;vertical-align:top}
 .table .num{text-align:right;white-space:nowrap}
-.table td.c{color:var(--err)}
-.table td.a{color:var(--ok)}
+.table td.f{white-space:nowrap}
+.table td.st{text-align:right;white-space:nowrap;font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase}
+.table td.st.paid{color:var(--muted)}
+.table td.st.due{color:var(--ink)}
+.table td.st small{display:block;text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+.table tr.due td:first-child{box-shadow:inset 3px 0 0 var(--brass);padding-left:12px}
+.credit-note{margin-top:14px;font-size:14px;color:var(--muted)}
 .table tr{animation:in .4s var(--soft) both}
 .empty{padding:28px 8px;text-align:center;color:var(--muted)}
 .more{margin-top:14px}
@@ -208,8 +209,10 @@ footer a{color:var(--navy)}
   .table tr{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
   .table td{border:0;padding:0}
   .table td.f{grid-column:1/-1;font-size:13px;color:var(--muted)}
-  .table td.s{grid-column:1/-1;font-size:13px;color:var(--muted);text-align:left}
-  .table td.s::before{content:"Saldo: "}
+  .table tr.due td:first-child{box-shadow:none;padding-left:0}
+  .table tr.due{box-shadow:inset 3px 0 0 var(--brass);padding-left:12px}
+  .table td.st{grid-column:1/-1;text-align:left}
+  .table td.st small{display:inline;margin-left:6px}
   .table td:empty{display:none}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
@@ -287,7 +290,6 @@ footer a{color:var(--navy)}
         <p id="p-sub"></p>
       </div>
       <div class="hello-actions">
-        <span class="status" id="p-status"><i></i><span></span></span>
         <button class="pill-btn" type="button" id="p-pass" hidden><svg aria-hidden="true"><use href="#i-lock"/></svg>Cambiar contraseña</button>
       </div>
     </div>
@@ -347,10 +349,11 @@ footer a{color:var(--navy)}
       <section class="panel p-mov" aria-labelledby="h-mov" style="animation-delay:.18s">
         <div class="mov-head"><div><h2 id="h-mov">Estado de cuenta</h2><p class="sub" id="p-mov-sub"></p></div></div>
         <table class="table" id="p-table">
-          <thead><tr><th>Fecha</th><th>Concepto</th><th class="num">Cargo</th><th class="num">Abono</th><th class="num">Saldo</th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Concepto</th><th class="num">Monto</th><th class="num">Estado</th></tr></thead>
           <tbody></tbody>
         </table>
-        <button class="btn light more" type="button" id="p-more" hidden>Ver todos los movimientos</button>
+        <p class="credit-note" id="p-credit" hidden></p>
+        <button class="btn light more" type="button" id="p-more" hidden>Ver historial completo</button>
       </section>
     </div>
   </div>
@@ -474,10 +477,9 @@ const PORTAL = {
     document.title=`${U.propietario||'Mi perfil'} · Portal Bramar`;
     $('#p-bld').textContent=E.nombre||'';
     $('#p-name').textContent='Hola, '+(String(U.propietario||'').split(' ')[0]||'copropietario');
-    $('#p-sub').textContent=`${U.propietario||''} · Departamento ${U.depto||''}`;
-    const debt=Number(R.deuda||0), st=$('#p-status');
-    st.className='status '+(debt>0.009?'debt':debt<-0.009?'credit':'ok');
-    st.querySelector('span').textContent=debt>0.009?'Con deuda pendiente':debt<-0.009?'Saldo a favor':'Al día';
+    const debt=Number(R.deuda||0);
+    const estado=debt>0.009?'Tiene pagos pendientes':debt<-0.009?'Tiene saldo a favor':'Sin deudas';
+    $('#p-sub').innerHTML=`${esc(U.propietario||'')} · Departamento ${esc(U.depto||'')} · <b>${estado}</b>`;
     $('#p-debt').innerHTML=`<span>${esc(cur)}</span>${Math.abs(debt).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
     $('#h-debt').textContent=debt<-0.009?'Saldo a favor':'Deuda total';
     $('#p-fee').textContent=U.expensa!=null?money(U.expensa,cur):'—';
@@ -498,16 +500,38 @@ const PORTAL = {
     $('#view-auto').hidden=true; $('#view-login').hidden=true; $('#view-profile').hidden=false; $('#logout').hidden=false; $('#back').hidden=true;
     window.scrollTo(0,0); $('#p-name').focus({preventScroll:true});
   }
+  const flong=s=>{ if(!s) return '—'; const d=new Date(s+'T00:00:00'); return isNaN(d)?s:d.toLocaleDateString('es-BO',{day:'2-digit',month:'long',year:'numeric'}); };
+  /* Cada cargo (expensa, multa…) es una fila. Los pagos se aplican a los cargos
+     más antiguos primero; el cargo cubierto se muestra como "Pagado". */
+  function statement(){
+    const mv=(data.movimientos||[]).slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+    const charges=mv.filter(m=>Number(m.cargo)>0).map(m=>({fecha:m.fecha,concepto:m.concepto,monto:Number(m.cargo),resta:Number(m.cargo),pagado:null}));
+    let credit=0, i=0;
+    mv.filter(m=>Number(m.abono)>0).forEach(p=>{
+      let amt=Number(p.abono);
+      while(amt>0.009&&i<charges.length){
+        const c=charges[i], use=Math.min(amt,c.resta);
+        c.resta=Math.round((c.resta-use)*100)/100; amt-=use;
+        if(c.resta<=0.009){ c.pagado=p.fecha; i++; }
+      }
+      credit+=Math.max(0,amt);
+    });
+    return {charges:charges.reverse(),credit:Math.round(credit*100)/100};
+  }
   function renderTable(){
     const cur=(data.edificio||{}).moneda||'Bs';
-    const mv=(data.movimientos||[]).slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
-    let bal=0; const withBal=mv.map(m=>{bal+=Number(m.cargo||0)-Number(m.abono||0);return {...m,saldo:bal};}).reverse();
-    const list=showAll?withBal:withBal.slice(0,12);
-    const tb=$('#p-table tbody');
-    tb.innerHTML=list.length?list.map((m,i)=>`<tr style="animation-delay:${Math.min(i,10)*.03}s"><td class="f">${fdate(m.fecha)}</td><td>${esc(m.concepto)}</td><td class="num c">${m.cargo?money(m.cargo,cur):''}</td><td class="num a">${m.abono?money(m.abono,cur):''}</td><td class="num s">${money(m.saldo,cur)}</td></tr>`).join('')
-      :'<tr><td colspan="5" class="empty">Aún no hay movimientos registrados.</td></tr>';
-    $('#p-mov-sub').textContent=mv.length?`${mv.length} movimiento${mv.length>1?'s':''} · del más reciente al más antiguo`:'';
-    $('#p-more').hidden=showAll||withBal.length<=12;
+    const {charges,credit}=statement();
+    const list=showAll?charges:charges.slice(0,12);
+    $('#p-table tbody').innerHTML=list.length?list.map((c,i)=>{
+      const paid=c.resta<=0.009, partial=!paid&&c.resta<c.monto;
+      const st=paid?`Pagado${c.pagado?`<small>el ${fdate(c.pagado)}</small>`:''}`
+        :partial?`Deuda<small>falta ${money(c.resta,cur)}</small>`:'Deuda';
+      return `<tr class="${paid?'':'due'}" style="animation-delay:${Math.min(i,10)*.03}s"><td class="f">${flong(c.fecha)}</td><td>${esc(c.concepto)}</td><td class="num">${money(c.monto,cur)}</td><td class="st ${paid?'paid':'due'}">${st}</td></tr>`;
+    }).join(''):'<tr><td colspan="4" class="empty">Aún no hay movimientos registrados.</td></tr>';
+    const due=charges.filter(c=>c.resta>0.009).length;
+    $('#p-mov-sub').textContent=charges.length?(due?`${due} pendiente${due>1?'s':''} de pago`:'Todo pagado')+' · del más reciente al más antiguo':'';
+    const cn=$('#p-credit'); cn.hidden=!(credit>0.009); if(credit>0.009) cn.textContent=`Tiene ${money(credit,cur)} pagados por adelantado, que se aplicarán a sus próximas expensas.`;
+    $('#p-more').hidden=showAll||charges.length<=12;
   }
   $('#p-more').addEventListener('click',()=>{showAll=true;renderTable();});
   document.addEventListener('click',async e=>{ const b=e.target.closest('[data-copy]'); if(!b) return;
