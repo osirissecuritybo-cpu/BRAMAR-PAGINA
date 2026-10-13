@@ -81,7 +81,7 @@ ol.steps li{margin:6px 0}
     <div id="done" hidden>
       <div class="ok">Listo. Se descargó <b>bramar-portal.zip</b>. Contiene:</div>
       <ol class="steps">
-        <li><b>subir-a-github/data/</b>: reemplace la carpeta <code>data</code> del repositorio por esta. Contiene solo datos cifrados.</li>
+        <li><b>data</b>: es la carpeta que se sube a GitHub. En su repositorio, use <b>Add file → Upload files</b> y arrastre <b>la carpeta data</b> (no su contenido suelto, ni otra carpeta que la contenga). GitHub reemplazará los archivos con el mismo nombre. Contiene solo datos cifrados.</li>
         <li><b>NO-SUBIR-codigos-de-acceso.xlsx</b>: su Excel con los códigos completados y un mensaje listo para enviar a cada propietario. <b>Guárdelo en privado y úselo como base el próximo mes</b>, así cada propietario conserva su código.</li>
       </ol>
       <div class="note">Si agrega fotos de QR, súbalas a <code>img/qr/</code> con el mismo nombre que puso en la columna <code>qr_archivo</code>.</div>
@@ -183,7 +183,7 @@ ol.steps li{margin:6px 0}
   $('#gen').addEventListener('click',async()=>{
     const btn=$('#gen'); btn.disabled=true; $('#prog').hidden=false; $('#done').hidden=true;
     const bar=$('#prog i'), upd=$('#upd').value, url=$('#url').value.trim();
-    const zip=new JSZip(), dir=zip.folder('subir-a-github').folder('data'), udir=dir.folder('u');
+    const zip=new JSZip(), dir=zip.folder('data'), udir=dir.folder('u');
     const list=[...model.units.values()]; let i=0;
     dir.file('edificios.json',JSON.stringify([...model.bld.values()].map(b=>({id:b.id,nombre:b.nombre})).sort((a,b)=>a.nombre.localeCompare(b.nombre,'es')),null,1));
     for(const u of list){

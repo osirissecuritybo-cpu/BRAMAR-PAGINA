@@ -55,7 +55,7 @@ GitHub Pages es público, por eso cada departamento tiene un archivo **cifrado**
 1. Complete la plantilla `herramientas/plantilla-copropietarios.xlsx` (hojas Edificios, Unidades y Movimientos). La primera vez deje vacía la columna `codigo_acceso`.
 2. Abra `generador.html` (en el sitio publicado o en su computadora), cargue el Excel, revise el resumen y presione **Generar archivos**. Se descarga `bramar-portal.zip`.
 3. Del ZIP:
-   - `subir-a-github/data/` → reemplace la carpeta `data` del repositorio por esta (borre la anterior y suba la nueva).
+   - `data/` → súbala al repositorio arrastrando **la carpeta `data`** en *Add file → Upload files*. Debe quedar en la raíz del repositorio (`data/edificios.json`), no dentro de otra carpeta.
    - `NO-SUBIR-codigos-de-acceso.xlsx` → **guárdelo en privado**. Tiene el código de cada propietario y un mensaje listo para enviarle por WhatsApp. El mes siguiente use **este** Excel como base, para que cada propietario conserve su código.
 4. Suba los QR a `img/qr/` con el nombre indicado en la columna `qr_archivo`.
 
@@ -67,16 +67,8 @@ Con 20 edificios de 100–110 departamentos (unos 2.200 perfiles) la generación
 - **Recomendado:** instale el script `herramientas/apps-script-comprobantes.gs` en la cuenta de Google de Bramar (las instrucciones están al inicio del archivo) y pegue su URL en `copropietarios.html`, en `PORTAL.uploadEndpoint`. Cada comprobante se guarda en Google Drive, en una carpeta por edificio, y se anota en la hoja "Registro de comprobantes" con el estado "Pendiente de verificar".
 - **Mientras no esté instalado:** en el celular, el portal ofrece compartir el archivo directamente a WhatsApp. En computadora, abre WhatsApp con los datos del pago y el propietario adjunta el archivo.
 
-### Prueba con el edificio de ejemplo
-El repositorio incluye "Edificio Demo (ejemplo)" con estos accesos:
-
-| Depto | Código | Situación |
-|---|---|---|
-| 1A | `5YYAG-ESRCE` | Al día |
-| 2B | `XD2F4-A4VS3` | Con deuda de Bs 1.040 |
-| 3C | `X3EUF-2XV6G` | Con deuda de Bs 530 |
-
-Al generar los datos reales, el edificio de ejemplo desaparece (salvo que deje sus filas en el Excel).
+### Prueba
+El portal muestra los edificios de la última generación. Para probar, use un departamento y su código de la hoja "Codigos" del Excel privado.
 
 ## Pendientes
 
