@@ -35,24 +35,35 @@
     return hex(h).slice(0, 40);
   }
 
-  async function deriveKey(code, salt) {
-    const base = await crypto.subtle.importKey("raw", enc.encode(normCode(code)), "PBKDF2", false, ["deriveKey"]);
+  // raw=true: contraseña personal tal cual (distingue mayúsculas); raw=false: código de acceso normalizado
+  async function deriveKey(code, salt, raw) {
+    const base = await crypto.subtle.importKey("raw", enc.encode(raw ? String(code) : normCode(code)), "PBKDF2", false, ["deriveKey"]);
     return crypto.subtle.deriveKey({ name: "PBKDF2", salt, iterations: ITERATIONS, hash: "SHA-256" },
       base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
   }
 
-  async function encrypt(obj, code) {
+  async function encrypt(obj, code, raw) {
     const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
-    const key = await deriveKey(code, salt);
+    const key = await deriveKey(code, salt, raw);
     const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, enc.encode(JSON.stringify(obj)));
     return { v: 1, salt: b64(salt), iv: b64(iv), ct: b64(ct) };
   }
 
-  async function decrypt(file, code) {
-    const key = await deriveKey(code, unb64(file.salt));
+  async function decrypt(file, code, raw) {
+    const key = await deriveKey(code, unb64(file.salt), raw);
     const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(file.iv) }, key, unb64(file.ct));
     return JSON.parse(dec.decode(pt));
   }
 
-  global.BramarCrypto = { normCode, normDepto, normId, formatCode, newCode, fileId, encrypt, decrypt };
+  /* Contraseña personal: se guarda en el servidor de Bramar (Apps Script) solo un
+     identificador y el código original cifrado con la contraseña. El servidor nunca
+     ve ni la contraseña ni el código. */
+  async function aliasId(edificio, depto, password) {
+    const h = await crypto.subtle.digest("SHA-256", enc.encode(`alias|${normId(edificio)}|${normDepto(depto)}|${String(password)}`));
+    return hex(h).slice(0, 48);
+  }
+  const wrapCode = (code, password) => encrypt({ code: normCode(code) }, password, true);
+  const unwrapCode = async (blob, password) => (await decrypt(blob, password, true)).code;
+
+  global.BramarCrypto = { normCode, normDepto, normId, formatCode, newCode, fileId, encrypt, decrypt, aliasId, wrapCode, unwrapCode };
 })(window);

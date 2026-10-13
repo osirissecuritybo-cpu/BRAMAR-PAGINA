@@ -1,8 +1,13 @@
 /**
- * BRAMAR · Recepción de comprobantes del portal de copropietarios
+ * BRAMAR · Servidor del portal de copropietarios
  * ---------------------------------------------------------------
- * Guarda cada comprobante en Google Drive (una carpeta por edificio)
- * y lo anota en una hoja de cálculo "Registro de comprobantes".
+ * 1. Comprobantes: guarda cada uno en Google Drive (una carpeta por
+ *    edificio) y lo anota en la hoja "Registro de comprobantes".
+ * 2. Contraseñas personales: guarda, por departamento, el código
+ *    original cifrado con la contraseña del propietario. Este servidor
+ *    nunca recibe ni la contraseña ni el código en texto legible.
+ *    Para "resetear" la contraseña de alguien, borre su fila en la
+ *    pestaña "Accesos" de la hoja: podrá volver a entrar con su código.
  *
  * INSTALACIÓN (una sola vez, con la cuenta bramargroupsrl@gmail.com):
  * 1. Entre a https://script.google.com y cree un "Proyecto nuevo".
@@ -12,7 +17,7 @@
  *      - Quién tiene acceso: Cualquier usuario
  *    Presione "Implementar" y autorice los permisos que pide Google.
  * 4. Copie la "URL de la aplicación web" (termina en /exec) y péguela en
- *    copropietarios.html, en PORTAL.uploadEndpoint.
+ *    copropietarios.html, en PORTAL.endpoint.
  * 5. Pruebe enviando un comprobante desde el portal: aparecerá la carpeta
  *    "Comprobantes Bramar" en su Drive y la hoja con el registro.
  *
@@ -28,6 +33,7 @@ const TIPOS = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/hei
 function doPost(e) {
   try {
     const d = JSON.parse(e.postData.contents);
+    if (d.action === 'setPassword') return setPassword_(d);
     if (!d.data || !d.filename) return json({ ok: false, error: 'Falta el archivo.' });
     if (TIPOS.indexOf(d.mimeType) === -1) return json({ ok: false, error: 'Tipo de archivo no permitido.' });
     const bytes = Utilities.base64Decode(d.data);
@@ -49,7 +55,45 @@ function doPost(e) {
   }
 }
 
-function doGet() { return json({ ok: true, servicio: 'Comprobantes Bramar' }); }
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  if (p.action === 'alias') return getAlias_(p.id);
+  return json({ ok: true, servicio: 'Portal Bramar' });
+}
+
+/* ---------- Contraseñas personales ---------- */
+function accesos_() {
+  const ss = registro_().getParent();
+  return ss.getSheetByName('Accesos') || (function () {
+    const sh = ss.insertSheet('Accesos');
+    sh.appendRow(['alias', 'clave_cifrada', 'edificio_id', 'depto', 'actualizado']);
+    sh.setFrozenRows(1);
+    return sh;
+  })();
+}
+function setPassword_(d) {
+  if (!/^[0-9a-f]{48}$/.test(d.alias || '') || !d.blob || !d.blob.ct) return json({ ok: false, error: 'Datos inválidos.' });
+  const lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    const sh = accesos_(), rows = sh.getDataRange().getValues();
+    // una sola contraseña personal por departamento: borra la anterior
+    for (let i = rows.length - 1; i >= 1; i--) {
+      if (String(rows[i][2]) === String(d.edificio_id) && String(rows[i][3]) === String(d.depto)) sh.deleteRow(i + 1);
+    }
+    sh.appendRow([d.alias, JSON.stringify(d.blob), String(d.edificio_id || ''), String(d.depto || ''), new Date()]);
+    return json({ ok: true });
+  } finally { lock.releaseLock(); }
+}
+function getAlias_(id) {
+  if (!/^[0-9a-f]{48}$/.test(id || '')) return json({ ok: false });
+  // freno básico contra intentos masivos: máximo 600 consultas por minuto
+  const cache = CacheService.getScriptCache(), k = 'q' + Math.floor(Date.now() / 60000);
+  const n = Number(cache.get(k) || 0) + 1; cache.put(k, String(n), 120);
+  if (n > 600) return json({ ok: false, error: 'Demasiados intentos, espere un minuto.' });
+  const f = accesos_().getRange('A:A').createTextFinder(id).matchEntireCell(true).findNext();
+  if (!f) return json({ ok: false });
+  return json({ ok: true, blob: JSON.parse(accesos_().getRange(f.getRow(), 2).getValue()) });
+}
 
 function json(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);

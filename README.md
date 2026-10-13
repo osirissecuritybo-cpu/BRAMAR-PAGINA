@@ -40,7 +40,11 @@ Los datos de contacto se editan en `index.html`, en el bloque `const SITE = { ..
 ## Portal de copropietarios
 
 ### Qué ve cada propietario
-Entra eligiendo su edificio, escribiendo su departamento y su **código de acceso** personal (10 caracteres, ej. `K7MF2-Q9XPR`). Ve:
+Entra eligiendo su edificio, escribiendo su departamento y su **contraseña personal** o su **código de acceso** original (10 caracteres, ej. `K7MF2-Q9XPR`). Si marca "Mantener mi sesión iniciada", la próxima vez entra directo sin escribir nada (se cierra con el botón "Salir").
+
+**Contraseña personal:** dentro de su perfil, el botón "Cambiar contraseña" le permite crear una contraseña propia (mínimo 6 caracteres). Desde ese momento puede entrar con su contraseña **o** con su código original. Si la olvida, entra con el código y crea otra. Requiere el script de Google instalado (ver "Recepción de comprobantes"). Para anular la contraseña de alguien, borre su fila en la pestaña "Accesos" de la hoja "Registro de comprobantes".
+
+Ve:
 
 - Estado: al día, con deuda o saldo a favor.
 - Deuda total, expensa mensual, vencimiento y fecha de actualización.
@@ -64,7 +68,7 @@ Con 20 edificios de 100–110 departamentos (unos 2.200 perfiles) la generación
 **Importante para subir a GitHub:** la carga desde la página web de GitHub acepta como máximo 100 archivos por vez. Para subir la carpeta `data` completa use **GitHub Desktop** (gratis): arrastre la carpeta al repositorio, escriba un mensaje y presione "Commit" y "Push".
 
 ### Recepción de comprobantes
-- **Recomendado:** instale el script `herramientas/apps-script-comprobantes.gs` en la cuenta de Google de Bramar (las instrucciones están al inicio del archivo) y pegue su URL en `copropietarios.html`, en `PORTAL.uploadEndpoint`. Cada comprobante se guarda en Google Drive, en una carpeta por edificio, y se anota en la hoja "Registro de comprobantes" con el estado "Pendiente de verificar".
+- **Recomendado:** instale el script `herramientas/apps-script-comprobantes.gs` en la cuenta de Google de Bramar (las instrucciones están al inicio del archivo) y pegue su URL en `copropietarios.html`, en `PORTAL.endpoint`. Ese mismo script también activa las contraseñas personales. Cada comprobante se guarda en Google Drive, en una carpeta por edificio, y se anota en la hoja "Registro de comprobantes" con el estado "Pendiente de verificar".
 - **Mientras no esté instalado:** en el celular, el portal ofrece compartir el archivo directamente a WhatsApp. En computadora, abre WhatsApp con los datos del pago y el propietario adjunta el archivo.
 
 ### Prueba
@@ -73,7 +77,7 @@ El portal muestra los edificios de la última generación. Para probar, use un d
 ## Pendientes
 
 - [ ] URL de la página de Facebook (`SITE.social.facebook` en `index.html`).
-- [ ] Instalar el script de comprobantes y pegar su URL en `PORTAL.uploadEndpoint`.
+- [ ] Instalar el script de Google y pegar su URL en `PORTAL.endpoint` (activa comprobantes a Drive y contraseñas personales).
 - [ ] Cargar el Excel real de cada edificio, generar los datos y subir los QR.
 - [ ] Servicio de formularios (`SITE.formEndpoint`) para el formulario de contacto (opcional).
 - [ ] Testimonios reales y nombres de los edificios de la galería.

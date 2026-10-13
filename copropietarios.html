@@ -71,7 +71,25 @@ button{font:inherit;color:inherit}
 .field label{position:absolute;left:17.5px;top:8px;font-size:12px;color:var(--navy);pointer-events:none}
 .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--navy);background:#fff}
 .field textarea{min-height:80px;resize:vertical}
-.field.code input{letter-spacing:.18em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+.field.pw input{padding-right:56px}
+.eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:44px;height:44px;border:0;background:none;border-radius:50%;cursor:pointer;display:grid;place-items:center;color:var(--muted)}
+.eye:hover{color:var(--navy);background:rgba(10,51,93,.06)}
+.eye svg{width:20px;height:20px}
+.meter{display:flex;gap:4px;margin-top:8px}
+.meter i{flex:1;height:4px;border-radius:4px;background:var(--line);transition:background .3s}
+.meter[data-s="1"] i:nth-child(1){background:var(--err)}
+.meter[data-s="2"] i:nth-child(-n+2){background:#D98A1E}
+.meter[data-s="3"] i{background:var(--ok)}
+.dialog{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:rgba(6,33,69,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.dialog.open{opacity:1;visibility:visible}
+.dialog-card{width:min(100%,460px);background:#fff;border-radius:var(--radius-l);padding:clamp(24px,5vw,40px);display:flex;flex-direction:column;gap:14px;transform:translateY(16px);transition:transform .4s var(--soft)}
+.dialog.open .dialog-card{transform:none}
+.dialog-card h2{font-size:26px;color:var(--navy);font-weight:400}
+.dialog-card .row{display:flex;gap:10px;flex-wrap:wrap}
+.dialog-card .row .btn{flex:1}
+.hello-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.autologin{flex:1;display:grid;place-items:center;padding:60px 20px;color:var(--muted)}
+.autologin .spin{display:block;width:32px;height:32px;margin:0 auto 14px;color:var(--navy)}
 .field .hint{display:block;font-size:13px;color:var(--muted);margin-top:6px}
 .alert{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;font-size:15px;animation:in .4s var(--soft)}
 .alert svg{width:20px;height:20px;flex:none;margin-top:2px}
@@ -215,6 +233,7 @@ footer a{color:var(--navy)}
   <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></symbol>
   <symbol id="i-wa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l1.3-4A8 8 0 1112 20a8 8 0 01-3.8-1z"/><path d="M9 9c0 3 3 6 6 6l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/></symbol>
+ <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
   <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-7 4 3 8-10M15 6h6v6"/></symbol>
 </defs></svg>
 
@@ -245,16 +264,18 @@ footer a{color:var(--navy)}
 
   <form class="login-card" id="login-form" novalidate>
     <h2>Ingrese a su perfil</h2>
-    <p class="muted" style="margin-top:-8px">Use el código de acceso que le entregó Bramar.</p>
+    <p class="muted" style="margin-top:-8px">Use su contraseña o el código que le entregó Bramar.</p>
     <div class="field"><select id="l-bld" required><option value="">Cargando edificios…</option></select><label for="l-bld">Edificio</label></div>
     <div class="field"><input id="l-dep" required autocomplete="off" placeholder="Ej. 4B o 401"><label for="l-dep">Departamento</label></div>
-    <div class="field code"><input id="l-code" required autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="XXXXX-XXXXX" maxlength="11"><label for="l-code">Código de acceso</label></div>
-    <label class="check"><input type="checkbox" id="l-remember"> Recordar edificio y departamento en este dispositivo</label>
+    <div class="field pw"><input id="l-code" type="password" required autocomplete="current-password" autocapitalize="off" spellcheck="false" placeholder="Contraseña o código"><label for="l-code">Contraseña o código de acceso</label><button class="eye" type="button" data-eye="l-code" aria-label="Mostrar contraseña"><svg aria-hidden="true"><use href="#i-eye"/></svg></button></div>
+    <label class="check"><input type="checkbox" id="l-remember" checked> Mantener mi sesión iniciada en este dispositivo</label>
     <div id="l-msg" role="alert"></div>
     <button class="btn navy block" type="submit" id="l-btn"><span id="l-btn-t">Ingresar</span><span class="spin" aria-hidden="true"></span><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
-    <p class="help">¿No tiene su código? <a id="l-ask" target="_blank" rel="noopener">Solicítelo por WhatsApp</a></p>
+    <p class="help">¿Olvidó su contraseña? Entre con el código que le dio Bramar. ¿No lo tiene? <a id="l-ask" target="_blank" rel="noopener">Solicítelo por WhatsApp</a></p>
   </form>
 </main>
+
+<div class="autologin" id="view-auto" hidden><div><span class="spin" aria-hidden="true"></span>Abriendo su perfil…</div></div>
 
 <!-- ======================= PERFIL ======================= -->
 <main class="profile" id="view-profile" hidden>
@@ -265,7 +286,10 @@ footer a{color:var(--navy)}
         <h1 id="p-name" tabindex="-1"></h1>
         <p id="p-sub"></p>
       </div>
-      <span class="status" id="p-status"><i></i><span></span></span>
+      <div class="hello-actions">
+        <span class="status" id="p-status"><i></i><span></span></span>
+        <button class="pill-btn" type="button" id="p-pass" hidden><svg aria-hidden="true"><use href="#i-lock"/></svg>Cambiar contraseña</button>
+      </div>
     </div>
 
     <div class="grid">
@@ -332,6 +356,21 @@ footer a{color:var(--navy)}
   </div>
 </main>
 
+<!-- Cambiar contraseña -->
+<div class="dialog" id="pw-dialog" role="dialog" aria-modal="true" aria-labelledby="pw-title" aria-hidden="true">
+  <form class="dialog-card" id="pw-form" novalidate>
+    <span class="tag">Seguridad</span>
+    <h2 id="pw-title">Cree su contraseña</h2>
+    <p class="muted">Elija una contraseña fácil de recordar para usted. Su código original de Bramar seguirá funcionando como respaldo.</p>
+    <input type="text" autocomplete="username" id="pw-user" hidden>
+    <div class="field pw"><input id="pw-new" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"><label for="pw-new">Nueva contraseña</label><button class="eye" type="button" data-eye="pw-new" aria-label="Mostrar contraseña"><svg aria-hidden="true"><use href="#i-eye"/></svg></button></div>
+    <div class="meter" id="pw-meter" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="field pw"><input id="pw-rep" type="password" autocomplete="new-password" placeholder="Repita la contraseña"><label for="pw-rep">Repita la contraseña</label></div>
+    <div id="pw-msg" role="status"></div>
+    <div class="row"><button class="btn light" type="button" id="pw-cancel">Cancelar</button><button class="btn navy" type="submit" id="pw-btn"><span id="pw-btn-t">Guardar</span><span class="spin" aria-hidden="true"></span></button></div>
+  </form>
+</div>
+
 <footer>© <span id="yr">2026</span> Bramar Group · <a href="index.html">Volver al sitio</a></footer>
 
 <script src="js/portal-crypto.js"></script>
@@ -339,13 +378,16 @@ footer a{color:var(--navy)}
 /* ================================================================
    CONFIGURACIÓN DEL PORTAL
    · whatsapp: número de Bramar (código de país, sin + ni espacios).
-   · uploadEndpoint: URL de la aplicación web de Google Apps Script
-     que guarda los comprobantes en Google Drive (ver README).
-     Si está vacío, el comprobante se comparte por WhatsApp.
+   · endpoint: URL de la aplicación web de Google Apps Script
+     (herramientas/apps-script-comprobantes.gs). Con ella funcionan:
+       - el envío de comprobantes a Google Drive,
+       - las contraseñas personales de los propietarios.
+     Si está vacío: los comprobantes se envían por WhatsApp y solo
+     se puede entrar con el código original.
    ================================================================ */
 const PORTAL = {
   whatsapp: "59178155275",
-  uploadEndpoint: ""   // PENDIENTE: ej. "https://script.google.com/macros/s/XXXX/exec"
+  endpoint: ""   // PENDIENTE: ej. "https://script.google.com/macros/s/XXXX/exec"
 };
 
 (function(){
@@ -353,7 +395,8 @@ const PORTAL = {
   const $=s=>document.querySelector(s);
   const C=window.BramarCrypto;
   const MAX=8*1024*1024;
-  let data=null, file=null, showAll=false;
+  let data=null, file=null, showAll=false, session=null;
+  const SKEY='bramar.session';
 
   const money=(n,cur)=>(cur||'Bs')+' '+Number(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
   const fdate=s=>{ if(!s) return '—'; const d=new Date(s+'T00:00:00'); return isNaN(d)?s:d.toLocaleDateString('es-BO',{day:'2-digit',month:'short',year:'numeric'}); };
@@ -370,11 +413,36 @@ const PORTAL = {
   fetch('data/edificios.json',{cache:'no-cache'}).then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(list=>{
     sel.innerHTML='<option value="">Seleccione su edificio</option>'+list.map(b=>`<option value="${esc(b.id)}">${esc(b.nombre)}</option>`).join('');
     const rb=store.get('bramar.bld'), rd=store.get('bramar.dep');
-    if(rb&&list.some(b=>b.id===rb)){ sel.value=rb; $('#l-dep').value=rd||''; $('#l-remember').checked=true; (rd?$('#l-code'):$('#l-dep')).focus(); }
+    if(rb&&list.some(b=>b.id===rb)){ sel.value=rb; $('#l-dep').value=rd||''; if(!session) (rd?$('#l-code'):$('#l-dep')).focus(); }
   }).catch(()=>{ sel.innerHTML='<option value="">No se pudo cargar la lista</option>'; alertBox($('#l-msg'),'bad','No pudimos cargar la lista de edificios. Revise su conexión e intente de nuevo.'); });
 
-  /* ---------- Código: formato XXXXX-XXXXX al escribir ---------- */
-  $('#l-code').addEventListener('input',e=>{ const p=e.target.selectionStart===e.target.value.length; e.target.value=C.formatCode(e.target.value).slice(0,11); if(p) e.target.selectionStart=e.target.selectionEnd=e.target.value.length; });
+  /* ---------- Mostrar / ocultar contraseña ---------- */
+  document.addEventListener('click',e=>{ const b=e.target.closest('[data-eye]'); if(!b) return;
+    const i=document.getElementById(b.dataset.eye), show=i.type==='password'; i.type=show?'text':'password';
+    b.setAttribute('aria-label',show?'Ocultar contraseña':'Mostrar contraseña'); i.focus(); });
+
+  /* ---------- Acceso: código original o contraseña personal ---------- */
+  async function openWithCode(b,d,code){
+    const r=await fetch('data/u/'+await C.fileId(b,d,code)+'.json',{cache:'no-cache'});
+    if(r.status===404) return null;
+    if(!r.ok) throw new Error('net');
+    return C.decrypt(await r.json(),code);
+  }
+  async function codeFromPassword(b,d,pass){
+    if(!PORTAL.endpoint||pass.length<6) return null;
+    const id=await C.aliasId(b,d,pass);
+    const r=await fetch(PORTAL.endpoint+'?action=alias&id='+id);
+    if(!r.ok) throw new Error('net');
+    const j=await r.json();
+    if(!j.ok||!j.blob) return null;
+    try{ return await C.unwrapCode(j.blob,pass); }catch(e){ return null; }
+  }
+  async function access(b,d,secret){
+    let code=null, res=null;
+    if(C.normCode(secret).length===10){ res=await openWithCode(b,d,secret); if(res) code=C.normCode(secret); }
+    if(!res){ code=await codeFromPassword(b,d,secret); if(code) res=await openWithCode(b,d,code); }
+    return res?{data:res,code}:null;
+  }
 
   /* ---------- Ingreso ---------- */
   $('#login-form').addEventListener('submit',async e=>{
@@ -383,21 +451,20 @@ const PORTAL = {
     msg.innerHTML='';
     if(!b) return alertBox(msg,'bad','Seleccione su edificio.'),sel.focus();
     if(!C.normDepto(d)) return alertBox(msg,'bad','Escriba su número de departamento.'),$('#l-dep').focus();
-    if(C.normCode(c).length<10) return alertBox(msg,'bad','El código tiene 10 caracteres, por ejemplo K7MF2-Q9XPR.'),$('#l-code').focus();
+    if(!c.trim()) return alertBox(msg,'bad','Escriba su contraseña o su código de acceso.'),$('#l-code').focus();
     btn.disabled=true; btn.classList.add('loading'); $('#l-btn-t').textContent='Verificando…';
     try{
-      const id=await C.fileId(b,d,c);
-      const r=await fetch('data/u/'+id+'.json',{cache:'no-cache'});
-      if(r.status===404) throw new Error('nf');
-      if(!r.ok) throw new Error('net');
-      data=await C.decrypt(await r.json(),c);
-      if($('#l-remember').checked){ store.set('bramar.bld',b); store.set('bramar.dep',C.normDepto(d)); } else { store.del('bramar.bld'); store.del('bramar.dep'); }
-      $('#l-code').value='';
+      const ok=await access(b,d,c.trim());
+      if(!ok) throw new Error('nf');
+      data=ok.data; session={b,d:C.normDepto(d),code:ok.code};
+      store.set('bramar.bld',b); store.set('bramar.dep',C.normDepto(d));
+      if($('#l-remember').checked) store.set(SKEY,JSON.stringify(session)); else store.del(SKEY);
+      $('#l-code').value=''; $('#l-code').type='password';
       renderProfile();
     }catch(err){
       alertBox(msg,'bad',err.message==='net'
         ?'No pudimos conectarnos. Revise su internet e intente otra vez.'
-        :'Los datos no coinciden. Revise el edificio, el departamento y el código. Si el problema sigue, <a href="'+wa('Hola Bramar, no puedo ingresar al portal. Edificio: '+(sel.selectedOptions[0]||{}).text+' Depto: '+d)+'" target="_blank" rel="noopener">escríbanos por WhatsApp</a>.');
+        :'Los datos no coinciden. Revise el edificio, el departamento y su contraseña o código. Si el problema sigue, <a href="'+wa('Hola Bramar, no puedo ingresar al portal. Edificio: '+(sel.selectedOptions[0]||{}).text+' Depto: '+d)+'" target="_blank" rel="noopener">escríbanos por WhatsApp</a>.');
     }finally{ btn.disabled=false; btn.classList.remove('loading'); $('#l-btn-t').textContent='Ingresar'; }
   });
 
@@ -427,7 +494,8 @@ const PORTAL = {
     else { box.innerHTML='<p class="none">Este edificio aún no tiene un QR cargado.</p>'; dl.hidden=true; }
     renderTable();
     $('#up-date').value=new Date().toISOString().slice(0,10);
-    $('#view-login').hidden=true; $('#view-profile').hidden=false; $('#logout').hidden=false; $('#back').hidden=true;
+    $('#p-pass').hidden=!PORTAL.endpoint;
+    $('#view-auto').hidden=true; $('#view-login').hidden=true; $('#view-profile').hidden=false; $('#logout').hidden=false; $('#back').hidden=true;
     window.scrollTo(0,0); $('#p-name').focus({preventScroll:true});
   }
   function renderTable(){
@@ -448,10 +516,48 @@ const PORTAL = {
     if(ok){ b.classList.add('done'); b.lastChild.textContent='Copiado'; setTimeout(()=>{b.classList.remove('done');b.lastChild.textContent='Copiar';},1800); } });
 
   $('#logout').addEventListener('click',()=>{
-    data=null; file=null; showAll=false; clearFile(); $('#up-msg').innerHTML='';
+    data=null; session=null; store.del(SKEY); file=null; showAll=false; clearFile(); $('#up-msg').innerHTML='';
     $('#view-profile').hidden=true; $('#view-login').hidden=false; $('#logout').hidden=true; $('#back').hidden=false;
     document.title='Portal de copropietarios · Bramar Group'; $('#l-code').focus();
   });
+
+  /* ---------- Cambiar contraseña ---------- */
+  const dlg=$('#pw-dialog'), pn=$('#pw-new'), pr=$('#pw-rep');
+  function strength(p){ let s=0; if(p.length>=6) s++; if(p.length>=10) s++; if(/\d/.test(p)&&/[a-zA-Z]/.test(p)) s++; return Math.min(3,p?Math.max(1,s):0); }
+  pn.addEventListener('input',()=>$('#pw-meter').dataset.s=strength(pn.value));
+  function openPw(){ $('#pw-user').value=`${session.b}-${session.d}`; pn.value=pr.value=''; $('#pw-meter').dataset.s=0; $('#pw-msg').innerHTML='';
+    dlg.classList.add('open'); dlg.setAttribute('aria-hidden','false'); setTimeout(()=>pn.focus(),50); }
+  function closePw(){ dlg.classList.remove('open'); dlg.setAttribute('aria-hidden','true'); $('#p-pass').focus(); }
+  $('#p-pass').addEventListener('click',openPw);
+  $('#pw-cancel').addEventListener('click',closePw);
+  dlg.addEventListener('click',e=>{ if(e.target===dlg) closePw(); });
+  addEventListener('keydown',e=>{ if(e.key==='Escape'&&dlg.classList.contains('open')) closePw(); });
+  $('#pw-form').addEventListener('submit',async e=>{
+    e.preventDefault(); const msg=$('#pw-msg'), btn=$('#pw-btn'), p=pn.value;
+    if(p.length<6) return alertBox(msg,'bad','La contraseña debe tener al menos 6 caracteres.'),pn.focus();
+    if(p!==pr.value) return alertBox(msg,'bad','Las contraseñas no coinciden.'),pr.focus();
+    if(C.normCode(p)===session.code) return alertBox(msg,'bad','Elija una contraseña distinta de su código original.');
+    btn.disabled=true; btn.classList.add('loading'); $('#pw-btn-t').textContent='Guardando…';
+    try{
+      const body=JSON.stringify({action:'setPassword',alias:await C.aliasId(session.b,session.d,p),blob:await C.wrapCode(session.code,p),edificio_id:session.b,depto:session.d});
+      const r=await fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok||!j.ok) throw new Error(j.error||r.status);
+      alertBox(msg,'ok','Listo. Desde ahora puede entrar con su nueva contraseña o con su código original.');
+      pn.value=pr.value=''; $('#pw-meter').dataset.s=0; setTimeout(closePw,2200);
+    }catch(err){ alertBox(msg,'bad','No pudimos guardar la contraseña. Revise su conexión e intente de nuevo.'); }
+    finally{ btn.disabled=false; btn.classList.remove('loading'); $('#pw-btn-t').textContent='Guardar'; }
+  });
+
+  /* ---------- Sesión guardada en este dispositivo ---------- */
+  (async()=>{
+    let s=null; try{ s=JSON.parse(store.get(SKEY)||'null'); }catch(e){}
+    if(!s||!s.b||!s.code) return;
+    $('#view-login').hidden=true; $('#view-auto').hidden=false;
+    try{ const d=await openWithCode(s.b,s.d,s.code); if(!d) throw 0; data=d; session=s; renderProfile(); }
+    catch(e){ store.del(SKEY); $('#view-auto').hidden=true; $('#view-login').hidden=false;
+      alertBox($('#l-msg'),'info','Su sesión se cerró. Ingrese nuevamente con su contraseña o código.'); }
+  })();
 
   /* ---------- Comprobante ---------- */
   const inp=$('#up-file'), drop=$('#drop');
@@ -499,12 +605,12 @@ const PORTAL = {
     const info={edificio:E.nombre||E.id, edificio_id:E.id, depto:U.depto, propietario:U.propietario, monto:amount, fecha:$('#up-date').value, nota:$('#up-note').value.trim()};
     const text=`Comprobante de pago\nEdificio: ${info.edificio}\nDepto: ${info.depto}\nPropietario: ${info.propietario}\nMonto: ${amount||'—'}\nFecha: ${info.fecha||'—'}${info.nota?'\nNota: '+info.nota:''}`;
 
-    if(PORTAL.uploadEndpoint){
+    if(PORTAL.endpoint){
       btn.disabled=true; btn.classList.add('loading'); $('#up-btn-t').textContent='Enviando…'; $('#up-bar').classList.add('show');
       try{
         const f=await prepare(file);
         const body=JSON.stringify({...info, filename:f.name, mimeType:f.type, data:await toB64(f)});
-        const r=await fetch(PORTAL.uploadEndpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+        const r=await fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
         const j=await r.json().catch(()=>({}));
         if(!r.ok||j.ok===false) throw new Error(j.error||r.status);
         alertBox(msg,'ok','Recibimos su comprobante. Lo verificaremos y actualizaremos su estado de cuenta.');
