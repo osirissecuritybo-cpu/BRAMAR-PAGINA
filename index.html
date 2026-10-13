@@ -265,31 +265,61 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .svc{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px}
 .svc-own{grid-template-columns:repeat(3,minmax(0,1fr))}
 .head .lede{max-width:52ch}
-/* desarrolladores */
-.dev{background:var(--navy-deep);color:#fff;border-radius:var(--radius-l);padding:clamp(28px,5vw,72px);display:grid;grid-template-columns:1fr 1.05fr;gap:clamp(32px,5vw,72px);position:relative;overflow:hidden}
-.dev .h2{color:#fff;margin-top:16px}
-.dev-lede{color:rgba(255,255,255,.78);margin-top:20px;font-size:clamp(16px,1.3vw,18px);max-width:48ch}
-.dev-offer{margin-top:32px;padding:22px 0 0;border-top:1px solid rgba(255,255,255,.16)}
-.dev-offer span{font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass-soft)}
-.dev-offer p{margin-top:8px;color:#fff;font-size:17px;font-weight:300;line-height:1.5;max-width:46ch}
-.dev-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
-.dev-phases{display:grid;align-self:start}
-.phase{padding:28px 0;border-top:1px solid rgba(255,255,255,.16)}
-.phase:first-child{border-top:0;padding-top:0}
-.ph-top{display:flex;align-items:center;gap:14px}
-.ph-top .ico{color:var(--brass-soft)}
-.ph-top .ico svg{width:30px;height:30px}
-.ph-k{font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6)}
-.phase h3{font-size:clamp(22px,2vw,26px);font-weight:400;margin-top:16px}
-.phase ul{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
-.phase li{position:relative;padding-left:22px;color:rgba(255,255,255,.8);font-size:16px}
-.phase li::before{content:"";position:absolute;left:0;top:.72em;width:10px;height:1px;background:var(--brass-soft)}
-.dev-fix{grid-column:1/-1;border-top:1px solid rgba(255,255,255,.16);padding-top:28px}
-.dev-fix p{font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.6)}
-.dev-fix ul{list-style:none;margin:20px 0 0;padding:0;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
-.dev-fix li{display:flex;flex-direction:column;gap:14px;font-size:16px;color:#fff;padding:20px;border:1px solid rgba(255,255,255,.14);border-radius:16px;transition:border-color .4s,background .4s}
-.dev-fix li:hover{border-color:var(--brass-soft);background:rgba(255,255,255,.04)}
-.dev-fix svg{width:30px;height:30px;color:var(--brass-soft)}
+/* desarrolladores: aviso destacado */
+.promo{display:grid;grid-template-columns:1.25fr 1fr;border-radius:var(--radius-l);overflow:hidden;text-decoration:none;color:var(--navy-deep);background:linear-gradient(120deg,#D6B57E 0%,var(--brass-soft) 45%,var(--brass) 100%);isolation:isolate;transition:transform .5s var(--soft),box-shadow .5s var(--soft)}
+.promo > *{min-width:0}
+.promo:hover{transform:translateY(-4px);box-shadow:0 34px 60px -30px rgba(110,80,30,.6)}
+.promo-tx{padding:clamp(30px,5vw,72px);display:flex;flex-direction:column;align-items:flex-start;gap:18px}
+.promo-k{font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;display:inline-flex;align-items:center;gap:10px}
+.promo-k::before{content:"";width:28px;height:1px;background:currentColor}
+.promo h2{font-size:clamp(32px,4.4vw,58px);font-weight:300;line-height:1.05;letter-spacing:-.02em}
+.promo h2 b{font-weight:500;display:block}
+.promo p{font-size:clamp(16px,1.3vw,18px);max-width:44ch;color:rgba(6,33,69,.82)}
+.promo-go{display:inline-flex;align-items:center;gap:12px;min-height:54px;padding:0 26px;border-radius:999px;background:var(--navy-deep);color:#fff;font-size:15px;font-weight:500;margin-top:6px;transition:gap .3s,background .3s}
+.promo-go svg{width:18px;height:18px}
+.promo:hover .promo-go{gap:18px;background:var(--navy)}
+.promo-ph{position:relative;min-height:320px;overflow:hidden}
+.promo-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--soft)}
+.promo:hover .promo-ph img{transform:scale(1.06)}
+.promo-badge{position:absolute;left:clamp(16px,3vw,32px);bottom:clamp(16px,3vw,32px);width:128px;height:128px;border-radius:50%;background:var(--navy-deep);color:#fff;display:grid;place-content:center;text-align:center;font-size:20px;font-weight:500;line-height:1.1;box-shadow:0 0 0 6px rgba(255,255,255,.18)}
+.promo-badge small{display:block;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass-soft);margin-bottom:4px}
+/* página de desarrolladores */
+.dev-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.dev-head h1 b{display:block}
+.offer{display:grid;grid-template-columns:1.1fr 1fr;gap:clamp(28px,5vw,72px);align-items:center;border-radius:var(--radius-l);padding:clamp(30px,5vw,72px);background:linear-gradient(120deg,#D6B57E 0%,var(--brass-soft) 45%,var(--brass) 100%);color:var(--navy-deep)}
+.offer > *{min-width:0}
+.offer-big{font-size:clamp(46px,8vw,112px);font-weight:300;line-height:.95;letter-spacing:-.03em}
+.offer-big b{display:block;font-weight:500}
+.offer-tx > p{font-size:clamp(18px,1.6vw,22px);font-weight:400}
+.offer-tx ul{list-style:none;margin:20px 0 0;padding:0;display:grid;gap:12px}
+.offer-tx li{position:relative;padding:14px 0 0 0;border-top:1px solid rgba(6,33,69,.22);font-size:16px;color:rgba(6,33,69,.86)}
+.tl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;counter-reset:none}
+.tl > li{position:relative;background:var(--paper);border-radius:var(--radius);padding:30px;min-width:0;overflow:hidden}
+.tl > li::after{content:"";position:absolute;left:0;top:0;height:3px;width:100%;background:var(--brass);transform:scaleX(0);transform-origin:left;transition:transform 1s var(--ease)}
+.tl.seen > li::after,.tl:not([data-reveal]) > li::after{transform:none}
+.tl.seen > li:nth-child(2)::after{transition-delay:.35s}.tl.seen > li:nth-child(3)::after{transition-delay:.7s}
+.tl-n{font-size:52px;font-weight:300;line-height:1;color:var(--brass)}
+.tl h3{font-size:24px;font-weight:400;color:var(--navy);margin-top:18px}
+.tl ul{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
+.tl ul li{position:relative;padding-left:22px;color:var(--muted);font-size:16px}
+.tl ul li::before{content:"";position:absolute;left:0;top:.72em;width:10px;height:1px;background:var(--brass)}
+.fixes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+.fixes article{background:var(--paper);border-radius:var(--radius);padding:30px;min-width:0;transition:background .45s,transform .45s var(--soft)}
+.fixes svg{width:40px;height:40px;color:var(--navy);transition:color .4s}
+.fixes h3{font-size:22px;font-weight:400;color:var(--navy);margin-top:26px;transition:color .4s}
+.fixes p{color:var(--muted);margin-top:6px;font-size:15px;transition:color .4s}
+.fixes article:hover{background:var(--navy);transform:translateY(-4px)}
+.fixes article:hover svg{color:var(--brass-soft)}
+.fixes article:hover h3{color:#fff}
+.fixes article:hover p{color:rgba(255,255,255,.78)}
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.vs-col{background:var(--paper);border-radius:var(--radius);padding:clamp(28px,4vw,48px);min-width:0}
+.vs-col.on-dark{background:var(--navy)}
+.vs-col h3{font-size:clamp(24px,2.4vw,32px);font-weight:400;color:var(--muted)}
+.vs-col.on-dark h3{color:#fff}
+.vs-col ul{list-style:none;margin:20px 0 0;padding:0}
+.vs-col li{padding:16px 0;border-top:1px solid var(--line);color:var(--muted);font-size:16px}
+.vs-col.on-dark li{border-color:rgba(255,255,255,.16);color:rgba(255,255,255,.88)}
 .svc .card{display:flex;flex-direction:column;min-height:250px;position:relative;overflow:hidden}
 .svc .card[hidden]{display:none}
 .svc .who{position:absolute;top:28px;right:28px;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;padding:5px 12px;border-radius:999px;background:var(--sand);color:var(--navy);transition:background .4s,color .4s}
@@ -481,8 +511,10 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   .numbers{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:32px}
   .n:nth-child(3){border-left:0;padding-left:0}
   .svc,.svc-own{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .dev{grid-template-columns:1fr}
-  .dev-fix ul{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .promo,.offer,.vs{grid-template-columns:1fr}
+  .promo-ph{min-height:280px}
+  .tl,.fixes{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tl > li:last-child{grid-column:1/-1}
   .steps{grid-template-columns:repeat(2,minmax(0,1fr))}
   .cards3{grid-template-columns:1fr}
   .benefits{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -500,8 +532,10 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   .hero-photo{min-height:340px}
   /* tarjetas de servicio compactas en una columna */
   .svc,.svc-own{grid-template-columns:1fr;gap:12px}
-  .dev-fix ul{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .dev-fix li{padding:16px;font-size:15px}
+  .tl,.fixes{grid-template-columns:1fr}
+  .fixes article,.tl > li{padding:24px}
+  .fixes h3{margin-top:16px}
+  .promo-badge{width:104px;height:104px;font-size:17px}
   .dev-actions .btn{width:100%}
   .svc .card{min-height:0;display:grid;grid-template-columns:44px 1fr;grid-template-areas:"ico title" "ico desc" "ico who";column-gap:16px;align-items:start;padding:22px}
   .svc .ico{grid-area:ico}
@@ -556,6 +590,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   <symbol id="i-roller" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="13" height="5" rx="1"/><path d="M17 6.5h2.5v5H11v3M10 14.5h2v6h-2z"/></symbol>
   <symbol id="i-window" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3" width="15" height="18" rx=".5"/><path d="M12 3v18M10.2 11v2"/></symbol>
   <symbol id="i-level" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8.5" width="19" height="7" rx="1"/><path d="M10 12h4M7 8.5v2M17 8.5v2"/></symbol>
+  <symbol id="i-door" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round"><path d="M6 21V3.5h12V21M3.5 21h17M14.5 11.5v2"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 9.5"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></symbol>
@@ -663,6 +698,20 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
 
   <section class="tight">
     <div class="wrap">
+      <a class="promo" href="#desarrolladores" data-go="desarrolladores" data-reveal>
+        <div class="promo-tx">
+          <span class="promo-k">Desarrolladores inmobiliarios</span>
+          <h2>Entregue su edificio <b>y no vuelva por ajustes.</b></h2>
+          <p>Asistencia pre y post entrega con un conserje técnico en el edificio, a un costo bastante menor que su propia cuadrilla.</p>
+          <span class="promo-go">Ver el programa completo <svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
+        </div>
+        <div class="promo-ph"><img src="img/rise-1.jpg" alt="" width="1000" height="1333" loading="lazy" decoding="async" style="object-position:center 30%"><span class="promo-badge"><small>Descuento</small>exclusivo</span></div>
+      </a>
+    </div>
+  </section>
+
+  <section class="tight">
+    <div class="wrap">
       <div class="cta" data-reveal>
         <div class="tx"><span class="tag">Propuesta sin costo</span><h2 class="h2">¿Su edificio necesita una <b>nueva administración</b>?</h2><div><a class="btn navy" href="#contacto" data-go="contacto">Solicitar visita <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div></div>
         <div class="ph"><img src="img/limco-ii.jpg" alt="Edificio Limco II, administrado por Bramar" width="1200" height="900" loading="lazy" decoding="async"></div>
@@ -727,33 +776,17 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
       <div class="svc svc-ally" id="svc-ally"></div>
     </div>
   </section>
-  <section class="tight" id="desarrolladores">
+  <section class="tight">
     <div class="wrap">
-      <div class="dev on-dark" data-reveal>
-        <div class="dev-intro">
-          <span class="tag light">Para desarrolladores inmobiliarios</span>
-          <h2 class="h2">Entregue su edificio <b>y no vuelva por ajustes.</b></h2>
-          <p class="dev-lede">Acompañamos su proyecto antes y después de la entrega. Un conserje técnico de Bramar resuelve en el edificio los detalles que hoy obligan a su equipo a regresar.</p>
-          <div class="dev-offer"><span>Descuento exclusivo</span><p>Tarifa preferencial para desarrolladores que nos confían la administración desde la entrega, con un costo bastante menor que sostener su propia cuadrilla de post entrega.</p></div>
-          <div class="dev-actions"><a class="btn gold" href="#contacto" data-go="contacto" data-role="Desarrollador inmobiliario">Solicitar plan para desarrolladores <svg aria-hidden="true"><use href="#i-arrow"/></svg></a><a class="btn outline" id="dev-wa" target="_blank" rel="noopener" hidden>Escribir por WhatsApp</a></div>
+      <a class="promo" href="#desarrolladores" data-go="desarrolladores" data-reveal>
+        <div class="promo-tx">
+          <span class="promo-k">Desarrolladores inmobiliarios</span>
+          <h2>Entregue su edificio <b>y no vuelva por ajustes.</b></h2>
+          <p>Asistencia pre y post entrega con un conserje técnico en el edificio, a un costo bastante menor que su propia cuadrilla.</p>
+          <span class="promo-go">Ver el programa completo <svg aria-hidden="true"><use href="#i-arrow"/></svg></span>
         </div>
-        <div class="dev-phases">
-          <article class="phase"><div class="ph-top"><span class="ico"><svg aria-hidden="true"><use href="#i-clip"/></svg></span><span class="ph-k">Antes de entregar</span></div><h3>Asistencia pre entrega</h3>
-            <ul><li>Revisión de cada departamento y de las áreas comunes</li><li>Lista de observaciones por unidad para sus contratistas</li><li>Puesta en marcha de equipos, accesos y servicios</li><li>Administración, personal y proveedores listos desde el primer día</li></ul></article>
-          <article class="phase"><div class="ph-top"><span class="ico"><svg aria-hidden="true"><use href="#i-key"/></svg></span><span class="ph-k">Después de entregar</span></div><h3>Asistencia post entrega</h3>
-            <ul><li>Conserje técnico en el edificio que atiende los reclamos de los propietarios</li><li>Registro ordenado de cada reclamo de garantía y su solución</li><li>Reporte periódico al desarrollador</li><li>Su equipo se concentra en el próximo proyecto</li></ul></article>
-        </div>
-        <div class="dev-fix">
-          <p>Ajustes que resolvemos en el sitio</p>
-          <ul>
-            <li><svg aria-hidden="true"><use href="#i-drop"/></svg>Plomería</li>
-            <li><svg aria-hidden="true"><use href="#i-bolt"/></svg>Electricidad</li>
-            <li><svg aria-hidden="true"><use href="#i-roller"/></svg>Detalles de pintura</li>
-            <li><svg aria-hidden="true"><use href="#i-window"/></svg>Perfilería de aluminio</li>
-            <li><svg aria-hidden="true"><use href="#i-level"/></svg>Terminaciones en general</li>
-          </ul>
-        </div>
-      </div>
+        <div class="promo-ph"><img src="img/limco-ii.jpg" alt="" width="1000" height="1333" loading="lazy" decoding="async" style="object-position:45% center"><span class="promo-badge"><small>Descuento</small>exclusivo</span></div>
+      </a>
     </div>
   </section>
   <section class="tight">
@@ -811,6 +844,76 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   </section>
 </div>
 
+<!-- ============================ DESARROLLADORES ============================ -->
+<div class="page" id="desarrolladores" data-page data-title="Desarrolladores" hidden>
+  <div class="p-head dev-head"><div class="box reveal-img"><img src="img/torre-zafiro.jpg" alt="Torre Zafiro II, edificio administrado por Bramar" width="1000" height="1333" loading="lazy" decoding="async" style="object-position:center 30%">
+    <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Desarrolladores</b></div>
+      <h1 class="rise d1" tabindex="-1">Entregue su edificio. <b>Nosotros nos quedamos.</b></h1>
+      <p class="rise d2">Asistencia pre y post entrega para desarrolladores inmobiliarios, para que su equipo no tenga que volver una vez entregado el edificio.</p>
+      <div class="dev-actions rise d3"><a class="btn gold" href="#contacto" data-go="contacto" data-role="Desarrollador inmobiliario">Solicitar plan <svg aria-hidden="true"><use href="#i-arrow"/></svg></a><a class="btn outline" id="dev-wa" target="_blank" rel="noopener" hidden>Escribir por WhatsApp</a></div>
+    </div></div></div>
+
+  <section>
+    <div class="wrap">
+      <div class="offer" data-reveal>
+        <p class="offer-big">Descuento <b>exclusivo</b></p>
+        <div class="offer-tx">
+          <p>Para desarrolladores inmobiliarios que nos confían su edificio desde la entrega.</p>
+          <ul>
+            <li>Tarifa preferencial para la asistencia pre y post entrega.</li>
+            <li>Un costo bastante menor que sostener su propia cuadrilla de post entrega.</li>
+            <li>Un solo contrato: pre entrega, post entrega y administración.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tight">
+    <div class="wrap">
+      <div class="head" data-reveal><div><span class="tag">Cómo trabajamos</span><h2 class="h2">Antes, durante y <b>después</b> de la entrega.</h2></div></div>
+      <ol class="tl" data-reveal>
+        <li><span class="tl-n">01</span><h3>Pre entrega</h3><ul><li>Revisión de cada departamento y de las áreas comunes</li><li>Lista de observaciones por unidad para sus contratistas</li><li>Verificación de que cada observación quede resuelta</li></ul></li>
+        <li><span class="tl-n">02</span><h3>Entrega</h3><ul><li>Recepción de áreas comunes, equipos y documentación</li><li>Puesta en marcha de accesos, personal y proveedores</li><li>Acompañamiento en la entrega a cada propietario</li></ul></li>
+        <li><span class="tl-n">03</span><h3>Post entrega</h3><ul><li>Conserje técnico en el edificio que atiende cada reclamo</li><li>Registro ordenado de reclamos de garantía y su solución</li><li>Reporte periódico al desarrollador</li></ul></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="tight">
+    <div class="wrap">
+      <div class="head" data-reveal><div><span class="tag">Conserje técnico</span><h2 class="h2">Ajustes que resolvemos <b>en el sitio.</b></h2></div><p class="lede">Los detalles que aparecen después de la entrega, atendidos sin que su equipo tenga que volver.</p></div>
+      <div class="fixes">
+        <article data-reveal><svg aria-hidden="true"><use href="#i-drop"/></svg><h3>Plomería</h3><p>Goteos, griferías, desagües y sanitarios.</p></article>
+        <article data-reveal style="--d:.05s"><svg aria-hidden="true"><use href="#i-bolt"/></svg><h3>Electricidad</h3><p>Tomacorrientes, luminarias e interruptores.</p></article>
+        <article data-reveal style="--d:.1s"><svg aria-hidden="true"><use href="#i-roller"/></svg><h3>Detalles de pintura</h3><p>Retoques, manchas y fisuras menores.</p></article>
+        <article data-reveal><svg aria-hidden="true"><use href="#i-window"/></svg><h3>Perfilería de aluminio</h3><p>Ventanas, correderas, burletes y cierres.</p></article>
+        <article data-reveal style="--d:.05s"><svg aria-hidden="true"><use href="#i-door"/></svg><h3>Puertas y cerraduras</h3><p>Ajuste de hojas, bisagras y chapas.</p></article>
+        <article data-reveal style="--d:.1s"><svg aria-hidden="true"><use href="#i-level"/></svg><h3>Terminaciones</h3><p>Siliconas, juntas, cerámicas y zócalos.</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="tight">
+    <div class="wrap">
+      <div class="head" data-reveal><div><span class="tag">La diferencia</span><h2 class="h2">Su post entrega, <b>con y sin Bramar.</b></h2></div></div>
+      <div class="vs" data-reveal>
+        <div class="vs-col"><h3>Sin Bramar</h3><ul><li>Su cuadrilla vuelve al edificio por cada reclamo</li><li>Traslados, horas y personal dedicados a obras ya entregadas</li><li>Reclamos dispersos en llamadas y mensajes</li><li>Propietarios esperando una visita</li></ul></div>
+        <div class="vs-col on-dark"><h3>Con Bramar</h3><ul><li>El conserje técnico atiende el reclamo en el edificio</li><li>Una tarifa preferencial, menor que su propia cuadrilla</li><li>Registro ordenado y reporte al desarrollador</li><li>Propietarios atendidos y su marca protegida</li></ul></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="tight">
+    <div class="wrap">
+      <div class="cta" data-reveal>
+        <div class="tx"><span class="tag">Su próximo proyecto</span><h2 class="h2">Planifiquemos su <b>entrega.</b></h2><div><a class="btn navy" href="#contacto" data-go="contacto" data-role="Desarrollador inmobiliario">Solicitar plan para desarrolladores <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div></div>
+        <div class="ph"><img src="img/hub-diamante-norte.jpg" alt="" width="1000" height="1155" loading="lazy" decoding="async" style="object-position:center 30%"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
 <!-- ============================ 05 · CONTACTO ============================ -->
 <div class="page" id="contacto" data-page data-title="Contacto" hidden>
   <section style="padding-top:var(--nav-space)">
@@ -847,7 +950,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
 <footer>
   <div class="wrap foot">
     <div><img src="img/logo-blanco.png" alt="Bramar Group" width="420" height="265" loading="lazy"><p>Administración integral de edificios y condominios en Santa Cruz.</p></div>
-    <div><h2>Páginas</h2><ul><li><a href="#inicio" data-go="inicio">Inicio</a></li><li><a href="#nosotros" data-go="nosotros">Nosotros</a></li><li><a href="#servicios" data-go="servicios">Servicios</a></li><li><a href="#edificios" data-go="edificios">Edificios</a></li><li><a href="#contacto" data-go="contacto">Contacto</a></li></ul></div>
+    <div><h2>Páginas</h2><ul><li><a href="#inicio" data-go="inicio">Inicio</a></li><li><a href="#nosotros" data-go="nosotros">Nosotros</a></li><li><a href="#servicios" data-go="servicios">Servicios</a></li><li><a href="#edificios" data-go="edificios">Edificios</a></li><li><a href="#desarrolladores" data-go="desarrolladores">Desarrolladores</a></li><li><a href="#contacto" data-go="contacto">Contacto</a></li></ul></div>
     <div><h2>Contacto</h2><ul><li><a data-link="tel"><span data-bind="phone"></span></a></li><li><a data-link="mail"><span data-bind="email"></span></a></li><li><span style="display:inline-flex;min-height:36px;align-items:center" data-bind="address"></span></li></ul></div>
   </div>
   <div class="wrap foot-bottom"><span>© <span id="yr">2026</span> Bramar Group</span><span>Gestión integral de edificios y condominios</span></div>
