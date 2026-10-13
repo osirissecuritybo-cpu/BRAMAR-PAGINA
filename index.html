@@ -285,6 +285,36 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .svc .partner svg{width:14px;height:14px}
 .svc a.card:hover .partner{color:var(--brass-soft);gap:10px}
 .svc .card.osiris{box-shadow:inset 0 0 0 1.5px var(--navy)}
+.svc .card.own{cursor:pointer;border:0;font:inherit;text-align:left;color:inherit;width:100%}
+.svc .card.own .partner{color:var(--navy)}
+.svc .card.ally:not(.osiris):hover{background:var(--paper)}
+.svc .card.ally:not(.osiris):hover h3{color:var(--navy)}
+.svc .card.ally:not(.osiris):hover p{color:var(--muted)}
+.svc .card.ally:not(.osiris):hover .ico{background:var(--sky);color:var(--navy)}
+.svc .card.ally:not(.osiris):hover .who{background:var(--sand);color:var(--navy)}
+/* ventana de detalle de servicio */
+.sd{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:16px;background:rgba(6,33,69,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
+.sd.open{opacity:1;visibility:visible}
+.sd-card{width:min(100%,920px);max-height:calc(100svh - 32px);overflow:auto;background:#fff;border-radius:var(--radius-l);display:grid;grid-template-columns:.85fr 1.15fr;transform:translateY(24px) scale(.98);transition:transform .5s var(--soft)}
+.sd.open .sd-card{transform:none}
+.sd-side{background:var(--navy-deep);color:#fff;padding:clamp(28px,4vw,44px);display:flex;flex-direction:column;gap:18px;position:relative;overflow:hidden}
+.sd-side::after{content:"";position:absolute;right:-90px;bottom:-90px;width:280px;height:280px;border-radius:50%;background:radial-gradient(circle,rgba(201,164,106,.28),transparent 65%);pointer-events:none}
+.sd-side .ico{background:rgba(255,255,255,.1);color:#fff}
+.sd-side h2{font-size:clamp(28px,3.2vw,40px);font-weight:300}
+.sd-side .pitch{color:rgba(255,255,255,.85);font-size:18px;line-height:1.5}
+.sd-side .result{margin-top:auto;padding-top:18px;border-top:1px solid rgba(255,255,255,.15);font-size:15px;color:rgba(255,255,255,.8);position:relative;z-index:1}
+.sd-side .result b{display:block;color:var(--brass-soft);font-weight:500;font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.sd-main{padding:clamp(28px,4vw,44px);display:flex;flex-direction:column;gap:18px}
+.sd-main h3{font-size:13px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.sd-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.sd-list li{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line);font-size:16px;opacity:0;transform:translateY(8px);transition:opacity .4s var(--soft),transform .4s var(--soft)}
+.sd.open .sd-list li{opacity:1;transform:none}
+.sd-list li svg{width:20px;height:20px;color:var(--brass);flex:none;margin-top:2px}
+.sd-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto;padding-top:6px}
+.sd-close{position:absolute;top:14px;right:14px;z-index:3;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.12);color:#fff;cursor:pointer;display:grid;place-items:center}
+.sd-close:hover{background:rgba(255,255,255,.22)}
+.sd-close svg{width:18px;height:18px}
+@media (max-width:760px){.sd-card{grid-template-columns:1fr}.sd-side .result{margin-top:6px}}
 .steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;counter-reset:s;list-style:none;margin:0;padding:0}
 .step{background:var(--paper);border-radius:var(--radius);padding:30px;min-width:0;position:relative;overflow:hidden;counter-increment:s}
 .step::before{content:"0" counter(s);font-size:52px;font-weight:300;color:var(--sky);line-height:1;display:block;transition:color .4s}
@@ -431,6 +461,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   .svc h3{grid-area:title;margin-top:0;padding-top:0;font-size:21px}
   .svc p{grid-area:desc}
   .svc .who{grid-area:who;position:static;justify-self:start;margin-top:12px}
+  .svc .partner{grid-column:2}
   .chips{display:flex;width:100%}
   .chips button{flex:1;padding:0 12px}
   /* portadas internas: degradado vertical para que el título se lea bien */
@@ -470,6 +501,8 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-7 4 3 8-10M15 6h6v6"/></symbol>
   <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16 9.5"/></symbol>
   <symbol id="i-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></symbol>
   <symbol id="i-arrow-l" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4M10 6l-6 6 6 6"/></symbol>
@@ -732,6 +765,27 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   <div class="wrap foot-bottom"><span>© <span id="yr">2026</span> Bramar Group</span><span>Gestión integral de edificios y condominios</span></div>
 </footer>
 
+<div class="sd" id="sd" role="dialog" aria-modal="true" aria-labelledby="sd-title" aria-hidden="true">
+  <div class="sd-card">
+    <div class="sd-side">
+      <button class="sd-close" type="button" id="sd-close" aria-label="Cerrar"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+      <span class="tag light">Servicio Bramar</span>
+      <div class="ico" id="sd-ico"></div>
+      <h2 id="sd-title"></h2>
+      <p class="pitch" id="sd-pitch"></p>
+      <p class="result" id="sd-result"></p>
+    </div>
+    <div class="sd-main">
+      <h3>Qué incluye</h3>
+      <ul class="sd-list" id="sd-list"></ul>
+      <div class="sd-actions">
+        <a class="btn navy" href="#contacto" data-go="contacto" id="sd-cta">Solicitar propuesta <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a class="btn light" id="sd-wa" target="_blank" rel="noopener" hidden><svg aria-hidden="true"><use href="#i-whatsapp"/></svg>WhatsApp</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <a class="wa-float" id="wa-float" hidden target="_blank" rel="noopener" aria-label="Escribir por WhatsApp"><svg aria-hidden="true"><use href="#i-whatsapp"/></svg></a>
 
 <script>
@@ -887,20 +941,54 @@ const SITE = {
     ['own','clean','Limpieza','Higiene premium en áreas comunes.'],
     ['own','concierge','Conserjería','Atención personalizada al residente.'],
     ['ally','security','Seguridad','Vigilancia las 24 horas a cargo de Osiris Security.','https://www.osirissecurity.com.bo','Osiris Security'],
-    ['ally','lift','Ascensores','Mantenimiento técnico garantizado.'],
+    ['ally','lift','Mantenimiento de ascensores','Revisiones periódicas y atención de fallas.'],
     ['ally','pool','Piscinas','Cuidado químico y funcional.'],
     ['ally','garden','Jardinería','Paisajismo y mantenimiento.'],
-    ['ally','maint','Mantenimiento','Acciones preventivas constantes.']
+    ['ally','maint','Asistencia post entrega','Seguimiento de garantías y detalles tras la entrega del edificio.']
   ];
+  const DETAIL={
+    admin:{pitch:'Su edificio con las cuentas en orden y un responsable que responde.',
+      items:['Presupuesto anual y control de cada gasto','Cobranza de expensas y seguimiento de morosidad','Pago puntual a proveedores y personal','Fondo de contingencia para imprevistos','Reporte mensual con recibos digitales','Organización de asambleas y actas'],
+      result:'La directiva deja de perseguir pagos y facturas: cada mes sabe en qué se usó cada boliviano.'},
+    clean:{pitch:'Áreas comunes impecables, todos los días.',
+      items:['Personal de limpieza propio y capacitado','Plan de limpieza diario y semanal por áreas','Halls, pasillos, escaleras, ascensores y estacionamientos','Limpieza profunda programada','Supervisión y control de calidad','Reemplazo inmediato ante ausencias'],
+      result:'Un edificio limpio se nota al entrar, se disfruta al vivirlo y conserva su valor.'},
+    concierge:{pitch:'Un trato cordial y un ingreso en el que puede confiar.',
+      items:['Atención a residentes y visitas','Control de ingreso de visitas y proveedores','Recepción de correspondencia y paquetes','Registro y reporte de novedades a la administración','Cobertura de turnos y reemplazos','Personal capacitado en atención y protocolo'],
+      result:'Los residentes se sienten atendidos y seguros desde que cruzan la puerta.'}
+  };
   $('#svc').innerHTML=S.map(([k,i,t,d,url,partner],n)=>{
-    const tag=url?'a':'article', attrs=url?` href="${url}" target="_blank" rel="noopener" aria-label="${t}: ${partner} (abre su sitio web)"`:'';
-    return `<${tag} class="card tilt ${k}${url?' osiris':''}" data-k="${k}"${attrs} data-reveal style="--d:${(n%4)*.06}s"><span class="who">${partner||(k==='own'?'Bramar':'Aliado')}</span><div class="ico"><svg aria-hidden="true"><use href="#i-${i}"/></svg></div><h3>${t}</h3><p>${d}</p>${url?`<span class="partner">Conocer Osiris Security <svg aria-hidden="true"><use href="#i-ext"/></svg></span>`:''}</${tag}>`;
+    const own=k==='own';
+    const tag=url?'a':own?'button':'article', attrs=url?` href="${url}" target="_blank" rel="noopener" aria-label="${t}: ${partner} (abre su sitio web)"`:own?` type="button" data-svc="${i}" aria-haspopup="dialog"`:'';
+    return `<${tag} class="card ${own||url?'tilt ':''}${k}${url?' osiris':''}" data-k="${k}"${attrs} data-reveal style="--d:${(n%4)*.06}s"><span class="who">${partner||(k==='own'?'Bramar':'Aliado')}</span><div class="ico"><svg aria-hidden="true"><use href="#i-${i}"/></svg></div><h3>${t}</h3><p>${d}</p>${url?`<span class="partner">Conocer Osiris Security <svg aria-hidden="true"><use href="#i-ext"/></svg></span>`:own?`<span class="partner">Ver qué incluye <svg aria-hidden="true"><use href="#i-arrow"/></svg></span>`:''}</${tag}>`;
   }).join('');
   $('#chips').addEventListener('click',e=>{
     const b=e.target.closest('button'); if(!b) return;
     $$('#chips button').forEach(x=>x.setAttribute('aria-pressed',x===b)); chipPill();
     $$('#svc .card').forEach(c=>{ const show=b.dataset.f==='all'||c.dataset.k===b.dataset.f; c.hidden=!show; if(show){c.classList.remove('enter');void c.offsetWidth;c.classList.add('enter');} });
   });
+
+  /* ---------- Detalle de servicios propios ---------- */
+  const sd=$('#sd'); let sdLast=null;
+  function openSvc(id){
+    const s=S.find(x=>x[1]===id), D=DETAIL[id]; if(!s||!D) return;
+    sdLast=document.activeElement;
+    $('#sd-ico').innerHTML=`<svg aria-hidden="true"><use href="#i-${id}"/></svg>`;
+    $('#sd-title').textContent=s[2]; $('#sd-pitch').textContent=D.pitch;
+    $('#sd-result').innerHTML=`<b>El resultado</b>${D.result}`;
+    $('#sd-list').innerHTML=D.items.map((t,n)=>`<li style="transition-delay:${.12+n*.05}s"><svg aria-hidden="true"><use href="#i-tick"/></svg><span>${t}</span></li>`).join('');
+    const wa=$('#sd-wa'); if(SITE.whatsapp){ wa.href=waURL(`Hola Bramar, quisiera información sobre el servicio de ${s[2].toLowerCase()} para mi edificio.`); wa.hidden=false; }
+    sd.classList.add('open'); sd.setAttribute('aria-hidden','false'); document.body.classList.add('lock');
+    setTimeout(()=>$('#sd-close').focus(),50);
+  }
+  function closeSvc(){ if(!sd.classList.contains('open')) return; sd.classList.remove('open'); sd.setAttribute('aria-hidden','true'); document.body.classList.remove('lock'); sdLast&&sdLast.focus&&sdLast.focus(); }
+  $('#svc').addEventListener('click',e=>{ const b=e.target.closest('[data-svc]'); if(b) openSvc(b.dataset.svc); });
+  $('#sd-close').addEventListener('click',closeSvc);
+  $('#sd-cta').addEventListener('click',closeSvc);
+  sd.addEventListener('click',e=>{ if(e.target===sd) closeSvc(); });
+  addEventListener('keydown',e=>{ if(e.key==='Escape') closeSvc();
+    if(e.key==='Tab'&&sd.classList.contains('open')){ const f=[...sd.querySelectorAll('a:not([hidden]),button')], a=f[0], z=f[f.length-1];
+      if(e.shiftKey&&document.activeElement===a){e.preventDefault();z.focus();} else if(!e.shiftKey&&document.activeElement===z){e.preventDefault();a.focus();} } });
 
   /* ---------- 9. Inclinación suave en tarjetas (solo con mouse) ---------- */
   if(!reduce&&matchMedia('(hover:hover) and (pointer:fine)').matches){
