@@ -280,6 +280,11 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .svc .card:hover .ico{background:var(--brass);color:#fff}
 .svc .card:hover .who{background:rgba(255,255,255,.16);color:#fff}
 .svc .card.enter{animation:rise .5s var(--soft) both}
+.svc a.card{text-decoration:none;color:inherit;cursor:pointer}
+.svc .partner{display:inline-flex;align-items:center;gap:6px;margin-top:14px;font-size:14px;font-weight:500;color:var(--navy);transition:color .4s,gap .3s}
+.svc .partner svg{width:14px;height:14px}
+.svc a.card:hover .partner{color:var(--brass-soft);gap:10px}
+.svc .card.osiris{box-shadow:inset 0 0 0 1.5px var(--navy)}
 .steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px;counter-reset:s;list-style:none;margin:0;padding:0}
 .step{background:var(--paper);border-radius:var(--radius);padding:30px;min-width:0;position:relative;overflow:hidden;counter-increment:s}
 .step::before{content:"0" counter(s);font-size:52px;font-weight:300;color:var(--sky);line-height:1;display:block;transition:color .4s}
@@ -290,15 +295,26 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .step p{color:var(--muted);margin-top:8px;font-size:16px}
 
 /* edificios */
-.rail{display:flex;gap:20px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding-bottom:4px;cursor:grab;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
-.rail::-webkit-scrollbar{display:none}
-.rail.drag{cursor:grabbing;scroll-snap-type:none}
-.rail.drag *{pointer-events:none}
-.b-card{flex:0 0 clamp(260px,34vw,440px);scroll-snap-align:start;border-radius:var(--radius);overflow:hidden;position:relative;aspect-ratio:3/4;background:var(--navy);user-select:none;margin:0}
-.b-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 1.2s var(--soft)}
-.b-card:hover img{transform:scale(1.05)}
+.slider{overflow:hidden;touch-action:pan-y;cursor:grab;outline:none}
+.slider.drag{cursor:grabbing}
+.slider:focus-visible{outline:2px solid var(--brass);outline-offset:4px;border-radius:var(--radius)}
+.track{display:flex;gap:20px;transition:transform .9s cubic-bezier(.65,0,.25,1);will-change:transform}
+.slider.drag .track{transition:none}
+.b-card{flex:0 0 clamp(260px,32vw,420px);border-radius:var(--radius);overflow:hidden;position:relative;aspect-ratio:3/4;background:var(--navy);user-select:none;margin:0;opacity:.55;transform:scale(.96);transition:opacity .8s var(--soft),transform .8s var(--soft)}
+.b-card.in{opacity:1;transform:none}
+.b-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scale(1.12);transition:transform 6s ease-out;pointer-events:none}
+.b-card.in img{transform:scale(1)}
 .b-card::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(6,33,69,.88))}
-.b-card figcaption{position:absolute;left:22px;right:22px;bottom:22px;z-index:2;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.b-card figcaption{position:absolute;left:22px;right:22px;bottom:22px;z-index:2;color:#fff;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;opacity:0;transform:translateY(14px);transition:opacity .6s var(--soft) .25s,transform .6s var(--soft) .25s}
+.b-card.in figcaption{opacity:1;transform:none}
+.slider-foot{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:24px}
+.b-dots{display:flex;gap:4px}
+.b-dots button{width:30px;height:36px;border:0;background:none;padding:0;cursor:pointer;display:grid;place-items:center}
+.b-dots button::before{content:"";width:100%;height:3px;border-radius:3px;background:var(--line);transition:background .3s}
+.b-dots button[aria-current="true"]::before{background:var(--navy)}
+.foot-r{display:flex;align-items:center;gap:18px}
+.b-count{white-space:nowrap;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.06em}
+.b-count b{color:var(--navy);font-weight:500}
 .b-card h3{font-size:24px;font-weight:400}
 .b-card figcaption span{font-size:14px;color:rgba(255,255,255,.8)}
 .b-card .chip{font-size:12px;font-weight:500;background:rgba(255,255,255,.18);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:6px 12px;border-radius:999px;white-space:nowrap;color:#fff}
@@ -307,8 +323,6 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .round:hover:not([disabled]){background:var(--navy);color:#fff;border-color:var(--navy)}
 .round[disabled]{opacity:.35;cursor:default}
 .round svg{width:18px;height:18px}
-.progress{height:2px;background:var(--line);margin-top:26px;border-radius:2px;overflow:hidden}
-.progress i{display:block;height:100%;width:30%;background:var(--navy);transition:width .2s}
 .testi{background:var(--navy-deep);color:#fff;border-radius:var(--radius-l);padding:clamp(32px,6vw,88px);display:grid;grid-template-columns:auto 1fr;gap:clamp(20px,5vw,72px);align-items:start}
 .testi > *{min-width:0}
 .testi .qmark{font-size:clamp(100px,14vw,190px);line-height:.7;color:var(--brass-soft);font-weight:300}
@@ -422,7 +436,8 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   /* portadas internas: degradado vertical para que el título se lea bien */
   .p-head .box{min-height:440px}
   .p-head .box::after{background:linear-gradient(180deg,rgba(6,33,69,.25) 0%,rgba(6,33,69,.7) 45%,rgba(6,33,69,.95) 100%)}
-  .rail-ctrl{display:none}
+  .b-card{flex-basis:82%}
+  .round{width:46px;height:46px}
   .foot{grid-template-columns:1fr}
 }
 @media (prefers-reduced-motion:reduce){
@@ -455,6 +470,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-7 4 3 8-10M15 6h6v6"/></symbol>
   <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
   <symbol id="i-key" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M15 8l2 2"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></symbol>
   <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></symbol>
   <symbol id="i-arrow-l" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4M10 6l-6 6 6 6"/></symbol>
   <symbol id="i-phone" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a1 1 0 01-1 1A16 16 0 014 5a1 1 0 011-1z"/></symbol>
@@ -638,16 +654,17 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
     <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Edificios</b></div><h1 class="rise d1" tabindex="-1">Impecables y <b>operativos.</b></h1><p class="rise d2">Edificios que hoy confían en nuestra gestión.</p></div></div></div>
   <section>
     <div class="wrap">
-      <div class="head" data-reveal><div><span class="tag">Portafolio</span><h2 class="h2">Edificios <b>gestionados.</b></h2></div>
-        <div class="rail-ctrl"><button class="round" type="button" id="r-prev" aria-label="Ver edificio anterior" aria-controls="rail"><svg aria-hidden="true"><use href="#i-arrow-l"/></svg></button><button class="round" type="button" id="r-next" aria-label="Ver edificio siguiente" aria-controls="rail"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div></div>
-      <div class="rail" id="rail" tabindex="0" aria-label="Galería de edificios gestionados (use las flechas del teclado para desplazarse)" data-reveal>
-        <figure class="b-card"><img src="img/torre-zafiro.jpg" alt="Torre Zafiro II" width="1000" height="1333" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>Torre Zafiro II</h3><span>Santa Cruz</span></div></figcaption></figure>
-        <figure class="b-card"><img src="img/rise-1.jpg" alt="Edificio Rise 1" width="1000" height="1333" loading="lazy" decoding="async" draggable="false" style="object-position:center 30%"><figcaption><div><h3>Rise 1</h3><span>Santa Cruz</span></div></figcaption></figure>
-        <figure class="b-card"><img src="img/san-nicolas.jpg" alt="San Nicolás Residences" width="985" height="1230" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>San Nicolás Residences</h3><span>Santa Cruz</span></div></figcaption></figure>
-        <figure class="b-card"><img src="img/hub-diamante-norte.jpg" alt="Hub Diamante Norte" width="1000" height="1155" loading="lazy" decoding="async" draggable="false"><figcaption><div><h3>Hub Diamante Norte</h3><span>Santa Cruz</span></div></figcaption></figure>
-        <figure class="b-card"><img src="img/limco-ii.jpg" alt="Edificio Limco II" width="1200" height="900" loading="lazy" decoding="async" draggable="false" style="object-position:45% center"><figcaption><div><h3>Limco II</h3><span>Santa Cruz</span></div></figcaption></figure>
+      <div class="head" data-reveal><div><span class="tag">Portafolio</span><h2 class="h2">Edificios <b>gestionados.</b></h2></div></div>
+      <div class="slider" id="slider" tabindex="0" role="region" aria-roledescription="carrusel" aria-label="Edificios gestionados (use las flechas del teclado)" data-reveal>
+        <div class="track" id="track">
+          <figure class="b-card"><img src="img/torre-zafiro.jpg" alt="Torre Zafiro II" width="1000" height="1333" loading="lazy" draggable="false" decoding="async"><figcaption><div><h3>Torre Zafiro II</h3><span>Santa Cruz</span></div></figcaption></figure>
+          <figure class="b-card"><img src="img/rise-1.jpg" alt="Edificio Rise 1" width="1000" height="1333" loading="lazy" draggable="false" decoding="async" style="object-position:center 30%"><figcaption><div><h3>Rise 1</h3><span>Santa Cruz</span></div></figcaption></figure>
+          <figure class="b-card"><img src="img/san-nicolas.jpg" alt="San Nicolás Residences" width="985" height="1230" loading="lazy" draggable="false" decoding="async"><figcaption><div><h3>San Nicolás Residences</h3><span>Santa Cruz</span></div></figcaption></figure>
+          <figure class="b-card"><img src="img/hub-diamante-norte.jpg" alt="Hub Diamante Norte" width="1000" height="1155" loading="lazy" draggable="false" decoding="async"><figcaption><div><h3>Hub Diamante Norte</h3><span>Santa Cruz</span></div></figcaption></figure>
+          <figure class="b-card"><img src="img/limco-ii.jpg" alt="Edificio Limco II" width="1200" height="900" loading="lazy" draggable="false" decoding="async" style="object-position:45% center"><figcaption><div><h3>Limco II</h3><span>Santa Cruz</span></div></figcaption></figure>
+        </div>
       </div>
-      <div class="progress" aria-hidden="true"><i id="r-bar"></i></div>
+      <div class="slider-foot"><div class="b-dots" id="b-dots" role="group" aria-label="Elegir edificio"></div><div class="foot-r"><span class="b-count" id="b-count" aria-live="polite"></span><div class="rail-ctrl"><button class="round" type="button" id="r-prev" aria-label="Ver edificio anterior" aria-controls="slider"><svg aria-hidden="true"><use href="#i-arrow-l"/></svg></button><button class="round" type="button" id="r-next" aria-label="Ver edificio siguiente" aria-controls="slider"><svg aria-hidden="true"><use href="#i-arrow"/></svg></button></div></div></div>
     </div>
   </section>
   <!-- Testimonios: se muestran solo si hay testimonios reales en SITE.testimonials -->
@@ -786,7 +803,7 @@ const SITE = {
     current=id; navPill(); watchReveal(pg);
     if(focus){ const h=$('h1',pg); h&&h.focus({preventScroll:true}); $('#announce').textContent='Página '+pg.dataset.title; }
     id==='inicio'?(countUp(),startWhy()):stopWhy();
-    id==='edificios'?(startSlides(),updateRail()):stopSlides();
+    id==='edificios'?(startSlides(),startSlider()):(stopSlides(),stopSlider());
     if(id==='servicios') requestAnimationFrame(chipPill);
   }
   function go(id,push=true){
@@ -817,7 +834,7 @@ const SITE = {
     setTimeout(()=>{const f=$('#mmenu a');f&&f.focus();},50);
   });
   addEventListener('scroll',()=>nav.classList.toggle('scrolled',scrollY>20),{passive:true});
-  let rz; addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{navPill();chipPill();updateRail(); if(innerWidth>1000) closeMenu(false);},120);});
+  let rz; addEventListener('resize',()=>{clearTimeout(rz);rz=setTimeout(()=>{navPill();chipPill();if(current==='edificios')goSlide(Math.min(bi,maxIdx()),true); if(innerWidth>1000) closeMenu(false);},120);});
 
   /* ---------- 5. Aparición al desplazarse ---------- */
   const io=('IntersectionObserver' in window)?new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){const el=e.target;el.classList.add('seen');io.unobserve(el);setTimeout(()=>{el.removeAttribute('data-reveal');el.classList.remove('seen');},1400);} }),{rootMargin:'0px 0px -8% 0px',threshold:.08}):null;
@@ -869,13 +886,16 @@ const SITE = {
     ['own','admin','Administración','Gestión estratégica y contable.'],
     ['own','clean','Limpieza','Higiene premium en áreas comunes.'],
     ['own','concierge','Conserjería','Atención personalizada al residente.'],
-    ['ally','security','Seguridad','Vigilancia las 24 horas.'],
+    ['ally','security','Seguridad','Vigilancia las 24 horas a cargo de Osiris Security.','https://www.osirissecurity.com.bo','Osiris Security'],
     ['ally','lift','Ascensores','Mantenimiento técnico garantizado.'],
     ['ally','pool','Piscinas','Cuidado químico y funcional.'],
     ['ally','garden','Jardinería','Paisajismo y mantenimiento.'],
     ['ally','maint','Mantenimiento','Acciones preventivas constantes.']
   ];
-  $('#svc').innerHTML=S.map(([k,i,t,d],n)=>`<article class="card tilt ${k}" data-k="${k}" data-reveal style="--d:${(n%4)*.06}s"><span class="who">${k==='own'?'Bramar':'Aliado'}</span><div class="ico"><svg aria-hidden="true"><use href="#i-${i}"/></svg></div><h3>${t}</h3><p>${d}</p></article>`).join('');
+  $('#svc').innerHTML=S.map(([k,i,t,d,url,partner],n)=>{
+    const tag=url?'a':'article', attrs=url?` href="${url}" target="_blank" rel="noopener" aria-label="${t}: ${partner} (abre su sitio web)"`:'';
+    return `<${tag} class="card tilt ${k}${url?' osiris':''}" data-k="${k}"${attrs} data-reveal style="--d:${(n%4)*.06}s"><span class="who">${partner||(k==='own'?'Bramar':'Aliado')}</span><div class="ico"><svg aria-hidden="true"><use href="#i-${i}"/></svg></div><h3>${t}</h3><p>${d}</p>${url?`<span class="partner">Conocer Osiris Security <svg aria-hidden="true"><use href="#i-ext"/></svg></span>`:''}</${tag}>`;
+  }).join('');
   $('#chips').addEventListener('click',e=>{
     const b=e.target.closest('button'); if(!b) return;
     $$('#chips button').forEach(x=>x.setAttribute('aria-pressed',x===b)); chipPill();
@@ -893,20 +913,42 @@ const SITE = {
       c.style.transform=`perspective(800px) rotateY(${x*5}deg) rotateX(${-y*5}deg) translateY(-6px)`; }); });
   }
 
-  /* ---------- 10. Galería de edificios ---------- */
-  const rail=$('#rail'), bar=$('#r-bar'), rp=$('#r-prev'), rn=$('#r-next');
-  function updateRail(){ const max=rail.scrollWidth-rail.clientWidth, vis=rail.clientWidth/rail.scrollWidth||1;
-    bar.style.width=Math.min(100,(vis+(max?rail.scrollLeft/max:1)*(1-vis))*100)+'%';
-    rp.disabled=rail.scrollLeft<4; rn.disabled=rail.scrollLeft>max-4; }
-  rail.addEventListener('scroll',updateRail,{passive:true});
-  const stepW=()=>rail.querySelector('.b-card').offsetWidth+20;
-  rn.onclick=()=>rail.scrollBy({left:stepW(),behavior:reduce?'auto':'smooth'});
-  rp.onclick=()=>rail.scrollBy({left:-stepW(),behavior:reduce?'auto':'smooth'});
-  rail.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'){e.preventDefault();rn.click();} if(e.key==='ArrowLeft'){e.preventDefault();rp.click();} });
-  let down=false, sx=0, sl=0, moved=false;
-  rail.addEventListener('pointerdown',e=>{ if(e.pointerType!=='mouse') return; down=true;moved=false;sx=e.clientX;sl=rail.scrollLeft; });
-  addEventListener('pointermove',e=>{ if(!down) return; const dx=e.clientX-sx; if(Math.abs(dx)>4){moved=true;rail.classList.add('drag');} rail.scrollLeft=sl-dx; });
-  addEventListener('pointerup',()=>{ if(!down) return; down=false; rail.classList.remove('drag'); });
+  /* ---------- 10. Carrusel de edificios ---------- */
+  const slider=$('#slider'), track=$('#track'), cards=$$('.b-card',track), rp=$('#r-prev'), rn=$('#r-next'), bdots=$('#b-dots'), bcount=$('#b-count');
+  let bi=0, bTimer=null, bHover=false, bRun=false;
+  const gapPx=()=>parseFloat(getComputedStyle(track).columnGap)||20;
+  const cardW=()=>cards[0].getBoundingClientRect().width+gapPx();
+  const visible=()=>Math.max(1,Math.floor((slider.clientWidth+gapPx()+2)/cardW()));
+  const maxIdx=()=>Math.max(0,cards.length-visible());
+  cards.forEach((_,k)=>{ const b=document.createElement('button'); b.type='button'; b.setAttribute('aria-label','Ver '+cards[k].querySelector('h3').textContent); b.onclick=()=>{goSlide(k);restart();}; bdots.appendChild(b); });
+  function goSlide(k,instant){
+    const m=maxIdx(); bi=k>m?0:k<0?m:k;
+    if(instant) track.style.transition='none';
+    track.style.transform=`translate3d(${-bi*cardW()}px,0,0)`;
+    if(instant){ void track.offsetWidth; track.style.transition=''; }
+    const v=visible();
+    cards.forEach((c,n)=>c.classList.toggle('in',n>=bi&&n<bi+v));
+    [...bdots.children].forEach((d,n)=>d.setAttribute('aria-current',n===bi));
+    bcount.innerHTML=`<b>${String(bi+1).padStart(2,'0')}</b> / ${String(cards.length).padStart(2,'0')}`;
+  }
+  function tick(){ clearTimeout(bTimer); if(bRun&&!bHover&&!reduce) bTimer=setTimeout(()=>{goSlide(bi+1);tick();},4200); }
+  function restart(){ tick(); }
+  function startSlider(){ bRun=true; goSlide(bi,true); tick(); }
+  function stopSlider(){ bRun=false; clearTimeout(bTimer); }
+  rn.onclick=()=>{goSlide(bi+1);restart();};
+  rp.onclick=()=>{goSlide(bi-1);restart();};
+  slider.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'){e.preventDefault();rn.click();} if(e.key==='ArrowLeft'){e.preventDefault();rp.click();} });
+  slider.addEventListener('mouseenter',()=>{bHover=true;clearTimeout(bTimer);});
+  slider.addEventListener('mouseleave',()=>{bHover=false;tick();});
+  // arrastrar con el mouse o deslizar con el dedo
+  let dx0=null, dxl=0;
+  slider.addEventListener('pointerdown',e=>{ dx0=e.clientX; dxl=0; slider.setPointerCapture(e.pointerId); clearTimeout(bTimer); });
+  slider.addEventListener('pointermove',e=>{ if(dx0===null) return; dxl=e.clientX-dx0; if(Math.abs(dxl)>6){ slider.classList.add('drag'); track.style.transform=`translate3d(${-bi*cardW()+dxl}px,0,0)`; } });
+  const endDrag=()=>{ if(dx0===null) return; slider.classList.remove('drag'); const th=Math.min(80,cardW()/4);
+    if(dxl<-th) goSlide(bi+1>maxIdx()?maxIdx():bi+1); else if(dxl>th) goSlide(bi-1<0?0:bi-1); else goSlide(bi);
+    dx0=null; tick(); };
+  slider.addEventListener('pointerup',endDrag); slider.addEventListener('pointercancel',endDrag);
+  document.addEventListener('visibilitychange',()=>document.hidden?clearTimeout(bTimer):tick());
 
   /* ---------- 11. Testimonios (solo si existen) ---------- */
   const T=SITE.testimonials.filter(t=>t&&t.quote);
