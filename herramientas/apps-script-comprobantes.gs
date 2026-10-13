@@ -55,6 +55,12 @@ function doPost(e) {
   }
 }
 
+/** Ejecute esta función una vez desde el editor: autoriza los permisos y crea la hoja. */
+function instalar() {
+  const sh = registro_(); accesos_();
+  Logger.log('Listo. Hoja de registro: ' + sh.getParent().getUrl());
+}
+
 function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.action === 'alias') return getAlias_(p.id);
