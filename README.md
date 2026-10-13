@@ -77,7 +77,8 @@ El portal muestra los edificios de la última generación. Para probar, use un d
 ## Pendientes
 
 - [ ] URL de la página de Facebook (`SITE.social.facebook` en `index.html`).
-- [ ] Instalar el script de Google y pegar su URL en `PORTAL.endpoint` (activa comprobantes a Drive y contraseñas personales).
+- [x] Script de Google instalado (por ahora en la cuenta de prueba osirissecurity.bo@gmail.com, proyecto "Portal Bramar").
+- [ ] Pasar el script a la cuenta bramargroupsrl@gmail.com y reemplazar la URL en `PORTAL.endpoint`.
 - [ ] Cargar el Excel real de cada edificio, generar los datos y subir los QR.
 - [ ] Servicio de formularios (`SITE.formEndpoint`) para el formulario de contacto (opcional).
 - [ ] Testimonios reales y nombres de los edificios de la galería.
