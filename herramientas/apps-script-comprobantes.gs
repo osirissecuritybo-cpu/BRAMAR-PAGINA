@@ -4,6 +4,8 @@
  * 1. Comprobantes: guarda cada uno en Google Drive, ordenado así:
  *      Comprobantes Bramar / EDIFICIO / 2026-10 Octubre / Depto 2B / archivo
  *    y lo anota en la hoja "Registro de comprobantes".
+ *    En la columna "Estado" elija Pendiente de verificar / Verificado / Rechazado:
+ *    el propietario ve ese estado al instante en su portal ("Mis comprobantes").
  * 2. Contraseñas personales: guarda, por departamento, el código
  *    original cifrado con la contraseña del propietario. Este servidor
  *    nunca recibe ni la contraseña ni el código en texto legible.
@@ -50,10 +52,13 @@ function doPost(e) {
     const nombre = `${fecha} · ${limpiar_(d.filename)}`;
     const archivo = depto.createFile(Utilities.newBlob(bytes, d.mimeType, nombre));
 
-    registro_().appendRow([
+    const sh = registro_();
+    sh.appendRow([
       ahora, d.edificio || '', d.depto || '', d.propietario || '',
-      d.monto || '', d.fecha || '', d.nota || '', archivo.getUrl(), 'Pendiente de verificar'
+      d.monto || '', d.fecha || '', d.nota || '', archivo.getUrl(), 'Pendiente de verificar',
+      /^[0-9a-f]{48}$/.test(d.rk || '') ? d.rk : ''
     ]);
+    sh.getRange(sh.getLastRow(), 9).setDataValidation(validacionEstado_());
     return json({ ok: true });
   } catch (err) {
     return json({ ok: false, error: String(err) });
@@ -62,14 +67,47 @@ function doPost(e) {
 
 /** Ejecute esta función una vez desde el editor: autoriza los permisos y crea la hoja. */
 function instalar() {
-  const sh = registro_(); accesos_();
+  const sh = registro_(); accesos_(); preparar_(sh);
   Logger.log('Listo. Hoja de registro: ' + sh.getParent().getUrl());
 }
 
 function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.action === 'alias') return getAlias_(p.id);
+  if (p.action === 'recibos') return getRecibos_(p.rk);
   return json({ ok: true, servicio: 'Portal Bramar' });
+}
+
+/* ---------- Estado de comprobantes ---------- */
+const ESTADOS = ['Pendiente de verificar', 'Verificado', 'Rechazado'];
+function validacionEstado_() {
+  return SpreadsheetApp.newDataValidation().requireValueInList(ESTADOS, true).setAllowInvalid(false).build();
+}
+/** Agrega la columna oculta "clave" y la lista desplegable de Estado (se ejecuta con instalar). */
+function preparar_(sh) {
+  if (!sh.getRange(1, 10).getValue()) sh.getRange(1, 10).setValue('clave');
+  const n = Math.max(sh.getMaxRows() - 1, 1);
+  sh.getRange(2, 9, n, 1).setDataValidation(validacionEstado_());
+  sh.hideColumns(10);
+}
+function freno_() {
+  const cache = CacheService.getScriptCache(), k = 'q' + Math.floor(Date.now() / 60000);
+  const n = Number(cache.get(k) || 0) + 1; cache.put(k, String(n), 120);
+  return n > 600;
+}
+function fecha_(v) {
+  return v instanceof Date ? Utilities.formatDate(v, 'America/La_Paz', 'yyyy-MM-dd') : String(v || '');
+}
+function getRecibos_(rk) {
+  if (!/^[0-9a-f]{48}$/.test(rk || '')) return json({ ok: false });
+  if (freno_()) return json({ ok: false, error: 'Demasiadas consultas, espere un minuto.' });
+  const sh = registro_();
+  const celdas = sh.getRange('J:J').createTextFinder(rk).matchEntireCell(true).findAll();
+  const recibos = celdas.map(function (c) {
+    const r = sh.getRange(c.getRow(), 1, 1, 9).getValues()[0];
+    return { recibido: fecha_(r[0]), monto: String(r[4] || ''), fecha: fecha_(r[5]), estado: String(r[8] || '') };
+  }).reverse();
+  return json({ ok: true, recibos: recibos });
 }
 
 /* ---------- Contraseñas personales ---------- */
@@ -98,9 +136,7 @@ function setPassword_(d) {
 function getAlias_(id) {
   if (!/^[0-9a-f]{48}$/.test(id || '')) return json({ ok: false });
   // freno básico contra intentos masivos: máximo 600 consultas por minuto
-  const cache = CacheService.getScriptCache(), k = 'q' + Math.floor(Date.now() / 60000);
-  const n = Number(cache.get(k) || 0) + 1; cache.put(k, String(n), 120);
-  if (n > 600) return json({ ok: false, error: 'Demasiados intentos, espere un minuto.' });
+  if (freno_()) return json({ ok: false, error: 'Demasiados intentos, espere un minuto.' });
   const f = accesos_().getRange('A:A').createTextFinder(id).matchEntireCell(true).findNext();
   if (!f) return json({ ok: false });
   return json({ ok: true, blob: JSON.parse(accesos_().getRange(f.getRow(), 2).getValue()) });
@@ -120,8 +156,9 @@ function registro_() {
   if (id) { try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; } }
   if (!ss) {
     ss = SpreadsheetApp.create(HOJA_REGISTRO);
-    ss.getSheets()[0].appendRow(['Recibido', 'Edificio', 'Depto', 'Propietario', 'Monto', 'Fecha del pago', 'Nota', 'Archivo', 'Estado']);
+    ss.getSheets()[0].appendRow(['Recibido', 'Edificio', 'Depto', 'Propietario', 'Monto', 'Fecha del pago', 'Nota', 'Archivo', 'Estado', 'clave']);
     ss.getSheets()[0].setFrozenRows(1);
+    preparar_(ss.getSheets()[0]);
     props.setProperty('HOJA_ID', ss.getId());
     DriveApp.getFileById(ss.getId()).moveTo(carpeta_(DriveApp.getRootFolder(), CARPETA_RAIZ));
   }

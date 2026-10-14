@@ -62,8 +62,14 @@
     const h = await crypto.subtle.digest("SHA-256", enc.encode(`alias|${normId(edificio)}|${normDepto(depto)}|${String(password)}`));
     return hex(h).slice(0, 48);
   }
+  /* Clave para consultar el estado de los comprobantes de un departamento.
+     Solo la puede calcular quien conoce el código de acceso. */
+  async function receiptKey(edificio, depto, code) {
+    const h = await crypto.subtle.digest("SHA-256", enc.encode(`recibos|${normId(edificio)}|${normDepto(depto)}|${normCode(code)}`));
+    return hex(h).slice(0, 48);
+  }
   const wrapCode = (code, password) => encrypt({ code: normCode(code) }, password, true);
   const unwrapCode = async (blob, password) => (await decrypt(blob, password, true)).code;
 
-  global.BramarCrypto = { normCode, normDepto, normId, formatCode, newCode, fileId, encrypt, decrypt, aliasId, wrapCode, unwrapCode };
+  global.BramarCrypto = { normCode, normDepto, normId, formatCode, newCode, fileId, encrypt, decrypt, aliasId, receiptKey, wrapCode, unwrapCode };
 })(window);

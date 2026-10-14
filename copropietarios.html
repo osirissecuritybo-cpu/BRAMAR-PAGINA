@@ -150,6 +150,17 @@ button{font:inherit;color:inherit}
 .qr .box img{width:100%;height:100%;object-fit:contain;border-radius:8px}
 .qr .box .none{font-size:13px;color:var(--muted);text-align:center;padding:12px}
 .p-up{grid-column:span 5}
+.rc{margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}
+.rc h3{font-size:17px;font-weight:500;color:var(--navy)}
+.rc-note{color:var(--muted);font-size:14px;margin-top:4px}
+.rc-list{list-style:none;margin:12px 0 0;padding:0}
+.rc-list li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 0;border-top:1px solid var(--line);font-size:15px}
+.rc-list li:first-child{border-top:0}
+.rc-list .d{color:var(--ink)}
+.rc-list .d small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.rc-list .s{flex:none;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right}
+.rc-list .s.ok{color:var(--navy)}
+.rc-list .s small{display:block;text-transform:none;letter-spacing:0;font-weight:400;font-size:12px;margin-top:2px;color:var(--muted)}
 .p-mov{grid-column:span 7}
 .drop{margin-top:18px;border:1.5px dashed #BFC9D4;border-radius:16px;padding:26px 18px;text-align:center;cursor:pointer;transition:border-color .25s,background .25s;display:flex;flex-direction:column;align-items:center;gap:8px;background:#FBFAF7}
 .drop:hover,.drop.over{border-color:var(--navy);background:var(--sky)}
@@ -344,6 +355,11 @@ footer a{color:var(--navy)}
             <button class="btn navy block" type="submit" id="up-btn"><span id="up-btn-t">Enviar comprobante</span><span class="spin" aria-hidden="true"></span><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
           </div>
         </form>
+        <div class="rc" id="rc" hidden>
+          <h3>Mis comprobantes</h3>
+          <p class="rc-note">Su estado de cuenta se actualizará en un máximo de 24 horas después de verificar su pago.</p>
+          <ul class="rc-list" id="rc-list"></ul>
+        </div>
       </section>
 
       <section class="panel p-mov" aria-labelledby="h-mov" style="animation-delay:.18s">
@@ -463,7 +479,7 @@ const PORTAL = {
       store.set('bramar.bld',b); store.set('bramar.dep',C.normDepto(d));
       if($('#l-remember').checked) store.set(SKEY,JSON.stringify(session)); else store.del(SKEY);
       $('#l-code').value=''; $('#l-code').type='password';
-      renderProfile();
+      renderProfile(); loadReceipts();
     }catch(err){
       alertBox(msg,'bad',err.message==='net'
         ?'No pudimos conectarnos. Revise su internet e intente otra vez.'
@@ -472,6 +488,24 @@ const PORTAL = {
   });
 
   /* ---------- Perfil ---------- */
+  /* Estado de los comprobantes enviados (lo cambia Bramar en la hoja "Registro de comprobantes") */
+  async function loadReceipts(){
+    const box=$('#rc'); if(!PORTAL.endpoint||!session){ box.hidden=true; return; }
+    try{
+      const rk=await C.receiptKey(session.b,session.d,session.code);
+      const r=await fetch(PORTAL.endpoint+'?action=recibos&rk='+rk,{cache:'no-store'}); const j=await r.json();
+      if(!j.ok||!j.recibos||!j.recibos.length){ box.hidden=true; return; }
+      const cur=(data.edificio||{}).moneda||'Bs';
+      $('#rc-list').innerHTML=j.recibos.slice(0,8).map(x=>{
+        const st=String(x.estado||'').toLowerCase();
+        const lab=st.startsWith('verific')?'Verificado':st.startsWith('rechaz')?'Rechazado':'En verificación';
+        const extra=lab==='En verificación'?'<small>máximo 24 horas</small>':lab==='Rechazado'?'<small>comuníquese con Bramar</small>':'';
+        const det=[x.monto?money(Number(String(x.monto).replace(',','.')),cur):'',x.fecha?'pago del '+fdate(x.fecha):''].filter(Boolean).join(' · ');
+        return `<li><span class="d">Enviado el ${fdate(x.recibido)}${det?`<small>${esc(det)}</small>`:''}</span><span class="s${lab==='Verificado'?' ok':''}">${lab}${extra}</span></li>`;
+      }).join('');
+      box.hidden=false;
+    }catch(e){ box.hidden=true; }
+  }
   function renderProfile(){
     const E=data.edificio||{}, U=data.unidad||{}, R=data.resumen||{}, cur=E.moneda||'Bs';
     document.title=`${U.propietario||'Mi perfil'} · Portal Bramar`;
@@ -587,7 +621,7 @@ const PORTAL = {
     let s=null; try{ s=JSON.parse(store.get(SKEY)||'null'); }catch(e){}
     if(!s||!s.b||!s.code) return;
     $('#view-login').hidden=true; $('#view-auto').hidden=false;
-    try{ const d=await openWithCode(s.b,s.d,s.code); if(!d) throw 0; data=d; session=s; renderProfile(); }
+    try{ const d=await openWithCode(s.b,s.d,s.code); if(!d) throw 0; data=d; session=s; renderProfile(); loadReceipts(); }
     catch(e){ store.del(SKEY); $('#view-auto').hidden=true; $('#view-login').hidden=false;
       alertBox($('#l-msg'),'info','Su sesión se cerró. Ingrese nuevamente con su contraseña o código.'); }
   })();
@@ -642,12 +676,12 @@ const PORTAL = {
       btn.disabled=true; btn.classList.add('loading'); $('#up-btn-t').textContent='Enviando…'; $('#up-bar').classList.add('show');
       try{
         const f=await prepare(file);
-        const body=JSON.stringify({...info, filename:f.name, mimeType:f.type, data:await toB64(f)});
+        const body=JSON.stringify({...info, rk:await C.receiptKey(session.b,session.d,session.code), filename:f.name, mimeType:f.type, data:await toB64(f)});
         const r=await fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
         const j=await r.json().catch(()=>({}));
         if(!r.ok||j.ok===false) throw new Error(j.error||r.status);
-        alertBox(msg,'ok','Recibimos su comprobante. Lo verificaremos y actualizaremos su estado de cuenta.');
-        clearFile(); $('#up-note').value='';
+        alertBox(msg,'ok','Recibimos su comprobante. Lo verificaremos y su estado de cuenta se actualizará en un máximo de 24 horas.');
+        clearFile(); $('#up-note').value=''; loadReceipts();
       }catch(err){
         alertBox(msg,'bad','No pudimos enviar el comprobante. Intente de nuevo o <a href="'+wa(text)+'" target="_blank" rel="noopener">envíelo por WhatsApp</a>.');
       }finally{ btn.disabled=false; btn.classList.remove('loading'); $('#up-btn-t').textContent='Enviar comprobante'; $('#up-bar').classList.remove('show'); }
@@ -657,7 +691,7 @@ const PORTAL = {
     try{
       if(navigator.canShare&&navigator.canShare({files:[file]})){
         await navigator.share({files:[file],text,title:'Comprobante Bramar'});
-        alertBox(msg,'ok','Elija WhatsApp y envíelo al número de Bramar. Verificaremos su pago y actualizaremos su estado de cuenta.');
+        alertBox(msg,'ok','Elija WhatsApp y envíelo al número de Bramar. Verificaremos su pago y su estado de cuenta se actualizará en un máximo de 24 horas.');
         return;
       }
     }catch(err){ if(err&&err.name==='AbortError') return; }
