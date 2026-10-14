@@ -315,6 +315,7 @@ function luka_(d) {
     if (freno_()) return json({ ok: false, error: 'Demasiados intentos, espere un minuto.' });
     const u = lkUsuarios_().filter(function (x) { return x.u === String(d.usuario || '').trim().toLowerCase(); })[0];
     if (!u || u.activo === false || lkHash_(u.salt, String(d.clave || '')) !== u.hash) return json({ ok: false, error: 'Usuario o clave incorrectos.' });
+    lkLog_(u, '', 'Ingresó', '');
     return json({ ok: true, token: lkToken_(u), usuario: lkPublico_(u) });
   }
   const u = sesion_(d.t);
@@ -324,7 +325,7 @@ function luka_(d) {
   if (a === 'lk_edificios') {
     const E = lkEdificios_();
     return json({ ok: true, edificios: Object.keys(E).filter(function (id) { return puedeVer_(u, id); })
-      .map(function (id) { return { id: id, nombre: E[id].name, v: E[id].v, actualizado: E[id].upd, por: E[id].by, creado: E[id].created }; }) });
+      .map(function (id) { return { id: id, nombre: E[id].name, v: E[id].v, actualizado: E[id].upd, por: E[id].by, creado: E[id].created, resumen: E[id].res || null }; }) });
   }
   if (a === 'lk_version') {
     const e = lkEdificios_()[d.id];
@@ -346,20 +347,31 @@ function luka_(d) {
         if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un administrador puede crear edificios.' });
         const f = lkCarpeta_().createFile(Utilities.newBlob(d.data, 'application/json', limpiar_(d.nombre || d.id) + ' (' + d.id + ').json'));
         E[d.id] = { name: String(d.nombre || d.id).slice(0, 80), file: f.getId(), v: 1, upd: now, by: u.n, created: now, portal: d.portal ? slug_(d.portal) : '' };
+        lkLog_(u, E[d.id].name, 'Creó el edificio', '');
       } else {
         if (!puedeVer_(u, d.id)) return json({ ok: false, error: 'Sin acceso a este edificio.' });
         if (Number(d.v) !== Number(e.v)) return json({ ok: false, conflicto: true, v: e.v, por: e.by, actualizado: e.upd, error: 'Otro dispositivo guardó cambios antes.' });
         DriveApp.getFileById(e.file).setContent(d.data);
         e.v = e.v + 1; e.upd = now; e.by = u.n; if (d.nombre) e.name = String(d.nombre).slice(0, 80);
         if (d.portal) e.portal = slug_(d.portal);
+        lkLogCambios_(u, e.name, d.id, d.notas);
       }
+      if (d.resumen && typeof d.resumen === 'object') E[d.id].res = { deptos: +d.resumen.deptos || 0, alDia: +d.resumen.alDia || 0, deuda: +d.resumen.deuda || 0, mora: +d.resumen.mora || 0 };
       lkEscribir_('LUKA_EDIFICIOS', E);
       return json({ ok: true, v: E[d.id].v });
     } finally { lock.releaseLock(); }
   }
   if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un administrador puede hacer esto.' });
+  if (a === 'lk_actividad') {
+    const sh = lkHojaLog_(), n = sh.getLastRow();
+    if (n < 2) return json({ ok: true, actividad: [] });
+    const desde = Math.max(2, n - 499), filas = sh.getRange(desde, 1, n - desde + 1, 5).getValues().reverse();
+    return json({ ok: true, actividad: filas.filter(function (r) { return !d.edificio || r[2] === d.edificio; }).slice(0, 300)
+      .map(function (r) { return { fecha: r[0] instanceof Date ? r[0].toISOString() : String(r[0]), usuario: String(r[1]), edificio: String(r[2]), accion: String(r[3]), detalle: String(r[4]) }; }) });
+  }
   if (a === 'lk_borrar') {
     const E = lkEdificios_(), e = E[d.id]; if (!e) return json({ ok: true });
+    lkLog_(u, e.name, 'Borró el edificio', '');
     try { DriveApp.getFileById(e.file).setTrashed(true); } catch (x) {}
     delete E[d.id]; lkEscribir_('LUKA_EDIFICIOS', E); return json({ ok: true });
   }
@@ -376,9 +388,11 @@ function luka_(d) {
       L[i].n = String(x.nombre || L[i].n).slice(0, 60); L[i].rol = rol; L[i].eds = eds; L[i].activo = x.activo !== false;
       if (d.clave) { if (String(d.clave).length < 6) return json({ ok: false, error: 'La clave debe tener al menos 6 caracteres.' }); L[i].salt = Utilities.getUuid(); L[i].hash = lkHash_(L[i].salt, String(d.clave)); }
     }
+    lkLog_(u, '', i < 0 ? 'Creó un usuario' : 'Modificó un usuario', id + ' (' + (rol === 'admin' ? 'Dueño' : 'Administrador de edificio') + ')');
     lkEscribir_('LUKA_USERS', L); return json({ ok: true, usuarios: L.map(lkPublico_) });
   }
   if (a === 'lk_usuario_borrar') {
+    lkLog_(u, '', 'Borró un usuario', String(d.usuario));
     if (String(d.usuario) === u.u) return json({ ok: false, error: 'No puede borrarse a usted mismo.' });
     const L = lkUsuarios_().filter(function (y) { return y.u !== String(d.usuario); });
     lkEscribir_('LUKA_USERS', L); return json({ ok: true, usuarios: L.map(lkPublico_) });
@@ -400,4 +414,25 @@ function lkVinculado_(u, portalId) {
   if (u.rol === 'admin' || (u.eds || []).indexOf('*') >= 0) return true;
   const E = lkEdificios_();
   return (u.eds || []).some(function (id) { return E[id] && E[id].portal === portalId; });
+}
+
+/* ---------- Bitácora de actividad (pestaña "Actividad LUKA" de la hoja de registro) ---------- */
+function lkHojaLog_() {
+  const ss = registro_().getParent();
+  return ss.getSheetByName('Actividad LUKA') || (function () {
+    const sh = ss.insertSheet('Actividad LUKA');
+    sh.appendRow(['Fecha', 'Usuario', 'Edificio', 'Acción', 'Detalle']); sh.setFrozenRows(1);
+    return sh;
+  })();
+}
+function lkLog_(u, edificio, accion, detalle) {
+  try { lkHojaLog_().appendRow([new Date(), u ? u.n + ' (' + u.u + ')' : '', edificio || '', accion, String(detalle || '').slice(0, 300)]); } catch (e) {}
+}
+/* Cada guardado trae notas de lo que se hizo (pagos, anulaciones…). Si no trae, se anota
+   "Actualizó datos" como máximo una vez cada 30 minutos por usuario y edificio. */
+function lkLogCambios_(u, nombre, id, notas) {
+  if (Array.isArray(notas) && notas.length) { notas.slice(0, 20).forEach(function (n) { lkLog_(u, nombre, String(n.accion || 'Cambio').slice(0, 60), n.detalle || ''); }); return; }
+  const c = CacheService.getScriptCache(), k = 'lg_' + u.u + '_' + id;
+  if (c.get(k)) return;
+  c.put(k, '1', 1800); lkLog_(u, nombre, 'Actualizó datos', '');
 }
