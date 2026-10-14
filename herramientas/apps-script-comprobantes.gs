@@ -6,6 +6,10 @@
  *    y lo anota en la hoja "Registro de comprobantes".
  *    En la columna "Estado" elija Pendiente de verificar / Verificado / Rechazado:
  *    el propietario ve ese estado al instante en su portal ("Mis comprobantes").
+ *    Desde Gestión LUKA ("Comprobantes del portal") también se pueden ver los
+ *    pendientes y marcarlos como verificados o rechazados. LUKA usa una clave
+ *    de administración: ejecute una vez crearClaveAdmin() y copie la clave
+ *    que aparece en el registro de ejecución.
  * 2. Contraseñas personales: guarda, por departamento, el código
  *    original cifrado con la contraseña del propietario. Este servidor
  *    nunca recibe ni la contraseña ni el código en texto legible.
@@ -38,6 +42,8 @@ function doPost(e) {
   try {
     const d = JSON.parse(e.postData.contents);
     if (d.action === 'setPassword') return setPassword_(d);
+    if (d.action === 'pendientes') return pendientes_(d);
+    if (d.action === 'estado') return cambiarEstado_(d);
     if (!d.data || !d.filename) return json({ ok: false, error: 'Falta el archivo.' });
     if (TIPOS.indexOf(d.mimeType) === -1) return json({ ok: false, error: 'Tipo de archivo no permitido.' });
     const bytes = Utilities.base64Decode(d.data);
@@ -108,6 +114,46 @@ function getRecibos_(rk) {
     return { recibido: fecha_(r[0]), monto: String(r[4] || ''), fecha: fecha_(r[5]), estado: String(r[8] || '') };
   }).reverse();
   return json({ ok: true, recibos: recibos });
+}
+
+/* ---------- Administración desde Gestión LUKA ---------- */
+/** Ejecute una vez: crea la clave de administración y la muestra en el registro. */
+function crearClaveAdmin() {
+  const props = PropertiesService.getScriptProperties();
+  let k = props.getProperty('CLAVE_ADMIN');
+  if (!k) { k = Utilities.getUuid().replace(/-/g, ''); props.setProperty('CLAVE_ADMIN', k); }
+  Logger.log('Clave de administración para Gestión LUKA: ' + k);
+}
+function esAdmin_(k) {
+  const real = PropertiesService.getScriptProperties().getProperty('CLAVE_ADMIN');
+  return !!real && String(k || '') === real;
+}
+function slug_(s) {
+  return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40);
+}
+function pendientes_(d) {
+  if (!esAdmin_(d.k)) return json({ ok: false, error: 'Clave de administración incorrecta.' });
+  const sh = registro_(), last = sh.getLastRow();
+  if (last < 2) return json({ ok: true, recibos: [] });
+  const filas = sh.getRange(2, 1, last - 1, 9).getValues(), ed = slug_(d.edificio), out = [];
+  filas.forEach(function (r, i) {
+    if (String(r[8]) !== 'Pendiente de verificar') return;
+    if (ed && slug_(r[1]) !== ed) return;
+    out.push({ fila: i + 2, recibido: r[0] instanceof Date ? r[0].toISOString() : String(r[0]), edificio: String(r[1]),
+      depto: String(r[2]), propietario: String(r[3]), monto: String(r[4] || ''), fecha: fecha_(r[5]), nota: String(r[6] || ''), archivo: String(r[7] || '') });
+  });
+  return json({ ok: true, recibos: out });
+}
+function cambiarEstado_(d) {
+  if (!esAdmin_(d.k)) return json({ ok: false, error: 'Clave de administración incorrecta.' });
+  if (ESTADOS.indexOf(d.estado) === -1) return json({ ok: false, error: 'Estado no válido.' });
+  const sh = registro_(), fila = Number(d.fila);
+  if (!(fila >= 2 && fila <= sh.getLastRow())) return json({ ok: false, error: 'No se encontró el comprobante.' });
+  // se confirma que la fila sigue siendo el mismo comprobante (por si alguien movió filas)
+  if (String(sh.getRange(fila, 8).getValue()) !== String(d.archivo || '')) return json({ ok: false, error: 'La hoja cambió; actualice la lista.' });
+  sh.getRange(fila, 9).setValue(d.estado);
+  return json({ ok: true });
 }
 
 /* ---------- Contraseñas personales ---------- */
