@@ -506,6 +506,15 @@ const PORTAL = {
   function statement(){
     const mv=(data.movimientos||[]).slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
     const charges=mv.filter(m=>Number(m.cargo)>0).map(m=>({fecha:m.fecha,concepto:m.concepto,monto:Number(m.cargo),resta:Number(m.cargo),pagado:null}));
+    /* Formato tipo Gestión LUKA: el Excel trae solo los cargos que siguen pendientes
+       (su suma es igual a la deuda) y los pagos ya hechos, cada uno con lo que pagó en el concepto.
+       En ese caso cada pago se muestra como su propia fila "Pagado" y no se cruza con los cargos. */
+    const sumCargos=charges.reduce((s,c)=>s+c.monto,0), R=data.resumen||{};
+    if(R.deuda!=null&&Math.abs(sumCargos-Number(R.deuda))<0.01){
+      const paid=mv.filter(m=>Number(m.abono)>0).map(m=>({fecha:m.fecha,concepto:m.concepto,monto:Number(m.abono),resta:0,pagado:m.fecha}));
+      const all=charges.concat(paid).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+      return {charges:all,credit:0};
+    }
     let credit=0, i=0;
     mv.filter(m=>Number(m.abono)>0).forEach(p=>{
       let amt=Number(p.abono);
