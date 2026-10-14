@@ -62,7 +62,8 @@ function doPost(e) {
     sh.appendRow([
       ahora, d.edificio || '', d.depto || '', d.propietario || '',
       d.monto || '', d.fecha || '', d.nota || '', archivo.getUrl(), 'Pendiente de verificar',
-      /^[0-9a-f]{48}$/.test(d.rk || '') ? d.rk : ''
+      /^[0-9a-f]{48}$/.test(d.rk || '') ? d.rk : '',
+      String(d.edificio_id || '').slice(0, 60)
     ]);
     sh.getRange(sh.getLastRow(), 9).setDataValidation(validacionEstado_());
     return json({ ok: true });
@@ -89,12 +90,13 @@ const ESTADOS = ['Pendiente de verificar', 'Verificado', 'Rechazado'];
 function validacionEstado_() {
   return SpreadsheetApp.newDataValidation().requireValueInList(ESTADOS, true).setAllowInvalid(false).build();
 }
-/** Agrega la columna oculta "clave" y la lista desplegable de Estado (se ejecuta con instalar). */
+/** Agrega las columnas ocultas "clave" y "edificio_id" y la lista desplegable de Estado (se ejecuta con instalar). */
 function preparar_(sh) {
   if (!sh.getRange(1, 10).getValue()) sh.getRange(1, 10).setValue('clave');
+  if (!sh.getRange(1, 11).getValue()) sh.getRange(1, 11).setValue('edificio_id');
   const n = Math.max(sh.getMaxRows() - 1, 1);
   sh.getRange(2, 9, n, 1).setDataValidation(validacionEstado_());
-  sh.hideColumns(10);
+  sh.hideColumns(10, 2);
 }
 function freno_() {
   const cache = CacheService.getScriptCache(), k = 'q' + Math.floor(Date.now() / 60000);
@@ -135,15 +137,23 @@ function slug_(s) {
 function pendientes_(d) {
   if (!esAdmin_(d.k)) return json({ ok: false, error: 'Clave de administración incorrecta.' });
   const sh = registro_(), last = sh.getLastRow();
-  if (last < 2) return json({ ok: true, recibos: [] });
-  const filas = sh.getRange(2, 1, last - 1, 9).getValues(), ed = slug_(d.edificio), out = [];
+  if (last < 2) return json({ ok: true, recibos: [], otros: [] });
+  // Cada comprobante guarda el id del edificio del portal (columna K). Los más
+  // antiguos no lo tienen: para ellos se compara el nombre del edificio.
+  // "otros" cuenta los pendientes de los demás edificios, para avisar en LUKA.
+  const filas = sh.getRange(2, 1, last - 1, 11).getValues(), id = slug_(d.edificio_id || d.edificio), out = [], otros = {};
   filas.forEach(function (r, i) {
     if (String(r[8]) !== 'Pendiente de verificar') return;
-    if (ed && slug_(r[1]) !== ed) return;
-    out.push({ fila: i + 2, recibido: r[0] instanceof Date ? r[0].toISOString() : String(r[0]), edificio: String(r[1]),
+    const rid = r[10] ? slug_(r[10]) : slug_(r[1]);
+    if (id && rid !== id) {
+      if (!otros[rid]) otros[rid] = { edificio_id: rid, edificio: String(r[1]), n: 0 };
+      otros[rid].n++;
+      return;
+    }
+    out.push({ fila: i + 2, edificio_id: rid, recibido: r[0] instanceof Date ? r[0].toISOString() : String(r[0]), edificio: String(r[1]),
       depto: String(r[2]), propietario: String(r[3]), monto: String(r[4] || ''), fecha: fecha_(r[5]), nota: String(r[6] || ''), archivo: String(r[7] || '') });
   });
-  return json({ ok: true, recibos: out });
+  return json({ ok: true, recibos: out, otros: Object.keys(otros).map(function (k) { return otros[k]; }) });
 }
 function cambiarEstado_(d) {
   if (!esAdmin_(d.k)) return json({ ok: false, error: 'Clave de administración incorrecta.' });
@@ -202,7 +212,7 @@ function registro_() {
   if (id) { try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; } }
   if (!ss) {
     ss = SpreadsheetApp.create(HOJA_REGISTRO);
-    ss.getSheets()[0].appendRow(['Recibido', 'Edificio', 'Depto', 'Propietario', 'Monto', 'Fecha del pago', 'Nota', 'Archivo', 'Estado', 'clave']);
+    ss.getSheets()[0].appendRow(['Recibido', 'Edificio', 'Depto', 'Propietario', 'Monto', 'Fecha del pago', 'Nota', 'Archivo', 'Estado', 'clave', 'edificio_id']);
     ss.getSheets()[0].setFrozenRows(1);
     preparar_(ss.getSheets()[0]);
     props.setProperty('HOJA_ID', ss.getId());
