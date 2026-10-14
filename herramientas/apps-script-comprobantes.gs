@@ -10,11 +10,17 @@
  *    pendientes y marcarlos como verificados o rechazados. LUKA usa una clave
  *    de administración: ejecute una vez crearClaveAdmin() y copie la clave
  *    que aparece en el registro de ejecución.
+ *    Cada comprobante nuevo se avisa por correo (solo el enlace, sin adjunto)
+ *    a las direcciones de la propiedad CORREOS_AVISO (por defecto Bramar).
  * 2. Contraseñas personales: guarda, por departamento, el código
  *    original cifrado con la contraseña del propietario. Este servidor
  *    nunca recibe ni la contraseña ni el código en texto legible.
  *    Para "resetear" la contraseña de alguien, borre su fila en la
  *    pestaña "Accesos" de la hoja: podrá volver a entrar con su código.
+ *
+ * 3. Gestión LUKA en la nube: usuarios con clave, y los datos de cada edificio
+ *    guardados como archivo en la carpeta "LUKA Datos" de este Drive, para usar
+ *    LUKA desde la computadora y el celular con la misma información.
  *
  * INSTALACIÓN (una sola vez, con la cuenta bramargroupsrl@gmail.com):
  * 1. Entre a https://script.google.com y cree un "Proyecto nuevo".
@@ -44,6 +50,7 @@ function doPost(e) {
     if (d.action === 'setPassword') return setPassword_(d);
     if (d.action === 'pendientes') return pendientes_(d);
     if (d.action === 'estado') return cambiarEstado_(d);
+    if (String(d.action || '').indexOf('lk_') === 0) return luka_(d);
     if (!d.data || !d.filename) return json({ ok: false, error: 'Falta el archivo.' });
     if (TIPOS.indexOf(d.mimeType) === -1) return json({ ok: false, error: 'Tipo de archivo no permitido.' });
     const bytes = Utilities.base64Decode(d.data);
@@ -66,6 +73,7 @@ function doPost(e) {
       String(d.edificio_id || '').slice(0, 60)
     ]);
     sh.getRange(sh.getLastRow(), 9).setDataValidation(validacionEstado_());
+    avisarComprobante_(d, archivo.getUrl());
     return json({ ok: true });
   } catch (err) {
     return json({ ok: false, error: String(err) });
@@ -126,25 +134,30 @@ function crearClaveAdmin() {
   if (!k) { k = Utilities.getUuid().replace(/-/g, ''); props.setProperty('CLAVE_ADMIN', k); }
   Logger.log('Clave de administración para Gestión LUKA: ' + k);
 }
-function esAdmin_(k) {
+function esAdmin_(k, t, edificioId) {
   const real = PropertiesService.getScriptProperties().getProperty('CLAVE_ADMIN');
-  return !!real && String(k || '') === real;
+  if (real && k && String(k) === real) return true;
+  // o una sesión de LUKA con acceso a ese edificio
+  const u = t ? sesion_(t) : null;
+  return !!u && (!edificioId || puedeVer_(u, edificioId));
 }
 function slug_(s) {
   return String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '').slice(0, 40);
 }
 function pendientes_(d) {
-  if (!esAdmin_(d.k)) return json({ ok: false, error: 'Clave de administración incorrecta.' });
+  if (!esAdmin_(d.k, d.t)) return json({ ok: false, error: 'Clave de administración incorrecta.' });
   const sh = registro_(), last = sh.getLastRow();
   if (last < 2) return json({ ok: true, recibos: [], otros: [] });
   // Cada comprobante guarda el id del edificio del portal (columna K). Los más
   // antiguos no lo tienen: para ellos se compara el nombre del edificio.
   // "otros" cuenta los pendientes de los demás edificios, para avisar en LUKA.
   const filas = sh.getRange(2, 1, last - 1, 11).getValues(), id = slug_(d.edificio_id || d.edificio), out = [], otros = {};
+  const usr = d.t ? sesion_(d.t) : null;
   filas.forEach(function (r, i) {
     if (String(r[8]) !== 'Pendiente de verificar') return;
     const rid = r[10] ? slug_(r[10]) : slug_(r[1]);
+    if (usr && !puedeVer_(usr, rid) && !lkVinculado_(usr, rid)) return;
     if (id && rid !== id) {
       if (!otros[rid]) otros[rid] = { edificio_id: rid, edificio: String(r[1]), n: 0 };
       otros[rid].n++;
@@ -156,7 +169,7 @@ function pendientes_(d) {
   return json({ ok: true, recibos: out, otros: Object.keys(otros).map(function (k) { return otros[k]; }) });
 }
 function cambiarEstado_(d) {
-  if (!esAdmin_(d.k)) return json({ ok: false, error: 'Clave de administración incorrecta.' });
+  if (!esAdmin_(d.k, d.t)) return json({ ok: false, error: 'Clave de administración incorrecta.' });
   if (ESTADOS.indexOf(d.estado) === -1) return json({ ok: false, error: 'Estado no válido.' });
   const sh = registro_(), fila = Number(d.fila);
   if (!(fila >= 2 && fila <= sh.getLastRow())) return json({ ok: false, error: 'No se encontró el comprobante.' });
@@ -219,4 +232,172 @@ function registro_() {
     DriveApp.getFileById(ss.getId()).moveTo(carpeta_(DriveApp.getRootFolder(), CARPETA_RAIZ));
   }
   return ss.getSheets()[0];
+}
+
+/* ============================================================================
+   AVISO POR CORREO DE CADA COMPROBANTE
+   ============================================================================ */
+const LUKA_URL = 'https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/luka/';
+function avisarComprobante_(d, url) {
+  try {
+    const to = PropertiesService.getScriptProperties().getProperty('CORREOS_AVISO') || 'bramargroupsrl@gmail.com';
+    const monto = d.monto ? 'Bs ' + d.monto : 'monto no indicado';
+    const asunto = 'Comprobante · ' + (d.edificio || '') + ' · Depto ' + (d.depto || '') + ' · ' + monto;
+    const esc = function (x) { return String(x || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+    const html = '<div style="font-family:Arial,sans-serif;font-size:15px;color:#0B2440">' +
+      '<p><b>' + esc(d.propietario) + '</b> envió un comprobante desde el portal.</p>' +
+      '<table cellpadding="4" style="font-size:15px">' +
+      '<tr><td style="color:#7d93ab">Edificio</td><td><b>' + esc(d.edificio) + '</b></td></tr>' +
+      '<tr><td style="color:#7d93ab">Depto</td><td><b>' + esc(d.depto) + '</b></td></tr>' +
+      '<tr><td style="color:#7d93ab">Monto</td><td><b>' + esc(monto) + '</b></td></tr>' +
+      '<tr><td style="color:#7d93ab">Fecha del pago</td><td>' + esc(d.fecha || '—') + '</td></tr>' +
+      (d.nota ? '<tr><td style="color:#7d93ab">Nota</td><td>' + esc(d.nota) + '</td></tr>' : '') +
+      '</table><p><a href="' + url + '">Ver el comprobante</a> &nbsp;·&nbsp; <a href="' + LUKA_URL + '">Abrir Gestión LUKA</a></p>' +
+      '<p style="color:#7d93ab;font-size:13px">Revíselo y regístrelo en LUKA. El propietario verá «Verificado» al instante.</p></div>';
+    MailApp.sendEmail({ to: to, subject: asunto, htmlBody: html, name: 'Portal Bramar' });
+  } catch (e) { /* el comprobante ya quedó guardado aunque el correo falle */ }
+}
+/** Ejecute una vez para autorizar el envío de correos y probarlo. */
+function probarCorreo() {
+  avisarComprobante_({ edificio: 'PRUEBA', depto: '0X', propietario: 'Prueba de aviso', monto: '1', fecha: '2026-01-01' }, LUKA_URL);
+  Logger.log('Correo de prueba enviado a ' + (PropertiesService.getScriptProperties().getProperty('CORREOS_AVISO') || 'bramargroupsrl@gmail.com'));
+}
+
+/* ============================================================================
+   GESTIÓN LUKA EN LA NUBE
+   · Usuarios: propiedad LUKA_USERS (la clave se guarda como hash con sal).
+   · Sesiones: propiedad T_<token>, válidas 60 días.
+   · Edificios: propiedad LUKA_EDIFICIOS + un archivo .json por edificio en
+     la carpeta "LUKA Datos". Cada guardado sube la versión; si otro dispositivo
+     guardó antes, se avisa (conflicto) para no pisar cambios.
+   ============================================================================ */
+const LK_CARPETA = 'LUKA Datos', LK_DIAS = 60;
+function lkProps_() { return PropertiesService.getScriptProperties(); }
+function lkLeer_(k, def) { try { const v = lkProps_().getProperty(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
+function lkEscribir_(k, v) { lkProps_().setProperty(k, JSON.stringify(v)); }
+function lkHash_(salt, clave) {
+  return Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + '|' + clave, Utilities.Charset.UTF_8)
+    .map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join('');
+}
+function lkUsuarios_() { return lkLeer_('LUKA_USERS', []); }
+function lkPublico_(u) { return { usuario: u.u, nombre: u.n, rol: u.rol, edificios: u.eds, activo: u.activo !== false }; }
+function lkToken_(u) {
+  const t = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+  lkProps_().setProperty('T_' + t, JSON.stringify({ u: u.u, exp: Date.now() + LK_DIAS * 864e5 }));
+  // limpieza de sesiones vencidas
+  const all = lkProps_().getProperties(), now = Date.now();
+  Object.keys(all).forEach(function (k) { if (k.indexOf('T_') === 0) { try { if (JSON.parse(all[k]).exp < now) lkProps_().deleteProperty(k); } catch (e) {} } });
+  return t;
+}
+function sesion_(t) {
+  if (!/^[0-9a-f]{64}$/.test(t || '')) return null;
+  const s = lkLeer_('T_' + t, null);
+  if (!s || s.exp < Date.now()) return null;
+  const u = lkUsuarios_().filter(function (x) { return x.u === s.u && x.activo !== false; })[0];
+  return u || null;
+}
+function puedeVer_(u, id) { return u.rol === 'admin' || (u.eds || []).indexOf('*') >= 0 || (u.eds || []).indexOf(id) >= 0; }
+function lkCarpeta_() { return carpeta_(DriveApp.getRootFolder(), LK_CARPETA); }
+function lkEdificios_() { return lkLeer_('LUKA_EDIFICIOS', {}); }
+
+function luka_(d) {
+  const a = d.action;
+  if (a === 'lk_estado') return json({ ok: true, hayUsuarios: lkUsuarios_().length > 0 });
+  if (a === 'lk_bootstrap') {
+    if (lkUsuarios_().length) return json({ ok: false, error: 'Ya existe un administrador. Ingrese con su usuario.' });
+    if (!esAdmin_(d.k)) return json({ ok: false, error: 'Clave de administración incorrecta.' });
+    const u = lkNuevo_(d.usuario, d.nombre, d.clave, 'admin', ['*']);
+    if (u.error) return json({ ok: false, error: u.error });
+    lkEscribir_('LUKA_USERS', [u]);
+    return json({ ok: true, token: lkToken_(u), usuario: lkPublico_(u) });
+  }
+  if (a === 'lk_login') {
+    if (freno_()) return json({ ok: false, error: 'Demasiados intentos, espere un minuto.' });
+    const u = lkUsuarios_().filter(function (x) { return x.u === String(d.usuario || '').trim().toLowerCase(); })[0];
+    if (!u || u.activo === false || lkHash_(u.salt, String(d.clave || '')) !== u.hash) return json({ ok: false, error: 'Usuario o clave incorrectos.' });
+    return json({ ok: true, token: lkToken_(u), usuario: lkPublico_(u) });
+  }
+  const u = sesion_(d.t);
+  if (!u) return json({ ok: false, sesion: false, error: 'La sesión venció. Vuelva a ingresar.' });
+  if (a === 'lk_me') return json({ ok: true, usuario: lkPublico_(u) });
+  if (a === 'lk_logout') { lkProps_().deleteProperty('T_' + d.t); return json({ ok: true }); }
+  if (a === 'lk_edificios') {
+    const E = lkEdificios_();
+    return json({ ok: true, edificios: Object.keys(E).filter(function (id) { return puedeVer_(u, id); })
+      .map(function (id) { return { id: id, nombre: E[id].name, v: E[id].v, actualizado: E[id].upd, por: E[id].by, creado: E[id].created }; }) });
+  }
+  if (a === 'lk_version') {
+    const e = lkEdificios_()[d.id];
+    if (!e || !puedeVer_(u, d.id)) return json({ ok: false, error: 'Edificio no encontrado.' });
+    return json({ ok: true, v: e.v, actualizado: e.upd, por: e.by });
+  }
+  if (a === 'lk_cargar') {
+    const e = lkEdificios_()[d.id];
+    if (!e || !puedeVer_(u, d.id)) return json({ ok: false, error: 'Edificio no encontrado.' });
+    return json({ ok: true, v: e.v, data: DriveApp.getFileById(e.file).getBlob().getDataAsString('UTF-8') });
+  }
+  if (a === 'lk_guardar') {
+    if (!/^[A-Za-z0-9_-]{2,40}$/.test(d.id || '')) return json({ ok: false, error: 'Edificio inválido.' });
+    if (typeof d.data !== 'string' || !d.data) return json({ ok: false, error: 'Sin datos.' });
+    const lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try {
+      const E = lkEdificios_(), e = E[d.id], now = new Date().toISOString();
+      if (!e) {
+        if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un administrador puede crear edificios.' });
+        const f = lkCarpeta_().createFile(Utilities.newBlob(d.data, 'application/json', limpiar_(d.nombre || d.id) + ' (' + d.id + ').json'));
+        E[d.id] = { name: String(d.nombre || d.id).slice(0, 80), file: f.getId(), v: 1, upd: now, by: u.n, created: now, portal: d.portal ? slug_(d.portal) : '' };
+      } else {
+        if (!puedeVer_(u, d.id)) return json({ ok: false, error: 'Sin acceso a este edificio.' });
+        if (Number(d.v) !== Number(e.v)) return json({ ok: false, conflicto: true, v: e.v, por: e.by, actualizado: e.upd, error: 'Otro dispositivo guardó cambios antes.' });
+        DriveApp.getFileById(e.file).setContent(d.data);
+        e.v = e.v + 1; e.upd = now; e.by = u.n; if (d.nombre) e.name = String(d.nombre).slice(0, 80);
+        if (d.portal) e.portal = slug_(d.portal);
+      }
+      lkEscribir_('LUKA_EDIFICIOS', E);
+      return json({ ok: true, v: E[d.id].v });
+    } finally { lock.releaseLock(); }
+  }
+  if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un administrador puede hacer esto.' });
+  if (a === 'lk_borrar') {
+    const E = lkEdificios_(), e = E[d.id]; if (!e) return json({ ok: true });
+    try { DriveApp.getFileById(e.file).setTrashed(true); } catch (x) {}
+    delete E[d.id]; lkEscribir_('LUKA_EDIFICIOS', E); return json({ ok: true });
+  }
+  if (a === 'lk_usuarios') return json({ ok: true, usuarios: lkUsuarios_().map(lkPublico_) });
+  if (a === 'lk_usuario_guardar') {
+    const L = lkUsuarios_(), x = d.usuario || {}, id = String(x.usuario || '').trim().toLowerCase();
+    const i = L.map(function (y) { return y.u; }).indexOf(id);
+    const rol = x.rol === 'admin' ? 'admin' : 'operador', eds = Array.isArray(x.edificios) && x.edificios.length ? x.edificios.map(String) : ['*'];
+    if (i < 0) {
+      const n = lkNuevo_(id, x.nombre, d.clave, rol, eds); if (n.error) return json({ ok: false, error: n.error });
+      L.push(n);
+    } else {
+      if (L[i].u === u.u && rol !== 'admin') return json({ ok: false, error: 'No puede quitarse a usted mismo el rol de administrador.' });
+      L[i].n = String(x.nombre || L[i].n).slice(0, 60); L[i].rol = rol; L[i].eds = eds; L[i].activo = x.activo !== false;
+      if (d.clave) { if (String(d.clave).length < 6) return json({ ok: false, error: 'La clave debe tener al menos 6 caracteres.' }); L[i].salt = Utilities.getUuid(); L[i].hash = lkHash_(L[i].salt, String(d.clave)); }
+    }
+    lkEscribir_('LUKA_USERS', L); return json({ ok: true, usuarios: L.map(lkPublico_) });
+  }
+  if (a === 'lk_usuario_borrar') {
+    if (String(d.usuario) === u.u) return json({ ok: false, error: 'No puede borrarse a usted mismo.' });
+    const L = lkUsuarios_().filter(function (y) { return y.u !== String(d.usuario); });
+    lkEscribir_('LUKA_USERS', L); return json({ ok: true, usuarios: L.map(lkPublico_) });
+  }
+  return json({ ok: false, error: 'Acción desconocida.' });
+}
+function lkNuevo_(usuario, nombre, clave, rol, eds) {
+  usuario = String(usuario || '').trim().toLowerCase();
+  if (!/^[a-z0-9._-]{3,30}$/.test(usuario)) return { error: 'El usuario debe tener de 3 a 30 letras o números, sin espacios.' };
+  if (String(clave || '').length < 6) return { error: 'La clave debe tener al menos 6 caracteres.' };
+  if (lkUsuarios_().some(function (x) { return x.u === usuario; })) return { error: 'Ese usuario ya existe.' };
+  const salt = Utilities.getUuid();
+  return { u: usuario, n: String(nombre || usuario).slice(0, 60), rol: rol, eds: eds, salt: salt, hash: lkHash_(salt, String(clave)), activo: true };
+}
+
+/* El id del portal y el id de LUKA pueden ser distintos: un usuario de LUKA ve los
+   comprobantes del edificio del portal que esté vinculado a un edificio suyo. */
+function lkVinculado_(u, portalId) {
+  if (u.rol === 'admin' || (u.eds || []).indexOf('*') >= 0) return true;
+  const E = lkEdificios_();
+  return (u.eds || []).some(function (id) { return E[id] && E[id].portal === portalId; });
 }
