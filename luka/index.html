@@ -21790,4 +21790,88 @@ body{overscroll-behavior-y:none}
 })();
 </script>
 
+<style>
+/* Módulo 37 · Verificar recibo + limpieza de la lista */
+.legend-row{display:none!important}
+.lista-toolbar{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+#lk-ver-btn{background:#fff;color:#0B2440;border:1px solid #D5DEE8}
+#lk-ver-btn:hover{background:#F2F5F9}
+.lk-ver-in{display:flex;gap:8px;margin:4px 0 6px}
+.lk-ver-in input{flex:1;min-width:0;font:inherit;font-size:16px;letter-spacing:.06em;text-transform:uppercase;padding:12px 14px;border:1px solid #D5DEE8;border-radius:10px}
+.lk-ver-res{margin-top:14px}
+.lk-ver-ok,.lk-ver-bad{border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.5}
+.lk-ver-ok{background:#EEF7F1;border:1px solid #CBE7D5;color:#14532D}
+.lk-ver-bad{background:#FBEFEF;border:1px solid #F0D0D0;color:#7A1F1F}
+.lk-ver-ok b,.lk-ver-bad b{display:block;font-size:15px;margin-bottom:4px}
+.lk-ver-kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:10px 0 12px;color:#0B2440}
+.lk-ver-kv span{color:#5B6B7F}
+@media (max-width:640px){ .lista-toolbar .btn{flex:1 1 auto;justify-content:center} }
+</style>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 37: Verificar recibo por su código único
+   Cada recibo lleva un QR con un "Cod. verificacion" (firma de sus datos).
+   Si alguien presenta un recibo, se escanea el QR y se pega el código (o todo
+   el texto del QR) aquí: LUKA busca a qué recibo real pertenece.
+   ============================================================================ */
+(function(){
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function codigoDe(d,p){ try{ var t=receiptQRText(d,p); var m=t.match(/Cod\. verificacion: (\S+)\s*$/); return m?m[1]:''; }catch(e){ return ''; } }
+  window.lukaCodigoRecibo=codigoDe;
+  function buscar(q){
+    var raw=String(q||'').trim(); if(!raw) return null;
+    var m=raw.match(/verificaci[oó]n:\s*([0-9A-Za-z]+)/i), cod=(m?m[1]:raw).toUpperCase().replace(/[^0-9A-Z]/g,'');
+    var nro=raw.replace(/^(recibo\s*)?(n[.º°o]*\s*)?/i,'').trim();
+    var out=[];
+    (DATA.deptos||[]).forEach(function(d){ (d.pagos_registrados||[]).forEach(function(p){
+      var c=codigoDe(d,p);
+      if((cod&&c===cod)||(nro&&String(p.recibo_no||'')===nro)) out.push({d:d,p:p,c:c,porCodigo:c===cod});
+    }); });
+    // si pegaron el texto completo del QR, comprobar que los datos no fueron alterados
+    var alterado=false;
+    if(m&&out.length&&raw.indexOf('\n')>0){ var r=out.filter(function(x){ return x.porCodigo; })[0]; if(r){ try{ alterado=receiptQRText(r.d,r.p).trim()!==raw.replace(/\r/g,'').trim(); }catch(e){} } }
+    return {cod:cod,lista:out,alterado:alterado};
+  }
+  function abrir(){
+    var bd=document.getElementById('lk-ver-bd');
+    if(!bd){
+      bd=document.createElement('div'); bd.className='modal-backdrop no-print'; bd.id='lk-ver-bd';
+      bd.innerHTML='<div class="modal lk-modal" style="max-width:520px"><button class="close-btn" title="Cerrar">&times;</button><h2>Verificar recibo</h2>'+
+        '<p class="modal-sub">Escanee el QR del recibo con la cámara del celular y escriba aquí el <b>Cod. verificación</b> (o pegue todo el texto del QR). También puede buscar por número de recibo.</p>'+
+        '<form class="lk-ver-in" id="lk-ver-f"><input id="lk-ver-q" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Ej. 0K3F9QZ"><button class="btn primary" type="submit">Buscar</button></form>'+
+        '<div class="lk-ver-res" id="lk-ver-r"></div></div>';
+      document.body.appendChild(bd);
+      bd.querySelector('.close-btn').onclick=function(){ bd.classList.remove('open'); };
+      bd.addEventListener('click',function(e){ if(e.target===bd) bd.classList.remove('open'); });
+      var q=bd.querySelector('#lk-ver-q');
+      q.addEventListener('paste',function(){ setTimeout(function(){ bd.querySelector('#lk-ver-f').requestSubmit(); },0); });
+      bd.querySelector('#lk-ver-f').onsubmit=function(e){
+        e.preventDefault(); var res=bd.querySelector('#lk-ver-r'), r=buscar(q.value);
+        if(!r){ res.innerHTML=''; return; }
+        var nombre=(typeof buildingName==='function')?buildingName():'este edificio';
+        if(!r.lista.length){ res.innerHTML='<div class="lk-ver-bad"><b>No existe ningún recibo con ese código en '+esc(nombre)+'.</b>Puede ser un recibo falso, estar mal escrito o pertenecer a otro edificio (abra ese edificio y vuelva a buscar).</div>'; return; }
+        res.innerHTML=r.lista.map(function(x,i){ var d=x.d,p=x.p;
+          var malo=r.alterado&&x.porCodigo;
+          return '<div class="'+(malo?'lk-ver-bad':'lk-ver-ok')+'" style="margin-bottom:10px"><b>'+(malo?'El código existe, pero los datos del QR no coinciden: el recibo fue alterado.':(x.porCodigo?'Recibo auténtico':'Recibo encontrado por número'))+'</b>'+
+            '<div class="lk-ver-kv"><span>Recibo</span><div>N.º '+esc(p.recibo_no)+'</div><span>Departamento</span><div>'+esc(d.depto)+(d.bloque?' · '+esc(d.bloque):'')+'</div>'+
+            '<span>Monto</span><div>'+esc(fmtMoney(p.monto))+'</div><span>Fecha</span><div>'+esc(fmtDate(p.fecha)||'')+'</div><span>Método</span><div>'+esc(p.metodo||'')+'</div>'+
+            (p.obs?'<span>Obs.</span><div>'+esc(p.obs)+'</div>':'')+'<span>Código</span><div>'+esc(x.c)+'</div></div>'+
+            '<button type="button" class="btn" data-ver="'+i+'">Ver recibo original</button></div>'; }).join('');
+        res.querySelectorAll('[data-ver]').forEach(function(b){ b.onclick=function(){ var x=r.lista[+b.dataset.ver]; bd.classList.remove('open'); openReceipt(x.d,x.p); }; });
+      };
+    }
+    bd.querySelector('#lk-ver-q').value=''; bd.querySelector('#lk-ver-r').innerHTML='';
+    bd.classList.add('open'); setTimeout(function(){ bd.querySelector('#lk-ver-q').focus(); },50);
+  }
+  window.lukaVerificarRecibo=abrir;
+  function poner(){
+    var tb=document.querySelector('.lista-toolbar'); if(!tb||document.getElementById('lk-ver-btn')) return;
+    var b=document.createElement('button'); b.type='button'; b.className='btn'; b.id='lk-ver-btn';
+    b.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/></svg> Verificar recibo';
+    b.onclick=abrir; tb.insertBefore(b,tb.firstChild);
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',poner); else poner();
+})();
+</script>
+
 </body></html>

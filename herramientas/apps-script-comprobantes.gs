@@ -568,15 +568,17 @@ function ptEstado_(portalId, lk, data, depto) {
   (d.cargos_extra || []).forEach(function (c) { mov.push({ fecha: ptFecha_(c.fecha), concepto: String(c.nombre || 'Cargo'), cargo: +c.monto || 0, abono: 0 }); });
   (d.pagos_registrados || []).forEach(function (p) {
     mov.push({ fecha: ptFecha_(p.fecha), concepto: String(p.concepto || 'Pago'), cargo: 0, abono: +p.monto || 0,
-      recibo: { no: String(p.recibo_no || ''), fecha: ptFecha_(p.fecha), monto: +p.monto || 0, metodo: String(p.metodo || ''), concepto: String(p.concepto || ''),
-        obs: String(p.obs || ''), recibido: String(p.recibido || ''), saldo: p.saldo_restante != null ? +p.saldo_restante : null,
-        meses: (p.meses_cubiertos || []).map(function (x) { return (x.mes || '') + ' ' + (x.anio || '') + (x.tipo === 'adelanto' ? ' (adelanto)' : ''); }) } });
+      // datos crudos del pago: el portal arma el MISMO recibo que LUKA (diseño y QR con su código)
+      recibo: { no: String(p.recibo_no || ''), fecha: String(p.fecha || ''), monto: +p.monto || 0, metodo: String(p.metodo || ''), concepto: String(p.concepto || ''),
+        obs: String(p.obs || ''), recibido: String(p.recibido || ''), saldo: +p.saldo_restante || 0,
+        meses_pagados: p.meses_pagados || [], meses_cubiertos: p.meses_cubiertos || [], prepagados: (p._anula && p._anula.prepagados) || [] } });
   });
   const deuda = Math.round(((+d.total_debt) || mov.reduce(function (a, m) { return a + m.cargo; }, 0)) * 100) / 100;
   return {
     modo: 'luka',
-    edificio: { id: portalId, nombre: cfg.nombreEdificio || lk.e.name, moneda: 'Bs', titular: String(cfg.titular || ''), cuenta: String(cfg.cuentaText || ''), banco: String(cfg.banco || ''), nit: String(cfg.nit || ''), qr: cfg.qr || '' },
-    unidad: { depto: d.depto, propietario: acc.propietario || '', expensa: +d.expensaMensual || +cfg.expensaMensual || 0 },
+    edificio: { id: portalId, nombre: cfg.nombreEdificio || lk.e.name, nombreRecibo: cfg.nombreEdificio || 'Gestión LUKA', logo: cfg.logo || '', sello: cfg.sello || '',
+      empresa: (cfg.empresaAdmin && String(cfg.empresaAdmin).trim()) || 'Gestión LUKA', moneda: 'Bs', titular: String(cfg.titular || ''), cuenta: String(cfg.cuentaText || ''), banco: String(cfg.banco || ''), nit: String(cfg.nit || ''), qr: cfg.qr || '' },
+    unidad: { depto: d.depto, bloque: String(d.bloque || ''), propietario: acc.propietario || '', expensa: +d.expensaMensual || +cfg.expensaMensual || 0 },
     resumen: { deuda: deuda, vencimiento: '', actualizado: String(lk.e.upd || '').slice(0, 10) },
     movimientos: mov,
     areas: ptAreas_(cfg).map(function (a) { return { id: a.id, nombre: a.nombre, garantia: +a.garantia || 0, tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: +t.monto || 0 }; }) }; })

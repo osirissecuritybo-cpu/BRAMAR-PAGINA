@@ -228,7 +228,85 @@ footer a{color:var(--navy)}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
 .rec-btn{display:block;margin-top:6px;padding:0;border:0;background:none;font:inherit;font-size:13px;font-weight:500;color:var(--navy);text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-transform:none;letter-spacing:0}
-.rec-card{width:min(100%,520px);max-height:92vh;overflow:auto}
+.rec-card{width:min(100%,560px);max-height:calc(100dvh - 32px);overflow:auto;padding:16px}
+.rec-card .row{position:sticky;bottom:-16px;background:#fff;padding:12px 0 4px;margin-bottom:-4px}
+/* Recibo: mismo diseño que Gestión LUKA */
+  /* Fixed light palette, independent of app dark mode, for a reliably printable receipt */
+  .receipt-box {
+    --r-ink: #17160f;
+    --r-ink-soft: #5b5a52;
+    --r-muted: #96948a;
+    --r-line: #e7e4da;
+    --r-accent: #2a78d6;
+    --r-accent-bg: #eaf2fc;
+    --r-good: #0a8a2f;
+    --r-good-bg: #e9f8ee;
+    --r-surface: #ffffff;
+    background: var(--r-surface); color: var(--r-ink);
+    border: 1px solid var(--r-line); border-radius: 14px;
+    padding: 26px 28px; font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .receipt-box { position: relative; overflow: hidden; }
+  .receipt-box .r-watermark {
+    position: absolute; top: 50%; left: 50%; width: 340px; height: auto;
+    transform: translate(-50%, -50%) rotate(-8deg); opacity: 0.05; pointer-events: none; z-index: 0;
+  }
+  .receipt-box > *:not(.r-watermark) { position: relative; z-index: 1; }
+  .receipt-box .r-band { height: 6px; background: var(--r-accent); border-radius: 6px 6px 0 0; margin: -26px -28px 20px; }
+  .receipt-box .r-header { text-align: center; margin-bottom: 4px; }
+  .receipt-box .r-header .r-logo-img { height: 44px; width: auto; margin-bottom: 6px; }
+  .receipt-box .r-header .r-logo { font-size: 26px; margin-bottom: 4px; }
+  .receipt-box .r-stamp {
+    position: absolute; right: 22px; bottom: 78px; width: 108px; height: 108px;
+    border: 3px solid var(--r-good); border-radius: 50%; color: var(--r-good);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transform: rotate(-14deg); opacity: 0.85; text-align: center; z-index: 2;
+  }
+  .receipt-box .r-stamp .r-stamp-check { font-size: 26px; line-height: 1; }
+  .receipt-box .r-stamp .r-stamp-text { font-size: 10px; font-weight: 800; letter-spacing: .06em; margin-top: 2px; }
+  .receipt-box .r-stamp .r-stamp-sub { font-size: 7.5px; font-weight: 700; letter-spacing: .04em; }
+  .receipt-box .r-header .r-title { font-size: 18px; font-weight: 800; letter-spacing: .01em; }
+  .receipt-box .r-header .r-sub { font-size: 12px; color: var(--r-ink-soft); margin-top: 2px; }
+  .receipt-box .r-divider { border: none; border-top: 1px dashed var(--r-line); margin: 16px 0; }
+  .receipt-box .r-no-badge {
+    display: inline-block; margin: 10px auto 0; padding: 5px 14px; border-radius: 999px;
+    background: var(--r-accent-bg); color: var(--r-accent); font-size: 12.5px; font-weight: 700;
+    text-align: center;
+  }
+  .receipt-box .r-no-wrap { text-align: center; }
+  .receipt-box .r-info-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin: 18px 0;
+  }
+  .receipt-box .r-info-item .r-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--r-muted); margin-bottom: 2px; }
+  .receipt-box .r-info-item .r-value { font-size: 14.5px; font-weight: 700; }
+  .receipt-box .r-concept-box {
+    background: #faf9f6; border: 1px solid var(--r-line); border-radius: 10px;
+    padding: 12px 14px; margin: 4px 0 18px; font-size: 12.5px; line-height: 1.5; color: var(--r-ink-soft);
+  }
+  .receipt-box .r-concept-box .r-concept-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--r-muted); margin-bottom: 5px; font-weight: 700; }
+  .receipt-box .r-total-band {
+    text-align: center; margin: 16px 0; padding: 14px; background: var(--r-good-bg);
+    border: 1px solid #c9ecd4; border-radius: 10px;
+  }
+  .receipt-box .r-total-band .r-total-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--r-good); font-weight: 700; }
+  .receipt-box .r-total-band .r-total-value { font-size: 26px; font-weight: 800; color: var(--r-good); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .receipt-box .r-balance-row {
+    display: flex; justify-content: space-between; font-size: 13px; padding: 4px 2px 0; color: var(--r-ink-soft);
+  }
+  .receipt-box .r-balance-row strong { color: var(--r-ink); font-variant-numeric: tabular-nums; }
+  .receipt-box .r-sign { margin-top: 20px; text-align: center; font-size: 11.5px; color: var(--r-muted); }
+  .receipt-box .r-sign .line { border-top: 1px solid var(--r-muted); width: 55%; margin: 0 auto 6px; }
+  .receipt-box .r-seal {
+    width: 88px; height: 88px; border-radius: 50%; border: 2px dashed var(--brand-gold, #c7a24a);
+    margin: 0 auto 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #fffdf7;
+  }
+  .receipt-box .r-seal img { height: 26px; width: auto; opacity: 0.9; }
+  .receipt-box .r-seal .r-seal-text { font-size: 6.5px; font-weight: 800; letter-spacing: .04em; color: #8a742f; margin-top: 3px; line-height: 1.2; }
+  .receipt-box .r-footer { text-align: center; font-size: 10.5px; color: var(--r-muted); margin-top: 18px; }
+  .receipt-box .r-qr-row { display: flex; justify-content: center; margin-top: 16px; padding: 10px; border: 1px solid var(--r-line); border-radius: 10px; background: #fbfbf9; }
+  .receipt-box .r-qr { flex-shrink: 0; width: 92px; height: 92px; }
+  .receipt-box .r-qr svg { display: block; width: 100%; height: 100%; }
 .rec-top{display:flex;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
 .rec-top b{display:block;color:var(--navy);font-size:17px}.rec-top span{font-size:13px;color:var(--muted)}
 .rec-no{text-align:right}.rec-no span{display:block;text-transform:uppercase;letter-spacing:.1em;font-size:11px}
@@ -237,10 +315,38 @@ footer a{color:var(--navy)}
 .rec-kv .full{grid-column:1/-1}.rec-kv dt{font-size:12px;color:var(--muted)}.rec-kv dd{margin:2px 0 0;font-size:15px;color:var(--ink)}
 .rec-foot{margin:18px 0 0;font-size:12px;color:var(--muted)}
 .p-rv{grid-column:1/-1}
-@media (min-width:901px){.p-rv #rv-form{max-width:none}.p-rv .up-fields{grid-template-columns:repeat(4,1fr)}.p-rv .up-fields .full{grid-column:span 2}.p-rv .up-fields .wide{grid-column:1/-1}.p-rv #rv-form .btn{width:auto;padding-left:40px;padding-right:40px}}
+.rv-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.rv-head .btn{flex:none}
+.rv-card{width:min(100%,560px);max-height:calc(100dvh - 32px);overflow:auto}
+.rv-card .up-fields{margin-top:4px}
+#rv-ok:not(:empty){margin-top:14px}
 .rv-gar{font-size:13px;color:var(--muted);margin:10px 0 0}.rv-gar:empty{display:none}
-#rv-form .btn{margin-top:14px}.rv-list h3{font-size:15px;font-weight:500;color:var(--navy);margin:24px 0 0}
+#rv-form .row{margin-top:14px}.rv-list h3{font-size:15px;font-weight:500;color:var(--navy);margin:24px 0 0}
 @media print{body.printing-rec>*:not(#rec-dialog){display:none!important}body.printing-rec #rec-dialog{position:static;background:none;backdrop-filter:none;opacity:1;visibility:visible;padding:0}body.printing-rec .rec-card{max-height:none;box-shadow:none;transform:none}body.printing-rec .rec-card .row{display:none}}
+
+/* ---- Celular (también Safari y el navegador interno de WhatsApp) ---- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{overflow-x:clip;max-width:100%}
+.panel{overflow-wrap:anywhere}
+.field input[type=date],.field input[type=time]{-webkit-appearance:none;appearance:none;display:block;min-width:0;min-height:60px;text-align:left}
+.field input::-webkit-date-and-time-value{text-align:left}
+.qr .box.vacio{width:100%;aspect-ratio:auto;min-height:0;padding:14px;font-size:13px}
+.rec-card .row{z-index:5}
+@media (max-width:600px){
+  .kv{grid-template-columns:minmax(90px,auto) 1fr;gap:10px;padding:10px 0}
+  .kv dd{justify-content:flex-end;text-align:right}
+  .p-debt .btn,.rv-head .btn,#up-btn{width:100%;justify-content:center;min-height:52px}
+  .rv-head{flex-direction:column;align-items:stretch}
+  .rv-card .up-fields{grid-template-columns:1fr 1fr}
+  .rv-card .up-fields .full{grid-column:1/-1}
+  #p-pass{min-height:44px;padding:0 18px;background:var(--sand);border-radius:999px}
+  .dialog{padding:10px;align-items:end}
+  .dialog-card{max-height:calc(100dvh - 20px);overflow:auto;border-radius:22px}
+  .rec-card{padding:10px}
+  .rec-card .receipt-box{padding:20px 16px;border-radius:12px}
+  .rec-card .receipt-box .r-band{margin:-20px -16px 16px}
+  .rec-card .receipt-box .r-stamp{width:88px;height:88px;right:10px}
+}
 </style>
 </head>
 <body>
@@ -387,9 +493,23 @@ footer a{color:var(--navy)}
       </section>
 
       <section class="panel p-rv" id="rv" aria-labelledby="h-rv" hidden style="animation-delay:.15s">
-        <h2 id="h-rv">Reservar área social</h2>
-        <p class="sub">Elija el área, la fecha y el horario. Bramar confirmará su reserva.</p>
-        <form id="rv-form" novalidate>
+        <div class="rv-head">
+          <div><h2 id="h-rv">Áreas sociales</h2><p class="sub">Reserve la churrasquera o el salón. Bramar confirmará su solicitud.</p></div>
+          <button class="btn navy" type="button" id="rv-open"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Reservar</button>
+        </div>
+        <div id="rv-ok" role="status"></div>
+        <div class="rv-list" id="rv-list"></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- Cambiar contraseña -->
+<div class="dialog" id="rv-dialog" role="dialog" aria-modal="true" aria-labelledby="rv-title" aria-hidden="true">
+  <div class="dialog-card rv-card">
+    <span class="tag">Áreas sociales</span>
+    <h2 id="rv-title">Reservar un área</h2>
+    <form id="rv-form" novalidate>
           <div class="up-fields">
             <div class="field full"><select id="rv-area"></select><label for="rv-area">Área</label></div>
             <div class="field full"><select id="rv-tramo"></select><label for="rv-tramo">Horario / tarifa</label></div>
@@ -403,20 +523,15 @@ footer a{color:var(--navy)}
           </div>
           <p class="rv-gar" id="rv-gar"></p>
           <div id="rv-msg" role="status"></div>
-          <button class="btn navy block" type="submit" id="rv-btn"><span id="rv-btn-t">Solicitar reserva</span><span class="spin" aria-hidden="true"></span></button>
+          <div class="row"><button class="btn light" type="button" id="rv-cancel">Cancelar</button><button class="btn navy" type="submit" id="rv-btn"><span id="rv-btn-t">Solicitar reserva</span><span class="spin" aria-hidden="true"></span></button></div>
         </form>
-        <div class="rv-list" id="rv-list"></div>
-      </section>
-    </div>
   </div>
-</main>
-
-<!-- Cambiar contraseña -->
+</div>
 <div class="dialog" id="rec-dialog" role="dialog" aria-modal="true" aria-labelledby="rec-title" aria-hidden="true">
   <div class="dialog-card rec-card">
     <h2 id="rec-title" class="sr-only">Recibo</h2>
     <div id="rec-body"></div>
-    <div class="row"><button class="btn light" type="button" id="rec-close">Cerrar</button><button class="btn navy" type="button" id="rec-print-btn">Imprimir o guardar PDF</button></div>
+    <div class="row"><button class="btn light" type="button" id="rec-close">Cerrar</button><button class="btn navy" type="button" id="rec-print-btn">Guardar PDF</button></div>
   </div>
 </div>
 <div class="dialog" id="pw-dialog" role="dialog" aria-modal="true" aria-labelledby="pw-title" aria-hidden="true">
@@ -436,6 +551,7 @@ footer a{color:var(--navy)}
 <footer>© <span id="yr">2026</span> Bramar Group · <a href="index.html">Volver al sitio</a></footer>
 
 <script src="js/portal-crypto.js"></script>
+<script src="js/luka-recibo.js"></script>
 <script>
 /* ================================================================
    CONFIGURACIÓN DEL PORTAL
@@ -587,9 +703,10 @@ const PORTAL = {
     $('#p-bank').innerHTML=rows.length?rows.map(([k,v])=>`<div class="kv"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')
       :'<p class="muted" style="padding:12px 0">Consulte los datos de pago con la administración.</p>';
     const qr=U.qr||E.qr, box=$('#p-qr'), dl=$('#p-qr-dl');
-    if(qr){ box.innerHTML=`<img src="${esc(qr)}" alt="Código QR de pago de ${esc(E.nombre)}">`; dl.href=qr; dl.hidden=false;
+    if(qr){ box.classList.remove('vacio'); box.innerHTML=`<img src="${esc(qr)}" alt="Código QR de pago de ${esc(E.nombre)}">`; dl.href=qr; dl.hidden=false;
       box.querySelector('img').onerror=()=>{box.innerHTML='<p class="none">QR no disponible por ahora.</p>';dl.hidden=true;}; }
     else { box.innerHTML='<p class="none">Este edificio aún no tiene un QR cargado.</p>'; dl.hidden=true; }
+    box.classList.toggle('vacio',!qr);
     renderTable();
     renderReservas();
     $('#up-date').value=new Date().toISOString().slice(0,10);
@@ -643,22 +760,8 @@ const PORTAL = {
   /* ---------- Recibo (pagos registrados en Gestión LUKA) ---------- */
   $('#p-table').addEventListener('click',e=>{ const b=e.target.closest('[data-rec]'); if(!b) return; const c=shown[+b.dataset.rec]; if(c&&c.recibo) openRecibo(c.recibo); });
   function openRecibo(r){
-    const E=data.edificio||{}, U=data.unidad||{}, cur=E.moneda||'Bs', dlgR=$('#rec-dialog');
-    $('#rec-body').innerHTML=`<div class="rec" id="rec-print">
-      <div class="rec-top"><div><b>${esc(E.nombre||'')}</b><span>Administración: Bramar Group</span></div><div class="rec-no"><span>Recibo</span><b>N.º ${esc(r.no||'—')}</b></div></div>
-      <div class="rec-amt"><span>Monto recibido</span><b>${money(r.monto,cur)}</b></div>
-      <dl class="rec-kv">
-        <div><dt>Fecha</dt><dd>${flong(r.fecha)}</dd></div>
-        <div><dt>Departamento</dt><dd>${esc(U.depto||'')}</dd></div>
-        ${U.propietario?`<div><dt>Propietario</dt><dd>${esc(U.propietario)}</dd></div>`:''}
-        <div><dt>Método</dt><dd>${esc(r.metodo||'—')}</dd></div>
-        <div class="full"><dt>Concepto</dt><dd>${esc(r.concepto||'')}</dd></div>
-        ${r.meses&&r.meses.length?`<div class="full"><dt>Meses cubiertos</dt><dd>${esc(r.meses.join(', '))}</dd></div>`:''}
-        ${r.obs?`<div class="full"><dt>Observación</dt><dd>${esc(r.obs)}</dd></div>`:''}
-        ${r.saldo!=null?`<div><dt>Saldo pendiente</dt><dd>${money(r.saldo,cur)}</dd></div>`:''}
-        ${r.recibido?`<div><dt>Recibido por</dt><dd>${esc(r.recibido)}</dd></div>`:''}
-      </dl>
-      <p class="rec-foot">Recibo emitido por Bramar Group desde Gestión LUKA.</p></div>`;
+    const dlgR=$('#rec-dialog');
+    $('#rec-body').innerHTML=window.lukaRecibo?window.lukaRecibo(data.edificio||{},data.unidad||{},r):'';
     dlgR.classList.add('open'); dlgR.setAttribute('aria-hidden','false');
   }
   function closeRecibo(){ const d=$('#rec-dialog'); d.classList.remove('open'); d.setAttribute('aria-hidden','true'); }
@@ -692,6 +795,11 @@ const PORTAL = {
         return `<li><span class="d">${esc(x.area.replace(/^[^·]*·\s*/,''))} · ${esc(fdate(x.fecha))}${x.hini?' '+esc(x.hini):''}<small>${esc(x.tramo||'')}${x.nota?' · '+esc(x.nota):''}</small></span><span class="s${lab==='Aprobada'?' ok':''}">${lab}${lab==='Pendiente'?'<small>Bramar la revisará</small>':''}</span></li>`; }).join('')+'</ul>':'';
     }catch(e){}
   }
+  const rvDlg=$('#rv-dialog');
+  function rvShow(on){ rvDlg.classList.toggle('open',on); rvDlg.setAttribute('aria-hidden',on?'false':'true'); if(on){ $('#rv-msg').innerHTML=''; setTimeout(()=>$('#rv-area').focus(),60); } }
+  $('#rv-open').addEventListener('click',()=>rvShow(true));
+  $('#rv-cancel').addEventListener('click',()=>rvShow(false));
+  rvDlg.addEventListener('click',e=>{ if(e.target===rvDlg) rvShow(false); });
   $('#rv-form').addEventListener('submit',async e=>{
     e.preventDefault(); const msg=$('#rv-msg'), btn=$('#rv-btn'); msg.innerHTML='';
     if(!$('#rv-fecha').value) return alertBox(msg,'bad','Elija la fecha de la reserva.');
@@ -700,7 +808,7 @@ const PORTAL = {
       const j=await ptCall({action:'pt_reserva',areaId:$('#rv-area').value,tramo:$('#rv-tramo').value,fecha:$('#rv-fecha').value,hini:$('#rv-hini').value,hfin:$('#rv-hfin').value,
         responsable:$('#rv-resp').value.trim(),telefono:$('#rv-tel').value.trim(),personas:$('#rv-pers').value,evento:$('#rv-evento').value.trim()});
       if(!j.ok) throw new Error(j.error||'error');
-      alertBox(msg,'ok','Recibimos su solicitud. Bramar la revisará y verá aquí si fue aprobada.');
+      rvShow(false); alertBox($('#rv-ok'),'ok','Recibimos su solicitud. Bramar la revisará y aquí verá si fue aprobada.');
       $('#rv-evento').value=''; loadReservas();
     }catch(err){ alertBox(msg,'bad','No pudimos enviar la solicitud'+(err.message&&err.message!=='error'&&err.message.length<80?': '+esc(err.message):'')+'. Intente de nuevo.'); }
     finally{ btn.disabled=false; btn.classList.remove('loading'); $('#rv-btn-t').textContent='Solicitar reserva'; }
