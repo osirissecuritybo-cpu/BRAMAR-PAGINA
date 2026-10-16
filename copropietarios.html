@@ -227,6 +227,20 @@ footer a{color:var(--navy)}
   .table td:empty{display:none}
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+.rec-btn{display:block;margin-top:6px;padding:0;border:0;background:none;font:inherit;font-size:13px;font-weight:500;color:var(--navy);text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-transform:none;letter-spacing:0}
+.rec-card{width:min(100%,520px);max-height:92vh;overflow:auto}
+.rec-top{display:flex;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.rec-top b{display:block;color:var(--navy);font-size:17px}.rec-top span{font-size:13px;color:var(--muted)}
+.rec-no{text-align:right}.rec-no span{display:block;text-transform:uppercase;letter-spacing:.1em;font-size:11px}
+.rec-amt{padding:18px 0;border-bottom:1px solid var(--line)}.rec-amt span{display:block;font-size:13px;color:var(--muted)}.rec-amt b{font-size:28px;font-weight:500;color:var(--navy)}
+.rec-kv{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;margin:16px 0 0}
+.rec-kv .full{grid-column:1/-1}.rec-kv dt{font-size:12px;color:var(--muted)}.rec-kv dd{margin:2px 0 0;font-size:15px;color:var(--ink)}
+.rec-foot{margin:18px 0 0;font-size:12px;color:var(--muted)}
+.p-rv{grid-column:1/-1}
+@media (min-width:901px){.p-rv #rv-form{max-width:none}.p-rv .up-fields{grid-template-columns:repeat(4,1fr)}.p-rv .up-fields .full{grid-column:span 2}.p-rv .up-fields .wide{grid-column:1/-1}.p-rv #rv-form .btn{width:auto;padding-left:40px;padding-right:40px}}
+.rv-gar{font-size:13px;color:var(--muted);margin:10px 0 0}.rv-gar:empty{display:none}
+#rv-form .btn{margin-top:14px}.rv-list h3{font-size:15px;font-weight:500;color:var(--navy);margin:24px 0 0}
+@media print{body.printing-rec>*:not(#rec-dialog){display:none!important}body.printing-rec #rec-dialog{position:static;background:none;backdrop-filter:none;opacity:1;visibility:visible;padding:0}body.printing-rec .rec-card{max-height:none;box-shadow:none;transform:none}body.printing-rec .rec-card .row{display:none}}
 </style>
 </head>
 <body>
@@ -371,11 +385,40 @@ footer a{color:var(--navy)}
         <p class="credit-note" id="p-credit" hidden></p>
         <button class="btn light more" type="button" id="p-more" hidden>Ver historial completo</button>
       </section>
+
+      <section class="panel p-rv" id="rv" aria-labelledby="h-rv" hidden style="animation-delay:.15s">
+        <h2 id="h-rv">Reservar área social</h2>
+        <p class="sub">Elija el área, la fecha y el horario. Bramar confirmará su reserva.</p>
+        <form id="rv-form" novalidate>
+          <div class="up-fields">
+            <div class="field full"><select id="rv-area"></select><label for="rv-area">Área</label></div>
+            <div class="field full"><select id="rv-tramo"></select><label for="rv-tramo">Horario / tarifa</label></div>
+            <div class="field"><input id="rv-fecha" type="date" required><label for="rv-fecha">Fecha</label></div>
+            <div class="field"><input id="rv-pers" inputmode="numeric" placeholder="0"><label for="rv-pers">Personas</label></div>
+            <div class="field"><input id="rv-hini" type="time" value="19:00"><label for="rv-hini">Desde</label></div>
+            <div class="field"><input id="rv-hfin" type="time" value="23:00"><label for="rv-hfin">Hasta</label></div>
+            <div class="field full"><input id="rv-resp" placeholder="Nombre"><label for="rv-resp">Responsable</label></div>
+            <div class="field full"><input id="rv-tel" type="tel" inputmode="tel" placeholder="7xxxxxxx"><label for="rv-tel">Teléfono</label></div>
+            <div class="field full wide"><input id="rv-evento" placeholder="Ej. cumpleaños, reunión"><label for="rv-evento">Evento</label></div>
+          </div>
+          <p class="rv-gar" id="rv-gar"></p>
+          <div id="rv-msg" role="status"></div>
+          <button class="btn navy block" type="submit" id="rv-btn"><span id="rv-btn-t">Solicitar reserva</span><span class="spin" aria-hidden="true"></span></button>
+        </form>
+        <div class="rv-list" id="rv-list"></div>
+      </section>
     </div>
   </div>
 </main>
 
 <!-- Cambiar contraseña -->
+<div class="dialog" id="rec-dialog" role="dialog" aria-modal="true" aria-labelledby="rec-title" aria-hidden="true">
+  <div class="dialog-card rec-card">
+    <h2 id="rec-title" class="sr-only">Recibo</h2>
+    <div id="rec-body"></div>
+    <div class="row"><button class="btn light" type="button" id="rec-close">Cerrar</button><button class="btn navy" type="button" id="rec-print-btn">Imprimir o guardar PDF</button></div>
+  </div>
+</div>
 <div class="dialog" id="pw-dialog" role="dialog" aria-modal="true" aria-labelledby="pw-title" aria-hidden="true">
   <form class="dialog-card" id="pw-form" novalidate>
     <span class="tag">Seguridad</span>
@@ -414,7 +457,7 @@ const PORTAL = {
   const $=s=>document.querySelector(s);
   const C=window.BramarCrypto;
   const MAX=8*1024*1024;
-  let data=null, file=null, showAll=false, session=null;
+  let data=null, file=null, showAll=false, session=null, shown=[];
   const SKEY='bramar.session';
 
   const money=(n,cur)=>(cur||'Bs')+' '+Number(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -429,7 +472,9 @@ const PORTAL = {
 
   /* ---------- Lista de edificios ---------- */
   const sel=$('#l-bld');
-  fetch('data/edificios.json',{cache:'no-cache'}).then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(list=>{
+  const listaSitio=fetch('data/edificios.json',{cache:'no-cache'}).then(r=>r.ok?r.json():[]).catch(()=>[]);
+  const listaLuka=PORTAL.endpoint?fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'pt_edificios'})}).then(r=>r.json()).then(j=>j.ok?j.edificios:[]).catch(()=>[]):Promise.resolve([]);
+  Promise.all([listaSitio,listaLuka]).then(([a,b])=>{ const m=new Map(); a.concat(b).forEach(x=>{ if(x&&x.id&&!m.has(x.id)) m.set(x.id,x); }); const list=[...m.values()].sort((x,y)=>String(x.nombre).localeCompare(String(y.nombre),'es')); if(!list.length) throw 0; return list; }).then(list=>{
     sel.innerHTML='<option value="">Seleccione su edificio</option>'+list.map(b=>`<option value="${esc(b.id)}">${esc(b.nombre)}</option>`).join('');
     const rb=store.get('bramar.bld'), rd=store.get('bramar.dep');
     if(rb&&list.some(b=>b.id===rb)){ sel.value=rb; $('#l-dep').value=rd||''; if(!session) (rd?$('#l-code'):$('#l-dep')).focus(); }
@@ -456,10 +501,27 @@ const PORTAL = {
     if(!j.ok||!j.blob) return null;
     try{ return await C.unwrapCode(j.blob,pass); }catch(e){ return null; }
   }
+  /* En línea: el estado de cuenta sale de Gestión LUKA en el momento. Devuelve
+     null si el edificio no está en LUKA (entonces se usa el archivo del sitio). */
+  async function live(b,d,code){
+    if(!PORTAL.endpoint) return undefined;
+    try{
+      const r=await fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'pt_estado',edificio_id:b,depto:C.normDepto(d),codigo:C.normCode(code)})});
+      const j=await r.json();
+      if(j.ok) return j.data;
+      return j.error==='codigo'?null:undefined;
+    }catch(e){ return undefined; }
+  }
+  async function openCode(b,d,code){
+    const v=await live(b,d,code);
+    if(v) return v;
+    if(v===null) return null;           // edificio en LUKA y código incorrecto
+    return openWithCode(b,d,code);      // edificio todavía con archivo del sitio
+  }
   async function access(b,d,secret){
     let code=null, res=null;
-    if(C.normCode(secret).length===10){ res=await openWithCode(b,d,secret); if(res) code=C.normCode(secret); }
-    if(!res){ code=await codeFromPassword(b,d,secret); if(code) res=await openWithCode(b,d,code); }
+    if(C.normCode(secret).length===10){ res=await openCode(b,d,secret); if(res) code=C.normCode(secret); }
+    if(!res){ code=await codeFromPassword(b,d,secret); if(code) res=await openCode(b,d,code); }
     return res?{data:res,code}:null;
   }
 
@@ -529,6 +591,7 @@ const PORTAL = {
       box.querySelector('img').onerror=()=>{box.innerHTML='<p class="none">QR no disponible por ahora.</p>';dl.hidden=true;}; }
     else { box.innerHTML='<p class="none">Este edificio aún no tiene un QR cargado.</p>'; dl.hidden=true; }
     renderTable();
+    renderReservas();
     $('#up-date').value=new Date().toISOString().slice(0,10);
     $('#p-pass').hidden=!PORTAL.endpoint;
     $('#view-auto').hidden=true; $('#view-login').hidden=true; $('#view-profile').hidden=false; $('#logout').hidden=false; $('#back').hidden=true;
@@ -544,8 +607,8 @@ const PORTAL = {
        (su suma es igual a la deuda) y los pagos ya hechos, cada uno con lo que pagó en el concepto.
        En ese caso cada pago se muestra como su propia fila "Pagado" y no se cruza con los cargos. */
     const sumCargos=charges.reduce((s,c)=>s+c.monto,0), R=data.resumen||{};
-    if(R.deuda!=null&&Math.abs(sumCargos-Number(R.deuda))<0.01){
-      const paid=mv.filter(m=>Number(m.abono)>0).map(m=>({fecha:m.fecha,concepto:m.concepto,monto:Number(m.abono),resta:0,pagado:m.fecha}));
+    if(data.modo==='luka'||(R.deuda!=null&&Math.abs(sumCargos-Number(R.deuda))<0.01)){
+      const paid=mv.filter(m=>Number(m.abono)>0).map(m=>({fecha:m.fecha,concepto:m.concepto,monto:Number(m.abono),resta:0,pagado:m.fecha,recibo:m.recibo||null}));
       const all=charges.concat(paid).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
       return {charges:all,credit:0};
     }
@@ -564,10 +627,10 @@ const PORTAL = {
   function renderTable(){
     const cur=(data.edificio||{}).moneda||'Bs';
     const {charges,credit}=statement();
-    const list=showAll?charges:charges.slice(0,12);
+    const list=showAll?charges:charges.slice(0,12); shown=list;
     $('#p-table tbody').innerHTML=list.length?list.map((c,i)=>{
       const paid=c.resta<=0.009, partial=!paid&&c.resta<c.monto;
-      const st=paid?`Pagado${c.pagado?`<small>el ${fdate(c.pagado)}</small>`:''}`
+      const st=paid?`Pagado${c.pagado?`<small>el ${fdate(c.pagado)}</small>`:''}${c.recibo?`<button type="button" class="rec-btn" data-rec="${i}">Ver recibo</button>`:''}`
         :partial?`Deuda<small>falta ${money(c.resta,cur)}</small>`:'Deuda';
       return `<tr class="${paid?'':'due'}" style="animation-delay:${Math.min(i,10)*.03}s"><td class="f">${flong(c.fecha)}</td><td>${esc(c.concepto)}</td><td class="num">${money(c.monto,cur)}</td><td class="st ${paid?'paid':'due'}">${st}</td></tr>`;
     }).join(''):'<tr><td colspan="4" class="empty">Aún no hay movimientos registrados.</td></tr>';
@@ -577,6 +640,71 @@ const PORTAL = {
     $('#p-more').hidden=showAll||charges.length<=12;
   }
   $('#p-more').addEventListener('click',()=>{showAll=true;renderTable();});
+  /* ---------- Recibo (pagos registrados en Gestión LUKA) ---------- */
+  $('#p-table').addEventListener('click',e=>{ const b=e.target.closest('[data-rec]'); if(!b) return; const c=shown[+b.dataset.rec]; if(c&&c.recibo) openRecibo(c.recibo); });
+  function openRecibo(r){
+    const E=data.edificio||{}, U=data.unidad||{}, cur=E.moneda||'Bs', dlgR=$('#rec-dialog');
+    $('#rec-body').innerHTML=`<div class="rec" id="rec-print">
+      <div class="rec-top"><div><b>${esc(E.nombre||'')}</b><span>Administración: Bramar Group</span></div><div class="rec-no"><span>Recibo</span><b>N.º ${esc(r.no||'—')}</b></div></div>
+      <div class="rec-amt"><span>Monto recibido</span><b>${money(r.monto,cur)}</b></div>
+      <dl class="rec-kv">
+        <div><dt>Fecha</dt><dd>${flong(r.fecha)}</dd></div>
+        <div><dt>Departamento</dt><dd>${esc(U.depto||'')}</dd></div>
+        ${U.propietario?`<div><dt>Propietario</dt><dd>${esc(U.propietario)}</dd></div>`:''}
+        <div><dt>Método</dt><dd>${esc(r.metodo||'—')}</dd></div>
+        <div class="full"><dt>Concepto</dt><dd>${esc(r.concepto||'')}</dd></div>
+        ${r.meses&&r.meses.length?`<div class="full"><dt>Meses cubiertos</dt><dd>${esc(r.meses.join(', '))}</dd></div>`:''}
+        ${r.obs?`<div class="full"><dt>Observación</dt><dd>${esc(r.obs)}</dd></div>`:''}
+        ${r.saldo!=null?`<div><dt>Saldo pendiente</dt><dd>${money(r.saldo,cur)}</dd></div>`:''}
+        ${r.recibido?`<div><dt>Recibido por</dt><dd>${esc(r.recibido)}</dd></div>`:''}
+      </dl>
+      <p class="rec-foot">Recibo emitido por Bramar Group desde Gestión LUKA.</p></div>`;
+    dlgR.classList.add('open'); dlgR.setAttribute('aria-hidden','false');
+  }
+  function closeRecibo(){ const d=$('#rec-dialog'); d.classList.remove('open'); d.setAttribute('aria-hidden','true'); }
+  $('#rec-close').addEventListener('click',closeRecibo);
+  $('#rec-dialog').addEventListener('click',e=>{ if(e.target.id==='rec-dialog') closeRecibo(); });
+  $('#rec-print-btn').addEventListener('click',()=>{ document.body.classList.add('printing-rec'); window.print(); setTimeout(()=>document.body.classList.remove('printing-rec'),500); });
+
+  /* ---------- Reservas de áreas sociales ---------- */
+  function renderReservas(){
+    const box=$('#rv'), areas=(data&&data.areas)||[];
+    if(!PORTAL.endpoint||!areas.length){ box.hidden=true; return; }
+    box.hidden=false;
+    const sa=$('#rv-area'); sa.innerHTML=areas.map(a=>`<option value="${esc(a.id)}">${esc(a.nombre)}</option>`).join('');
+    const pintaTramos=()=>{ const a=areas.find(x=>x.id===sa.value)||areas[0]; const cur=(data.edificio||{}).moneda||'Bs';
+      $('#rv-tramo').innerHTML=(a.tramos||[]).map(t=>`<option value="${esc(t.label)}">${esc(t.label)}${t.monto?' — '+money(t.monto,cur):''}</option>`).join('')||'<option value="">General</option>';
+      $('#rv-gar').textContent=a.garantia?`Garantía: ${money(a.garantia,cur)} (se devuelve después del evento).`:''; };
+    sa.onchange=pintaTramos; pintaTramos();
+    const hoy=new Date(); hoy.setDate(hoy.getDate()+1); $('#rv-fecha').min=hoy.toISOString().slice(0,10);
+    if(!$('#rv-resp').value) $('#rv-resp').value=(data.unidad||{}).propietario||'';
+    loadReservas();
+  }
+  async function ptCall(body){
+    const r=await fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({edificio_id:session.b,depto:session.d,codigo:session.code},body))});
+    return r.json();
+  }
+  async function loadReservas(){
+    try{
+      const j=await ptCall({action:'pt_reservas'}); const L=(j.ok&&j.reservas)||[];
+      $('#rv-list').innerHTML=L.length?'<h3>Mis solicitudes</h3><ul class="rc-list">'+L.map(x=>{
+        const lab=x.estado==='Aprobada'?'Aprobada':x.estado==='Rechazada'?'Rechazada':'Pendiente';
+        return `<li><span class="d">${esc(x.area.replace(/^[^·]*·\s*/,''))} · ${esc(fdate(x.fecha))}${x.hini?' '+esc(x.hini):''}<small>${esc(x.tramo||'')}${x.nota?' · '+esc(x.nota):''}</small></span><span class="s${lab==='Aprobada'?' ok':''}">${lab}${lab==='Pendiente'?'<small>Bramar la revisará</small>':''}</span></li>`; }).join('')+'</ul>':'';
+    }catch(e){}
+  }
+  $('#rv-form').addEventListener('submit',async e=>{
+    e.preventDefault(); const msg=$('#rv-msg'), btn=$('#rv-btn'); msg.innerHTML='';
+    if(!$('#rv-fecha').value) return alertBox(msg,'bad','Elija la fecha de la reserva.');
+    btn.disabled=true; btn.classList.add('loading'); $('#rv-btn-t').textContent='Enviando…';
+    try{
+      const j=await ptCall({action:'pt_reserva',areaId:$('#rv-area').value,tramo:$('#rv-tramo').value,fecha:$('#rv-fecha').value,hini:$('#rv-hini').value,hfin:$('#rv-hfin').value,
+        responsable:$('#rv-resp').value.trim(),telefono:$('#rv-tel').value.trim(),personas:$('#rv-pers').value,evento:$('#rv-evento').value.trim()});
+      if(!j.ok) throw new Error(j.error||'error');
+      alertBox(msg,'ok','Recibimos su solicitud. Bramar la revisará y verá aquí si fue aprobada.');
+      $('#rv-evento').value=''; loadReservas();
+    }catch(err){ alertBox(msg,'bad','No pudimos enviar la solicitud'+(err.message&&err.message!=='error'&&err.message.length<80?': '+esc(err.message):'')+'. Intente de nuevo.'); }
+    finally{ btn.disabled=false; btn.classList.remove('loading'); $('#rv-btn-t').textContent='Solicitar reserva'; }
+  });
   document.addEventListener('click',async e=>{ const b=e.target.closest('[data-copy]'); if(!b) return;
     const v=b.dataset.copy; let ok=false;
     try{ await navigator.clipboard.writeText(v); ok=true; }catch(err){ const t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();try{ok=document.execCommand('copy');}catch(e2){}t.remove(); }
@@ -621,7 +749,7 @@ const PORTAL = {
     let s=null; try{ s=JSON.parse(store.get(SKEY)||'null'); }catch(e){}
     if(!s||!s.b||!s.code) return;
     $('#view-login').hidden=true; $('#view-auto').hidden=false;
-    try{ const d=await openWithCode(s.b,s.d,s.code); if(!d) throw 0; data=d; session=s; renderProfile(); loadReceipts(); }
+    try{ const d=await openCode(s.b,s.d,s.code); if(!d) throw 0; data=d; session=s; renderProfile(); loadReceipts(); }
     catch(e){ store.del(SKEY); $('#view-auto').hidden=true; $('#view-login').hidden=false;
       alertBox($('#l-msg'),'info','Su sesión se cerró. Ingrese nuevamente con su contraseña o código.'); }
   })();

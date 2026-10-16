@@ -51,6 +51,7 @@ function doPost(e) {
     if (d.action === 'pendientes') return pendientes_(d);
     if (d.action === 'estado') return cambiarEstado_(d);
     if (String(d.action || '').indexOf('lk_') === 0) return luka_(d);
+    if (String(d.action || '').indexOf('pt_') === 0) return portal_(d);
     if (!d.data || !d.filename) return json({ ok: false, error: 'Falta el archivo.' });
     if (TIPOS.indexOf(d.mimeType) === -1) return json({ ok: false, error: 'Tipo de archivo no permitido.' });
     const bytes = Utilities.base64Decode(d.data);
@@ -240,7 +241,8 @@ function registro_() {
 const LUKA_URL = 'https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/luka/';
 function avisarComprobante_(d, url) {
   try {
-    const to = PropertiesService.getScriptProperties().getProperty('CORREOS_AVISO') || 'bramargroupsrl@gmail.com';
+    const to = destinatarios_(d.edificio_id || d.edificio);
+    if (!to) return;
     const monto = d.monto ? 'Bs ' + d.monto : 'monto no indicado';
     const asunto = 'Comprobante · ' + (d.edificio || '') + ' · Depto ' + (d.depto || '') + ' · ' + monto;
     const esc = function (x) { return String(x || '').replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
@@ -280,7 +282,8 @@ function lkHash_(salt, clave) {
     .map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join('');
 }
 function lkUsuarios_() { return lkLeer_('LUKA_USERS', []); }
-function lkPublico_(u) { return { usuario: u.u, nombre: u.n, rol: u.rol, edificios: u.eds, activo: u.activo !== false }; }
+function lkPublico_(u) { return { usuario: u.u, nombre: u.n, correo: u.mail || '', rol: u.rol, edificios: u.eds, activo: u.activo !== false }; }
+function lkCorreoValido_(c) { return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(c || '').trim()); }
 function lkToken_(u) {
   const t = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
   lkProps_().setProperty('T_' + t, JSON.stringify({ u: u.u, exp: Date.now() + LK_DIAS * 864e5 }));
@@ -306,14 +309,15 @@ function luka_(d) {
   if (a === 'lk_bootstrap') {
     if (lkUsuarios_().length) return json({ ok: false, error: 'Ya existe un administrador. Ingrese con su usuario.' });
     if (!esAdmin_(d.k)) return json({ ok: false, error: 'Clave de administración incorrecta.' });
-    const u = lkNuevo_(d.usuario, d.nombre, d.clave, 'admin', ['*']);
+    const u = lkNuevo_(d.usuario || d.correo, d.nombre, d.clave, 'admin', ['*'], d.correo);
     if (u.error) return json({ ok: false, error: u.error });
     lkEscribir_('LUKA_USERS', [u]);
     return json({ ok: true, token: lkToken_(u), usuario: lkPublico_(u) });
   }
   if (a === 'lk_login') {
     if (freno_()) return json({ ok: false, error: 'Demasiados intentos, espere un minuto.' });
-    const u = lkUsuarios_().filter(function (x) { return x.u === String(d.usuario || '').trim().toLowerCase(); })[0];
+    const q = String(d.usuario || '').trim().toLowerCase();
+    const u = lkUsuarios_().filter(function (x) { return x.u === q || (x.mail && x.mail === q); })[0];
     if (!u || u.activo === false || lkHash_(u.salt, String(d.clave || '')) !== u.hash) return json({ ok: false, error: 'Usuario o clave incorrectos.' });
     lkLog_(u, '', 'Ingresó', '');
     return json({ ok: true, token: lkToken_(u), usuario: lkPublico_(u) });
@@ -321,6 +325,13 @@ function luka_(d) {
   const u = sesion_(d.t);
   if (!u) return json({ ok: false, sesion: false, error: 'La sesión venció. Vuelva a ingresar.' });
   if (a === 'lk_me') return json({ ok: true, usuario: lkPublico_(u) });
+  if (a === 'lk_mi_clave') {
+    if (lkHash_(u.salt, String(d.actual || '')) !== u.hash) return json({ ok: false, error: 'La clave actual no es correcta.' });
+    if (String(d.nueva || '').length < 6) return json({ ok: false, error: 'La nueva clave debe tener al menos 6 caracteres.' });
+    const L = lkUsuarios_(), i = L.map(function (y) { return y.u; }).indexOf(u.u);
+    L[i].salt = Utilities.getUuid(); L[i].hash = lkHash_(L[i].salt, String(d.nueva));
+    lkEscribir_('LUKA_USERS', L); lkLog_(u, '', 'Cambió su clave', ''); return json({ ok: true });
+  }
   if (a === 'lk_logout') { lkProps_().deleteProperty('T_' + d.t); return json({ ok: true }); }
   if (a === 'lk_edificios') {
     const E = lkEdificios_();
@@ -361,6 +372,22 @@ function luka_(d) {
       return json({ ok: true, v: E[d.id].v });
     } finally { lock.releaseLock(); }
   }
+  if (a === 'lk_reservas') {
+    if (!puedeVer_(u, d.id)) return json({ ok: false, error: 'Sin acceso a este edificio.' });
+    const e = lkEdificios_()[d.id]; if (!e) return json({ ok: true, reservas: [] });
+    const pid = e.portal || slug_(e.name);
+    return json({ ok: true, reservas: ptReservasLista_(function (r) { return r.edificio_id === pid && (d.todas || r.estado === 'Pendiente'); }) });
+  }
+  if (a === 'lk_reserva_estado') {
+    const sh = ptHojaReservas_(), f = sh.getRange('A:A').createTextFinder(String(d.rid || '')).matchEntireCell(true).findNext();
+    if (!f || ['Aprobada', 'Rechazada'].indexOf(d.estado) < 0) return json({ ok: false, error: 'Solicitud no encontrada.' });
+    const row = sh.getRange(f.getRow(), 1, 1, 15).getValues()[0];
+    const E = lkEdificios_(), ok = Object.keys(E).some(function (k) { return (E[k].portal || slug_(E[k].name)) === row[2] && puedeVer_(u, k); });
+    if (!ok) return json({ ok: false, error: 'Sin acceso a este edificio.' });
+    sh.getRange(f.getRow(), 13, 1, 3).setValues([[d.estado, String(d.nota || '').slice(0, 300), u.n]]);
+    lkLog_(u, String(row[3]), d.estado === 'Aprobada' ? 'Aprobó una reserva' : 'Rechazó una reserva', 'Depto ' + row[4] + ' · ' + row[6] + ' · ' + fecha_(row[8]));
+    return json({ ok: true });
+  }
   if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un administrador puede hacer esto.' });
   if (a === 'lk_actividad') {
     const sh = lkHojaLog_(), n = sh.getLastRow();
@@ -377,15 +404,18 @@ function luka_(d) {
   }
   if (a === 'lk_usuarios') return json({ ok: true, usuarios: lkUsuarios_().map(lkPublico_) });
   if (a === 'lk_usuario_guardar') {
-    const L = lkUsuarios_(), x = d.usuario || {}, id = String(x.usuario || '').trim().toLowerCase();
+    const L = lkUsuarios_(), x = d.usuario || {}, id = String(x.usuario || x.correo || '').trim().toLowerCase();
+    const correo = String(x.correo || '').trim().toLowerCase();
+    if (correo && !lkCorreoValido_(correo)) return json({ ok: false, error: 'El correo no es válido.' });
+    if (correo && L.some(function (y) { return y.mail === correo && y.u !== id; })) return json({ ok: false, error: 'Ese correo ya está usado por otro usuario.' });
     const i = L.map(function (y) { return y.u; }).indexOf(id);
     const rol = x.rol === 'admin' ? 'admin' : 'operador', eds = Array.isArray(x.edificios) && x.edificios.length ? x.edificios.map(String) : ['*'];
     if (i < 0) {
-      const n = lkNuevo_(id, x.nombre, d.clave, rol, eds); if (n.error) return json({ ok: false, error: n.error });
+      const n = lkNuevo_(id, x.nombre, d.clave, rol, eds, correo); if (n.error) return json({ ok: false, error: n.error });
       L.push(n);
     } else {
       if (L[i].u === u.u && rol !== 'admin') return json({ ok: false, error: 'No puede quitarse a usted mismo el rol de administrador.' });
-      L[i].n = String(x.nombre || L[i].n).slice(0, 60); L[i].rol = rol; L[i].eds = eds; L[i].activo = x.activo !== false;
+      L[i].n = String(x.nombre || L[i].n).slice(0, 60); L[i].rol = rol; L[i].eds = eds; L[i].activo = x.activo !== false; if (correo) L[i].mail = correo;
       if (d.clave) { if (String(d.clave).length < 6) return json({ ok: false, error: 'La clave debe tener al menos 6 caracteres.' }); L[i].salt = Utilities.getUuid(); L[i].hash = lkHash_(L[i].salt, String(d.clave)); }
     }
     lkLog_(u, '', i < 0 ? 'Creó un usuario' : 'Modificó un usuario', id + ' (' + (rol === 'admin' ? 'Dueño' : 'Administrador de edificio') + ')');
@@ -399,13 +429,15 @@ function luka_(d) {
   }
   return json({ ok: false, error: 'Acción desconocida.' });
 }
-function lkNuevo_(usuario, nombre, clave, rol, eds) {
-  usuario = String(usuario || '').trim().toLowerCase();
-  if (!/^[a-z0-9._-]{3,30}$/.test(usuario)) return { error: 'El usuario debe tener de 3 a 30 letras o números, sin espacios.' };
+function lkNuevo_(usuario, nombre, clave, rol, eds, correo) {
+  usuario = String(usuario || '').trim().toLowerCase(); correo = String(correo || '').trim().toLowerCase();
+  if (correo && !lkCorreoValido_(correo)) return { error: 'El correo no es válido.' };
+  if (!/^[a-z0-9._@+-]{3,60}$/.test(usuario)) return { error: 'Ingrese un correo válido (o un usuario sin espacios).' };
   if (String(clave || '').length < 6) return { error: 'La clave debe tener al menos 6 caracteres.' };
   if (lkUsuarios_().some(function (x) { return x.u === usuario; })) return { error: 'Ese usuario ya existe.' };
   const salt = Utilities.getUuid();
-  return { u: usuario, n: String(nombre || usuario).slice(0, 60), rol: rol, eds: eds, salt: salt, hash: lkHash_(salt, String(clave)), activo: true };
+  if (correo && lkUsuarios_().some(function (x) { return x.mail === correo; })) return { error: 'Ese correo ya está usado por otro usuario.' };
+  return { u: usuario, n: String(nombre || usuario).slice(0, 60), mail: correo, rol: rol, eds: eds, salt: salt, hash: lkHash_(salt, String(clave)), activo: true };
 }
 
 /* El id del portal y el id de LUKA pueden ser distintos: un usuario de LUKA ve los
@@ -435,4 +467,142 @@ function lkLogCambios_(u, nombre, id, notas) {
   const c = CacheService.getScriptCache(), k = 'lg_' + u.u + '_' + id;
   if (c.get(k)) return;
   c.put(k, '1', 1800); lkLog_(u, nombre, 'Actualizó datos', '');
+}
+
+/* Correos que reciben el aviso de un comprobante: los usuarios de LUKA (activos y con
+   correo) que administran ese edificio, los súper administradores y, además, las
+   direcciones fijas de la propiedad CORREOS_AVISO (si existe). */
+function destinatarios_(portalId) {
+  const id = slug_(portalId), E = lkEdificios_(), lista = {};
+  const idsLuka = Object.keys(E).filter(function (k) { return E[k].portal === id || slug_(E[k].name) === id; });
+  lkUsuarios_().forEach(function (u) {
+    if (u.activo === false || !u.mail) return;
+    const ve = u.rol === 'admin' || (u.eds || []).indexOf('*') >= 0 || idsLuka.some(function (k) { return (u.eds || []).indexOf(k) >= 0; });
+    if (ve) lista[u.mail] = 1;
+  });
+  const fijos = PropertiesService.getScriptProperties().getProperty('CORREOS_AVISO');
+  (fijos === null ? 'bramargroupsrl@gmail.com' : fijos).split(/[,;\s]+/).filter(Boolean).forEach(function (c) { lista[c.toLowerCase()] = 1; });
+  return Object.keys(lista).join(',');
+}
+
+/* ============================================================================
+   PORTAL EN LÍNEA (sin Excel): el estado de cuenta, los recibos y las áreas
+   reservables se leen de los datos de LUKA del edificio vinculado.
+   El propietario se identifica con su código de acceso: el que LUKA guarda en
+   «Accesos del portal» o, para los códigos antiguos, el que generó el Excel
+   (se comprueba que exista su archivo en el sitio).
+   ============================================================================ */
+const SITIO = 'https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/';
+function ptNormCode_(s) { return String(s || '').toUpperCase().replace(/[^0-9A-Z]/g, ''); }
+function ptNormDepto_(s) { return String(s == null ? '' : s).toUpperCase().replace(/\s+/g, '').replace(/^DEPTO\.?|^DPTO\.?/, ''); }
+function ptHex_(bytes) { return bytes.map(function (b) { return ('0' + (b & 255).toString(16)).slice(-2); }).join(''); }
+function ptLuka_(portalId) {
+  const id = slug_(portalId), E = lkEdificios_();
+  // si hay varios con el mismo nombre (duplicados), el que tenga departamentos cargados
+  const k = Object.keys(E).filter(function (x) { return (E[x].portal || slug_(E[x].name)) === id && E[x].file; })
+    .sort(function (x, y) { return ((E[y].res || {}).deptos || 0) - ((E[x].res || {}).deptos || 0); })[0];
+  return k ? { id: k, e: E[k] } : null;
+}
+function ptDatos_(lk) { return JSON.parse(DriveApp.getFileById(lk.e.file).getBlob().getDataAsString('UTF-8')); }
+function ptCodigoOk_(portalId, depto, code, data) {
+  const c = ptNormCode_(code), dep = ptNormDepto_(depto);
+  if (c.length < 6) return false;
+  const acc = (((data.config || {}).portal || {}).deptos || {})[dep];
+  if (acc && acc.codigo) return ptNormCode_(acc.codigo) === c;
+  // código antiguo del Excel: existe su archivo cifrado en el sitio
+  const cache = CacheService.getScriptCache(), ck = 'pc_' + ptHex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, portalId + '|' + dep + '|' + c)).slice(0, 40);
+  if (cache.get(ck)) return true;
+  const fid = ptHex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, String(portalId).trim().toLowerCase() + '|' + dep + '|' + c, Utilities.Charset.UTF_8)).slice(0, 40);
+  try {
+    const r = UrlFetchApp.fetch(SITIO + 'data/u/' + fid + '.json', { muteHttpExceptions: true });
+    if (r.getResponseCode() === 200) { cache.put(ck, '1', 21600); return true; }
+  } catch (e) {}
+  return false;
+}
+const PT_MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+function ptFecha_(v) {
+  if (!v) return '';
+  const s = String(v), m = s.match(/(\d{4})-(\d{1,2})-(\d{1,2})/); if (m) return m[1] + '-' + ('0' + m[2]).slice(-2) + '-' + ('0' + m[3]).slice(-2);
+  const n = s.match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/); if (n) return (n[3].length === 2 ? '20' + n[3] : n[3]) + '-' + ('0' + n[2]).slice(-2) + '-' + ('0' + n[1]).slice(-2);
+  return s;
+}
+function ptEstado_(portalId, lk, data, depto) {
+  const dep = ptNormDepto_(depto);
+  const d = (data.deptos || []).filter(function (x) { return ptNormDepto_(x.depto) === dep; })[0];
+  if (!d) return null;
+  const cfg = data.config || {}, acc = ((cfg.portal || {}).deptos || {})[dep] || {};
+  const mov = [];
+  (d.meses_adeudados || []).forEach(function (m) {
+    const mi = PT_MESES.indexOf(m.mes);
+    mov.push({ fecha: m.anio ? m.anio + '-' + ('0' + (mi + 1)).slice(-2) + '-01' : '', concepto: 'Expensa ' + (m.mes || '') + ' ' + (m.anio || ''), cargo: +m.monto || 0, abono: 0 });
+  });
+  if ((+d.ascensor_debt || 0) > 0.005) mov.push({ fecha: '', concepto: 'Cuota extraordinaria ascensor', cargo: +d.ascensor_debt, abono: 0 });
+  (d.cargos_extra || []).forEach(function (c) { mov.push({ fecha: ptFecha_(c.fecha), concepto: String(c.nombre || 'Cargo'), cargo: +c.monto || 0, abono: 0 }); });
+  (d.pagos_registrados || []).forEach(function (p) {
+    mov.push({ fecha: ptFecha_(p.fecha), concepto: String(p.concepto || 'Pago'), cargo: 0, abono: +p.monto || 0,
+      recibo: { no: String(p.recibo_no || ''), fecha: ptFecha_(p.fecha), monto: +p.monto || 0, metodo: String(p.metodo || ''), concepto: String(p.concepto || ''),
+        obs: String(p.obs || ''), recibido: String(p.recibido || ''), saldo: p.saldo_restante != null ? +p.saldo_restante : null,
+        meses: (p.meses_cubiertos || []).map(function (x) { return (x.mes || '') + ' ' + (x.anio || '') + (x.tipo === 'adelanto' ? ' (adelanto)' : ''); }) } });
+  });
+  const deuda = Math.round(((+d.total_debt) || mov.reduce(function (a, m) { return a + m.cargo; }, 0)) * 100) / 100;
+  return {
+    modo: 'luka',
+    edificio: { id: portalId, nombre: cfg.nombreEdificio || lk.e.name, moneda: 'Bs', titular: String(cfg.titular || ''), cuenta: String(cfg.cuentaText || ''), banco: String(cfg.banco || ''), nit: String(cfg.nit || ''), qr: cfg.qr || '' },
+    unidad: { depto: d.depto, propietario: acc.propietario || '', expensa: +d.expensaMensual || +cfg.expensaMensual || 0 },
+    resumen: { deuda: deuda, vencimiento: '', actualizado: String(lk.e.upd || '').slice(0, 10) },
+    movimientos: mov,
+    areas: (cfg.areasLuka || []).map(function (a) { return { id: a.id, nombre: a.nombre, garantia: +a.garantia || 0, tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: +t.monto || 0 }; }) }; })
+  };
+}
+function ptHojaReservas_() {
+  const ss = registro_().getParent();
+  return ss.getSheetByName('Reservas portal') || (function () {
+    const sh = ss.insertSheet('Reservas portal');
+    sh.appendRow(['id', 'Recibida', 'edificio_id', 'Edificio', 'Depto', 'Responsable', 'Área', 'Horario', 'Fecha', 'Inicio', 'Fin', 'Evento', 'Estado', 'Nota de Bramar', 'Atendió', 'Personas', 'Teléfono']);
+    sh.setFrozenRows(1); sh.hideColumns(1); sh.hideColumns(3);
+    return sh;
+  })();
+}
+function ptReservasLista_(filtro) {
+  const sh = ptHojaReservas_(), n = sh.getLastRow(); if (n < 2) return [];
+  return sh.getRange(2, 1, n - 1, 17).getValues().map(function (r) {
+    return { id: String(r[0]), recibida: r[1] instanceof Date ? r[1].toISOString() : String(r[1]), edificio_id: String(r[2]), edificio: String(r[3]), depto: String(r[4]),
+      responsable: String(r[5]), areaId: String(r[6]).split(' · ')[0], area: String(r[6]), tramo: String(r[7]), fecha: fecha_(r[8]), hini: String(r[9]), hfin: String(r[10]),
+      evento: String(r[11]), estado: String(r[12] || 'Pendiente'), nota: String(r[13] || ''), personas: String(r[15] || ''), telefono: String(r[16] || '') };
+  }).filter(filtro).reverse();
+}
+function portal_(d) {
+  if (freno_()) return json({ ok: false, error: 'Demasiadas consultas, espere un minuto.' });
+  if (d.action === 'pt_edificios') {
+    const E = lkEdificios_();
+    return json({ ok: true, edificios: Object.keys(E).map(function (k) { return { id: E[k].portal || slug_(E[k].name), nombre: E[k].name }; }) });
+  }
+  const pid = slug_(d.edificio_id), lk = ptLuka_(pid);
+  if (!lk) return json({ ok: false, error: 'no_vinculado' });
+  const data = ptDatos_(lk);
+  // edificio aún sin departamentos en LUKA: el portal sigue usando el archivo del sitio
+  if (!(data.deptos || []).some(function (x) { return ptNormDepto_(x.depto) === ptNormDepto_(d.depto); })) return json({ ok: false, error: 'no_vinculado' });
+  if (!ptCodigoOk_(pid, d.depto, d.codigo, data)) return json({ ok: false, error: 'codigo' });
+  const est = ptEstado_(pid, lk, data, d.depto);
+  if (!est) return json({ ok: false, error: 'codigo' });
+  const dep = ptNormDepto_(d.depto);
+  if (d.action === 'pt_estado') return json({ ok: true, data: est });
+  if (d.action === 'pt_reservas') return json({ ok: true, reservas: ptReservasLista_(function (r) { return r.edificio_id === pid && ptNormDepto_(r.depto) === dep; }).slice(0, 20) });
+  if (d.action === 'pt_reserva') {
+    const area = (est.areas || []).filter(function (a) { return a.id === d.areaId; })[0];
+    if (!area) return json({ ok: false, error: 'Elija un área.' });
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha || '')) return json({ ok: false, error: 'Elija la fecha.' });
+    const id = Utilities.getUuid().replace(/-/g, '').slice(0, 16);
+    ptHojaReservas_().appendRow([id, new Date(), pid, est.edificio.nombre, est.unidad.depto, String(d.responsable || est.unidad.propietario || '').slice(0, 80),
+      area.id + ' · ' + area.nombre, String(d.tramo || '').slice(0, 60), d.fecha, String(d.hini || '').slice(0, 5), String(d.hfin || '').slice(0, 5),
+      String(d.evento || '').slice(0, 120), 'Pendiente', '', '', String(d.personas || '').slice(0, 10), String(d.telefono || '').slice(0, 30)]);
+    try {
+      const to = destinatarios_(pid);
+      if (to) MailApp.sendEmail({ to: to, name: 'Portal Bramar', subject: 'Solicitud de reserva · ' + est.edificio.nombre + ' · Depto ' + est.unidad.depto + ' · ' + area.nombre + ' · ' + d.fecha,
+        htmlBody: '<div style="font-family:Arial,sans-serif;font-size:15px;color:#0B2440"><p>Nueva solicitud de reserva desde el portal.</p><p><b>' + area.nombre + '</b> · ' + (d.tramo || '') + '<br>' + d.fecha + ' ' + (d.hini || '') + '–' + (d.hfin || '') +
+          '<br>Depto ' + est.unidad.depto + ' · ' + (d.responsable || '') + (d.evento ? '<br>Evento: ' + String(d.evento).replace(/</g, '&lt;') : '') + '</p><p><a href="' + LUKA_URL + '">Abrir Gestión LUKA</a> para aprobarla o rechazarla.</p></div>' });
+    } catch (e) {}
+    return json({ ok: true, id: id });
+  }
+  return json({ ok: false, error: 'Acción desconocida.' });
 }

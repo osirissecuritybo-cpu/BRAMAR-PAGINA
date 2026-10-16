@@ -13400,6 +13400,26 @@ checkReservaHoyBanner();
 .lk-act-what span{color:#46617f}
 .lk-act-who{color:#7d93ab;font-size:12.5px;margin-top:2px}
 @media (max-width:760px){ .lk-act-row{grid-template-columns:1fr;gap:2px} }
+/* Chapa de rol y Cuenta */
+.lk-rol-chip{display:inline-flex;align-items:center;height:20px;padding:0 8px;border-radius:6px;font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;margin-top:5px;width:max-content;max-width:100%}
+.lk-rol-chip.sup{background:#C08A2E;color:#fff}
+.lk-rol-chip.adm{background:rgba(255,255,255,.14);color:#dbe6f2;border:1px solid rgba(255,255,255,.2)}
+#lk-cuenta .lk-rol-chip.adm{background:#ECEFF3;color:#46617f;border:0}
+.sidebar .sb-text{display:flex;flex-direction:column}
+.lk-cuenta-card{display:flex;gap:10px;align-items:center;padding:8px 12px 4px}
+.lk-cuenta-tx{display:flex;flex-direction:column;min-width:0}
+.lk-cuenta-tx b{font-size:14px}
+.lk-cuenta-tx > span:not(.lk-rol-chip){font-size:12px;opacity:.75;overflow:hidden;text-overflow:ellipsis}
+#lk-cuenta .lk-user-status{padding:0 2px 10px;margin:0;font-size:12.5px;color:var(--text-secondary,#46617f)}
+#lk-cuenta .lk-cuenta-card{padding:4px 2px 10px}
+#lk-cuenta .lk-cuenta-tx b{color:var(--text-primary,#0B2440);font-size:15px}
+#lk-cuenta .lk-cuenta-tx > span:not(.lk-rol-chip){color:var(--text-secondary,#46617f);opacity:1}
+.lk-cuenta-nota{font-size:13px;color:var(--text-secondary,#46617f);margin:0 2px 10px;line-height:1.45}
+.luka-sel-item{position:relative}
+.lk-sel-del{position:absolute;top:10px;right:10px;width:36px;height:36px;border-radius:10px;border:1px solid #DDE5EE;background:#fff;color:#8E2A20;display:grid;place-items:center;cursor:pointer}
+.lk-sel-del:hover{background:#FBE4E4;border-color:#f0c4c4}
+#luka-new-btn:disabled{opacity:.7;cursor:wait}
+.lk-solo-sup{display:none!important}
 </style>
 
 <script>
@@ -13412,7 +13432,7 @@ checkReservaHoyBanner();
 window.lukaCloud = (function(){
   var ENDPOINT='https://script.google.com/macros/s/AKfycbwIPnPGQPIpK6NTiTXrbsTtR5e90ETrqByyrzwErl4t0yJNSoIae8IJtb8S-7cG-AVA/exec';
   var LS_S='luka.cloud.session', LS_DIRTY='luka.cloud.dirty.', LS_LIST='luka.cloud.list';
-  var edInfo={}, notas=[];
+  var edInfo={}, notas=[], recien={};
   function money(v){ try{ return (typeof fmtMoney==='function')?fmtMoney(v):('Bs. '+Number(v||0).toLocaleString('es-BO')); }catch(e){ return 'Bs. '+v; } }
   function fcorta(s){ var d=new Date(s); return isNaN(d)?String(s):d.toLocaleDateString('es-BO',{day:'2-digit',month:'short'}); }
   function resumen(data){ var L=(data&&data.deptos)||[]; return { deptos:L.length, alDia:L.filter(function(d){ return !(d.total_debt>0.005); }).length, deuda:Math.round(L.reduce(function(a,d){ return a+(+d.total_debt||0); },0)*100)/100, mora:L.filter(function(d){ return d.en_mora_expensas; }).length }; }
@@ -13449,9 +13469,9 @@ window.lukaCloud = (function(){
   function showLogin(msg){
     return new Promise(function(resolve){
       function formLogin(m){
-        var o=overlay('<h1>Ingresar</h1><p class="lk-login-sub">Use su usuario y clave de LUKA.</p>'+
+        var o=overlay('<h1>Ingresar</h1><p class="lk-login-sub">Use su correo (o usuario) y su clave de LUKA.</p>'+
           (m?'<p class="lk-login-err">'+esc(m)+'</p>':'')+
-          '<form id="lk-lf" autocomplete="on"><label>Usuario<input id="lk-u" name="username" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>'+
+          '<form id="lk-lf" autocomplete="on"><label>Correo<input id="lk-u" name="username" type="text" inputmode="email" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" required placeholder="nombre@correo.com"></label>'+
           '<label>Clave<input id="lk-p" name="password" type="password" autocomplete="current-password" required></label>'+
           '<button class="lk-login-btn" type="submit" id="lk-lb">Ingresar</button></form>'+
           '<p class="lk-login-foot" id="lk-first" hidden><a href="#" id="lk-boot">Primera vez: crear el administrador</a></p>');
@@ -13470,14 +13490,15 @@ window.lukaCloud = (function(){
           (m?'<p class="lk-login-err">'+esc(m)+'</p>':'')+
           '<form id="lk-bf"><label>Clave de administración del portal<input id="lk-k" type="password" autocomplete="off" required></label>'+
           '<label>Su nombre<input id="lk-n" autocomplete="name" required></label>'+
-          '<label>Usuario<input id="lk-u" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" required placeholder="ej. mariela"></label>'+
+          '<label>Su correo (ahí le llegarán los avisos de pago)<input id="lk-u" type="email" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username" required placeholder="nombre@correo.com"></label>'+
           '<label>Clave (mínimo 6)<input id="lk-p" type="password" autocomplete="new-password" required minlength="6"></label>'+
           '<button class="lk-login-btn" type="submit" id="lk-bb">Crear y entrar</button></form>'+
           '<p class="lk-login-foot"><a href="#" id="lk-back">Volver</a></p>');
         o.querySelector('#lk-back').onclick=function(e){ e.preventDefault(); formLogin(); };
         o.querySelector('#lk-bf').onsubmit=function(e){
           e.preventDefault(); var b=o.querySelector('#lk-bb'); b.disabled=true; b.textContent='Creando…';
-          api({action:'lk_bootstrap',k:o.querySelector('#lk-k').value.trim(),nombre:o.querySelector('#lk-n').value.trim(),usuario:o.querySelector('#lk-u').value.trim(),clave:o.querySelector('#lk-p').value})
+          var cor=o.querySelector('#lk-u').value.trim().toLowerCase();
+          api({action:'lk_bootstrap',k:o.querySelector('#lk-k').value.trim(),nombre:o.querySelector('#lk-n').value.trim(),usuario:cor,correo:cor,clave:o.querySelector('#lk-p').value})
             .then(function(r){ ses={token:r.token,usuario:r.usuario}; persistSes(); hideOverlay(); resolve(); })
             .catch(function(err){ formBoot(err.message); });
         };
@@ -13494,6 +13515,8 @@ window.lukaCloud = (function(){
       catch(e){ if(e.sesion===false){ ses=null; persistSes(); await showLogin('Su sesión venció. Ingrese de nuevo.'); } }
     }
     try{ await migrate(); }catch(e){}
+    if(window.lukaShowSelector&&!window.__lkSelWrap){ window.__lkSelWrap=1; var rs=window.lukaShowSelector;
+      window.lukaShowSelector=function(){ resetCrear(); return rs.apply(this,arguments); }; }
     next();
     decorate();
     setTimeout(hookNotas,2500);
@@ -13539,6 +13562,7 @@ window.lukaCloud = (function(){
 
   /* Traer los datos de un edificio (si hay cambios locales sin subir, se suben primero) */
   async function pull(id){
+    if(recien[id]){ delete recien[id]; return null; }
     var base=dirtyBase(id);
     if(base!=null){
       var local=null; try{ local=await idbGet('luka-b-'+id); }catch(e){}
@@ -13556,7 +13580,7 @@ window.lukaCloud = (function(){
     }
   }
   async function created(id,name){
-    try{ var data=await idbGet('luka-b-'+id); var r=await api({action:'lk_guardar',id:id,nombre:name,data:JSON.stringify(data),v:0}); versions[id]=r.v; persistVer(); }
+    try{ var data=await idbGet('luka-b-'+id); var r=await api({action:'lk_guardar',id:id,nombre:name,data:JSON.stringify(data),v:0,resumen:resumen(data)}); versions[id]=r.v; persistVer(); recien[id]=1; }
     catch(e){ alert('El edificio se creó en este dispositivo, pero no se pudo subir a la nube: '+e.message); }
   }
 
@@ -13577,7 +13601,7 @@ window.lukaCloud = (function(){
   }
   async function pushData(id,data,base,silent){
     saving=true; status('Guardando en la nube…');
-    var portal=(data.config&&data.config.portalBramar&&data.config.portalBramar.portalId)||'';
+    var portal=(data.config&&data.config.portalBramar&&data.config.portalBramar.portalId)||(typeof window.lukaPortalId==='function'&&curId()===id?lukaPortalId():'');
     try{
       var enviadas=notas.slice();
       var r=await api({action:'lk_guardar',id:id,nombre:(data.config&&data.config.nombreEdificio)||'',data:JSON.stringify(data),v:base==null?(versions[id]||0):base,portal:portal,resumen:resumen(data),notas:enviadas});
@@ -13635,23 +13659,61 @@ window.lukaCloud = (function(){
     try{ localStorage.removeItem(LS_LIST); }catch(e){}
     ses=null; persistSes(); location.reload();
   }
-  function rolTxt(r){ return r==='admin'?'Dueño':'Administrador de edificio'; }
+  function rolTxt(r){ return r==='admin'?'Súper administrador':'Administrador de edificio'; }
   function iniciales(n){ return String(n||'?').trim().split(/\s+/).slice(0,2).map(function(x){return x[0];}).join('').toUpperCase(); }
+  var ICO={
+    key:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/></svg>',
+    users:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.5 3-5.5 6.5-5.5s6.5 2 6.5 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2 .7 3.5 2.4 3.5 5.2"/></svg>',
+    act:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>',
+    out:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 4h4a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1h-4M10 17l-5-5 5-5M5 12h11"/></svg>'};
+  function mi(id,ic,t,d){ return '<button type="button" class="menu-item" id="'+id+'"><span class="mi-ic">'+ic+'</span><span class="mi-text"><span class="mi-title">'+esc(t)+'</span>'+(d?'<span class="mi-desc">'+esc(d)+'</span>':'')+'</span></button>'; }
   function decorate(){
     var u=user(); if(!u) return;
-    var side=document.getElementById('sidebar'), foot=side&&side.querySelector('.sidebar-footer');
-    if(side&&!document.getElementById('lk-user')){
-      var box=document.createElement('div'); box.id='lk-user'; box.className='lk-user no-print';
-      box.innerHTML='<div class="lk-user-row"><span class="lk-user-av">'+esc(iniciales(u.nombre))+'</span><div class="lk-user-tx"><b>'+esc(u.nombre)+'</b><span>'+rolTxt(u.rol)+'</span></div></div>'+
+    var sbt=document.querySelector('.sidebar .sb-text');
+    if(sbt&&!document.getElementById('lk-rol-chip')){ var ch=document.createElement('span'); ch.id='lk-rol-chip'; ch.className='lk-rol-chip '+(u.rol==='admin'?'sup':'adm'); ch.textContent=rolTxt(u.rol); sbt.appendChild(ch); }
+    var nav=document.getElementById('cfg2-nav'), cont=document.getElementById('cfg2-cont');
+    if(!nav||!cont){ setTimeout(decorate,700); }
+    else if(!document.getElementById('lk-cuenta')){
+      var tab=document.createElement('button'); tab.type='button'; tab.className='cfg2-tab active'; tab.dataset.cat='cuenta';
+      tab.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg><span>Cuenta<span class="cfg2-tab-n">'+esc(u.nombre)+'</span></span>';
+      nav.querySelectorAll('.cfg2-tab').forEach(function(t){ t.classList.remove('active'); });
+      nav.insertBefore(tab,nav.firstChild);
+      var sec=document.createElement('div'); sec.className='cfg2-sec active'; sec.dataset.cat='cuenta'; sec.id='lk-cuenta';
+      cont.querySelectorAll('.cfg2-sec').forEach(function(x){ x.classList.remove('active'); });
+      sec.innerHTML='<h3 class="cfg2-sec-title">Cuenta</h3><p class="cfg2-sec-desc">Su usuario, su nivel de acceso y la sesión de este dispositivo.</p>'+
+        '<div class="lk-cuenta-card"><span class="lk-user-av">'+esc(iniciales(u.nombre))+'</span><div class="lk-cuenta-tx"><b>'+esc(u.nombre)+'</b><span>'+esc(u.correo||u.usuario)+'</span><span class="lk-rol-chip '+(u.rol==='admin'?'sup':'adm')+'">'+rolTxt(u.rol)+'</span></div></div>'+
+        '<p class="lk-cuenta-nota">'+(u.rol==='admin'?'Puede ver todos los edificios, crear y eliminar edificios, dar accesos y ver la actividad.':'Trabaja solo en los edificios que le asignaron. No puede eliminar edificios ni dar accesos.')+'</p>'+
         '<div class="lk-user-status" id="lk-user-status">'+esc(statusTxt||'Conectado a la nube')+'</div>'+
-        '<div class="lk-user-acts"><button type="button" id="lk-switch">Cambiar de edificio</button>'+(u.rol==='admin'?'<button type="button" id="lk-users">Usuarios y accesos</button><button type="button" id="lk-act">Actividad</button>':'')+'<button type="button" id="lk-out">Cerrar sesión</button></div>';
-      if(foot) side.insertBefore(box,foot); else side.appendChild(box);
-      box.querySelector('#lk-switch').onclick=function(){ closeSidebar(); try{ saveDataLocal(); }catch(e){} window.lukaShowSelector&&window.lukaShowSelector(); };
-      box.querySelector('#lk-out').onclick=function(){ if(dirtyBase(curId())!=null&&!confirm('Hay cambios que todavía no se subieron a la nube. Si cierra sesión ahora podría perderlos. ¿Cerrar igual?')) return; logout(false); };
-      var ub=box.querySelector('#lk-users'); if(ub) ub.onclick=function(){ closeSidebar(); openUsers(); };
-      var ab=box.querySelector('#lk-act'); if(ab) ab.onclick=function(){ closeSidebar(); openActividad(); };
+        mi('lk-mi-clave',ICO.key,'Cambiar mi clave','La que usa para entrar a LUKA')+
+        (u.rol==='admin'?mi('lk-users',ICO.users,'Usuarios y accesos','Quién entra y a qué edificios')+mi('lk-act',ICO.act,'Actividad','Quién hizo qué y cuándo'):'')+
+        mi('lk-out',ICO.out,'Cerrar sesión','Salir de LUKA en este dispositivo');
+      cont.insertBefore(sec,cont.firstChild);
+      sec.querySelector('#lk-mi-clave').onclick=function(){ cerrarCfg(); openMiClave(); };
+      sec.querySelector('#lk-out').onclick=function(){ if(dirtyBase(curId())!=null&&!confirm('Hay cambios que todavía no se subieron a la nube. Si cierra sesión ahora podría perderlos. ¿Cerrar igual?')) return; logout(false); };
+      var ub=sec.querySelector('#lk-users'); if(ub) ub.onclick=function(){ cerrarCfg(); closeSidebar(); openUsers(); };
+      var ab=sec.querySelector('#lk-act'); if(ab) ab.onclick=function(){ cerrarCfg(); closeSidebar(); openActividad(); };
     }
+    var del=document.getElementById('luka-mi-delete'); if(del&&u.rol!=='admin'){ del.style.setProperty('display','none','important'); del.classList.add('lk-solo-sup'); }
     decorateSelector();
+  }
+  function resetCrear(){
+    var cb=document.getElementById('luka-new-btn'), inp=document.getElementById('luka-new-name');
+    if(cb){ delete cb.dataset.busy; cb.disabled=false; cb.textContent='+ Crear edificio'; }
+    if(inp){ inp.disabled=false; inp.value=''; }
+  }
+  function cerrarCfg(){ var b=document.getElementById('cfg2-bd'); if(b){ b.classList.remove('open'); document.body.style.overflow=''; } }
+  function openMiClave(){
+    var bd=document.getElementById('lk-clave-bd');
+    if(!bd){ bd=document.createElement('div'); bd.className='modal-backdrop no-print'; bd.id='lk-clave-bd'; document.body.appendChild(bd);
+      bd.addEventListener('click',function(e){ if(e.target===bd) bd.classList.remove('open'); }); }
+    bd.innerHTML='<div class="modal lk-modal" style="max-width:440px"><button class="close-btn" title="Cerrar">&times;</button><h2>Cambiar mi clave</h2><p class="modal-sub">Mínimo 6 caracteres.</p>'+
+      '<form class="lk-form" id="lk-cf"><label>Clave actual<input type="password" id="cf-a" autocomplete="current-password" required></label><label>Nueva clave<input type="password" id="cf-n" autocomplete="new-password" minlength="6" required></label><label>Repita la nueva clave<input type="password" id="cf-r" autocomplete="new-password" minlength="6" required></label><p class="lk-warn" id="cf-m"></p><div class="lk-modal-foot"><span></span><button class="btn primary" type="submit">Guardar</button></div></form></div>';
+    bd.querySelector('.close-btn').onclick=function(){ bd.classList.remove('open'); };
+    bd.querySelector('#lk-cf').onsubmit=async function(e){ e.preventDefault(); var m=bd.querySelector('#cf-m');
+      if(bd.querySelector('#cf-n').value!==bd.querySelector('#cf-r').value){ m.textContent='Las claves nuevas no coinciden.'; return; }
+      try{ await api({action:'lk_mi_clave',actual:bd.querySelector('#cf-a').value,nueva:bd.querySelector('#cf-n').value}); bd.classList.remove('open'); try{ showSaveToast('Clave actualizada.'); }catch(_){} }
+      catch(err){ m.textContent=err.message; } };
+    bd.classList.add('open');
   }
   function closeSidebar(){ try{ var c=document.getElementById('sidebar-close'); if(c&&window.innerWidth<1000) c.click(); }catch(e){} }
   function decorateSelector(){
@@ -13665,7 +13727,25 @@ window.lukaCloud = (function(){
       card.insertBefore(d,card.firstChild.nextSibling);
     }
     var nw=card.querySelector('.luka-sel-new'); if(nw) nw.style.display=u.rol==='admin'?'':'none';
-    var em=card.querySelector('.luka-sel-empty'); if(em&&u.rol!=='admin') em.textContent='Todavía no tiene edificios asignados. Pida acceso al dueño.';
+    var cb=card.querySelector('#luka-new-btn');
+    if(cb&&!cb.dataset.lkLock){ cb.dataset.lkLock='1';
+      cb.addEventListener('click',function(ev){
+        var inp=card.querySelector('#luka-new-name'), nombre=(inp&&inp.value||'').trim();
+        if(cb.dataset.busy){ ev.stopImmediatePropagation(); ev.preventDefault(); return; }
+        if(!nombre) return;
+        var dup=Object.keys(edInfo).some(function(k){ return String(edInfo[k].nombre||'').trim().toLowerCase()===nombre.toLowerCase(); });
+        if(dup&&!confirm('Ya existe un edificio llamado «'+nombre+'». ¿Crear otro con el mismo nombre?')){ ev.stopImmediatePropagation(); ev.preventDefault(); return; }
+        cb.dataset.busy='1'; cb.disabled=true; cb.textContent='Creando… espere'; if(inp) inp.disabled=true;
+      },true);
+    }
+    if(u.rol==='admin') card.querySelectorAll('.luka-sel-item[data-id]').forEach(function(it){
+      if(it.querySelector('.lk-sel-del')) return;
+      var b=document.createElement('button'); b.type='button'; b.className='lk-sel-del'; b.title='Eliminar este edificio'; b.setAttribute('aria-label','Eliminar edificio');
+      b.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+      b.onclick=function(ev){ ev.stopPropagation(); eliminarEdificio(it.dataset.id); };
+      it.appendChild(b);
+    });
+    var em=card.querySelector('.luka-sel-empty'); if(em&&u.rol!=='admin') em.textContent='Todavía no tiene edificios asignados. Pida acceso a un súper administrador.';
     // resumen de cada edificio (para supervisar de un vistazo)
     var tot={deuda:0,deptos:0,alDia:0,n:0};
     card.querySelectorAll('.luka-sel-item[data-id]').forEach(function(it){
@@ -13725,13 +13805,28 @@ window.lukaCloud = (function(){
     }catch(e){ b.innerHTML='<p class="lk-warn">'+esc(e.message)+'</p>'; }
   }
 
+  async function eliminarEdificio(id){
+    var e=edInfo[id]||{}, nombre=String(e.nombre||'').trim(), r=e.resumen;
+    var vacio=!r||!r.deptos;
+    if(vacio){ if(!confirm('¿Eliminar «'+nombre+'»? No tiene departamentos cargados.')) return; }
+    else { var t=prompt('Va a ELIMINAR «'+nombre+'» con '+r.deptos+' departamentos y todos sus pagos, pizarra y finanzas.\nEl archivo queda 30 días en la papelera de Google Drive.\n\nPara confirmar, escriba el nombre del edificio:'); if(t===null) return; if(t.trim()!==nombre){ alert('El nombre no coincide; no se eliminó nada.'); return; } }
+    try{ await api({action:'lk_borrar',id:id}); }catch(err){ alert('No se pudo eliminar: '+err.message); return; }
+    try{ await idbSet('luka-b-'+id,undefined); }catch(_){}
+    delete edInfo[id]; setDirty(id,null);
+    if(window.lukaShowSelector) window.lukaShowSelector();
+  }
+  async function cloudDelete(id){
+    if(!isAdmin()){ alert('Solo un súper administrador puede eliminar edificios.'); return false; }
+    try{ await api({action:'lk_borrar',id:id}); setDirty(id,null); return true; }catch(err){ alert('No se pudo eliminar en la nube: '+err.message); return false; }
+  }
+
   /* ---------------- Usuarios (administrador) ---------------- */
   var usuarios=[], edificiosNube=[];
   async function openUsers(){
     var bd=document.getElementById('lk-users-bd');
     if(!bd){
       bd=document.createElement('div'); bd.className='modal-backdrop no-print'; bd.id='lk-users-bd';
-      bd.innerHTML='<div class="modal lk-modal" style="max-width:720px"><button class="close-btn" id="lk-users-x" title="Cerrar">&times;</button><h2>Usuarios de LUKA</h2><p class="modal-sub"><b>Dueño:</b> ve todos los edificios, crea edificios, da accesos y ve la actividad. <b>Administrador de edificio:</b> trabaja solo en los edificios que usted le asigne (pagos, reservas, comprobantes, reportes).</p><div id="lk-users-body"></div></div>';
+      bd.innerHTML='<div class="modal lk-modal" style="max-width:720px"><button class="close-btn" id="lk-users-x" title="Cerrar">&times;</button><h2>Usuarios de LUKA</h2><p class="modal-sub"><b>Súper administrador:</b> ve todos los edificios, crea y elimina edificios, da accesos y ve la actividad. <b>Administrador de edificio:</b> trabaja solo en los edificios que usted le asigne (pagos, reservas, comprobantes, reportes); no puede eliminar edificios ni dar accesos.</p><div id="lk-users-body"></div></div>';
       document.body.appendChild(bd);
       bd.querySelector('#lk-users-x').onclick=function(){ bd.classList.remove('open'); };
       bd.addEventListener('click',function(e){ if(e.target===bd) bd.classList.remove('open'); });
@@ -13745,21 +13840,22 @@ window.lukaCloud = (function(){
   function listUsers(){
     var body=document.getElementById('lk-users-body');
     body.innerHTML='<div class="lk-list">'+usuarios.map(function(x,i){
-      return '<div class="lk-item"><div class="lk-item-main"><div class="lk-item-title">'+esc(x.nombre)+' <span>· '+esc(x.usuario)+'</span></div><div class="lk-item-meta">'+rolTxt(x.rol)+' · '+esc(x.rol==='admin'?'Todos los edificios':nombreEds(x.edificios))+(x.activo?'':' · <b>Desactivado</b>')+'</div></div>'+
+      return '<div class="lk-item"><div class="lk-item-main"><div class="lk-item-title">'+esc(x.nombre)+' <span>· '+esc(x.correo||x.usuario)+'</span></div><div class="lk-item-meta">'+rolTxt(x.rol)+' · '+esc(x.rol==='admin'?'Todos los edificios':nombreEds(x.edificios))+(x.activo?'':' · <b>Desactivado</b>')+'</div></div>'+
         '<div class="lk-item-actions"><button type="button" class="btn" data-ue="'+i+'">Editar</button></div></div>';
     }).join('')+'</div><div class="lk-modal-foot"><span></span><button type="button" class="btn primary" id="lk-u-new">Agregar usuario</button></div>';
     body.querySelectorAll('[data-ue]').forEach(function(b){ b.onclick=function(){ formUser(usuarios[+b.dataset.ue]); }; });
     body.querySelector('#lk-u-new').onclick=function(){ formUser(null); };
   }
   function formUser(x){
-    var nuevo=!x; x=x||{usuario:'',nombre:'',rol:'operador',edificios:['*'],activo:true};
+    var nuevo=!x; x=x||{usuario:'',nombre:'',correo:'',rol:'operador',edificios:['*'],activo:true};
     var todos=!x.edificios||x.edificios.indexOf('*')>=0;
     var body=document.getElementById('lk-users-body');
     body.innerHTML='<form id="lk-uf" class="lk-form">'+
       '<label>Nombre<input id="uf-n" value="'+esc(x.nombre)+'" required></label>'+
-      '<label>Usuario<input id="uf-u" value="'+esc(x.usuario)+'" '+(nuevo?'':'readonly')+' autocapitalize="none" autocorrect="off" required placeholder="ej. ana.limco"></label>'+
+      '<label>Correo (para entrar y recibir los avisos de pago)<input id="uf-c" type="email" inputmode="email" value="'+esc(x.correo||(x.usuario&&x.usuario.indexOf('@')>0?x.usuario:''))+'" autocapitalize="none" autocorrect="off" '+(nuevo?'required':'')+' placeholder="nombre@correo.com"></label>'+
+      (nuevo?'':'<p class="lk-muted">Usuario: '+esc(x.usuario)+'</p>')+
       '<label>'+(nuevo?'Clave (mínimo 6)':'Nueva clave (déjela vacía para no cambiarla)')+'<input id="uf-p" type="password" autocomplete="new-password" '+(nuevo?'required':'')+'></label>'+
-      '<label>Rol<select id="uf-r"><option value="operador"'+(x.rol!=='admin'?' selected':'')+'>Administrador de edificio</option><option value="admin"'+(x.rol==='admin'?' selected':'')+'>Dueño (todos los edificios y accesos)</option></select></label>'+
+      '<label>Rol<select id="uf-r"><option value="operador"'+(x.rol!=='admin'?' selected':'')+'>Administrador de edificio</option><option value="admin"'+(x.rol==='admin'?' selected':'')+'>Súper administrador (todos los edificios y accesos)</option></select></label>'+
       '<fieldset id="uf-eds"><legend>Edificios que puede ver</legend><label class="lk-chk"><input type="checkbox" id="uf-all"'+(todos?' checked':'')+'> Todos</label>'+
       edificiosNube.map(function(e){ return '<label class="lk-chk"><input type="checkbox" class="uf-e" value="'+esc(e.id)+'"'+(!todos&&x.edificios.indexOf(e.id)>=0?' checked':'')+(todos?' disabled':'')+'> '+esc(e.nombre)+'</label>'; }).join('')+'</fieldset>'+
       (nuevo?'':'<label class="lk-chk"><input type="checkbox" id="uf-a"'+(x.activo?' checked':'')+'> Usuario activo (puede entrar)</label>')+
@@ -13772,14 +13868,15 @@ window.lukaCloud = (function(){
       e.preventDefault();
       var eds=all.checked?['*']:[].slice.call(body.querySelectorAll('.uf-e:checked')).map(function(c){ return c.value; });
       if(!eds.length){ body.querySelector('#uf-msg').textContent='Elija al menos un edificio.'; return; }
-      var payload={usuario:body.querySelector('#uf-u').value.trim().toLowerCase(),nombre:body.querySelector('#uf-n').value.trim(),rol:body.querySelector('#uf-r').value,edificios:eds,activo:nuevo?true:body.querySelector('#uf-a').checked};
+      var cor=body.querySelector('#uf-c').value.trim().toLowerCase();
+      var payload={usuario:nuevo?cor:x.usuario,correo:cor,nombre:body.querySelector('#uf-n').value.trim(),rol:body.querySelector('#uf-r').value,edificios:eds,activo:nuevo?true:body.querySelector('#uf-a').checked};
       try{ usuarios=(await api({action:'lk_usuario_guardar',usuario:payload,clave:body.querySelector('#uf-p').value})).usuarios; listUsers(); }
       catch(err){ body.querySelector('#uf-msg').textContent=err.message; }
     };
   }
 
   return { active:active, user:user, isAdmin:isAdmin, token:function(){ return ses&&ses.token; }, api:api,
-    boot:boot, registry:registry, openActividad:openActividad, pull:pull, created:created, onLocalSave:onLocalSave, reload:reload, logout:logout, openUsers:openUsers };
+    boot:boot, registry:registry, openActividad:openActividad, cloudDelete:cloudDelete, pull:pull, created:created, onLocalSave:onLocalSave, reload:reload, logout:logout, openUsers:openUsers };
 })();
 </script>
 
@@ -13893,6 +13990,7 @@ window.lukaCloud = (function(){
   }
 
   async function deleteBuilding(id){
+    if (window.lukaCloud && lukaCloud.active()) { const ok = await lukaCloud.cloudDelete(id); if (!ok) return; }
     const reg = await getRegistry();
     reg.list = reg.list.filter(b=>b.id!==id);
     if (reg.activeId===id) reg.activeId=null;
@@ -21122,6 +21220,176 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 })();
 </script>
 
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 36: Portal de propietarios en línea
+   · «Portal de propietarios» (Configuraciones): edificio vinculado, propietario,
+     teléfono y código de acceso de cada depto; mensaje por WhatsApp; importar
+     los códigos del Excel privado (NO-SUBIR-codigos-de-acceso.xlsx).
+   · «Solicitudes del portal» en Reservas: aprobar o rechazar lo que piden los
+     propietarios desde el portal.
+   ============================================================================ */
+(function(){
+  var PORTAL_URL='https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/copropietarios.html';
+  var ALF='23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function nd(s){ return String(s==null?'':s).toUpperCase().replace(/\s+/g,'').replace(/^DEPTO\.?|^DPTO\.?/,''); }
+  function nc(s){ return String(s||'').toUpperCase().replace(/[^0-9A-Z]/g,''); }
+  function fmt(c){ c=nc(c); return c.length>5?c.slice(0,5)+'-'+c.slice(5):c; }
+  function nuevoCodigo(){ var r=crypto.getRandomValues(new Uint32Array(10)), o=''; for(var i=0;i<10;i++) o+=ALF[r[i]%ALF.length]; return o; }
+  function slug(n){ return String(n||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'').slice(0,40); }
+  function acc(){ if(!DATA.config) DATA.config={}; var p=DATA.config.portal||(DATA.config.portal={}); if(!p.deptos) p.deptos={}; return p; }
+  function guardar(){ try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); else saveDataLocal(); }catch(e){} }
+  function pid(){ return (typeof window.lukaPortalId==='function')?lukaPortalId():slug(DATA.config&&DATA.config.nombreEdificio); }
+  function nombreEd(){ return (DATA.config&&DATA.config.nombreEdificio)||''; }
+  function wa(tel,txt){ var t=String(tel||'').replace(/\D/g,''); if(t&&t.length<=8) t='591'+t; return 'https://wa.me/'+(t||'')+'?text='+encodeURIComponent(txt); }
+  function mensaje(dep,a){
+    return 'Hola'+(a.propietario?' '+a.propietario.split(' ')[0]:'')+', le saluda Bramar Group.\n\nYa puede ver su estado de cuenta, descargar sus recibos, enviar comprobantes y reservar áreas sociales en el portal de copropietarios:\n'+PORTAL_URL+'\n\nEdificio: '+nombreEd()+'\nDepartamento: '+dep+'\nCódigo de acceso: '+fmt(a.codigo)+'\n\nAl entrar puede crear su propia contraseña. No comparta este código.';
+  }
+
+  /* ---------------- Panel «Portal de propietarios» ---------------- */
+  function abrirPanel(){
+    var bd=$('lkp-bd');
+    if(!bd){ bd=document.createElement('div'); bd.className='modal-backdrop no-print'; bd.id='lkp-bd'; document.body.appendChild(bd);
+      bd.addEventListener('click',function(e){ if(e.target===bd) bd.classList.remove('open'); }); }
+    bd.classList.add('open'); pintarPanel();
+  }
+  function pintarPanel(filtro){
+    var bd=$('lkp-bd'), p=acc(), L=(DATA.deptos||[]).slice().sort(function(a,b){ return String(a.depto).localeCompare(String(b.depto),'es',{numeric:true}); });
+    var conCod=L.filter(function(d){ var a=p.deptos[nd(d.depto)]; return a&&a.codigo; }).length;
+    filtro=filtro||'';
+    bd.innerHTML='<div class="modal lk-modal" style="max-width:960px"><button class="close-btn" title="Cerrar">&times;</button>'+
+      '<h2>Portal de propietarios</h2><p class="modal-sub">Cada propietario entra al portal con su edificio, su departamento y su código de acceso. Lo que registre en LUKA (pagos, recibos, deudas) se ve en el portal al instante, sin Excel.</p>'+
+      '<div class="lk-vinculo"><div class="lk-vinculo-row"><div><span class="lk-k">Edificio en el portal</span><b>'+esc(pid())+'</b></div><div><span class="lk-k">Códigos asignados</span><b>'+conCod+' de '+L.length+' departamentos</b></div></div>'+
+      '<p class="lk-muted" style="margin-top:6px">Si el portal todavía no muestra este edificio, elija el vínculo en «Comprobantes del portal» (la bandeja de arriba).</p></div>'+
+      '<div class="lk-row" style="margin:6px 0 12px"><input id="lkp-q" placeholder="Buscar depto o propietario" value="'+esc(filtro)+'"><button type="button" class="btn" id="lkp-imp">Importar del Excel de códigos</button><button type="button" class="btn primary" id="lkp-gen">Generar códigos faltantes</button></div>'+
+      '<input type="file" id="lkp-file" accept=".xlsx,.xls" hidden>'+
+      '<div class="lkp-tabla"><div class="lkp-fila lkp-head"><span>Depto</span><span>Propietario</span><span>Teléfono (WhatsApp)</span><span>Código</span><span></span></div>'+
+      L.filter(function(d){ var a=p.deptos[nd(d.depto)]||{}; var q=filtro.toLowerCase(); return !q||String(d.depto).toLowerCase().indexOf(q)>=0||String(a.propietario||'').toLowerCase().indexOf(q)>=0; }).map(function(d){
+        var k=nd(d.depto), a=p.deptos[k]||{};
+        return '<div class="lkp-fila" data-k="'+esc(k)+'"><span class="lkp-dep">'+esc(d.depto)+'</span>'+
+          '<input class="lkp-in" data-f="propietario" value="'+esc(a.propietario||'')+'" placeholder="Nombre del propietario">'+
+          '<input class="lkp-in" data-f="telefono" inputmode="tel" value="'+esc(a.telefono||'')+'" placeholder="7xxxxxxx">'+
+          '<span class="lkp-cod">'+(a.codigo?esc(fmt(a.codigo)):'<i>sin código</i>')+'</span>'+
+          '<span class="lkp-acc">'+(a.codigo?'<a class="btn" target="_blank" rel="noopener" href="'+esc(wa(a.telefono,mensaje(d.depto,a)))+'">WhatsApp</a>':'')+'<button type="button" class="btn" data-nuevo="'+esc(k)+'" title="Crear un código nuevo (el anterior deja de servir)">'+(a.codigo?'Nuevo código':'Crear código')+'</button></span></div>';
+      }).join('')+'</div></div>';
+    bd.querySelector('.close-btn').onclick=function(){ bd.classList.remove('open'); };
+    var q=bd.querySelector('#lkp-q'); q.oninput=function(){ var v=q.value, pos=q.selectionStart; pintarPanel(v); var n=$('lkp-q'); n.focus(); try{ n.setSelectionRange(pos,pos); }catch(e){} };
+    bd.querySelectorAll('.lkp-in').forEach(function(i){ i.onchange=function(){ var k=i.closest('.lkp-fila').dataset.k, a=p.deptos[k]||(p.deptos[k]={}); a[i.dataset.f]=i.value.trim(); guardar(); }; });
+    bd.querySelectorAll('[data-nuevo]').forEach(function(b){ b.onclick=function(){ var k=b.dataset.nuevo, a=p.deptos[k]||(p.deptos[k]={});
+      if(a.codigo&&!confirm('¿Crear un código nuevo para el depto '+k+'? El código anterior dejará de servir.')) return;
+      a.codigo=nuevoCodigo(); guardar(); pintarPanel(filtro); }; });
+    bd.querySelector('#lkp-gen').onclick=function(){ var n=0; L.forEach(function(d){ var k=nd(d.depto), a=p.deptos[k]||(p.deptos[k]={}); if(!a.codigo){ a.codigo=nuevoCodigo(); n++; } }); guardar(); pintarPanel(filtro); try{ showSaveToast(n+' código(s) creados.'); }catch(e){} };
+    var f=bd.querySelector('#lkp-file');
+    bd.querySelector('#lkp-imp').onclick=function(){ f.click(); };
+    f.onchange=function(){ var file=f.files[0]; if(!file) return; var r=new FileReader();
+      r.onload=function(){ try{ importar(new Uint8Array(r.result)); }catch(e){ alert('No se pudo leer el Excel: '+e.message); } };
+      r.readAsArrayBuffer(file); };
+  }
+  function importar(buf){
+    if(typeof XLSX==='undefined') throw new Error('falta el lector de Excel');
+    var wb=XLSX.read(buf,{type:'array'}), ws=wb.Sheets['Codigos']||wb.Sheets[wb.SheetNames[wb.SheetNames.length-1]];
+    var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+    var p=acc(), deps={}; (DATA.deptos||[]).forEach(function(d){ deps[nd(d.depto)]=1; });
+    var mio=pid(), nom=slug(nombreEd()), n=0, otros=0;
+    rows.forEach(function(r){
+      var get=function(){ for(var i=0;i<arguments.length;i++){ for(var k in r){ if(slug(k)===arguments[i]) return r[k]; } } return ''; };
+      var ed=slug(get('edificio','edificio-id')), dep=nd(get('depto','departamento')), cod=nc(get('codigo-de-acceso','codigo','codigo-acceso'));
+      if(!dep||!cod) return;
+      if(ed&&ed!==mio&&ed!==nom&&nom.indexOf(ed)<0&&ed.indexOf(mio)<0){ otros++; return; }
+      if(!deps[dep]) { otros++; return; }
+      var a=p.deptos[dep]||(p.deptos[dep]={});
+      a.codigo=cod; var pr=get('propietario','nombre'), te=get('telefono','celular');
+      if(pr&&!a.propietario) a.propietario=String(pr).trim(); if(te&&!a.telefono) a.telefono=String(te).trim();
+      n++;
+    });
+    guardar(); pintarPanel();
+    alert(n+' código(s) importados'+(otros?' ('+otros+' filas eran de otro edificio o de deptos que no están en LUKA)':'')+'. Los propietarios siguen entrando con el mismo código de siempre.');
+  }
+  window.lukaPortalPropietarios=abrirPanel;
+
+  /* Botón en Configuraciones → Departamentos */
+  function injectCfg(){
+    var cont=$('cfg2-cont'); if(!cont){ setTimeout(injectCfg,800); return; }
+    if($('lkp-mi')) return;
+    var sec=cont.querySelector('.cfg2-sec[data-cat="departamentos"]')||cont.querySelector('.cfg2-sec[data-cat="edificio"]'); if(!sec){ setTimeout(injectCfg,800); return; }
+    var b=document.createElement('button'); b.type='button'; b.className='menu-item'; b.id='lkp-mi';
+    b.innerHTML='<span class="mi-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/></svg></span><span class="mi-text"><span class="mi-title">Portal de propietarios</span><span class="mi-desc">Códigos de acceso, propietarios y mensajes por WhatsApp</span></span><span class="cfg2-kind k-vent">Ventana</span>';
+    b.onclick=function(){ var c=$('cfg2-bd'); if(c){ c.classList.remove('open'); document.body.style.overflow=''; } abrirPanel(); };
+    sec.insertBefore(b,sec.querySelector('.menu-item'));
+  }
+
+  /* ---------------- Solicitudes de reserva del portal ---------------- */
+  var solicitudes=[];
+  function cloudId(){ try{ return /^luka-b-/.test(LOCAL_DATA_KEY)?LOCAL_DATA_KEY.slice(7):null; }catch(e){ return null; } }
+  function cargarSol(){
+    if(!window.lukaCloud||!lukaCloud.active()||!cloudId()) return Promise.resolve([]);
+    return lukaCloud.api({action:'lk_reservas',id:cloudId()}).then(function(j){ solicitudes=j.reservas||[]; pintarSol(); return solicitudes; }).catch(function(){ return []; });
+  }
+  function pintarSol(){
+    var view=$('view-areas-sociales'); if(!view) return;
+    var box=$('lkp-sol');
+    if(!solicitudes.length){ if(box) box.remove(); return; }
+    if(!box){ box=document.createElement('div'); box.id='lkp-sol'; box.className='lk-card lkp-sol no-print'; var c=$('areas-sociales-container'); (c||view).insertBefore(box,(c||view).firstChild); }
+    box.innerHTML='<div class="lkp-sol-h"><b>Solicitudes del portal</b><span>'+solicitudes.length+' pendiente'+(solicitudes.length>1?'s':'')+'</span></div>'+
+      solicitudes.map(function(r,i){ return '<div class="lk-item"><div class="lk-item-main"><div class="lk-item-title">'+esc(r.area.replace(/^[^·]*·\s*/,''))+' <span>· '+esc(r.tramo)+'</span></div>'+
+        '<div class="lk-item-meta"><b>'+esc(new Date(r.fecha+'T00:00:00').toLocaleDateString('es-BO',{weekday:'short',day:'2-digit',month:'short'}))+'</b>'+(r.hini?' · '+esc(r.hini)+(r.hfin?'–'+esc(r.hfin):''):'')+' · Depto '+esc(r.depto)+' · '+esc(r.responsable)+(r.evento?' · «'+esc(r.evento)+'»':'')+(r.personas?' · '+esc(r.personas)+' personas':'')+'</div></div>'+
+        '<div class="lk-item-actions"><button type="button" class="btn primary" data-ap="'+i+'">Aprobar</button><button type="button" class="btn" data-re="'+i+'">Rechazar</button></div></div>'; }).join('');
+    box.querySelectorAll('[data-ap]').forEach(function(b){ b.onclick=function(){ resolver(solicitudes[+b.dataset.ap],'Aprobada',b); }; });
+    box.querySelectorAll('[data-re]').forEach(function(b){ b.onclick=function(){ var n=prompt('Motivo del rechazo (lo verá el propietario):',''); if(n===null) return; resolver(solicitudes[+b.dataset.re],'Rechazada',b,n); }; });
+  }
+  function resolver(r,estado,btn,nota){
+    btn.disabled=true;
+    lukaCloud.api({action:'lk_reserva_estado',rid:r.id,estado:estado,nota:nota||''}).then(function(){
+      if(estado==='Aprobada') crearReserva(r);
+      try{ showSaveToast(estado==='Aprobada'?'Reserva aprobada y cargada. El propietario ya la ve aprobada.':'Solicitud rechazada.'); }catch(e){}
+      cargarSol();
+    }).catch(function(e){ btn.disabled=false; alert('No se pudo actualizar: '+e.message); });
+  }
+  function crearReserva(r){
+    if(!Array.isArray(DATA.reservasSociales)) DATA.reservasSociales=[];
+    var areas=(DATA.config&&DATA.config.areasLuka)||[], a=areas.filter(function(x){ return x.id===r.areaId; })[0]||{};
+    var t=(a.tramos||[]).filter(function(x){ return x.label===r.tramo; })[0]||{};
+    DATA.reservaCounter=(DATA.reservaCounter||0)+1;
+    DATA.reservasSociales.push({ id:'r'+DATA.reservaCounter, creado:new Date().toISOString().slice(0,10), garDev:{estado:'pendiente',historial:[]},
+      depto:r.depto, responsable:r.responsable, evento:r.evento, areaId:a.id||r.areaId, areaNombre:a.nombre||r.area, tramoLabel:r.tramo,
+      inicio:r.fecha+'T'+(r.hini||'00:00'), fin:r.hfin?r.fecha+'T'+r.hfin:'', fecha:r.fecha, monto:+t.monto||0, garantia:+a.garantia||0,
+      sillas:0, mesas:0, mesasNuevas:0, extras:0, estado:'Confirmada', obs:'Solicitada desde el portal de propietarios'+(r.telefono?' · Tel. '+r.telefono:'') });
+    guardar();
+    try{ if(typeof renderAreasSociales==='function') renderAreasSociales(); }catch(e){}
+  }
+  // recargar al entrar a Reservas
+  function hookVista(){
+    if(window.__lkpHook||typeof window.switchView!=='function') return; window.__lkpHook=1;
+    var sv=window.switchView; window.switchView=function(v){ var o=sv.apply(this,arguments); if(v==='areas-sociales') setTimeout(cargarSol,200); return o; };
+    if(typeof window.renderAreasSociales==='function'){ var ra=window.renderAreasSociales; window.renderAreasSociales=function(){ var o=ra.apply(this,arguments); setTimeout(pintarSol,50); return o; }; }
+  }
+  function init(){ injectCfg(); setTimeout(hookVista,1500); }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+<style>
+.lkp-tabla{display:grid;gap:6px;max-height:56vh;overflow:auto;padding-right:4px}
+.lkp-fila{display:grid;grid-template-columns:70px 1.4fr 1fr 120px auto;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--lk-line,#DDE5EE);border-radius:10px;background:#fff}
+.lkp-head{background:transparent;border:0;font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--lk-muted,#7d93ab);position:sticky;top:0;background:var(--surface-1,#fff);z-index:1}
+.lkp-dep{font-weight:700;color:var(--lk-text,#0B2440)}
+.lkp-cod{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--lk-text,#0B2440)}
+.lkp-cod i{font-family:inherit;color:var(--lk-muted,#7d93ab);font-style:normal}
+.lkp-acc{display:flex;gap:6px;justify-content:flex-end}
+.lkp-in{height:36px!important;min-width:0}
+.lkp-sol{padding:14px 16px;margin-bottom:14px}
+.lkp-sol-h{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}
+.lkp-sol-h b{font-size:15px;color:var(--lk-text,#0B2440)}
+.lkp-sol-h span{font-size:13px;color:var(--lk-gold,#C08A2E);font-weight:600}
+.lkp-sol .lk-item{margin-top:6px}
+@media (max-width:760px){
+  .lkp-fila{grid-template-columns:60px 1fr;grid-template-areas:"d p" "d t" "c c" "a a"}
+  .lkp-fila > :nth-child(1){grid-area:d}.lkp-fila > :nth-child(2){grid-area:p}.lkp-fila > :nth-child(3){grid-area:t}.lkp-fila > :nth-child(4){grid-area:c}.lkp-fila > :nth-child(5){grid-area:a;justify-content:flex-start}
+  .lkp-head{display:none}
+}
+</style>
+
 <style id="luka-diseno-unificado">
 /* ============================================================================
    GESTIÓN LUKA — Módulo 33: Sistema de diseño unificado (v9)
@@ -21390,6 +21658,7 @@ body{overscroll-behavior-y:none}
     padding:calc(16px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom))!important;box-sizing:border-box!important;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
   .modal-backdrop .close-btn, #pay-modal-close{position:sticky!important;top:0!important;float:right;width:44px!important;height:44px!important;z-index:5;background:#fff!important;border-radius:12px!important;font-size:22px!important}
   .modal h2{font-size:20px!important;padding-right:52px}
+  .cfg2-head .close-btn{color:#0B2440!important;background:#fff!important}
   .lk-item{padding:12px!important}
   .lk-item-actions{width:100%}
   .lk-item-actions .btn{flex:1 1 auto;justify-content:center!important}
@@ -21425,6 +21694,29 @@ body{overscroll-behavior-y:none}
   .luka-sel-new input, .luka-sel-new button{width:100%!important;height:48px!important}
   #save-toast{bottom:calc(16px + env(safe-area-inset-bottom))!important;left:12px!important;right:12px!important;max-width:none!important}
 }
+@media (max-width: 760px){
+  /* En el celular solo lo de todos los días: pagos, pizarra, reporte diario y reservas */
+  .nav-item[data-view="panel"], .nav-item[data-view="cajachica"], .nav-item[data-view="tarjetas"], .nav-item[data-view="plan"], .lk-nav-oculto{display:none!important}
+}
 </style>
+<script>
+/* Celular: oculta los títulos de grupo que quedan vacíos y, si se abre una sección
+   que no está en el celular, vuelve a Departamentos. */
+(function(){
+  var SOLO_PC=['panel','cajachica','tarjetas','plan'];
+  function movil(){ return window.matchMedia('(max-width: 760px)').matches; }
+  function ajustar(){
+    document.querySelectorAll('.sidebar-nav .nav-group-title').forEach(function(t){
+      var n=t.nextElementSibling, visibles=0;
+      while(n&&!n.classList.contains('nav-group-title')){ if(n.classList.contains('nav-item')&&SOLO_PC.indexOf(n.dataset.view)<0) visibles++; n=n.nextElementSibling; }
+      t.classList.toggle('lk-nav-oculto', movil()&&visibles===0);
+    });
+    var act=document.querySelector('.nav-item.active');
+    if(movil()&&act&&SOLO_PC.indexOf(act.dataset.view)>=0&&typeof switchView==='function') switchView('lista');
+  }
+  window.addEventListener('resize',ajustar);
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){ setTimeout(ajustar,800); }); else setTimeout(ajustar,800);
+})();
+</script>
 
 </body></html>
