@@ -13420,6 +13420,19 @@ checkReservaHoyBanner();
 .lk-sel-del:hover{background:#FBE4E4;border-color:#f0c4c4}
 #luka-new-btn:disabled{opacity:.7;cursor:wait}
 .lk-solo-sup{display:none!important}
+.luka-sel-item.lk-abriendo{opacity:.75;pointer-events:none;position:relative}
+.luka-sel-item.lk-abriendo::after{content:"Abriendo…";position:absolute;right:56px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:#1E4E86}
+.luka-sel-item.lk-borrando{opacity:.4;pointer-events:none}
+.lk-conf-op{display:flex;flex-direction:column;gap:4px;margin-top:10px}
+.lk-conf-op .btn{width:100%;justify-content:center;min-height:46px}
+.lk-conf-op span{font-size:12.5px;color:#5B6B7F}
+.lk-avisos{margin-top:22px;padding-top:18px;border-top:1px solid #E3E9F0}
+.lk-avisos h4{margin:0 0 4px;font-size:15px;color:#0B2440}
+.lk-av-l{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:#0B2440;margin:12px 0 10px}
+.lk-av-l input{font:inherit;font-size:15px;font-weight:400;padding:11px 12px;border:1px solid #D5DEE8;border-radius:10px}
+.lk-av-b{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:8px}
+.lk-ok{color:#1E5E3A;font-size:13px;margin:8px 0 0}
+#lk-rol-chip{display:none!important}
 </style>
 
 <script>
@@ -13432,7 +13445,16 @@ checkReservaHoyBanner();
 window.lukaCloud = (function(){
   var ENDPOINT='https://script.google.com/macros/s/AKfycbwIPnPGQPIpK6NTiTXrbsTtR5e90ETrqByyrzwErl4t0yJNSoIae8IJtb8S-7cG-AVA/exec';
   var LS_S='luka.cloud.session', LS_DIRTY='luka.cloud.dirty.', LS_LIST='luka.cloud.list';
-  var edInfo={}, notas=[], recien={};
+  var edInfo={}, notas=[], recien={}, synced={}, listaCache=null, listaT=0;
+  var DEV=(function(){ try{ var x=localStorage.getItem('luka.cloud.dev'); if(!x){ x='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem('luka.cloud.dev',x); } return x; }catch(e){ return ''; } })();
+  function snap(data){ try{ return JSON.stringify(data); }catch(e){ return null; } }
+  /* lista de edificios: una sola consulta cada 30 s (antes se pedía 3 o 4 veces seguidas) */
+  function listaNube(forzar){
+    if(!forzar&&listaCache&&Date.now()-listaT<30000) return listaCache;
+    listaT=Date.now(); listaCache=api({action:'lk_edificios'}).catch(function(e){ listaCache=null; throw e; });
+    return listaCache;
+  }
+  function olvidarLista(){ listaCache=null; }
   function money(v){ try{ return (typeof fmtMoney==='function')?fmtMoney(v):('Bs. '+Number(v||0).toLocaleString('es-BO')); }catch(e){ return 'Bs. '+v; } }
   function fcorta(s){ var d=new Date(s); return isNaN(d)?String(s):d.toLocaleDateString('es-BO',{day:'2-digit',month:'short'}); }
   function resumen(data){ var L=(data&&data.deptos)||[]; return { deptos:L.length, alDia:L.filter(function(d){ return !(d.total_debt>0.005); }).length, deuda:Math.round(L.reduce(function(a,d){ return a+(+d.total_debt||0); },0)*100)/100, mora:L.filter(function(d){ return d.en_mora_expensas; }).length }; }
@@ -13511,8 +13533,8 @@ window.lukaCloud = (function(){
   async function boot(next){
     if(!active()){ await showLogin(); }
     else {
-      try{ var r=await api({action:'lk_me'}); ses.usuario=r.usuario; persistSes(); }
-      catch(e){ if(e.sesion===false){ ses=null; persistSes(); await showLogin('Su sesión venció. Ingrese de nuevo.'); } }
+      // se entra de inmediato con la sesión guardada; se confirma con el servidor en segundo plano
+      api({action:'lk_me'}).then(function(r){ ses.usuario=r.usuario; persistSes(); }).catch(function(e){ if(e.sesion===false) logout(true); });
     }
     try{ await migrate(); }catch(e){}
     if(window.lukaShowSelector&&!window.__lkSelWrap){ window.__lkSelWrap=1; var rs=window.lukaShowSelector;
@@ -13530,7 +13552,7 @@ window.lukaCloud = (function(){
     if(!isAdmin()) return;
     var raw=null; try{ raw=await idbGet('luka-registry'); }catch(e){}
     if(!raw||!Array.isArray(raw.list)||!raw.list.length) return;
-    var srv; try{ srv=(await api({action:'lk_edificios'})).edificios; }catch(e){ return; }
+    var srv; try{ srv=(await listaNube()).edificios; }catch(e){ return; }
     var ids=srv.map(function(e){ return e.id; });
     var faltan=raw.list.filter(function(b){ return ids.indexOf(b.id)<0; });
     if(!faltan.length) return;
@@ -13539,7 +13561,7 @@ window.lukaCloud = (function(){
       var b=faltan[i], data=null; try{ data=await idbGet('luka-b-'+b.id); }catch(e){}
       if(!data) continue;
       var portal=(data.config&&data.config.portalBramar&&data.config.portalBramar.portalId)||'';
-      try{ var r=await api({action:'lk_guardar',id:b.id,nombre:b.name,data:JSON.stringify(data),v:0,portal:portal,resumen:resumen(data)}); versions[b.id]=r.v; persistVer(); }
+      try{ var r=await api({action:'lk_guardar',id:b.id,nombre:b.name,data:JSON.stringify(data),v:0,portal:portal,resumen:resumen(data),dev:DEV}); versions[b.id]=r.v; persistVer(); olvidarLista(); }
       catch(e){ alert('No se pudo subir «'+b.name+'»: '+e.message); }
     }
   }
@@ -13547,7 +13569,7 @@ window.lukaCloud = (function(){
   /* Lista de edificios: la de la nube (los que este usuario puede ver) */
   async function registry(reg){
     try{
-      var r=await api({action:'lk_edificios'});
+      var r=await listaNube();
       try{ localStorage.setItem(LS_LIST,JSON.stringify(r.edificios)); }catch(e){}
       reg.list=r.edificios.map(function(e){ return {id:e.id,name:e.nombre,createdAt:String(e.creado||'').slice(0,10)}; });
       edInfo={}; r.edificios.forEach(function(e){ edInfo[e.id]=e; });
@@ -13569,8 +13591,15 @@ window.lukaCloud = (function(){
       if(local){ var ok=await pushData(id,local,base,true); if(ok) return local; }
     }
     try{
+      if(versions[id]){
+        var local0=null; try{ local0=await idbGet('luka-b-'+id); }catch(e){}
+        if(local0&&local0.deptos){
+          var vv=await api({action:'lk_version',id:id});
+          if(vv.v===versions[id]){ synced[id]=snap(local0); status('Sincronizado'); return null; }
+        }
+      }
       var r=await api({action:'lk_cargar',id:id});
-      var data=JSON.parse(r.data); versions[id]=r.v; persistVer();
+      var data=JSON.parse(r.data); versions[id]=r.v; persistVer(); synced[id]=snap(data);
       try{ await idbSet('luka-b-'+id,data); }catch(e){}
       status('Sincronizado');
       return data;
@@ -13580,7 +13609,7 @@ window.lukaCloud = (function(){
     }
   }
   async function created(id,name){
-    try{ var data=await idbGet('luka-b-'+id); var r=await api({action:'lk_guardar',id:id,nombre:name,data:JSON.stringify(data),v:0,resumen:resumen(data)}); versions[id]=r.v; persistVer(); recien[id]=1; }
+    try{ var data=await idbGet('luka-b-'+id); var r=await api({action:'lk_guardar',id:id,nombre:name,data:JSON.stringify(data),v:0,resumen:resumen(data),dev:DEV}); versions[id]=r.v; persistVer(); recien[id]=1; synced[id]=snap(data); olvidarLista(); }
     catch(e){ alert('El edificio se creó en este dispositivo, pero no se pudo subir a la nube: '+e.message); }
   }
 
@@ -13589,14 +13618,17 @@ window.lukaCloud = (function(){
   function setDirty(id,v){ try{ v==null?localStorage.removeItem(LS_DIRTY+id):localStorage.setItem(LS_DIRTY+id,String(v)); }catch(e){} }
   function onLocalSave(){
     var id=curId(); if(!active()||!id) return;
+    if(dirtyBase(id)==null&&synced[id]!=null&&typeof DATA!=='undefined'&&snap(DATA)===synced[id]) return;
     if(dirtyBase(id)==null) setDirty(id,versions[id]||0);
     status('Cambios sin subir…');
     scheduleSave(2500);
   }
   function scheduleSave(ms){ clearTimeout(saveTimer); saveTimer=setTimeout(pushCurrent,ms); }
   function pushCurrent(){
-    var id=curId(); if(!id||saving) return;
+    var id=curId(); if(!id) return;
+    if(saving){ scheduleSave(1500); return; }
     var data; try{ data=buildFullExportData(); }catch(e){ return; }
+    if(synced[id]!=null&&snap(data)===synced[id]){ setDirty(id,null); status('Guardado en la nube'); return; }
     pushData(id,data,dirtyBase(id),false);
   }
   async function pushData(id,data,base,silent){
@@ -13604,9 +13636,12 @@ window.lukaCloud = (function(){
     var portal=(data.config&&data.config.portalBramar&&data.config.portalBramar.portalId)||(typeof window.lukaPortalId==='function'&&curId()===id?lukaPortalId():'');
     try{
       var enviadas=notas.slice();
-      var r=await api({action:'lk_guardar',id:id,nombre:(data.config&&data.config.nombreEdificio)||'',data:JSON.stringify(data),v:base==null?(versions[id]||0):base,portal:portal,resumen:resumen(data),notas:enviadas});
+      var txt=JSON.stringify(data);
+      var r=await api({action:'lk_guardar',id:id,nombre:(data.config&&data.config.nombreEdificio)||'',data:txt,v:base==null?(versions[id]||0):base,portal:portal,resumen:resumen(data),notas:enviadas,dev:DEV});
       notas=notas.slice(enviadas.length);
-      versions[id]=r.v; persistVer(); setDirty(id,null); lastSaved=new Date(); status('Guardado en la nube');
+      versions[id]=r.v; persistVer(); synced[id]=txt;
+      // si hubo más cambios mientras se subía, se sube de nuevo; si no, queda limpio
+      if(curId()===id&&typeof DATA!=='undefined'&&snap(DATA)!==txt){ setDirty(id,r.v); scheduleSave(1500); } else setDirty(id,null); lastSaved=new Date(); status('Guardado en la nube');
       return true;
     }catch(e){
       if(e.sesion===false){ logout(true); return false; }
@@ -13616,10 +13651,25 @@ window.lukaCloud = (function(){
     }finally{ saving=false; }
   }
   async function conflict(id,data,info,silent){
-    var quien=info.por?(' ('+info.por+')'):'';
-    var mantenerNube=confirm('Otro dispositivo'+quien+' guardó cambios en este edificio mientras usted trabajaba.\n\nAceptar: cargar la versión más reciente de la nube (sus últimos cambios en este dispositivo se descartan).\nCancelar: conservar lo de este dispositivo y reemplazar la nube.');
+    var mantenerNube=await elegirConflicto(info);
     if(mantenerNube){ setDirty(id,null); await reload(id); }
     else { await pushData(id,data,info.v,silent); }
+  }
+  function elegirConflicto(info){
+    return new Promise(function(resolve){
+      var bd=document.getElementById('lk-conf-bd');
+      if(!bd){ bd=document.createElement('div'); bd.className='modal-backdrop no-print'; bd.id='lk-conf-bd'; document.body.appendChild(bd); }
+      var cuando=info.actualizado?new Date(info.actualizado):null;
+      var hora=cuando&&!isNaN(cuando)?cuando.toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'}):'';
+      bd.innerHTML='<div class="modal lk-modal" style="max-width:460px"><h2>Este edificio cambió en otro equipo</h2>'+
+        '<p class="modal-sub">'+esc(info.por||'Otro usuario')+' guardó cambios desde otro celular o computadora'+(hora?' a las '+esc(hora):'')+', mientras usted también tenía cambios sin subir en este equipo.</p>'+
+        '<p class="lk-muted" style="margin:0 0 14px">Elija con cuál versión quedarse. La otra se descarta.</p>'+
+        '<div class="lk-conf-op"><button type="button" class="btn primary" id="lk-cf-nube">Usar la versión del otro equipo</button><span>Recomendado si no hizo nada importante aquí en los últimos minutos.</span></div>'+
+        '<div class="lk-conf-op"><button type="button" class="btn" id="lk-cf-mia">Quedarme con lo de este equipo</button><span>Reemplaza lo que se guardó en el otro equipo.</span></div></div>';
+      bd.classList.add('open');
+      bd.querySelector('#lk-cf-nube').onclick=function(){ bd.classList.remove('open'); resolve(true); };
+      bd.querySelector('#lk-cf-mia').onclick=function(){ bd.classList.remove('open'); resolve(false); };
+    });
   }
   async function reload(id){
     var d=await pull(id); if(!d) return;
@@ -13670,7 +13720,7 @@ window.lukaCloud = (function(){
   function decorate(){
     var u=user(); if(!u) return;
     var sbt=document.querySelector('.sidebar .sb-text');
-    if(sbt&&!document.getElementById('lk-rol-chip')){ var ch=document.createElement('span'); ch.id='lk-rol-chip'; ch.className='lk-rol-chip '+(u.rol==='admin'?'sup':'adm'); ch.textContent=rolTxt(u.rol); sbt.appendChild(ch); }
+    var oldChip=document.getElementById('lk-rol-chip'); if(oldChip) oldChip.remove();
     var nav=document.getElementById('cfg2-nav'), cont=document.getElementById('cfg2-cont');
     if(!nav||!cont){ setTimeout(decorate,700); }
     else if(!document.getElementById('lk-cuenta')){
@@ -13686,15 +13736,30 @@ window.lukaCloud = (function(){
         '<div class="lk-user-status" id="lk-user-status">'+esc(statusTxt||'Conectado a la nube')+'</div>'+
         mi('lk-mi-clave',ICO.key,'Cambiar mi clave','La que usa para entrar a LUKA')+
         (u.rol==='admin'?mi('lk-users',ICO.users,'Usuarios y accesos','Quién entra y a qué edificios')+mi('lk-act',ICO.act,'Actividad','Quién hizo qué y cuándo'):'')+
-        mi('lk-out',ICO.out,'Cerrar sesión','Salir de LUKA en este dispositivo');
+        mi('lk-out',ICO.out,'Cerrar sesión','Salir de LUKA en este dispositivo')+
+        (u.rol==='admin'?'<div class="lk-avisos" id="lk-avisos"><h4>Avisos de comprobantes y reservas</h4><p class="lk-muted">Cuando un propietario sube un comprobante de pago o pide una reserva en el portal, se envía un correo a estas direcciones.</p>'+
+          '<label class="lk-av-l">Correos (separe con coma)<input id="lk-av-c" type="text" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="pagos@empresa.com, otro@correo.com"></label>'+
+          '<label class="lk-chk"><input type="checkbox" id="lk-av-a"> Avisar también a los administradores asignados a cada edificio</label>'+
+          '<p class="lk-warn" id="lk-av-m"></p><div class="lk-av-b"><button type="button" class="btn" id="lk-av-p">Enviar correo de prueba</button><button type="button" class="btn primary" id="lk-av-g">Guardar</button></div></div>':'');
       cont.insertBefore(sec,cont.firstChild);
       sec.querySelector('#lk-mi-clave').onclick=function(){ cerrarCfg(); openMiClave(); };
       sec.querySelector('#lk-out').onclick=function(){ if(dirtyBase(curId())!=null&&!confirm('Hay cambios que todavía no se subieron a la nube. Si cierra sesión ahora podría perderlos. ¿Cerrar igual?')) return; logout(false); };
       var ub=sec.querySelector('#lk-users'); if(ub) ub.onclick=function(){ cerrarCfg(); closeSidebar(); openUsers(); };
       var ab=sec.querySelector('#lk-act'); if(ab) ab.onclick=function(){ cerrarCfg(); closeSidebar(); openActividad(); };
+      if(sec.querySelector('#lk-avisos')) avisos(sec);
     }
     var del=document.getElementById('luka-mi-delete'); if(del&&u.rol!=='admin'){ del.style.setProperty('display','none','important'); del.classList.add('lk-solo-sup'); }
     decorateSelector();
+  }
+  function avisos(sec){
+    var c=sec.querySelector('#lk-av-c'), a=sec.querySelector('#lk-av-a'), m=sec.querySelector('#lk-av-m');
+    api({action:'lk_avisos'}).then(function(r){ c.value=String(r.correos||'').split(',').filter(Boolean).join(', '); a.checked=!!r.admins; }).catch(function(e){ m.textContent=e.message; });
+    async function enviar(extra,btn,txt){ m.textContent=''; m.className='lk-warn'; btn.disabled=true; var t0=btn.textContent; btn.textContent=txt;
+      try{ var r=await api(Object.assign({action:'lk_avisos',guardar:true,correos:c.value,admins:a.checked},extra));
+        m.className='lk-ok'; m.textContent=r.enviado?('Correo de prueba enviado a: '+r.enviado.split(',').join(', ')):'Guardado. Los avisos llegarán a estos correos.'; }
+      catch(e){ m.textContent=e.message; } finally{ btn.disabled=false; btn.textContent=t0; } }
+    sec.querySelector('#lk-av-g').onclick=function(){ enviar({},this,'Guardando…'); };
+    sec.querySelector('#lk-av-p').onclick=function(){ enviar({probar:true},this,'Enviando…'); };
   }
   function resetCrear(){
     var cb=document.getElementById('luka-new-btn'), inp=document.getElementById('luka-new-name');
@@ -13738,6 +13803,10 @@ window.lukaCloud = (function(){
         cb.dataset.busy='1'; cb.disabled=true; cb.textContent='Creando… espere'; if(inp) inp.disabled=true;
       },true);
     }
+    card.querySelectorAll('.luka-sel-item[data-id]').forEach(function(it){
+      if(it.dataset.lkLoad) return; it.dataset.lkLoad='1';
+      it.addEventListener('click',function(ev){ if(ev.target.closest('.lk-sel-del')) return; card.querySelectorAll('.lk-abriendo').forEach(function(x){ x.classList.remove('lk-abriendo'); }); it.classList.add('lk-abriendo'); },true);
+    });
     if(u.rol==='admin') card.querySelectorAll('.luka-sel-item[data-id]').forEach(function(it){
       if(it.querySelector('.lk-sel-del')) return;
       var b=document.createElement('button'); b.type='button'; b.className='lk-sel-del'; b.title='Eliminar este edificio'; b.setAttribute('aria-label','Eliminar edificio');
@@ -13791,7 +13860,7 @@ window.lukaCloud = (function(){
       bd.querySelector('#lk-act-f').onchange=cargarAct;
     }
     bd.classList.add('open');
-    try{ var eds=(await api({action:'lk_edificios'})).edificios; var f=bd.querySelector('#lk-act-f'); f.innerHTML='<option value="">Todos los edificios</option>'+eds.map(function(e){ return '<option>'+esc(e.nombre)+'</option>'; }).join(''); }catch(e){}
+    try{ var eds=(await listaNube()).edificios; var f=bd.querySelector('#lk-act-f'); f.innerHTML='<option value="">Todos los edificios</option>'+eds.map(function(e){ return '<option>'+esc(e.nombre)+'</option>'; }).join(''); }catch(e){}
     cargarAct();
   }
   async function cargarAct(){
@@ -13810,14 +13879,16 @@ window.lukaCloud = (function(){
     var vacio=!r||!r.deptos;
     if(vacio){ if(!confirm('¿Eliminar «'+nombre+'»? No tiene departamentos cargados.')) return; }
     else { var t=prompt('Va a ELIMINAR «'+nombre+'» con '+r.deptos+' departamentos y todos sus pagos, pizarra y finanzas.\nEl archivo queda 30 días en la papelera de Google Drive.\n\nPara confirmar, escriba el nombre del edificio:'); if(t===null) return; if(t.trim()!==nombre){ alert('El nombre no coincide; no se eliminó nada.'); return; } }
-    try{ await api({action:'lk_borrar',id:id}); }catch(err){ alert('No se pudo eliminar: '+err.message); return; }
+    var fila=document.querySelector('.luka-sel-item[data-id="'+id+'"]'); if(fila) fila.classList.add('lk-borrando');
+    try{ await api({action:'lk_borrar',id:id}); }catch(err){ if(fila) fila.classList.remove('lk-borrando'); alert('No se pudo eliminar: '+err.message); return; }
+    if(fila) fila.remove();
     try{ await idbSet('luka-b-'+id,undefined); }catch(_){}
-    delete edInfo[id]; setDirty(id,null);
-    if(window.lukaShowSelector) window.lukaShowSelector();
+    delete edInfo[id]; setDirty(id,null); olvidarLista();
+    try{ var reg=await idbGet('luka-registry'); if(reg&&Array.isArray(reg.list)){ reg.list=reg.list.filter(function(b){ return b.id!==id; }); if(reg.activeId===id) reg.activeId=null; await idbSet('luka-registry',reg); } }catch(_){}
   }
   async function cloudDelete(id){
     if(!isAdmin()){ alert('Solo un súper administrador puede eliminar edificios.'); return false; }
-    try{ await api({action:'lk_borrar',id:id}); setDirty(id,null); return true; }catch(err){ alert('No se pudo eliminar en la nube: '+err.message); return false; }
+    try{ await api({action:'lk_borrar',id:id}); setDirty(id,null); olvidarLista(); return true; }catch(err){ alert('No se pudo eliminar en la nube: '+err.message); return false; }
   }
 
   /* ---------------- Usuarios (administrador) ---------------- */
@@ -13833,7 +13904,7 @@ window.lukaCloud = (function(){
     }
     bd.classList.add('open');
     var body=bd.querySelector('#lk-users-body'); body.innerHTML='<p class="lk-muted">Cargando…</p>';
-    try{ usuarios=(await api({action:'lk_usuarios'})).usuarios; edificiosNube=(await api({action:'lk_edificios'})).edificios; listUsers(); }
+    try{ usuarios=(await api({action:'lk_usuarios'})).usuarios; edificiosNube=(await listaNube()).edificios; listUsers(); }
     catch(e){ body.innerHTML='<p class="lk-warn">'+esc(e.message)+'</p>'; }
   }
   function nombreEds(eds){ if(!eds||eds.indexOf('*')>=0) return 'Todos los edificios'; return eds.map(function(id){ var e=edificiosNube.find(function(x){return x.id===id;}); return e?e.nombre:id; }).join(', '); }

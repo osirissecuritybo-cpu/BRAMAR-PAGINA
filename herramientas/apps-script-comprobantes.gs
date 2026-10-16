@@ -361,13 +361,15 @@ function luka_(d) {
       if (!e) {
         if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un administrador puede crear edificios.' });
         const f = lkCarpeta_().createFile(Utilities.newBlob(d.data, 'application/json', limpiar_(d.nombre || d.id) + ' (' + d.id + ').json'));
-        E[d.id] = { name: String(d.nombre || d.id).slice(0, 80), file: f.getId(), v: 1, upd: now, by: u.n, created: now, portal: d.portal ? slug_(d.portal) : '' };
+        E[d.id] = { name: String(d.nombre || d.id).slice(0, 80), file: f.getId(), v: 1, upd: now, by: u.n, dev: String(d.dev || '').slice(0, 40), created: now, portal: d.portal ? slug_(d.portal) : '' };
         lkLog_(u, E[d.id].name, 'Creó el edificio', '');
       } else {
         if (!puedeVer_(u, d.id)) return json({ ok: false, error: 'Sin acceso a este edificio.' });
-        if (Number(d.v) !== Number(e.v)) return json({ ok: false, conflicto: true, v: e.v, por: e.by, actualizado: e.upd, error: 'Otro dispositivo guardó cambios antes.' });
+        // mismo navegador (otra pestaña o dos guardados seguidos): no es conflicto
+        const mismoDisp = d.dev && e.dev === String(d.dev);
+        if (Number(d.v) !== Number(e.v) && !mismoDisp) return json({ ok: false, conflicto: true, v: e.v, por: e.by, actualizado: e.upd, error: 'Otro dispositivo guardó cambios antes.' });
         DriveApp.getFileById(e.file).setContent(d.data);
-        e.v = e.v + 1; e.upd = now; e.by = u.n; if (d.nombre) e.name = String(d.nombre).slice(0, 80);
+        e.v = e.v + 1; e.upd = now; e.by = u.n; e.dev = String(d.dev || '').slice(0, 40); if (d.nombre) e.name = String(d.nombre).slice(0, 80);
         if (d.portal) e.portal = slug_(d.portal);
         lkLogCambios_(u, e.name, d.id, d.notas);
       }
@@ -405,6 +407,27 @@ function luka_(d) {
     lkLog_(u, e.name, 'Borró el edificio', '');
     try { DriveApp.getFileById(e.file).setTrashed(true); } catch (x) {}
     delete E[d.id]; lkEscribir_('LUKA_EDIFICIOS', E); return json({ ok: true });
+  }
+  if (a === 'lk_avisos') {
+    const P = PropertiesService.getScriptProperties();
+    if (d.guardar) {
+      const lista = String(d.correos || '').split(/[,;\s]+/).map(function (c) { return c.trim().toLowerCase(); }).filter(Boolean);
+      const malos = lista.filter(function (c) { return !lkCorreoValido_(c); });
+      if (malos.length) return json({ ok: false, error: 'Correo no válido: ' + malos.join(', ') });
+      if (!lista.length && d.admins === false) return json({ ok: false, error: 'Ponga al menos un correo o active el aviso a los administradores.' });
+      P.setProperty('CORREOS_AVISO', lista.join(','));
+      P.setProperty('AVISO_ADMINS', d.admins === false ? 'no' : 'si');
+      lkLog_(u, '', 'Cambió los correos de aviso', lista.join(', '));
+    }
+    if (d.probar) {
+      const to = destinatarios_('');
+      if (!to) return json({ ok: false, error: 'No hay ningún correo configurado.' });
+      MailApp.sendEmail({ to: to, name: 'Portal Bramar', subject: 'Prueba de aviso de comprobantes · Gestión LUKA',
+        htmlBody: '<div style="font-family:Arial,sans-serif;font-size:15px;color:#0B2440"><p>Este es un correo de prueba.</p><p>Aquí llegarán los avisos cuando un propietario suba un comprobante de pago o pida una reserva en el portal.</p></div>' });
+      return json({ ok: true, enviado: to });
+    }
+    const fijos = P.getProperty('CORREOS_AVISO');
+    return json({ ok: true, correos: fijos === null ? 'bramargroupsrl@gmail.com' : fijos, admins: P.getProperty('AVISO_ADMINS') !== 'no' });
   }
   if (a === 'lk_usuarios') return json({ ok: true, usuarios: lkUsuarios_().map(lkPublico_) });
   if (a === 'lk_usuario_guardar') {
@@ -478,9 +501,10 @@ function lkLogCambios_(u, nombre, id, notas) {
    direcciones fijas de la propiedad CORREOS_AVISO (si existe). */
 function destinatarios_(portalId) {
   const id = slug_(portalId), E = lkEdificios_(), lista = {};
+  const avisarAdmins = PropertiesService.getScriptProperties().getProperty('AVISO_ADMINS') !== 'no';
   const idsLuka = Object.keys(E).filter(function (k) { return E[k].portal === id || slug_(E[k].name) === id; });
   lkUsuarios_().forEach(function (u) {
-    if (u.activo === false || !u.mail) return;
+    if (!avisarAdmins || u.activo === false || !u.mail) return;
     const ve = u.rol === 'admin' || (u.eds || []).indexOf('*') >= 0 || idsLuka.some(function (k) { return (u.eds || []).indexOf(k) >= 0; });
     if (ve) lista[u.mail] = 1;
   });
@@ -555,8 +579,22 @@ function ptEstado_(portalId, lk, data, depto) {
     unidad: { depto: d.depto, propietario: acc.propietario || '', expensa: +d.expensaMensual || +cfg.expensaMensual || 0 },
     resumen: { deuda: deuda, vencimiento: '', actualizado: String(lk.e.upd || '').slice(0, 10) },
     movimientos: mov,
-    areas: (cfg.areasLuka || []).map(function (a) { return { id: a.id, nombre: a.nombre, garantia: +a.garantia || 0, tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: +t.monto || 0 }; }) }; })
+    areas: ptAreas_(cfg).map(function (a) { return { id: a.id, nombre: a.nombre, garantia: +a.garantia || 0, tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: +t.monto || 0 }; }) }; })
   };
+}
+const PT_AREAS_DEF = {
+  churrasquera_normal: { label: 'Churrasquera normal', precios: { '10': 50, '+10': 100, '+20': 140 } },
+  churrasquera_inox: { label: 'Churrasquera inox.', precios: { '10': 100, '+10': 150, '+20': 190 } },
+  salon_social: { label: 'Salón social', precios: { '10': 100, '+10': 150, '+20': 200, '+40': 300 } },
+  ch_normal_salon: { label: 'Ch. normal + salón', precios: { '10': 150, '+10': 250, '+20': 340, '+40': 430 } },
+  ch_inox_salon: { label: 'Ch. inox + salón', precios: { '10': 200, '+10': 300, '+20': 390, '+40': 480 } }
+};
+function ptAreas_(cfg) {
+  if (Array.isArray(cfg.areasLuka) && cfg.areasLuka.length) return cfg.areasLuka.map(function (a) { return a.tramos ? a : { id: a.id, nombre: a.nombre, garantia: a.garantia, tramos: [{ label: 'General', monto: a.monto || 0 }] }; });
+  const src = cfg.areasSociales || PT_AREAS_DEF, gar = (cfg.garantiaAreaSocial && cfg.garantiaAreaSocial.normal) || 300;
+  const lab = { '10': 'Hasta 10 personas', '+10': '+10 personas', '+20': '+20 personas', '+40': '+40 personas' };
+  return Object.keys(src).map(function (k) { const pr = src[k].precios || {};
+    return { id: k, nombre: src[k].label || k, garantia: gar, tramos: Object.keys(pr).filter(function (t) { return pr[t] != null; }).map(function (t) { return { label: lab[t] || t, monto: pr[t] }; }) }; });
 }
 function ptHojaReservas_() {
   const ss = registro_().getParent();
