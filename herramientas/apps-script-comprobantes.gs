@@ -260,6 +260,10 @@ function avisarComprobante_(d, url) {
   } catch (e) { /* el comprobante ya quedó guardado aunque el correo falle */ }
 }
 /** Ejecute una vez para autorizar el envío de correos y probarlo. */
+/* Ejecutar UNA vez desde el editor para dar permiso de "conectarse a un servicio externo"
+   (lo usa el portal para comprobar los códigos antiguos generados con el Excel). */
+function autorizarPortal() { Logger.log(UrlFetchApp.fetch(SITIO + 'data/edificios.json').getResponseCode()); }
+
 function probarCorreo() {
   avisarComprobante_({ edificio: 'PRUEBA', depto: '0X', propietario: 'Prueba de aviso', monto: '1', fecha: '2026-01-01' }, LUKA_URL);
   Logger.log('Correo de prueba enviado a ' + (PropertiesService.getScriptProperties().getProperty('CORREOS_AVISO') || 'bramargroupsrl@gmail.com'));
@@ -516,7 +520,7 @@ function ptCodigoOk_(portalId, depto, code, data) {
   try {
     const r = UrlFetchApp.fetch(SITIO + 'data/u/' + fid + '.json', { muteHttpExceptions: true });
     if (r.getResponseCode() === 200) { cache.put(ck, '1', 21600); return true; }
-  } catch (e) {}
+  } catch (e) { return null; }   // sin permiso de UrlFetch: el portal usa el archivo del sitio
   return false;
 }
 const PT_MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
@@ -582,7 +586,9 @@ function portal_(d) {
   const data = ptDatos_(lk);
   // edificio aún sin departamentos en LUKA: el portal sigue usando el archivo del sitio
   if (!(data.deptos || []).some(function (x) { return ptNormDepto_(x.depto) === ptNormDepto_(d.depto); })) return json({ ok: false, error: 'no_vinculado' });
-  if (!ptCodigoOk_(pid, d.depto, d.codigo, data)) return json({ ok: false, error: 'codigo' });
+  const okc = ptCodigoOk_(pid, d.depto, d.codigo, data);
+  if (okc === null) return json({ ok: false, error: 'no_vinculado' });
+  if (!okc) return json({ ok: false, error: 'codigo' });
   const est = ptEstado_(pid, lk, data, d.depto);
   if (!est) return json({ ok: false, error: 'codigo' });
   const dep = ptNormDepto_(d.depto);
