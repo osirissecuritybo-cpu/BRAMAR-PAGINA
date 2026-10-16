@@ -10,14 +10,13 @@ Sitio de Bramar Group, administración integral de edificios y condominios en Sa
 ```
 index.html                    Sitio público (5 páginas: inicio, nosotros, servicios, edificios, contacto)
 copropietarios.html           Portal de copropietarios (perfil, estado de cuenta, pago, comprobantes)
-generador.html                Herramienta interna: convierte el Excel en los datos del portal
-js/portal-crypto.js           Cifrado de los datos del portal (lo usan el portal y el generador)
+luka/                         Gestión LUKA (administración; los datos viven en el Drive de Bramar)
+js/portal-crypto.js           Lectura de los perfiles cifrados antiguos (códigos del Excel)
+js/luka-recibo.js, luka-docs.js  Recibos idénticos a los de LUKA (con QR y código de verificación)
 data/edificios.json           Lista de edificios que aparece en el portal (solo id y nombre)
 data/u/*.json                 Un archivo cifrado por departamento
 herramientas/
-  plantilla-copropietarios.xlsx   Plantilla de Excel para cargar los datos
-  apps-script-comprobantes.gs     Script de Google para recibir comprobantes en Drive
-vendor/                       Librerías del generador (lectura de Excel y ZIP)
+  apps-script-comprobantes.gs     Servidor (Google Apps Script): LUKA en la nube, portal en vivo, comprobantes y reservas
 img/                          Fotos, logos e íconos
 img/qr/                       Imágenes de QR de pago (una por edificio)
 ```
@@ -55,24 +54,13 @@ Ve:
 ### Cómo se protegen los datos
 GitHub Pages es público, por eso cada departamento tiene un archivo **cifrado** (AES-256). El nombre del archivo y la clave se calculan con el edificio, el departamento y el código del propietario: sin el código no se puede encontrar ni leer. El código no se guarda en ningún lado del sitio.
 
-### Actualización mensual (paso a paso)
-1. Complete la plantilla `herramientas/plantilla-copropietarios.xlsx` (hojas Edificios, Unidades y Movimientos). La primera vez deje vacía la columna `codigo_acceso`.
-2. Abra `generador.html` (en el sitio publicado o en su computadora), cargue el Excel, revise el resumen y presione **Generar archivos**. Se descarga `bramar-portal.zip`.
-3. Del ZIP:
-   - `data/` → súbala al repositorio arrastrando **la carpeta `data`** en *Add file → Upload files*. Debe quedar en la raíz del repositorio (`data/edificios.json`), no dentro de otra carpeta.
-   - `NO-SUBIR-codigos-de-acceso.xlsx` → **guárdelo en privado**. Tiene el código de cada propietario y un mensaje listo para enviarle por WhatsApp. El mes siguiente use **este** Excel como base, para que cada propietario conserve su código.
-4. Suba los QR a `img/qr/` con el nombre indicado en la columna `qr_archivo`.
-
-Con 20 edificios de 100–110 departamentos (unos 2.200 perfiles) la generación tarda alrededor de un minuto y los datos pesan unos 9 MB.
-
-**Importante para subir a GitHub:** la carga desde la página web de GitHub acepta como máximo 100 archivos por vez. Para subir la carpeta `data` completa use **GitHub Desktop** (gratis): arrastre la carpeta al repositorio, escriba un mensaje y presione "Commit" y "Push".
+### Datos del portal (en vivo desde LUKA)
+Ya no se sube ningún Excel. El estado de cuenta, los recibos, los datos para pagar (banco, titular, cuenta y QR) y las reservas se leen de Gestión LUKA en el momento. Los códigos de acceso de cada departamento se crean en LUKA → Configuración → Departamentos → «Portal de propietarios». Los códigos antiguos del Excel siguen funcionando (sus archivos cifrados quedan en `data/u/`).
 
 ### Recepción de comprobantes
 - **Recomendado:** instale el script `herramientas/apps-script-comprobantes.gs` en la cuenta de Google de Bramar (las instrucciones están al inicio del archivo) y pegue su URL en `copropietarios.html`, en `PORTAL.endpoint`. Ese mismo script también activa las contraseñas personales. Cada comprobante se guarda en Google Drive ordenado por edificio, mes y departamento (`Comprobantes Bramar / EDIFICIO / 2026-10 Octubre / Depto 2B`), y se anota en la hoja "Registro de comprobantes" con el estado "Pendiente de verificar".
 - **Mientras no esté instalado:** en el celular, el portal ofrece compartir el archivo directamente a WhatsApp. En computadora, abre WhatsApp con los datos del pago y el propietario adjunta el archivo.
 
-### Prueba
-El portal muestra los edificios de la última generación. Para probar, use un departamento y su código de la hoja "Codigos" del Excel privado.
 
 ## Pendientes
 

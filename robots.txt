@@ -1,3 +1,2 @@
 User-agent: *
 Disallow: /luka/
-Disallow: /generador.html

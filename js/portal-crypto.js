@@ -5,7 +5,7 @@
    del archivo y la clave de cifrado se calculan a partir del
    edificio, el departamento y el código de acceso del propietario.
    Sin el código correcto el archivo no se encuentra ni se puede leer.
-   Lo usan copropietarios.html (para leer) y generador.html (para crear).
+   Lo usa copropietarios.html para leer los perfiles cifrados antiguos.
    ================================================================ */
 (function (global) {
   "use strict";

@@ -595,7 +595,10 @@ function ptEstado_(portalId, lk, data, depto) {
   return {
     modo: 'luka',
     edificio: { id: portalId, nombre: cfg.nombreEdificio || lk.e.name, nombreRecibo: cfg.nombreEdificio || 'Gestión LUKA', logo: cfg.logo || '', sello: cfg.sello || '',
-      empresa: (cfg.empresaAdmin && String(cfg.empresaAdmin).trim()) || 'Gestión LUKA', moneda: 'Bs', titular: String(cfg.titular || ''), cuenta: String(cfg.cuentaText || ''), banco: String(cfg.banco || ''), nit: String(cfg.nit || ''), qr: cfg.qr || '' },
+      empresa: (cfg.empresaAdmin && String(cfg.empresaAdmin).trim()) || 'Gestión LUKA', moneda: 'Bs',
+      // datos de cobro tal como están en LUKA (Configuración → Datos de cobro)
+      titular: String(cfg.cuentaTitular || cfg.titular || ''), banco: String(cfg.cuentaBanco || cfg.banco || ''), cuenta: String(cfg.cuentaNumero || cfg.cuentaText || ''),
+      tipo_cuenta: String(cfg.cuentaTipo || ''), moneda_cuenta: String(cfg.cuentaMoneda || ''), nit: String(cfg.cuentaNit || cfg.nit || ''), qr: cfg.qr || '' },
     unidad: { depto: d.depto, bloque: String(d.bloque || ''), propietario: acc.propietario || '', expensa: +d.expensaMensual || +cfg.expensaMensual || 0 },
     resumen: { deuda: deuda, vencimiento: '', actualizado: String(lk.e.upd || '').slice(0, 10) },
     movimientos: mov,

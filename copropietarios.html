@@ -388,32 +388,66 @@ html,body{overflow-x:clip;max-width:100%}
   .rec-card .receipt-box .r-stamp{width:88px;height:88px;right:10px}
 }
 
-/* ---- Celular minimalista: saludo, deuda y un menú; cada opción abre su pantalla ---- */
-.m-menu,.m-head{display:none}
+/* ---- Celular: cabecera con ☰, inicio corto (deuda, dos acciones, pendientes) y pantallas por opción ---- */
+.m-home,.m-head,.m-burger,.m-drawer{display:none}
 .table tr.last td{border-top:1px solid var(--line);color:var(--muted)}
 .table tr.last td small{display:block;font-size:12.5px;color:var(--muted)}
 .table td.empty.ok{color:var(--navy);text-align:left;padding:14px 0}
 @media (max-width:600px){
   :root{--g:16px}
+  .top{padding-left:var(--g);padding-right:var(--g)}
   .profile .wrap{padding-left:var(--g);padding-right:var(--g)}
-  .hello{padding:4px 0 0}
+  body.en-perfil #logout{display:none}
+  .m-burger:not([hidden]){display:grid;align-content:center;justify-items:center;gap:5px;position:relative;width:44px;height:44px;border:0;border-radius:999px;background:var(--sand);cursor:pointer}
+  .m-burger span{display:block;width:18px;height:1.8px;border-radius:2px;background:var(--navy)}
+  .m-dot{position:absolute;top:9px;right:9px;width:8px;height:8px;border-radius:50%;background:#C0392B;box-shadow:0 0 0 2px var(--sand)}
+  .m-dot[hidden]{display:none}
+  .hello{padding:2px 0 0}
+  .hello .tag{margin-bottom:6px}
+  .hello h1{font-size:30px}
+  .hello p{font-size:14px}
   .hello-actions{display:none}
-  .grid{display:flex;flex-direction:column;gap:12px}
-  .p-debt{padding:22px var(--g) 20px;border-radius:20px}
+  .grid{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+  .p-debt{padding:20px var(--g);border-radius:20px}
+  .p-debt .amount{font-size:44px}
   .p-debt .meta{gap:16px;margin-top:14px;padding-top:12px}
-  .p-debt .meta>div:nth-child(2){display:none}
+  .p-debt .meta>div:nth-child(1),.p-debt .meta>div:nth-child(2){display:none}
   .p-debt .btn.gold{display:none}
-  .m-menu{display:flex;flex-direction:column;background:var(--paper);border-radius:20px;overflow:hidden}
-  .m-menu button{display:flex;align-items:center;gap:14px;width:100%;min-height:58px;padding:0 var(--g);border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:16px;text-align:left;cursor:pointer}
-  .m-menu button:first-child{border-top:0}
-  .m-menu button[hidden]{display:none}
-  .m-menu button:active{background:var(--sand)}
-  .m-menu svg{width:22px;height:22px;flex:none;color:var(--navy)}
-  .m-menu span{flex:1}
-  .m-menu .chev{width:8px;height:8px;border-right:1.6px solid var(--muted);border-top:1.6px solid var(--muted);transform:rotate(45deg);margin-right:4px}
+  .m-home{display:flex;flex-direction:column;gap:12px}
+  .m-acts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .m-acts .btn{width:100%;min-height:52px;padding:0 10px;justify-content:center;font-size:15px}
+  .m-acts .btn.light{background:var(--paper);color:var(--navy)}
+  .m-pend{background:var(--paper);border-radius:20px;padding:16px var(--g) 8px}
+  .m-pend-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px}
+  .m-pend-h b{font-weight:500;color:var(--navy);font-size:16px}
+  .m-pend-h button{border:0;background:none;padding:0;color:var(--navy);font:inherit;font-size:13.5px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  .m-pend ul{list-style:none;margin:0;padding:0}
+  .m-pend li{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--line);font-size:15px}
+  .m-pend li:first-child{border-top:0}
+  .m-pend li span{color:var(--ink)}.m-pend li b{font-weight:500;white-space:nowrap;color:var(--ink)}
+  .m-pend li.multa span::after{content:"Multa";margin-left:8px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:#FBEFEF;color:#8E2A20;vertical-align:1px}
+  .m-ok,.m-more{margin:4px 0 10px;font-size:14px;color:var(--muted)}
+  .m-row:not([hidden]){display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:0 var(--g);border:0;border-radius:20px;background:var(--paper);color:var(--ink);font:inherit;font-size:16px;text-align:left;cursor:pointer}
+  .m-row span{flex:1}.m-row small{font-size:13.5px;color:var(--muted)}
+  .chev{width:8px;height:8px;border-right:1.6px solid var(--muted);border-top:1.6px solid var(--muted);transform:rotate(45deg);margin:0 4px 0 6px}
   .m-badge{font-style:normal;min-width:22px;height:22px;padding:0 8px;border-radius:999px;background:var(--sand);color:var(--navy);font-size:12px;font-weight:600;display:inline-grid;place-items:center}
   .m-badge.alerta{background:#FBEFEF;color:#8E2A20}
   .m-badge[hidden]{display:none}
+  /* menú lateral */
+  .m-drawer{display:block;position:fixed;inset:0;z-index:85;background:rgba(6,33,69,.4);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+  .m-drawer.open{opacity:1;visibility:visible}
+  .m-drawer-in{position:absolute;top:0;right:0;bottom:0;width:min(84vw,320px);background:var(--paper);display:flex;flex-direction:column;padding:calc(18px + env(safe-area-inset-top,0px)) var(--g) calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(100%);transition:transform .3s var(--soft)}
+  .m-drawer.open .m-drawer-in{transform:none}
+  .m-drawer-h{position:relative;padding:4px 44px 16px 0;border-bottom:1px solid var(--line)}
+  .m-drawer-h b{display:block;font-weight:500;font-size:18px;color:var(--navy)}
+  .m-drawer-h span{font-size:13px;color:var(--muted)}
+  .m-x{position:absolute;top:-6px;right:-8px;width:44px;height:44px;border:0;background:none;font-size:28px;line-height:1;color:var(--navy);cursor:pointer}
+  .m-nav{display:flex;flex-direction:column;padding:8px 0}
+  .m-nav button{display:flex;align-items:center;gap:10px;min-height:54px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:16px;text-align:left;cursor:pointer;padding:0}
+  .m-nav button[hidden]{display:none}
+  .m-nav button span{flex:1}
+  .m-out{margin-top:auto;min-height:50px;border:0;border-radius:999px;background:var(--sand);color:var(--navy);font:inherit;font-size:15px;font-weight:500;cursor:pointer}
+  /* pantallas de cada opción */
   .grid>section.panel:not(.p-debt){display:none}
   .grid>section.panel.m-open{display:block;position:fixed;inset:0;z-index:70;border-radius:0;margin:0;padding:0 var(--g) calc(28px + env(safe-area-inset-bottom,0px));overflow-y:auto;overscroll-behavior:contain;background:var(--paper);animation:none}
   .grid>section.panel.m-open[hidden]{display:none}
@@ -422,7 +456,6 @@ html,body{overflow-x:clip;max-width:100%}
   .m-back{width:44px;height:44px;border:0;background:none;color:var(--navy);display:grid;place-items:center;cursor:pointer}
   .m-back svg{width:22px;height:22px}
   .m-open>h2:first-of-type,.m-open .mov-head h2,.m-open .rv-head h2,.m-open .bank>h2{display:none}
-  .m-open .p-pay,.p-pay.m-open{display:block}
   .p-pay.m-open .qr{margin-top:18px;align-items:center}
   .dialog{z-index:90}
   .table tr.last{margin-top:10px;border-bottom:0;padding:14px 0 0;border-top:1px solid var(--line)}
@@ -460,6 +493,7 @@ html,body{overflow-x:clip;max-width:100%}
     <div class="top-actions">
       <a class="pill-btn" id="back" href="index.html"><svg aria-hidden="true"><use href="#i-back"/></svg><span>Sitio web</span></a>
       <button class="pill-btn" id="logout" type="button" hidden><svg aria-hidden="true"><use href="#i-out"/></svg><span>Salir</span></button>
+      <button class="m-burger" id="m-burger" type="button" aria-label="Menú" aria-expanded="false" hidden><span></span><span></span><span></span><em class="m-dot" id="m-dot" hidden></em></button>
     </div>
   </div>
 </header>
@@ -521,13 +555,14 @@ html,body{overflow-x:clip;max-width:100%}
         <a class="btn gold" href="#comprobante"><svg aria-hidden="true"><use href="#i-upload"/></svg>Enviar comprobante</a>
       </section>
 
-      <nav class="m-menu" id="m-menu" aria-label="Opciones">
-        <button type="button" data-sheet="comprobante"><svg aria-hidden="true"><use href="#i-upload"/></svg><span>Enviar comprobante</span><i class="chev"></i></button>
-        <button type="button" data-sheet="estado"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span>Estado de cuenta</span><em class="m-badge" id="m-badge-estado" hidden></em><i class="chev"></i></button>
-        <button type="button" data-sheet="datos"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg><span>Datos de la cuenta</span><i class="chev"></i></button>
-        <button type="button" data-sheet="rv" id="m-rv" hidden><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Áreas sociales</span><em class="m-badge" id="m-badge-rv" hidden></em><i class="chev"></i></button>
-        <button type="button" data-sheet="clave" id="m-clave" hidden><svg aria-hidden="true"><use href="#i-lock"/></svg><span>Cambiar contraseña</span><i class="chev"></i></button>
-      </nav>
+      <div class="m-home" id="m-home">
+        <div class="m-acts">
+          <button type="button" class="btn light" data-sheet="datos">Datos para pagar</button>
+          <button type="button" class="btn navy" data-sheet="comprobante">Enviar comprobante</button>
+        </div>
+        <div class="m-pend" id="m-pend"></div>
+        <button type="button" class="m-row" data-sheet="rv" id="m-rv" hidden><span>Áreas sociales</span><small id="m-rv-t">Reservar</small><i class="chev"></i></button>
+      </div>
 
       <section class="panel p-pay" id="datos" aria-labelledby="h-pay" style="animation-delay:.06s">
         <div class="bank">
@@ -598,6 +633,19 @@ html,body{overflow-x:clip;max-width:100%}
 </main>
 
 <!-- Cambiar contraseña -->
+<div class="m-drawer" id="m-drawer" aria-hidden="true">
+  <div class="m-drawer-in" role="dialog" aria-label="Menú">
+    <div class="m-drawer-h"><b id="m-dr-name"></b><span id="m-dr-sub"></span><button type="button" class="m-x" id="m-dr-x" aria-label="Cerrar">&times;</button></div>
+    <nav class="m-nav" id="m-nav">
+      <button type="button" data-sheet="estado"><span>Estado de cuenta</span><em class="m-badge" id="m-badge-estado" hidden></em></button>
+      <button type="button" data-sheet="comprobante"><span>Enviar comprobante</span></button>
+      <button type="button" data-sheet="datos"><span>Datos para pagar</span></button>
+      <button type="button" data-sheet="rv" id="m-nav-rv" hidden><span>Áreas sociales</span><em class="m-badge" id="m-badge-rv" hidden></em></button>
+      <button type="button" data-sheet="clave" id="m-clave" hidden><span>Cambiar contraseña</span></button>
+    </nav>
+    <button type="button" class="m-out" id="m-out">Cerrar sesión</button>
+  </div>
+</div>
 <div class="dialog" id="rv-dialog" role="dialog" aria-modal="true" aria-labelledby="rv-title" aria-hidden="true">
   <div class="dialog-card rv-card">
     <span class="tag">Áreas sociales</span>
@@ -831,7 +879,7 @@ const PORTAL = {
     $('#p-upd').textContent=fdate(R.actualizado);
     if(debt>0.009) $('#up-amount').value=debt.toFixed(2);
     // banco
-    const rows=[['Banco',E.banco],['Titular',E.titular],['N.º de cuenta',E.cuenta,true],['Tipo',E.tipo_cuenta],['Moneda',E.moneda_cuenta||E.moneda],['NIT / CI',E.nit,true]].filter(r=>r[1]);
+    const rows=[['Titular',E.titular],['Banco',E.banco],['N.º de cuenta',E.cuenta,true],['Tipo',E.tipo_cuenta],['Moneda',E.moneda_cuenta||E.moneda],['NIT / CI',E.nit,true]].filter(r=>r[1]);
     $('#p-bank').innerHTML=rows.length?rows.map(([k,v])=>`<div class="kv"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')
       :'<p class="muted" style="padding:12px 0">Consulte los datos de pago con la administración.</p>';
     const qr=U.qr||E.qr, box=$('#p-qr'), dl=$('#p-qr-dl');
@@ -843,7 +891,7 @@ const PORTAL = {
     renderReservas();
     $('#up-date').value=new Date().toISOString().slice(0,10);
     $('#p-pass').hidden=!PORTAL.endpoint; $('#m-clave').hidden=!PORTAL.endpoint;
-    $('#view-auto').hidden=true; $('#view-login').hidden=true; $('#view-profile').hidden=false; $('#logout').hidden=false; $('#back').hidden=true;
+    $('#view-auto').hidden=true; $('#view-login').hidden=true; $('#view-profile').hidden=false; $('#logout').hidden=false; $('#m-burger').hidden=false; document.body.classList.add('en-perfil'); $('#back').hidden=true;
     window.scrollTo(0,0); $('#p-name').focus({preventScroll:true});
   }
   const flong=s=>{ if(!s) return '—'; const d=new Date(s+'T00:00:00'); return isNaN(d)?s:d.toLocaleDateString('es-BO',{day:'2-digit',month:'long',year:'numeric'}); };
@@ -928,7 +976,7 @@ const PORTAL = {
 
   /* ---------- Celular: menú minimalista; cada opción se abre en su propia pantalla ---------- */
   const esCel=()=>window.matchMedia('(max-width:600px)').matches;
-  const TIT={comprobante:'Enviar comprobante',estado:'Estado de cuenta',datos:'Datos de la cuenta',rv:'Áreas sociales'};
+  const TIT={comprobante:'Enviar comprobante',estado:'Estado de cuenta',datos:'Datos para pagar',rv:'Áreas sociales'};
   Object.keys(TIT).forEach(id=>{ const sec=document.getElementById(id); if(!sec) return;
     const h=document.createElement('div'); h.className='m-head';
     h.innerHTML='<button type="button" class="m-back" aria-label="Volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><b>'+TIT[id]+'</b><span></span>';
@@ -939,15 +987,26 @@ const PORTAL = {
   function cerrarHojas(){ document.querySelectorAll('.m-open').forEach(x=>x.classList.remove('m-open')); }
   window.addEventListener('popstate',cerrarHojas);
   function irA(id){ if(esCel()) abrirHoja(id); else document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}); }
-  $('#m-menu').addEventListener('click',e=>{ const b=e.target.closest('[data-sheet]'); if(!b) return;
-    if(b.dataset.sheet==='clave') return $('#p-pass').click(); abrirHoja(b.dataset.sheet); });
+  const drawer=$('#m-drawer');
+  function menu(on){ drawer.classList.toggle('open',on); drawer.setAttribute('aria-hidden',on?'false':'true'); $('#m-burger').setAttribute('aria-expanded',on?'true':'false'); }
+  $('#m-burger').addEventListener('click',()=>{ $('#m-dr-name').textContent=$('#p-name').textContent.replace(/^Hola,\s*/,''); $('#m-dr-sub').textContent=$('#p-bld').textContent+' · Depto '+((data&&data.unidad||{}).depto||''); menu(true); });
+  $('#m-dr-x').addEventListener('click',()=>menu(false));
+  drawer.addEventListener('click',e=>{ if(e.target===drawer) menu(false); });
+  $('#m-out').addEventListener('click',()=>{ menu(false); $('#logout').click(); });
+  document.addEventListener('click',e=>{ const b=e.target.closest('#m-nav [data-sheet],#m-home [data-sheet]'); if(!b) return;
+    menu(false); if(b.dataset.sheet==='clave') return $('#p-pass').click(); abrirHoja(b.dataset.sheet); });
   document.querySelector('.p-debt a[href="#comprobante"]').addEventListener('click',e=>{ e.preventDefault(); irA('comprobante'); });
   function menuBadges(pend){
-    const b=$('#m-badge-estado'), multa=pend.some(c=>/multa|sanci|cargo/i.test(c.concepto||''));
+    const b=$('#m-badge-estado'), multa=pend.some(c=>/multa|sanci|cargo/i.test(c.concepto||'')), cur=(data.edificio||{}).moneda||'Bs';
     b.hidden=!pend.length; b.textContent=multa?'Multa':String(pend.length); b.classList.toggle('alerta',multa);
+    $('#m-dot').hidden=!multa;
+    // inicio del celular: lo que debe, corto
+    const L=pend.slice(0,4);
+    $('#m-pend').innerHTML='<div class="m-pend-h"><b>'+(pend.length?'Pendiente de pago':'Está al día')+'</b>'+(pend.length?'<button type="button" data-sheet="estado">Ver estado de cuenta</button>':'')+'</div>'+
+      (L.length?'<ul>'+L.map(c=>'<li class="'+(/multa|sanci|cargo/i.test(c.concepto||'')?'multa':'')+'"><span>'+esc(c.concepto)+'</span><b>'+money(c.resta,cur)+'</b></li>').join('')+'</ul>'+(pend.length>4?'<p class="m-more">y '+(pend.length-4)+' más</p>':''):'<p class="m-ok">No tiene pagos pendientes.</p>');
   }
   /* con una ventana abierta, la página de fondo no se mueve */
-  new MutationObserver(()=>{ document.documentElement.classList.toggle('modal-abierto',!!document.querySelector('.dialog.open,.m-open')); })
+  new MutationObserver(()=>{ document.documentElement.classList.toggle('modal-abierto',!!document.querySelector('.dialog.open,.m-open,.m-drawer.open')); })
     .observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
   /* ---------- Reservas de áreas sociales ---------- */
   let misReservas=[];
@@ -978,8 +1037,8 @@ const PORTAL = {
   }
   function renderReservas(){
     const box=$('#rv'), areas=(data&&data.areas)||[];
-    if(!PORTAL.endpoint||!areas.length){ box.hidden=true; $('#m-rv').hidden=true; return; }
-    box.hidden=false; $('#m-rv').hidden=false;
+    if(!PORTAL.endpoint||!areas.length){ box.hidden=true; $('#m-rv').hidden=true; $('#m-nav-rv').hidden=true; return; }
+    box.hidden=false; $('#m-rv').hidden=false; $('#m-nav-rv').hidden=false;
     const sa=$('#rv-area'); sa.innerHTML=areas.map(a=>`<option value="${esc(a.id)}">${esc(a.nombre)}</option>`).join('');
     const pintaTramos=()=>{ const a=areaSel(), cur=cur0();
       $('#rv-tramo').innerHTML=(a.tramos||[]).map(t=>`<option value="${esc(t.label)}">${esc(t.label)}${t.monto?' — '+money(t.monto,cur):''}</option>`).join('')||'<option value="">General</option>';
@@ -1013,7 +1072,7 @@ const PORTAL = {
           `<span class="s${lab==='Aprobada'?' ok':''}">${x.terminado?'Finalizada':lab}${lab==='Pendiente'?'<small>Bramar la revisará</small>':''}</span></li>`; }).join('')+'</ul>':'';
       resumenReserva();
       const bR=$('#m-badge-rv'), acc=misReservas.filter(r=>r.estado==='Aprobada'&&((!r.terminado&&!r.recibo&&!r.pago)||(r.terminado&&!r.garEstado&&!r.devolucion))).length;
-      bR.hidden=!acc; bR.textContent=acc;
+      bR.hidden=!acc; bR.textContent=acc; $('#m-rv-t').textContent=acc?'Tiene '+acc+' pendiente'+(acc>1?'s':''):'Reservar';
     }catch(e){}
   }
   function accion(x,i,cur){
@@ -1075,7 +1134,7 @@ const PORTAL = {
     $('#rp-body').innerHTML=`<p class="sub" style="margin:0 0 12px">${esc(fechaCorta(x.fecha))}${x.hini?' · '+esc(x.hini)+(x.hfin?' a '+esc(x.hfin):''):''}</p>`+
       `<div class="rv-sum">${filas}<div class="tot"><span>Total a pagar</span><b>${money(x.total,cur)}</b></div></div>`+
       (qr?`<div class="rp-qr"><img src="${esc(qr)}" alt="QR de pago"></div>`:'')+
-      `<dl class="rp-bank">${[['Banco',E.banco],['Titular',E.titular],['N.º de cuenta',E.cuenta]].filter(r=>r[1]).map(([k,v])=>`<div class="kv"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`+
+      `<dl class="rp-bank">${[['Titular',E.titular],['Banco',E.banco],['N.º de cuenta',E.cuenta]].filter(r=>r[1]).map(([k,v])=>`<div class="kv"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`+
       `<p class="sub" style="margin-top:10px">Después de pagar, envíe el comprobante para que Bramar lo confirme.</p>`;
     rpShow(true); });
   $('#rp-close').addEventListener('click',()=>rpShow(false));
@@ -1116,7 +1175,7 @@ const PORTAL = {
 
   $('#logout').addEventListener('click',()=>{
     data=null; session=null; store.del(SKEY); file=null; showAll=false; clearFile(); $('#up-msg').innerHTML='';
-    $('#view-profile').hidden=true; $('#view-login').hidden=false; $('#logout').hidden=true; $('#back').hidden=false;
+    $('#view-profile').hidden=true; $('#view-login').hidden=false; $('#logout').hidden=true; $('#m-burger').hidden=true; document.body.classList.remove('en-perfil'); menu(false); $('#back').hidden=false;
     document.title='Portal de copropietarios · Bramar Group'; $('#l-code').focus();
   });
 
