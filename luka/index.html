@@ -13709,7 +13709,7 @@ window.lukaCloud = (function(){
     try{ localStorage.removeItem(LS_LIST); }catch(e){}
     ses=null; persistSes(); location.reload();
   }
-  function rolTxt(r){ return r==='admin'?'Súper administrador':'Administrador de edificio'; }
+  function rolTxt(r){ return r==='admin'?'Coordinador general':'Administrador de edificio'; }
   function iniciales(n){ return String(n||'?').trim().split(/\s+/).slice(0,2).map(function(x){return x[0];}).join('').toUpperCase(); }
   var ICO={
     key:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3"/></svg>',
@@ -13814,7 +13814,7 @@ window.lukaCloud = (function(){
       b.onclick=function(ev){ ev.stopPropagation(); eliminarEdificio(it.dataset.id); };
       it.appendChild(b);
     });
-    var em=card.querySelector('.luka-sel-empty'); if(em&&u.rol!=='admin') em.textContent='Todavía no tiene edificios asignados. Pida acceso a un súper administrador.';
+    var em=card.querySelector('.luka-sel-empty'); if(em&&u.rol!=='admin') em.textContent='Todavía no tiene edificios asignados. Pida acceso a un coordinador general.';
     // resumen de cada edificio (para supervisar de un vistazo)
     var tot={deuda:0,deptos:0,alDia:0,n:0};
     card.querySelectorAll('.luka-sel-item[data-id]').forEach(function(it){
@@ -13887,7 +13887,7 @@ window.lukaCloud = (function(){
     try{ var reg=await idbGet('luka-registry'); if(reg&&Array.isArray(reg.list)){ reg.list=reg.list.filter(function(b){ return b.id!==id; }); if(reg.activeId===id) reg.activeId=null; await idbSet('luka-registry',reg); } }catch(_){}
   }
   async function cloudDelete(id){
-    if(!isAdmin()){ alert('Solo un súper administrador puede eliminar edificios.'); return false; }
+    if(!isAdmin()){ alert('Solo un coordinador general puede eliminar edificios.'); return false; }
     try{ await api({action:'lk_borrar',id:id}); setDirty(id,null); olvidarLista(); return true; }catch(err){ alert('No se pudo eliminar en la nube: '+err.message); return false; }
   }
 
@@ -13897,7 +13897,7 @@ window.lukaCloud = (function(){
     var bd=document.getElementById('lk-users-bd');
     if(!bd){
       bd=document.createElement('div'); bd.className='modal-backdrop no-print'; bd.id='lk-users-bd';
-      bd.innerHTML='<div class="modal lk-modal" style="max-width:720px"><button class="close-btn" id="lk-users-x" title="Cerrar">&times;</button><h2>Usuarios de LUKA</h2><p class="modal-sub"><b>Súper administrador:</b> ve todos los edificios, crea y elimina edificios, da accesos y ve la actividad. <b>Administrador de edificio:</b> trabaja solo en los edificios que usted le asigne (pagos, reservas, comprobantes, reportes); no puede eliminar edificios ni dar accesos.</p><div id="lk-users-body"></div></div>';
+      bd.innerHTML='<div class="modal lk-modal" style="max-width:720px"><button class="close-btn" id="lk-users-x" title="Cerrar">&times;</button><h2>Usuarios de LUKA</h2><p class="modal-sub"><b>Coordinador general:</b> ve todos los edificios, crea y elimina edificios, da accesos y ve la actividad. <b>Administrador de edificio:</b> trabaja solo en los edificios que usted le asigne (pagos, reservas, comprobantes, reportes); no puede eliminar edificios ni dar accesos.</p><div id="lk-users-body"></div></div>';
       document.body.appendChild(bd);
       bd.querySelector('#lk-users-x').onclick=function(){ bd.classList.remove('open'); };
       bd.addEventListener('click',function(e){ if(e.target===bd) bd.classList.remove('open'); });
@@ -13926,7 +13926,7 @@ window.lukaCloud = (function(){
       '<label>Correo (para entrar y recibir los avisos de pago)<input id="uf-c" type="email" inputmode="email" value="'+esc(x.correo||(x.usuario&&x.usuario.indexOf('@')>0?x.usuario:''))+'" autocapitalize="none" autocorrect="off" '+(nuevo?'required':'')+' placeholder="nombre@correo.com"></label>'+
       (nuevo?'':'<p class="lk-muted">Usuario: '+esc(x.usuario)+'</p>')+
       '<label>'+(nuevo?'Clave (mínimo 6)':'Nueva clave (déjela vacía para no cambiarla)')+'<input id="uf-p" type="password" autocomplete="new-password" '+(nuevo?'required':'')+'></label>'+
-      '<label>Rol<select id="uf-r"><option value="operador"'+(x.rol!=='admin'?' selected':'')+'>Administrador de edificio</option><option value="admin"'+(x.rol==='admin'?' selected':'')+'>Súper administrador (todos los edificios y accesos)</option></select></label>'+
+      '<label>Rol<select id="uf-r"><option value="operador"'+(x.rol!=='admin'?' selected':'')+'>Administrador de edificio</option><option value="admin"'+(x.rol==='admin'?' selected':'')+'>Coordinador general (todos los edificios y accesos)</option></select></label>'+
       '<fieldset id="uf-eds"><legend>Edificios que puede ver</legend><label class="lk-chk"><input type="checkbox" id="uf-all"'+(todos?' checked':'')+'> Todos</label>'+
       edificiosNube.map(function(e){ return '<label class="lk-chk"><input type="checkbox" class="uf-e" value="'+esc(e.id)+'"'+(!todos&&x.edificios.indexOf(e.id)>=0?' checked':'')+(todos?' disabled':'')+'> '+esc(e.nombre)+'</label>'; }).join('')+'</fieldset>'+
       (nuevo?'':'<label class="lk-chk"><input type="checkbox" id="uf-a"'+(x.activo?' checked':'')+'> Usuario activo (puede entrar)</label>')+
@@ -21401,11 +21401,15 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   function pintarSol(){
     var view=$('view-areas-sociales'); if(!view) return;
     var box=$('lkp-sol');
+    badge();
     if(!solicitudes.length){ if(box) box.remove(); return; }
     if(!box){ box=document.createElement('div'); box.id='lkp-sol'; box.className='lk-card lkp-sol no-print'; var c=$('areas-sociales-container'); (c||view).insertBefore(box,(c||view).firstChild); }
     box.innerHTML='<div class="lkp-sol-h"><b>Solicitudes del portal</b><span>'+solicitudes.length+' pendiente'+(solicitudes.length>1?'s':'')+'</span></div>'+
-      solicitudes.map(function(r,i){ return '<div class="lk-item"><div class="lk-item-main"><div class="lk-item-title">'+esc(r.area.replace(/^[^·]*·\s*/,''))+' <span>· '+esc(r.tramo)+'</span></div>'+
-        '<div class="lk-item-meta"><b>'+esc(new Date(r.fecha+'T00:00:00').toLocaleDateString('es-BO',{weekday:'short',day:'2-digit',month:'short'}))+'</b>'+(r.hini?' · '+esc(r.hini)+(r.hfin?'–'+esc(r.hfin):''):'')+' · Depto '+esc(r.depto)+' · '+esc(r.responsable)+(r.evento?' · «'+esc(r.evento)+'»':'')+(r.personas?' · '+esc(r.personas)+' personas':'')+'</div></div>'+
+      solicitudes.map(function(r,i){ var choque=ocupado(r);
+        return '<div class="lk-item"><div class="lk-item-main"><div class="lk-item-title">'+esc(r.area.replace(/^[^·]*·\s*/,''))+' <span>· '+esc(r.tramo)+'</span></div>'+
+        '<div class="lk-item-meta"><b>'+esc(new Date(r.fecha+'T00:00:00').toLocaleDateString('es-BO',{weekday:'short',day:'2-digit',month:'short'}))+'</b>'+(r.hini?' · '+esc(r.hini)+(r.hfin?'–'+esc(r.hfin):''):'')+' · Depto '+esc(r.depto)+' · '+esc(r.responsable)+(r.telefono?' · Tel. '+esc(r.telefono):'')+(r.evento?' · «'+esc(r.evento)+'»':'')+(r.personas?' · '+esc(r.personas)+' personas':'')+'</div>'+
+        (r.extrasTxt||r.total!=null?'<div class="lk-item-meta">'+(r.extrasTxt?'Extras: '+esc(r.extrasTxt)+' · ':'')+(r.total!=null?'<b>Total '+esc(fmtMoney(r.total))+'</b> (incluye garantía '+esc(fmtMoney(r.garantia||0))+')':'')+'</div>':'')+
+        (choque?'<div class="lkp-choque">Ese día ya hay una reserva de '+esc(choque)+'.</div>':'')+'</div>'+
         '<div class="lk-item-actions"><button type="button" class="btn primary" data-ap="'+i+'">Aprobar</button><button type="button" class="btn" data-re="'+i+'">Rechazar</button></div></div>'; }).join('');
     box.querySelectorAll('[data-ap]').forEach(function(b){ b.onclick=function(){ resolver(solicitudes[+b.dataset.ap],'Aprobada',b); }; });
     box.querySelectorAll('[data-re]').forEach(function(b){ b.onclick=function(){ var n=prompt('Motivo del rechazo (lo verá el propietario):',''); if(n===null) return; resolver(solicitudes[+b.dataset.re],'Rechazada',b,n); }; });
@@ -21418,15 +21422,31 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       cargarSol();
     }).catch(function(e){ btn.disabled=false; alert('No se pudo actualizar: '+e.message); });
   }
+  function ocupado(r){
+    var L=(DATA.reservasSociales||[]).filter(function(x){ return x.estado!=='Cancelada'&&String(x.fecha||x.inicio||'').slice(0,10)===r.fecha&&x.areaId===r.areaId; });
+    return L.length?(L[0].areaNombre||'esta área')+(L[0].inicio?' ('+String(L[0].inicio).slice(11,16)+')':''):'';
+  }
+  /* puntito en el menú cuando hay reservas por aprobar */
+  function badge(){
+    var n=solicitudes.length;
+    var it=document.querySelector('.nav-item[data-view="areas-sociales"]');
+    if(it){ var b=it.querySelector('.lk-nav-badge'); if(!b){ b=document.createElement('span'); b.className='lk-nav-badge'; it.appendChild(b); } b.textContent=n; b.hidden=!n; }
+    var bu=$('sidebar-open'); if(bu) bu.classList.toggle('lk-dot',n>0);
+  }
+  setInterval(function(){ if(!document.hidden) cargarSol(); },60000);
+  setTimeout(cargarSol,4000);
   function crearReserva(r){
     if(!Array.isArray(DATA.reservasSociales)) DATA.reservasSociales=[];
     var areas=(DATA.config&&DATA.config.areasLuka)||[], a=areas.filter(function(x){ return x.id===r.areaId; })[0]||{};
     var t=(a.tramos||[]).filter(function(x){ return x.label===r.tramo; })[0]||{};
     DATA.reservaCounter=(DATA.reservaCounter||0)+1;
     DATA.reservasSociales.push({ id:'r'+DATA.reservaCounter, creado:new Date().toISOString().slice(0,10), garDev:{estado:'pendiente',historial:[]},
-      depto:r.depto, responsable:r.responsable, evento:r.evento, areaId:a.id||r.areaId, areaNombre:a.nombre||r.area, tramoLabel:r.tramo,
-      inicio:r.fecha+'T'+(r.hini||'00:00'), fin:r.hfin?r.fecha+'T'+r.hfin:'', fecha:r.fecha, monto:+t.monto||0, garantia:+a.garantia||0,
-      sillas:0, mesas:0, mesasNuevas:0, extras:0, estado:'Confirmada', obs:'Solicitada desde el portal de propietarios'+(r.telefono?' · Tel. '+r.telefono:'') });
+      depto:r.depto, responsable:r.responsable, evento:r.evento, areaId:a.id||r.areaId, areaNombre:a.nombre||String(r.area).replace(/^[^·]*·\s*/,''), tramoLabel:r.tramo,
+      inicio:r.fecha+'T'+(r.hini||'00:00'), fin:r.hfin?(r.hfin<(r.hini||'')?r.fecha+'T23:59':r.fecha+'T'+r.hfin):'', fecha:r.fecha,
+      monto:r.alquiler!=null?+r.alquiler:(+t.monto||0), garantia:r.garantia!=null?+r.garantia:(+a.garantia||0),
+      sillas:cant('silla'), mesas:cant('mesa'), mesasNuevas:cant('mesaNueva'), extras:(r.extras||[]).reduce(function(s,x){ return s+(+x.subtotal||0); },0),
+      estado:'Confirmada', obs:'Solicitada desde el portal de propietarios'+(r.telefono?' · Tel. '+r.telefono:'')+(r.personas?' · '+r.personas+' personas':'')+(r.extrasTxt?' · Extras: '+r.extrasTxt:'') });
+    function cant(k){ var x=(r.extras||[]).filter(function(z){ return z.id===k; })[0]; return x?+x.cant||0:0; }
     guardar();
     try{ if(typeof renderAreasSociales==='function') renderAreasSociales(); }catch(e){}
   }
@@ -21441,6 +21461,13 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 })();
 </script>
 <style>
+/* sin el formulario por WhatsApp: las reservas llegan desde el portal */
+.lkr-form > div:has(#lkr-wa-copy),.lkr-form > div:has(#lkr-leer-msg){display:none!important}
+.lk-nav-badge{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#C0392B;color:#fff;font-size:11.5px;font-weight:700;display:inline-grid;place-items:center}
+.lk-nav-badge[hidden]{display:none}
+#sidebar-open.lk-dot{position:relative}
+#sidebar-open.lk-dot::after{content:"";position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:#C0392B;box-shadow:0 0 0 2px #fff}
+.lkp-choque{margin-top:6px;font-size:12.5px;font-weight:600;color:#8E2A20;background:#FBEFEF;border-radius:8px;padding:6px 10px;display:inline-block}
 .lkp-tabla{display:grid;gap:6px;max-height:56vh;overflow:auto;padding-right:4px}
 .lkp-fila{display:grid;grid-template-columns:70px 1.4fr 1fr 120px auto;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--lk-line,#DDE5EE);border-radius:10px;background:#fff}
 .lkp-head{background:transparent;border:0;font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--lk-muted,#7d93ab);position:sticky;top:0;background:var(--surface-1,#fff);z-index:1}
@@ -21871,6 +21898,27 @@ body{overscroll-behavior-y:none}
     b.onclick=abrir; tb.insertBefore(b,tb.firstChild);
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',poner); else poner();
+})();
+</script>
+
+<script>
+/* Servicios y tarifas: poder agregar otros alquileres (freezer, conservadora…) que el portal ofrece como opcionales */
+(function(){
+  function fila(k){
+    return '<div class="luka-form-field" data-svc="'+k+'" style="display:grid; grid-template-columns:1fr 120px 80px; gap:10px; align-items:end; margin-bottom:10px;">'+
+      '<div><label>Nombre</label><input type="text" class="bs-nombre" maxlength="40" placeholder="Ej. Freezer, conservadora"></div>'+
+      '<div><label>Precio (Bs.)</label><input type="number" class="bs-precio" min="0" step="0.01"></div>'+
+      '<div style="display:flex; align-items:center; gap:6px; padding-bottom:10px;"><input type="checkbox" class="bs-enabled" checked id="bs-en-'+k+'"><label for="bs-en-'+k+'" style="margin:0; font-size:12px;">Cobrar</label></div></div>';
+  }
+  function poner(){
+    var rows=document.getElementById('bramar-svc-rows'); if(!rows||document.getElementById('lk-svc-add')) return;
+    var b=document.createElement('button'); b.type='button'; b.className='btn'; b.id='lk-svc-add'; b.textContent='+ Agregar otro alquiler (freezer, conservadora…)'; b.style.margin='0 0 12px';
+    b.onclick=function(){ rows.insertAdjacentHTML('beforeend',fila('x'+Date.now().toString(36))); var i=rows.lastElementChild.querySelector('.bs-nombre'); if(i) i.focus(); };
+    rows.parentNode.insertBefore(b,rows.nextSibling);
+    var p=document.createElement('p'); p.style.cssText='font-size:12px;color:#5B6B7F;margin:0 0 12px'; p.textContent='Los propietarios ven estos alquileres como opcionales al reservar en el portal. Desmarque «Cobrar» para no ofrecerlos.';
+    b.parentNode.insertBefore(p,b.nextSibling);
+  }
+  new MutationObserver(function(){ if(document.getElementById('bramar-svc-rows')) poner(); }).observe(document.body,{childList:true});
 })();
 </script>
 

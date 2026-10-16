@@ -581,6 +581,7 @@ function ptEstado_(portalId, lk, data, depto) {
     unidad: { depto: d.depto, bloque: String(d.bloque || ''), propietario: acc.propietario || '', expensa: +d.expensaMensual || +cfg.expensaMensual || 0 },
     resumen: { deuda: deuda, vencimiento: '', actualizado: String(lk.e.upd || '').slice(0, 10) },
     movimientos: mov,
+    servicios: ptServicios_(cfg),
     areas: ptAreas_(cfg).map(function (a) { return { id: a.id, nombre: a.nombre, garantia: +a.garantia || 0, tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: +t.monto || 0 }; }) }; })
   };
 }
@@ -607,12 +608,43 @@ function ptHojaReservas_() {
     return sh;
   })();
 }
+const PT_RES_COLS = 22;
+function ptHojaRes_() {
+  const sh = ptHojaReservas_();
+  if (sh.getRange(1, 18).getValue() === '') {
+    sh.getRange(1, 18, 1, 5).setValues([['Extras', 'Alquiler Bs', 'Garantía Bs', 'Total Bs', 'extras_json']]);
+    sh.hideColumns(22);
+  }
+  return sh;
+}
+function ptHora_(v) { return v instanceof Date ? Utilities.formatDate(v, 'America/La_Paz', 'HH:mm') : String(v || ''); }
+function ptTxt_(v) { const t = String(v == null ? '' : v); return t.charAt(0) === '#' ? '' : t; }
+/* Servicios extra que el edificio alquila (sillas, mesas, freezer…), como en LUKA */
+function ptServicios_(cfg) {
+  const s = cfg.servicios || { silla: { nombre: 'Sillas', precio: 2, unidad: 'c/u' }, mesa: { nombre: 'Mesas pequeñas', precio: 3, unidad: 'c/u' }, mesaNueva: { nombre: 'Mesas nuevas 6-8p', precio: 10, unidad: 'c/u' } };
+  return Object.keys(s).filter(function (k) { return s[k] && s[k].enabled !== false && isFinite(+s[k].precio); })
+    .map(function (k) { return { id: k, nombre: String(s[k].nombre || k), precio: +s[k].precio || 0, unidad: String(s[k].unidad || 'c/u') }; });
+}
+/* Reservas que ya hay ese día (de LUKA y solicitudes pendientes del portal) */
+function ptOcupadas_(pid, data, fecha) {
+  const out = [];
+  (data.reservasSociales || []).forEach(function (x) {
+    const f = String(x.fecha || x.inicio || '').slice(0, 10);
+    if (f === fecha && x.estado !== 'Cancelada') out.push({ areaId: String(x.areaId || ''), area: String(x.areaNombre || ''), hora: String(x.inicio || '').slice(11, 16), estado: 'Confirmada' });
+  });
+  ptReservasLista_(function (r) { return r.edificio_id === pid && r.fecha === fecha && r.estado === 'Pendiente'; })
+    .forEach(function (r) { out.push({ areaId: r.areaId, area: r.area.replace(/^[^·]*·\s*/, ''), hora: r.hini, estado: 'Pendiente' }); });
+  return out;
+}
 function ptReservasLista_(filtro) {
-  const sh = ptHojaReservas_(), n = sh.getLastRow(); if (n < 2) return [];
-  return sh.getRange(2, 1, n - 1, 17).getValues().map(function (r) {
-    return { id: String(r[0]), recibida: r[1] instanceof Date ? r[1].toISOString() : String(r[1]), edificio_id: String(r[2]), edificio: String(r[3]), depto: String(r[4]),
-      responsable: String(r[5]), areaId: String(r[6]).split(' · ')[0], area: String(r[6]), tramo: String(r[7]), fecha: fecha_(r[8]), hini: String(r[9]), hfin: String(r[10]),
-      evento: String(r[11]), estado: String(r[12] || 'Pendiente'), nota: String(r[13] || ''), personas: String(r[15] || ''), telefono: String(r[16] || '') };
+  const sh = ptHojaRes_(), n = sh.getLastRow(); if (n < 2) return [];
+  const cols = Math.min(PT_RES_COLS, sh.getLastColumn());
+  return sh.getRange(2, 1, n - 1, cols).getValues().map(function (r) {
+    let ex = []; try { ex = JSON.parse(r[21] || '[]'); } catch (e) {}
+    return { id: String(r[0]), recibida: r[1] instanceof Date ? r[1].toISOString() : String(r[1]), edificio_id: String(r[2]), edificio: String(r[3]), depto: ptTxt_(r[4]),
+      responsable: String(r[5]), areaId: String(r[6]).split(' · ')[0], area: String(r[6]), tramo: ptTxt_(r[7]), fecha: fecha_(r[8]), hini: ptHora_(r[9]), hfin: ptHora_(r[10]),
+      evento: String(r[11]), estado: String(r[12] || 'Pendiente'), nota: String(r[13] || ''), personas: ptTxt_(r[15]), telefono: ptTxt_(r[16]),
+      extrasTxt: String(r[17] || ''), alquiler: r[18] === '' || r[18] == null ? null : +r[18], garantia: r[19] === '' || r[19] == null ? null : +r[19], total: r[20] === '' || r[20] == null ? null : +r[20], extras: ex };
   }).filter(filtro).reverse();
 }
 function portal_(d) {
@@ -633,22 +665,54 @@ function portal_(d) {
   if (!est) return json({ ok: false, error: 'codigo' });
   const dep = ptNormDepto_(d.depto);
   if (d.action === 'pt_estado') return json({ ok: true, data: est });
-  if (d.action === 'pt_reservas') return json({ ok: true, reservas: ptReservasLista_(function (r) { return r.edificio_id === pid && ptNormDepto_(r.depto) === dep; }).slice(0, 20) });
+  if (d.action === 'pt_reservas') {
+    const L = ptReservasLista_(function (r) { return r.edificio_id === pid && ptNormDepto_(r.depto) === dep; }).slice(0, 20);
+    L.forEach(function (r) {
+      if (r.total != null) return;
+      const a = (est.areas || []).filter(function (x) { return x.id === r.areaId; })[0] || {};
+      const t = (a.tramos || []).filter(function (x) { return x.label === r.tramo; })[0] || {};
+      r.alquiler = +t.monto || 0; r.garantia = +a.garantia || 0; r.total = r.alquiler + r.garantia;
+    });
+    return json({ ok: true, reservas: L });
+  }
+  if (d.action === 'pt_ocupado') {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha || '')) return json({ ok: true, ocupadas: [] });
+    return json({ ok: true, ocupadas: ptOcupadas_(pid, data, d.fecha) });
+  }
   if (d.action === 'pt_reserva') {
     const area = (est.areas || []).filter(function (a) { return a.id === d.areaId; })[0];
     if (!area) return json({ ok: false, error: 'Elija un área.' });
+    const tramo = (area.tramos || []).filter(function (t) { return t.label === d.tramo; })[0];
+    if (!tramo && (area.tramos || []).length) return json({ ok: false, error: 'Elija el horario o tarifa.' });
     if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha || '')) return json({ ok: false, error: 'Elija la fecha.' });
-    const id = Utilities.getUuid().replace(/-/g, '').slice(0, 16);
-    ptHojaReservas_().appendRow([id, new Date(), pid, est.edificio.nombre, est.unidad.depto, String(d.responsable || est.unidad.propietario || '').slice(0, 80),
-      area.id + ' · ' + area.nombre, String(d.tramo || '').slice(0, 60), d.fecha, String(d.hini || '').slice(0, 5), String(d.hfin || '').slice(0, 5),
-      String(d.evento || '').slice(0, 120), 'Pendiente', '', '', String(d.personas || '').slice(0, 10), String(d.telefono || '').slice(0, 30)]);
+    const hoy = Utilities.formatDate(new Date(), 'America/La_Paz', 'yyyy-MM-dd');
+    if (d.fecha < hoy) return json({ ok: false, error: 'La fecha ya pasó.' });
+    const req = { hini: 'la hora de inicio', hfin: 'la hora de fin', responsable: 'el nombre del responsable', telefono: 'el teléfono', personas: 'la cantidad de personas', evento: 'el tipo de evento' };
+    const falta = Object.keys(req).filter(function (k) { return !String(d[k] || '').trim(); });
+    if (falta.length) return json({ ok: false, error: 'Complete ' + falta.map(function (k) { return req[k]; }).join(', ') + '.' });
+    if (!/^\d{2}:\d{2}$/.test(d.hini) || !/^\d{2}:\d{2}$/.test(d.hfin)) return json({ ok: false, error: 'Revise las horas.' });
+    // servicios extra (opcionales)
+    const svc = est.servicios || [], pedidos = [];
+    svc.forEach(function (x) { const q = Math.floor(+((d.extras || {})[x.id]) || 0); if (q > 0 && q <= 500) pedidos.push({ id: x.id, nombre: x.nombre, cant: q, precio: x.precio, subtotal: q * x.precio }); });
+    const alquiler = tramo ? +tramo.monto || 0 : 0, garantia = +area.garantia || 0;
+    const totExtras = pedidos.reduce(function (a, x) { return a + x.subtotal; }, 0), total = alquiler + garantia + totExtras;
+    const ocup = ptOcupadas_(pid, data, d.fecha);
+    const id = Utilities.getUuid().replace(/-/g, '').slice(0, 16), T = function (v, n) { return "'" + String(v || '').slice(0, n); };
+    ptHojaRes_().appendRow([id, new Date(), pid, est.edificio.nombre, T(est.unidad.depto, 20), String(d.responsable).slice(0, 80),
+      area.id + ' · ' + area.nombre, T(d.tramo, 60), d.fecha, T(d.hini, 5), T(d.hfin, 5),
+      String(d.evento).slice(0, 120), 'Pendiente', '', '', T(d.personas, 10), T(d.telefono, 30),
+      pedidos.map(function (x) { return x.nombre + ' x' + x.cant; }).join(', '), alquiler, garantia, total, JSON.stringify(pedidos)]);
+    const mismo = ocup.filter(function (o) { return o.areaId === area.id; });
     try {
       const to = destinatarios_(pid);
-      if (to) MailApp.sendEmail({ to: to, name: 'Portal Bramar', subject: 'Solicitud de reserva · ' + est.edificio.nombre + ' · Depto ' + est.unidad.depto + ' · ' + area.nombre + ' · ' + d.fecha,
-        htmlBody: '<div style="font-family:Arial,sans-serif;font-size:15px;color:#0B2440"><p>Nueva solicitud de reserva desde el portal.</p><p><b>' + area.nombre + '</b> · ' + (d.tramo || '') + '<br>' + d.fecha + ' ' + (d.hini || '') + '–' + (d.hfin || '') +
-          '<br>Depto ' + est.unidad.depto + ' · ' + (d.responsable || '') + (d.evento ? '<br>Evento: ' + String(d.evento).replace(/</g, '&lt;') : '') + '</p><p><a href="' + LUKA_URL + '">Abrir Gestión LUKA</a> para aprobarla o rechazarla.</p></div>' });
+      if (to) MailApp.sendEmail({ to: to, name: 'Portal Bramar', subject: 'Solicitud de reserva · ' + est.edificio.nombre + ' · Depto ' + est.unidad.depto + ' · ' + area.nombre + ' · ' + d.fecha + (mismo.length ? ' · YA HAY RESERVA ESE DÍA' : ''),
+        htmlBody: '<div style="font-family:Arial,sans-serif;font-size:15px;color:#0B2440"><p>Nueva solicitud de reserva desde el portal.</p><p><b>' + area.nombre + '</b> · ' + (d.tramo || '') + '<br>' + d.fecha + ' ' + d.hini + '–' + d.hfin +
+          '<br>Depto ' + est.unidad.depto + ' · ' + String(d.responsable).replace(/</g, '&lt;') + ' · Tel. ' + String(d.telefono).replace(/</g, '&lt;') + '<br>Evento: ' + String(d.evento).replace(/</g, '&lt;') +
+          (pedidos.length ? '<br>Extras: ' + pedidos.map(function (x) { return x.nombre + ' x' + x.cant; }).join(', ') : '') + '<br><b>Total: Bs ' + total + '</b> (incluye garantía Bs ' + garantia + ')</p>' +
+          (ocup.length ? '<p style="color:#8E2A20"><b>Atención:</b> ese día ya hay ' + ocup.map(function (o) { return o.area + (o.hora ? ' ' + o.hora : '') + ' (' + o.estado.toLowerCase() + ')'; }).join(', ') + '.</p>' : '') +
+          '<p><a href="' + LUKA_URL + '">Abrir Gestión LUKA</a> para aprobarla o rechazarla.</p></div>' });
     } catch (e) {}
-    return json({ ok: true, id: id });
+    return json({ ok: true, id: id, total: total, ocupadas: ocup });
   }
   return json({ ok: false, error: 'Acción desconocida.' });
 }
