@@ -21188,7 +21188,10 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     modal().classList.add('open');
     var conSesion=window.lukaCloud&&lukaCloud.active();
     var bc=document.getElementById('pb-cfg'); if(bc) bc.style.visibility=conSesion?'hidden':'';
-    cargarEdificiosPortal().then(function(){ pintarVinculo(); if(!conSesion&&!cfg().clave) pedirClave(false); else cargar(); });
+    // se muestra al instante lo último que se consultó y se actualiza por detrás
+    if(cargadoEn&&(conSesion||cfg().clave)){ pintar(); pintarOtros(); }
+    if(conSesion||cfg().clave) cargar(!!cargadoEn);
+    cargarEdificiosPortal().then(function(){ pintarVinculo(); if(!conSesion&&!cfg().clave) pedirClave(false); else if(cargadoEn) pintarOtros(); });
   }
   function pedirClave(cambiar){
     var b=document.getElementById('pb-body'); document.getElementById('pb-otros').innerHTML='';
@@ -21196,10 +21199,11 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       '<div class="lk-row"><input id="pb-key" type="password" autocomplete="off" placeholder="Clave de administración" value="'+esc(cfg().clave)+'"><button type="button" class="btn primary" id="pb-key-ok">Guardar y conectar</button></div>';
     document.getElementById('pb-key-ok').onclick=function(){ var v=document.getElementById('pb-key').value.trim(); if(!v) return; cfg().clave=v; try{ localStorage.setItem(LS_KEY,v); }catch(e){} guardar(); cargar(); };
   }
-  function cargar(){
-    var b=document.getElementById('pb-body'); if(b) b.innerHTML='<p class="lk-muted">Consultando el portal…</p>';
+  var cargadoEn=0;
+  function cargar(callado){
+    var b=document.getElementById('pb-body'); if(b&&!callado) b.innerHTML='<p class="lk-muted">Consultando el portal…</p>';
     return api({action:'pendientes',edificio_id:lukaPortalId(),edificio:edificio()}).then(function(j){
-      lista=j.recibos||[]; otros=j.otros||[]; badge(lista.length); if(b){ pintar(); pintarOtros(); }
+      lista=j.recibos||[]; otros=j.otros||[]; cargadoEn=Date.now(); badge(lista.length); b=document.getElementById('pb-body'); if(b){ pintar(); pintarOtros(); }
     }).catch(function(e){
       if(!b) return;
       var m=String(e.message||e);
@@ -21287,14 +21291,14 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       return out;
     };
   }
-  function contar(){ if(cfg().clave||(window.lukaCloud&&lukaCloud.active())) cargar(); }
+  function contar(){ if(cfg().clave||(window.lukaCloud&&lukaCloud.active())) cargar(true); }
   function init(){
     try{ injectBtn(); hook(); }catch(e){ try{console.error('portal bramar',e);}catch(_){}}
     setTimeout(function(){ try{ injectBtn(); hook(); contar(); }catch(e){} },1500);
-    clearInterval(timer); timer=setInterval(function(){ try{ injectBtn(); contar(); }catch(e){} },5*60*1000);
+    clearInterval(timer); timer=setInterval(function(){ try{ if(!document.hidden){ injectBtn(); contar(); } }catch(e){} },2*60*1000);
     // al cambiar de edificio en LUKA (se actualiza el nombre de la barra lateral), recontar
     var sb=document.getElementById('sb-edificio');
-    if(sb&&!window.__pbObs){ window.__pbObs=new MutationObserver(function(){ lista=[]; badge(0); var bd=document.getElementById('pb-bd'); if(bd) bd.classList.remove('open'); setTimeout(function(){ injectBtn(); contar(); },400); });
+    if(sb&&!window.__pbObs){ window.__pbObs=new MutationObserver(function(){ lista=[]; cargadoEn=0; badge(0); var bd=document.getElementById('pb-bd'); if(bd) bd.classList.remove('open'); setTimeout(function(){ injectBtn(); contar(); },400); });
       window.__pbObs.observe(sb,{childList:true,characterData:true,subtree:true}); }
   }
   window.__lukaComprobantesPortal=abrir;
@@ -21869,6 +21873,23 @@ body{overscroll-behavior-y:none}
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',function(){ setTimeout(ajustar,800); }); else setTimeout(ajustar,800);
 })();
 </script>
+
+<style>
+/* ---- Módulo 35b: celular minimalista (sin tarjetas de cifras) y orden en escritorio ---- */
+@media (max-width:700px){
+  #stat-grid,.stat-grid,.progress-bar-wrap,.qr-banner,.lkr-kpis,#lk-piz-hist,#pzbar,#btn-lista-estado-cuenta-pdf,#btn-cuota-masiva{display:none!important}
+  #view-pizarra>p.no-print:first-child{display:none!important}
+  #topbar-download-slot,#btn-piz-personalizar,.topbar .btn-descarga,#lkr-cfg{display:none!important}
+  .lista-toolbar{justify-content:stretch}
+  .lista-toolbar #lk-ver-btn{flex:1}
+}
+@media (min-width:1000px){
+  .controls{display:grid!important;grid-template-columns:minmax(220px,1.3fr) auto minmax(160px,1fr) minmax(160px,1fr);gap:10px;align-items:center}
+  .controls>*{margin:0!important;min-width:0}
+  .controls input,.controls select{width:100%}
+}
+.lista-toolbar{gap:8px;margin-bottom:12px}
+</style>
 
 <style>
 /* Módulo 37 · Verificar recibo + limpieza de la lista */

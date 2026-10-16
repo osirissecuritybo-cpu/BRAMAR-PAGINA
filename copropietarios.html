@@ -387,6 +387,49 @@ html,body{overflow-x:clip;max-width:100%}
   .rec-card .receipt-box .r-band{margin:-20px -16px 16px}
   .rec-card .receipt-box .r-stamp{width:88px;height:88px;right:10px}
 }
+
+/* ---- Celular minimalista: saludo, deuda y un menú; cada opción abre su pantalla ---- */
+.m-menu,.m-head{display:none}
+.table tr.last td{border-top:1px solid var(--line);color:var(--muted)}
+.table tr.last td small{display:block;font-size:12.5px;color:var(--muted)}
+.table td.empty.ok{color:var(--navy);text-align:left;padding:14px 0}
+@media (max-width:600px){
+  :root{--g:16px}
+  .profile .wrap{padding-left:var(--g);padding-right:var(--g)}
+  .hello{padding:4px 0 0}
+  .hello-actions{display:none}
+  .grid{display:flex;flex-direction:column;gap:12px}
+  .p-debt{padding:22px var(--g) 20px;border-radius:20px}
+  .p-debt .meta{gap:16px;margin-top:14px;padding-top:12px}
+  .p-debt .meta>div:nth-child(2){display:none}
+  .p-debt .btn.gold{display:none}
+  .m-menu{display:flex;flex-direction:column;background:var(--paper);border-radius:20px;overflow:hidden}
+  .m-menu button{display:flex;align-items:center;gap:14px;width:100%;min-height:58px;padding:0 var(--g);border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:16px;text-align:left;cursor:pointer}
+  .m-menu button:first-child{border-top:0}
+  .m-menu button[hidden]{display:none}
+  .m-menu button:active{background:var(--sand)}
+  .m-menu svg{width:22px;height:22px;flex:none;color:var(--navy)}
+  .m-menu span{flex:1}
+  .m-menu .chev{width:8px;height:8px;border-right:1.6px solid var(--muted);border-top:1.6px solid var(--muted);transform:rotate(45deg);margin-right:4px}
+  .m-badge{font-style:normal;min-width:22px;height:22px;padding:0 8px;border-radius:999px;background:var(--sand);color:var(--navy);font-size:12px;font-weight:600;display:inline-grid;place-items:center}
+  .m-badge.alerta{background:#FBEFEF;color:#8E2A20}
+  .m-badge[hidden]{display:none}
+  .grid>section.panel:not(.p-debt){display:none}
+  .grid>section.panel.m-open{display:block;position:fixed;inset:0;z-index:70;border-radius:0;margin:0;padding:0 var(--g) calc(28px + env(safe-area-inset-bottom,0px));overflow-y:auto;overscroll-behavior:contain;background:var(--paper);animation:none}
+  .grid>section.panel.m-open[hidden]{display:none}
+  .m-open .m-head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;position:sticky;top:0;z-index:2;margin:0 calc(-1*var(--g)) 16px;padding:calc(8px + env(safe-area-inset-top,0px)) calc(var(--g) - 8px) 8px;background:var(--paper);border-bottom:1px solid var(--line)}
+  .m-head b{text-align:center;font-weight:500;font-size:16px;color:var(--navy)}
+  .m-back{width:44px;height:44px;border:0;background:none;color:var(--navy);display:grid;place-items:center;cursor:pointer}
+  .m-back svg{width:22px;height:22px}
+  .m-open>h2:first-of-type,.m-open .mov-head h2,.m-open .rv-head h2,.m-open .bank>h2{display:none}
+  .m-open .p-pay,.p-pay.m-open{display:block}
+  .p-pay.m-open .qr{margin-top:18px;align-items:center}
+  .dialog{z-index:90}
+  .table tr.last{margin-top:10px;border-bottom:0;padding:14px 0 0;border-top:1px solid var(--line)}
+  .table tr.last td{border-top:0}
+  .table tr.last td.f{font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  .table td.empty.ok{padding:4px 0 10px}
+}
 </style>
 </head>
 <body>
@@ -478,7 +521,15 @@ html,body{overflow-x:clip;max-width:100%}
         <a class="btn gold" href="#comprobante"><svg aria-hidden="true"><use href="#i-upload"/></svg>Enviar comprobante</a>
       </section>
 
-      <section class="panel p-pay" aria-labelledby="h-pay" style="animation-delay:.06s">
+      <nav class="m-menu" id="m-menu" aria-label="Opciones">
+        <button type="button" data-sheet="comprobante"><svg aria-hidden="true"><use href="#i-upload"/></svg><span>Enviar comprobante</span><i class="chev"></i></button>
+        <button type="button" data-sheet="estado"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18H6z"/><path d="M9 8h6M9 12h6M9 16h4"/></svg><span>Estado de cuenta</span><em class="m-badge" id="m-badge-estado" hidden></em><i class="chev"></i></button>
+        <button type="button" data-sheet="datos"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg><span>Datos de la cuenta</span><i class="chev"></i></button>
+        <button type="button" data-sheet="rv" id="m-rv" hidden><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Áreas sociales</span><em class="m-badge" id="m-badge-rv" hidden></em><i class="chev"></i></button>
+        <button type="button" data-sheet="clave" id="m-clave" hidden><svg aria-hidden="true"><use href="#i-lock"/></svg><span>Cambiar contraseña</span><i class="chev"></i></button>
+      </nav>
+
+      <section class="panel p-pay" id="datos" aria-labelledby="h-pay" style="animation-delay:.06s">
         <div class="bank">
           <h2 id="h-pay">Datos para el pago</h2>
           <p class="sub">Deposite o transfiera a la cuenta del edificio.</p>
@@ -518,13 +569,13 @@ html,body{overflow-x:clip;max-width:100%}
           </div>
         </form>
         <div class="rc" id="rc" hidden>
-          <h3>Mis comprobantes</h3>
+          <h3>En verificación</h3>
           <p class="rc-note">Su estado de cuenta se actualizará en un máximo de 24 horas después de verificar su pago.</p>
           <ul class="rc-list" id="rc-list"></ul>
         </div>
       </section>
 
-      <section class="panel p-mov" aria-labelledby="h-mov" style="animation-delay:.18s">
+      <section class="panel p-mov" id="estado" aria-labelledby="h-mov" style="animation-delay:.18s">
         <div class="mov-head"><div><h2 id="h-mov">Estado de cuenta</h2><p class="sub" id="p-mov-sub"></p></div></div>
         <table class="table" id="p-table">
           <thead><tr><th>Fecha</th><th>Concepto</th><th class="num">Monto</th><th class="num">Estado</th></tr></thead>
@@ -752,6 +803,7 @@ const PORTAL = {
       const rk=await C.receiptKey(session.b,session.d,session.code);
       const r=await fetch(PORTAL.endpoint+'?action=recibos&rk='+rk,{cache:'no-store'}); const j=await r.json();
       rcCount=(j.ok&&j.recibos)?j.recibos.length:0;
+      if(j.ok&&j.recibos) j.recibos=j.recibos.filter(x=>!/^(verific|rechaz)/i.test(String(x.estado||'')));
       if(!j.ok||!j.recibos||!j.recibos.length){ box.hidden=true; return; }
       const cur=(data.edificio||{}).moneda||'Bs';
       $('#rc-list').innerHTML=j.recibos.slice(0,8).map(x=>{
@@ -790,7 +842,7 @@ const PORTAL = {
     renderTable();
     renderReservas();
     $('#up-date').value=new Date().toISOString().slice(0,10);
-    $('#p-pass').hidden=!PORTAL.endpoint;
+    $('#p-pass').hidden=!PORTAL.endpoint; $('#m-clave').hidden=!PORTAL.endpoint;
     $('#view-auto').hidden=true; $('#view-login').hidden=true; $('#view-profile').hidden=false; $('#logout').hidden=false; $('#back').hidden=true;
     window.scrollTo(0,0); $('#p-name').focus({preventScroll:true});
   }
@@ -824,17 +876,22 @@ const PORTAL = {
   function renderTable(){
     const cur=(data.edificio||{}).moneda||'Bs';
     const {charges,credit}=statement();
-    const list=showAll?charges:charges.slice(0,12); shown=list;
+    // sin historial: lo que debe y, aparte, su último pago (con su recibo)
+    const pend=charges.filter(c=>c.resta>0.009), ult=charges.find(c=>c.resta<=0.009);
+    const list=ult?pend.concat([ult]):pend; shown=list;
     $('#p-table tbody').innerHTML=list.length?list.map((c,i)=>{
       const paid=c.resta<=0.009, partial=!paid&&c.resta<c.monto;
       const st=paid?`Pagado${c.pagado?`<small>el ${fdate(c.pagado)}</small>`:''}${c.recibo?`<button type="button" class="rec-btn" data-rec="${i}">Ver recibo</button>`:''}`
         :partial?`Deuda<small>falta ${money(c.resta,cur)}</small>`:'Deuda';
+      if(paid) return `<tr class="last"><td class="f">Último pago</td><td>${esc(c.concepto)}<small>${c.pagado?'pagado el '+fdate(c.pagado):''}</small></td><td class="num">${money(c.monto,cur)}</td><td class="st paid">${c.recibo?`<button type="button" class="rec-btn" data-rec="${i}">Ver recibo</button>`:'Pagado'}</td></tr>`;
       return `<tr class="${paid?'':'due'}" style="animation-delay:${Math.min(i,10)*.03}s"><td class="f">${flong(c.fecha)}</td><td>${esc(c.concepto)}</td><td class="num">${money(c.monto,cur)}</td><td class="st ${paid?'paid':'due'}">${st}</td></tr>`;
     }).join(''):'<tr><td colspan="4" class="empty">Aún no hay movimientos registrados.</td></tr>';
-    const due=charges.filter(c=>c.resta>0.009).length;
-    $('#p-mov-sub').textContent=charges.length?(due?`${due} pendiente${due>1?'s':''} de pago`:'Todo pagado')+' · del más reciente al más antiguo':'';
+    if(!pend.length&&list.length) $('#p-table tbody').insertAdjacentHTML('afterbegin','<tr><td colspan="4" class="empty ok">Está al día. No tiene pagos pendientes.</td></tr>');
+    const due=pend.length;
+    $('#p-mov-sub').textContent=due?`${due} pendiente${due>1?'s':''} de pago`:'Sin deudas pendientes';
+    menuBadges(pend);
     const cn=$('#p-credit'); cn.hidden=!(credit>0.009); if(credit>0.009) cn.textContent=`Tiene ${money(credit,cur)} pagados por adelantado, que se aplicarán a sus próximas expensas.`;
-    $('#p-more').hidden=showAll||charges.length<=12;
+    $('#p-more').hidden=true;
   }
   $('#p-more').addEventListener('click',()=>{showAll=true;renderTable();});
   /* ---------- Recibo (pagos registrados en Gestión LUKA) ---------- */
@@ -869,8 +926,28 @@ const PORTAL = {
   $('#rec-dialog').addEventListener('click',e=>{ if(e.target.id==='rec-dialog') closeRecibo(); });
   $('#rec-print-btn').addEventListener('click',imprimirRecibo);
 
+  /* ---------- Celular: menú minimalista; cada opción se abre en su propia pantalla ---------- */
+  const esCel=()=>window.matchMedia('(max-width:600px)').matches;
+  const TIT={comprobante:'Enviar comprobante',estado:'Estado de cuenta',datos:'Datos de la cuenta',rv:'Áreas sociales'};
+  Object.keys(TIT).forEach(id=>{ const sec=document.getElementById(id); if(!sec) return;
+    const h=document.createElement('div'); h.className='m-head';
+    h.innerHTML='<button type="button" class="m-back" aria-label="Volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><b>'+TIT[id]+'</b><span></span>';
+    sec.insertBefore(h,sec.firstChild); h.querySelector('.m-back').onclick=()=>history.back(); });
+  function abrirHoja(id){ const sec=document.getElementById(id); if(!sec) return;
+    document.querySelectorAll('.m-open').forEach(x=>x.classList.remove('m-open'));
+    sec.classList.add('m-open'); sec.scrollTop=0; history.pushState({hoja:id},''); }
+  function cerrarHojas(){ document.querySelectorAll('.m-open').forEach(x=>x.classList.remove('m-open')); }
+  window.addEventListener('popstate',cerrarHojas);
+  function irA(id){ if(esCel()) abrirHoja(id); else document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}); }
+  $('#m-menu').addEventListener('click',e=>{ const b=e.target.closest('[data-sheet]'); if(!b) return;
+    if(b.dataset.sheet==='clave') return $('#p-pass').click(); abrirHoja(b.dataset.sheet); });
+  document.querySelector('.p-debt a[href="#comprobante"]').addEventListener('click',e=>{ e.preventDefault(); irA('comprobante'); });
+  function menuBadges(pend){
+    const b=$('#m-badge-estado'), multa=pend.some(c=>/multa|sanci|cargo/i.test(c.concepto||''));
+    b.hidden=!pend.length; b.textContent=multa?'Multa':String(pend.length); b.classList.toggle('alerta',multa);
+  }
   /* con una ventana abierta, la página de fondo no se mueve */
-  new MutationObserver(()=>{ document.documentElement.classList.toggle('modal-abierto',!!document.querySelector('.dialog.open')); })
+  new MutationObserver(()=>{ document.documentElement.classList.toggle('modal-abierto',!!document.querySelector('.dialog.open,.m-open')); })
     .observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
   /* ---------- Reservas de áreas sociales ---------- */
   let misReservas=[];
@@ -901,8 +978,8 @@ const PORTAL = {
   }
   function renderReservas(){
     const box=$('#rv'), areas=(data&&data.areas)||[];
-    if(!PORTAL.endpoint||!areas.length){ box.hidden=true; return; }
-    box.hidden=false;
+    if(!PORTAL.endpoint||!areas.length){ box.hidden=true; $('#m-rv').hidden=true; return; }
+    box.hidden=false; $('#m-rv').hidden=false;
     const sa=$('#rv-area'); sa.innerHTML=areas.map(a=>`<option value="${esc(a.id)}">${esc(a.nombre)}</option>`).join('');
     const pintaTramos=()=>{ const a=areaSel(), cur=cur0();
       $('#rv-tramo').innerHTML=(a.tramos||[]).map(t=>`<option value="${esc(t.label)}">${esc(t.label)}${t.monto?' — '+money(t.monto,cur):''}</option>`).join('')||'<option value="">General</option>';
@@ -935,6 +1012,8 @@ const PORTAL = {
           `${lab==='Aprobada'?accion(x,i,cur):''}</span>`+
           `<span class="s${lab==='Aprobada'?' ok':''}">${x.terminado?'Finalizada':lab}${lab==='Pendiente'?'<small>Bramar la revisará</small>':''}</span></li>`; }).join('')+'</ul>':'';
       resumenReserva();
+      const bR=$('#m-badge-rv'), acc=misReservas.filter(r=>r.estado==='Aprobada'&&((!r.terminado&&!r.recibo&&!r.pago)||(r.terminado&&!r.garEstado&&!r.devolucion))).length;
+      bR.hidden=!acc; bR.textContent=acc;
     }catch(e){}
   }
   function accion(x,i,cur){
@@ -1003,7 +1082,7 @@ const PORTAL = {
   rpDlg.addEventListener('click',e=>{ if(e.target===rpDlg) rpShow(false); });
   $('#rp-send').addEventListener('click',()=>{ const x=rpSel; rpShow(false); if(!x) return;
     $('#up-amount').value=(+x.total||0).toFixed(2); $('#up-note').value=('Reserva '+x.area.replace(/^[^·]*·\s*/,'')+' '+fechaCorta(x.fecha)).slice(0,120); setPagoReserva(x);
-    document.getElementById('comprobante').scrollIntoView({behavior:'smooth',block:'start'}); });
+    irA('comprobante'); });
   const rvDlg=$('#rv-dialog');
   function rvShow(on){ rvDlg.classList.toggle('open',on); rvDlg.setAttribute('aria-hidden',on?'false':'true'); if(on){ $('#rv-msg').innerHTML=''; rvDlg.querySelectorAll('.err').forEach(x=>x.classList.remove('err')); } }
   $('#rv-open').addEventListener('click',()=>rvShow(true));
