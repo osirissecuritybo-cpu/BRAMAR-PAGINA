@@ -346,6 +346,19 @@ footer a{color:var(--navy)}
 .rv-pay{display:inline-flex;margin-top:8px;min-height:38px;align-items:center;padding:0 16px;border:0;border-radius:999px;background:var(--navy);color:#fff;font:inherit;font-size:14px;font-weight:500;cursor:pointer}
 .rp-qr{display:grid;place-items:center;margin:16px 0 4px}.rp-qr img{width:210px;max-width:70%;border-radius:12px}
 .rp-bank{margin:8px 0 0}
+.rv-st{display:block;margin-top:8px;font-size:13px;color:var(--navy);font-weight:500}
+.res-due{position:relative;z-index:1;display:flex;align-items:center;gap:8px;width:100%;margin-top:16px;padding:12px 14px;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(255,255,255,.08);color:#fff;font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.res-due b{font-weight:500;color:var(--brass-soft)}.res-due span{margin-left:auto;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.up-tipo{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:12px;background:var(--sky);color:var(--navy);font-size:14px}
+.up-tipo button{border:0;background:none;color:var(--navy);text-decoration:underline;font:inherit;font-size:13px;cursor:pointer}
+.gr-op{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 12px}
+.gr-op label{display:block;cursor:pointer}.gr-op input{position:absolute;opacity:0}
+.gr-op span{display:grid;place-items:center;min-height:48px;border-radius:12px;background:var(--sand);color:var(--navy);font-weight:500;border:1.5px solid transparent}
+.gr-op input:checked+span{border-color:var(--navy);background:#fff}
+.gr-op input:focus-visible+span{outline:2px solid var(--brass)}
+#gr-drop{display:grid;place-items:center;min-height:110px;padding:16px;border:1.5px dashed var(--line);border-radius:14px;color:var(--navy);text-align:center;cursor:pointer;font-size:14px}
+#gr-drop.has{border-style:solid;border-color:var(--navy)}
+#gr-form .row{margin-top:14px}
 
 /* ---- Celular (también Safari y el navegador interno de WhatsApp) ---- */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
@@ -457,6 +470,7 @@ html,body{overflow-x:clip;max-width:100%}
           <div><b id="p-due"></b><span>Vencimiento</span></div>
           <div><b id="p-upd"></b><span>Actualizado al</span></div>
         </div>
+        <button type="button" class="res-due" id="p-res-due" hidden></button>
         <a class="btn gold" href="#comprobante"><svg aria-hidden="true"><use href="#i-upload"/></svg>Enviar comprobante</a>
       </section>
 
@@ -491,6 +505,7 @@ html,body{overflow-x:clip;max-width:100%}
             <div class="field"><input id="up-amount" inputmode="decimal" placeholder="0.00"><label for="up-amount">Monto pagado</label></div>
             <div class="field"><input id="up-date" type="date"><label for="up-date">Fecha del pago</label></div>
             <div class="field full"><input id="up-note" placeholder="Opcional"><label for="up-note">Nota (ej. expensa de octubre)</label></div>
+            <div class="up-tipo full" id="up-tipo" hidden><span id="up-tipo-t"></span><button type="button" id="up-tipo-x" aria-label="Quitar">Quitar</button></div>
           </div>
           <div class="up-actions">
             <div class="bar" id="up-bar"><i></i></div>
@@ -562,6 +577,29 @@ html,body{overflow-x:clip;max-width:100%}
     <div id="rp-body"></div>
     <div class="row"><button class="btn light" type="button" id="rp-close">Cerrar</button><button class="btn navy" type="button" id="rp-send">Enviar comprobante</button></div>
   </div>
+</div>
+<div class="dialog" id="gr-dialog" role="dialog" aria-modal="true" aria-labelledby="gr-title" aria-hidden="true">
+  <form class="dialog-card rv-card" id="gr-form" novalidate>
+    <span class="tag">Garantía</span>
+    <h2 id="gr-title">Solicitar devolución de garantía</h2>
+    <p class="sub" id="gr-sub" style="margin:0"></p>
+    <div class="gr-op" role="radiogroup" aria-label="Cómo recibir la garantía">
+      <label><input type="radio" name="gr-m" value="qr" checked><span>Por QR</span></label>
+      <label><input type="radio" name="gr-m" value="transferencia"><span>Por transferencia</span></label>
+    </div>
+    <div id="gr-qr">
+      <label class="drop" id="gr-drop"><input type="file" id="gr-file" accept="image/*" class="sr-only"><span id="gr-file-t">Toque para subir la imagen de su QR de cobro</span></label>
+    </div>
+    <div id="gr-tr" hidden>
+      <div class="up-fields">
+        <div class="field full"><input id="gr-banco" placeholder="Ej. Banco Unión"><label for="gr-banco">Banco</label></div>
+        <div class="field full"><input id="gr-cuenta" inputmode="numeric" placeholder="N.º de cuenta"><label for="gr-cuenta">Número de cuenta</label></div>
+        <div class="field full"><input id="gr-titular" placeholder="Nombre completo"><label for="gr-titular">Titular de la cuenta</label></div>
+      </div>
+    </div>
+    <div id="gr-msg" role="status"></div>
+    <div class="row"><button class="btn light" type="button" id="gr-cancel">Cancelar</button><button class="btn navy" type="submit" id="gr-btn"><span id="gr-btn-t">Enviar solicitud</span><span class="spin" aria-hidden="true"></span></button></div>
+  </form>
 </div>
 <div class="dialog" id="rec-dialog" role="dialog" aria-modal="true" aria-labelledby="rec-title" aria-hidden="true">
   <div class="dialog-card rec-card">
@@ -880,15 +918,58 @@ const PORTAL = {
     try{
       const j=await ptCall({action:'pt_reservas'}); misReservas=(j.ok&&j.reservas)||[];
       const cur=cur0();
-      $('#rv-list').innerHTML=misReservas.length?'<h3>Mis solicitudes</h3><ul class="rc-list rv-ul">'+misReservas.map((x,i)=>{
+      $('#rv-list').innerHTML=misReservas.length?'<h3>Mis reservas</h3><ul class="rc-list rv-ul">'+misReservas.map((x,i)=>{
         const lab=x.estado==='Aprobada'?'Aprobada':x.estado==='Rechazada'?'Rechazada':'Pendiente';
         const hora=x.hini?(x.hfin?x.hini+' a '+x.hfin:x.hini):'';
         return `<li><span class="d">${esc(x.area.replace(/^[^·]*·\s*/,''))} · ${esc(fechaCorta(x.fecha))}${hora?' · '+esc(hora):''}`+
           `<small>${[x.tramo,x.extrasTxt].filter(Boolean).map(esc).join(' · ')}${x.total!=null?' · Total '+money(x.total,cur):''}${x.nota?' · '+esc(x.nota):''}</small>`+
-          `${lab==='Aprobada'?`<button type="button" class="rv-pay" data-pay="${i}">Pagar ${x.total!=null?money(x.total,cur):''}</button>`:''}</span>`+
-          `<span class="s${lab==='Aprobada'?' ok':''}">${lab}${lab==='Pendiente'?'<small>Bramar la revisará</small>':''}</span></li>`; }).join('')+'</ul>':'';
+          `${lab==='Aprobada'?accion(x,i,cur):''}</span>`+
+          `<span class="s${lab==='Aprobada'?' ok':''}">${x.terminado?'Finalizada':lab}${lab==='Pendiente'?'<small>Bramar la revisará</small>':''}</span></li>`; }).join('')+'</ul>':'';
+      resumenReserva();
     }catch(e){}
   }
+  function accion(x,i,cur){
+    if(x.terminado){
+      if(x.garEstado==='Solicitada') return '<span class="rv-st">Garantía solicitada · Bramar se la devolverá</span>';
+      return `<button type="button" class="rv-pay" data-gar="${i}">Solicitar garantía ${x.garantia?money(x.garantia,cur):''}</button>`;
+    }
+    if(x.pago) return '<span class="rv-st">Pago enviado · en revisión</span>';
+    return `<button type="button" class="rv-pay" data-pay="${i}">Pagar ${x.total!=null?money(x.total,cur):''}</button>`;
+  }
+  function resumenReserva(){
+    const cur=cur0(), x=misReservas.find(r=>r.estado==='Aprobada'&&!r.terminado&&!r.pago&&r.total>0), b=$('#p-res-due');
+    if(!x){ b.hidden=true; return; }
+    b.hidden=false; b.innerHTML=`Reserva aprobada por pagar <b>${money(x.total,cur)}</b><span>Ver</span>`;
+    b.onclick=()=>{ const i=misReservas.indexOf(x); const el=document.querySelector('[data-pay="'+i+'"]'); if(el) el.click(); };
+  }
+  /* solicitar la garantía después del evento */
+  const grDlg=$('#gr-dialog'); let grSel=null, grFile=null;
+  function grShow(on){ grDlg.classList.toggle('open',on); grDlg.setAttribute('aria-hidden',on?'false':'true'); if(on) $('#gr-msg').innerHTML=''; }
+  $('#rv-list').addEventListener('click',e=>{ const b=e.target.closest('[data-gar]'); if(!b) return; grSel=misReservas[+b.dataset.gar]; if(!grSel) return;
+    $('#gr-sub').textContent=`${grSel.area.replace(/^[^·]*·\s*/,'')} · ${fechaCorta(grSel.fecha)} · Garantía ${money(grSel.garantia,cur0())}`; grShow(true); });
+  grDlg.querySelectorAll('input[name=gr-m]').forEach(r=>r.addEventListener('change',()=>{ $('#gr-msg').innerHTML=''; const qr=grDlg.querySelector('input[name=gr-m]:checked').value==='qr'; $('#gr-qr').hidden=!qr; $('#gr-tr').hidden=qr; }));
+  $('#gr-file').addEventListener('change',e=>{ grFile=e.target.files[0]||null; $('#gr-file-t').textContent=grFile?grFile.name:'Toque para subir la imagen de su QR de cobro'; $('#gr-drop').classList.toggle('has',!!grFile); });
+  $('#gr-cancel').addEventListener('click',()=>grShow(false));
+  grDlg.addEventListener('click',e=>{ if(e.target===grDlg) grShow(false); });
+  $('#gr-form').addEventListener('submit',async e=>{
+    e.preventDefault(); const msg=$('#gr-msg'), btn=$('#gr-btn'), m=grDlg.querySelector('input[name=gr-m]:checked').value;
+    const body={action:'pt_garantia',rid:grSel&&grSel.id,metodo:m};
+    if(m==='qr'){ if(!grFile) return alertBox(msg,'bad','Suba la imagen de su QR de cobro.'); }
+    else { const f=[['gr-banco','banco'],['gr-cuenta','número de cuenta'],['gr-titular','titular']].filter(([id])=>!$('#'+id).value.trim());
+      if(f.length) return alertBox(msg,'bad','Complete: '+f.map(x=>x[1]).join(', ')+'.');
+      body.banco=$('#gr-banco').value.trim(); body.cuenta=$('#gr-cuenta').value.trim(); body.titular=$('#gr-titular').value.trim(); }
+    btn.disabled=true; btn.classList.add('loading'); $('#gr-btn-t').textContent='Enviando…';
+    try{
+      if(m==='qr'){ const f=await prepare(grFile); body.mimeType=f.type; body.data=await toB64(f); }
+      const j=await ptCall(body); if(!j.ok) throw new Error(j.error||'error');
+      grShow(false); alertBox($('#rv-ok'),'ok','Recibimos su solicitud de devolución de garantía. Bramar se la devolverá por el medio que eligió.'); loadReservas();
+    }catch(err){ alertBox(msg,'bad',err.message&&err.message!=='error'?esc(err.message):'No se pudo enviar. Intente de nuevo.'); }
+    finally{ btn.disabled=false; btn.classList.remove('loading'); $('#gr-btn-t').textContent='Enviar solicitud'; }
+  });
+  /* comprobante de una reserva: va a "Alquileres y otros", no a expensas */
+  let pagoReserva=null;
+  function setPagoReserva(x){ pagoReserva=x; $('#up-tipo').hidden=!x; if(x) $('#up-tipo-t').textContent='Pago de reserva · '+x.area.replace(/^[^·]*·\s*/,'')+' '+fechaCorta(x.fecha); }
+  $('#up-tipo-x').addEventListener('click',()=>{ setPagoReserva(null); $('#up-note').value=''; });
   /* pagar una reserva aprobada: total, QR y datos de la cuenta */
   const rpDlg=$('#rp-dialog'); let rpSel=null;
   function rpShow(on){ rpDlg.classList.toggle('open',on); rpDlg.setAttribute('aria-hidden',on?'false':'true'); }
@@ -906,7 +987,7 @@ const PORTAL = {
   $('#rp-close').addEventListener('click',()=>rpShow(false));
   rpDlg.addEventListener('click',e=>{ if(e.target===rpDlg) rpShow(false); });
   $('#rp-send').addEventListener('click',()=>{ const x=rpSel; rpShow(false); if(!x) return;
-    $('#up-amount').value=(+x.total||0).toFixed(2); $('#up-note').value=('Reserva '+x.area.replace(/^[^·]*·\s*/,'')+' '+fechaCorta(x.fecha)).slice(0,120);
+    $('#up-amount').value=(+x.total||0).toFixed(2); $('#up-note').value=('Reserva '+x.area.replace(/^[^·]*·\s*/,'')+' '+fechaCorta(x.fecha)).slice(0,120); setPagoReserva(x);
     document.getElementById('comprobante').scrollIntoView({behavior:'smooth',block:'start'}); });
   const rvDlg=$('#rv-dialog');
   function rvShow(on){ rvDlg.classList.toggle('open',on); rvDlg.setAttribute('aria-hidden',on?'false':'true'); if(on){ $('#rv-msg').innerHTML=''; rvDlg.querySelectorAll('.err').forEach(x=>x.classList.remove('err')); } }
@@ -1027,6 +1108,7 @@ const PORTAL = {
     if(amount&&!(Number(amount)>0)) return alertBox(msg,'bad','Revise el monto: use solo números, por ejemplo 450.50.'),$('#up-amount').focus();
     const E=data.edificio||{}, U=data.unidad||{};
     const info={edificio:E.nombre||E.id, edificio_id:E.id, depto:U.depto, propietario:U.propietario, monto:amount, fecha:$('#up-date').value, nota:$('#up-note').value.trim()};
+    if(pagoReserva){ info.tipo='alquiler'; info.reserva_id=pagoReserva.id; }
     const text=`Comprobante de pago\nEdificio: ${info.edificio}\nDepto: ${info.depto}\nPropietario: ${info.propietario}\nMonto: ${amount||'—'}\nFecha: ${info.fecha||'—'}${info.nota?'\nNota: '+info.nota:''}`;
 
     if(PORTAL.endpoint){
@@ -1038,7 +1120,7 @@ const PORTAL = {
         const j=await r.json().catch(()=>({}));
         if(!r.ok||j.ok===false) throw new Error(j.error||r.status);
         alertBox(msg,'ok','Recibimos su comprobante. Lo verificaremos y su estado de cuenta se actualizará en un máximo de 24 horas.');
-        clearFile(); $('#up-note').value=''; loadReceipts();
+        clearFile(); $('#up-note').value=''; loadReceipts(); if(pagoReserva){ setPagoReserva(null); loadReservas(); }
       }catch(err){
         alertBox(msg,'bad','No pudimos enviar el comprobante. Intente de nuevo o <a href="'+wa(text)+'" target="_blank" rel="noopener">envíelo por WhatsApp</a>.');
       }finally{ btn.disabled=false; btn.classList.remove('loading'); $('#up-btn-t').textContent='Enviar comprobante'; $('#up-bar').classList.remove('show'); }

@@ -21392,16 +21392,16 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   }
 
   /* ---------------- Solicitudes de reserva del portal ---------------- */
-  var solicitudes=[];
+  var solicitudes=[], garantias=[];
   function cloudId(){ try{ return /^luka-b-/.test(LOCAL_DATA_KEY)?LOCAL_DATA_KEY.slice(7):null; }catch(e){ return null; } }
   function cargarSol(){
     if(!window.lukaCloud||!lukaCloud.active()||!cloudId()) return Promise.resolve([]);
-    return lukaCloud.api({action:'lk_reservas',id:cloudId()}).then(function(j){ solicitudes=j.reservas||[]; pintarSol(); return solicitudes; }).catch(function(){ return []; });
+    return lukaCloud.api({action:'lk_reservas',id:cloudId()}).then(function(j){ solicitudes=j.reservas||[]; garantias=j.garantias||[]; pintarSol(); return solicitudes; }).catch(function(){ return []; });
   }
   function pintarSol(){
     var view=$('view-areas-sociales'); if(!view) return;
     var box=$('lkp-sol');
-    badge();
+    badge(); pintarGar(); colorear();
     if(!solicitudes.length){ if(box) box.remove(); return; }
     if(!box){ box=document.createElement('div'); box.id='lkp-sol'; box.className='lk-card lkp-sol no-print'; var c=$('areas-sociales-container'); (c||view).insertBefore(box,(c||view).firstChild); }
     box.innerHTML='<div class="lkp-sol-h"><b>Solicitudes del portal</b><span>'+solicitudes.length+' pendiente'+(solicitudes.length>1?'s':'')+'</span></div>'+
@@ -21422,6 +21422,45 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       cargarSol();
     }).catch(function(e){ btn.disabled=false; alert('No se pudo actualizar: '+e.message); });
   }
+  /* devoluciones de garantía pedidas desde el portal */
+  function pintarGar(){
+    var view=$('view-areas-sociales'); if(!view) return;
+    var box=$('lkp-gar');
+    if(!garantias.length){ if(box) box.remove(); return; }
+    if(!box){ box=document.createElement('div'); box.id='lkp-gar'; box.className='lk-card lkp-sol no-print'; var c=$('areas-sociales-container'); (c||view).insertBefore(box,(c||view).firstChild); }
+    box.innerHTML='<div class="lkp-sol-h"><b>Garantías por devolver</b><span>'+garantias.length+'</span></div>'+garantias.map(function(r,i){
+      var d=String(r.garDatos||''), url=(d.match(/https?:\/\/\S+/)||[''])[0];
+      return '<div class="lk-item"><div class="lk-item-main"><div class="lk-item-title">Depto '+esc(r.depto)+' · '+esc(r.area.replace(/^[^·]*·\s*/,''))+' <span>· '+esc(r.fecha)+'</span></div>'+
+        '<div class="lk-item-meta">Garantía <b>'+esc(fmtMoney(r.garantia||0))+'</b> · '+(url?'Por QR · <a href="'+esc(url)+'" target="_blank" rel="noopener">Ver QR del propietario</a>':esc(d))+'</div></div>'+
+        '<div class="lk-item-actions"><button type="button" class="btn primary" data-gd="'+i+'">Marcar devuelta</button></div></div>'; }).join('');
+    box.querySelectorAll('[data-gd]').forEach(function(b){ b.onclick=function(){ devolver(garantias[+b.dataset.gd],b); }; });
+  }
+  function devolver(r,btn){
+    var comp=prompt('N.º de comprobante de la devolución (opcional):',''); if(comp===null) return;
+    btn.disabled=true;
+    lukaCloud.api({action:'lk_garantia_devuelta',rid:r.id}).then(function(){
+      var x=(DATA.reservasSociales||[]).filter(function(z){ return z.portalId===r.id; })[0]
+        ||(DATA.reservasSociales||[]).filter(function(z){ return nd(z.depto)===nd(r.depto)&&String(z.fecha||'')===r.fecha&&z.areaId===r.areaId; })[0];
+      if(x){ if(!x.garDev||typeof x.garDev!=='object') x.garDev={estado:'pendiente',historial:[]}; if(!Array.isArray(x.garDev.historial)) x.garDev.historial=[];
+        x.garDev.historial.push({fecha:new Date().toISOString().slice(0,10),monto:+x.garantia||+r.garantia||0,comprobante:String(comp||'').trim(),recibio:r.responsable||'',obs:'Pedida desde el portal · '+String(r.garDatos||'').replace(/https?:\/\/\S+/,'').trim(),at:new Date().toISOString()});
+        x.garDev.estado='devuelta'; guardar(); }
+      try{ showSaveToast('Garantía marcada como devuelta.'); }catch(e){}
+      cargarSol(); try{ if(typeof renderAreasSociales==='function') renderAreasSociales(); }catch(e){}
+    }).catch(function(e){ btn.disabled=false; alert('No se pudo actualizar: '+e.message); });
+  }
+  /* cada tipo de área con su color (tonos sobrios) */
+  var TONOS=['#1E4E86','#9A7330','#4E6E5D','#6A5A8C','#8A4F4F','#3D6C7A'];
+  function colorear(){
+    var A=((DATA.config||{}).areasLuka)||[];
+    document.querySelectorAll('.lkr-res[data-id]').forEach(function(row){
+      var r=(DATA.reservasSociales||[]).filter(function(x){ return String(x.id)===row.dataset.id; })[0]; if(!r) return;
+      var i=A.map(function(a){ return a.id; }).indexOf(r.areaId); if(i<0) i=0;
+      row.style.borderLeftColor=TONOS[i%TONOS.length];
+    });
+  }
+  var colPend=false;
+  new MutationObserver(function(){ if(colPend) return; colPend=true; requestAnimationFrame(function(){ colPend=false; if(document.querySelector('.lkr-res[data-id]')) colorear(); }); })
+    .observe(document.body,{childList:true,subtree:true});
   function ocupado(r){
     var L=(DATA.reservasSociales||[]).filter(function(x){ return x.estado!=='Cancelada'&&String(x.fecha||x.inicio||'').slice(0,10)===r.fecha&&x.areaId===r.areaId; });
     return L.length?(L[0].areaNombre||'esta área')+(L[0].inicio?' ('+String(L[0].inicio).slice(11,16)+')':''):'';
@@ -21441,7 +21480,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     var t=(a.tramos||[]).filter(function(x){ return x.label===r.tramo; })[0]||{};
     DATA.reservaCounter=(DATA.reservaCounter||0)+1;
     DATA.reservasSociales.push({ id:'r'+DATA.reservaCounter, creado:new Date().toISOString().slice(0,10), garDev:{estado:'pendiente',historial:[]},
-      depto:r.depto, responsable:r.responsable, evento:r.evento, areaId:a.id||r.areaId, areaNombre:a.nombre||String(r.area).replace(/^[^·]*·\s*/,''), tramoLabel:r.tramo,
+      portalId:r.id, depto:r.depto, responsable:r.responsable, evento:r.evento, areaId:a.id||r.areaId, areaNombre:a.nombre||String(r.area).replace(/^[^·]*·\s*/,''), tramoLabel:r.tramo,
       inicio:r.fecha+'T'+(r.hini||'00:00'), fin:r.hfin?(r.hfin<(r.hini||'')?r.fecha+'T23:59':r.fecha+'T'+r.hfin):'', fecha:r.fecha,
       monto:r.alquiler!=null?+r.alquiler:(+t.monto||0), garantia:r.garantia!=null?+r.garantia:(+a.garantia||0),
       sillas:cant('silla'), mesas:cant('mesa'), mesasNuevas:cant('mesaNueva'), extras:(r.extras||[]).reduce(function(s,x){ return s+(+x.subtotal||0); },0),
@@ -21462,6 +21501,13 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 </script>
 <style>
 /* sin el formulario por WhatsApp: las reservas llegan desde el portal */
+#lkr-gen-sol,#lkr-imp-sol{display:none!important}
+.lkr-res.future,.lkr-res.active{background:var(--surface-1,#fff)!important;border-color:var(--gridline,#DDE5EE)!important;border-left:4px solid #1E4E86!important}
+.lkr-res.active{background:#F6F8FB!important}
+.lkr-chip.prox{background:#EEF2F7!important;color:#1E4E86!important}
+.lkr-chip.act{background:#F6EFE2!important;color:#7A5B1E!important}
+.lkr-chip.gdev{background:#EEF2F7!important;color:#3B5B7A!important}
+.theme-dark .lkr-res.future,.theme-dark .lkr-res.active{background:transparent!important}
 .lkr-form > div:has(#lkr-wa-copy),.lkr-form > div:has(#lkr-leer-msg){display:none!important}
 .lk-nav-badge{margin-left:auto;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#C0392B;color:#fff;font-size:11.5px;font-weight:700;display:inline-grid;place-items:center}
 .lk-nav-badge[hidden]{display:none}
