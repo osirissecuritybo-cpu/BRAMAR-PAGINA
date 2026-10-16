@@ -72,8 +72,10 @@ function doPost(e) {
       ahora, d.edificio || '', d.depto || '', d.propietario || '',
       d.monto || '', d.fecha || '', (d.tipo === 'alquiler' ? '[Alquiler] ' : '') + (d.nota || ''), archivo.getUrl(), 'Pendiente de verificar',
       /^[0-9a-f]{48}$/.test(d.rk || '') ? d.rk : '',
-      String(d.edificio_id || '').slice(0, 60)
+      String(d.edificio_id || '').slice(0, 60),
+      d.tipo === 'alquiler' && /^[0-9a-f]{16}$/.test(d.reserva_id || '') ? d.reserva_id : ''
     ]);
+    if (sh.getRange(1, 12).getValue() === '') { sh.getRange(1, 12).setValue('reserva_id'); sh.hideColumns(12); }
     sh.getRange(sh.getLastRow(), 9).setDataValidation(validacionEstado_());
     if (d.tipo === 'alquiler' && /^[0-9a-f]{16}$/.test(d.reserva_id || '')) {
       try { const hr = ptHojaRes_(), fr = hr.getRange('A:A').createTextFinder(d.reserva_id).matchEntireCell(true).findNext(); if (fr) hr.getRange(fr.getRow(), 24).setValue(archivo.getUrl()); } catch (x) {}
@@ -157,7 +159,7 @@ function pendientes_(d) {
   // Cada comprobante guarda el id del edificio del portal (columna K). Los más
   // antiguos no lo tienen: para ellos se compara el nombre del edificio.
   // "otros" cuenta los pendientes de los demás edificios, para avisar en LUKA.
-  const filas = sh.getRange(2, 1, last - 1, 11).getValues(), id = slug_(d.edificio_id || d.edificio), out = [], otros = {};
+  const filas = sh.getRange(2, 1, last - 1, Math.max(11, Math.min(12, sh.getLastColumn()))).getValues(), id = slug_(d.edificio_id || d.edificio), out = [], otros = {};
   const usr = d.t ? sesion_(d.t) : null;
   filas.forEach(function (r, i) {
     if (String(r[8]) !== 'Pendiente de verificar') return;
@@ -169,7 +171,7 @@ function pendientes_(d) {
       return;
     }
     out.push({ fila: i + 2, edificio_id: rid, recibido: r[0] instanceof Date ? r[0].toISOString() : String(r[0]), edificio: String(r[1]),
-      depto: String(r[2]), propietario: String(r[3]), monto: String(r[4] || ''), fecha: fecha_(r[5]), nota: String(r[6] || ''), archivo: String(r[7] || '') });
+      depto: String(r[2]), propietario: String(r[3]), monto: String(r[4] || ''), fecha: fecha_(r[5]), nota: String(r[6] || ''), archivo: String(r[7] || ''), reserva_id: String(r[11] || '') });
   });
   return json({ ok: true, recibos: out, otros: Object.keys(otros).map(function (k) { return otros[k]; }) });
 }
@@ -692,7 +694,11 @@ function portal_(d) {
   if (d.action === 'pt_estado') return json({ ok: true, data: est });
   if (d.action === 'pt_reservas') {
     const ahora = new Date(), hoy = Utilities.formatDate(ahora, 'America/La_Paz', "yyyy-MM-dd'T'HH:mm");
-    const devueltas = {}; (data.reservasSociales || []).forEach(function (x) { if (x.portalId && x.garDev && x.garDev.estado === 'devuelta') devueltas[x.portalId] = 1; });
+    const LR = {}; (data.reservasSociales || []).forEach(function (x) { if (x.portalId) LR[x.portalId] = x; });
+    const devueltas = {};
+    Object.keys(LR).forEach(function (k) { const x = LR[k], h = (x.garDev && x.garDev.historial) || [];
+      // la reserva sigue visible 7 días después de devolver la garantía (para ver su comprobante)
+      if (x.garDev && x.garDev.estado === 'devuelta') { const t = new Date((h[h.length - 1] || {}).at || 0); if (isNaN(t) || ahora - t > 7 * 864e5) devueltas[k] = 1; } });
     // sin historial: rechazadas se ocultan 24 h después; aprobadas, después del evento (o al devolver la garantía)
     const L = ptReservasLista_(function (r) {
       if (r.edificio_id !== pid || ptNormDepto_(r.depto) !== dep) return false;
@@ -701,7 +707,7 @@ function portal_(d) {
       if (r.estado === 'Pendiente') return fin >= hoy;
       if (fin >= hoy) return true;
       r.terminado = true;
-      return r.garEstado !== 'Devuelta' && !devueltas[r.id] && r.garantia !== 0;
+      return !devueltas[r.id] && r.garantia !== 0;
     }).slice(0, 20);
     L.forEach(function (r) {
       if (r.total != null) return;
@@ -711,7 +717,11 @@ function portal_(d) {
     });
     // datos aprobados en LUKA (montos finales)
     L.forEach(function (r) { const x = (data.reservasSociales || []).filter(function (z) { return z.portalId === r.id; })[0];
-      if (x) { r.alquiler = +x.monto || 0; r.garantia = +x.garantia || 0; r.total = r.alquiler + r.garantia + (+x.extras || 0); } });
+      if (x) { r.alquiler = +x.monto || 0; r.garantia = +x.garantia || 0; r.extrasMonto = +x.extras || 0; r.total = r.alquiler + r.garantia + r.extrasMonto;
+        if (x.pago) r.recibo = x.pago;
+        const h = (x.garDev && x.garDev.historial) || [];
+        if (x.garDev && x.garDev.estado === 'devuelta' && h.length) { const u = h[h.length - 1]; r.devolucion = { no: String(u.no || ''), fecha: String(u.fecha || ''), monto: +u.monto || 0, garantia: +u.garantia || +x.garantia || 0, comprobante: String(u.comprobante || ''), obs: String(u.obs || ''), metodo: String(u.metodo || ''), destino: String(u.destino || ''), area: String(u.area || x.areaNombre || ''), fechaEvento: String(u.fechaEvento || x.fecha || '') }; r.garEstado = 'Devuelta'; }
+        r.areaNombre = String(x.areaNombre || ''); } });
     return json({ ok: true, reservas: L.filter(function (r) { return !(r.terminado && !(r.garantia > 0)); }) });
   }
   if (d.action === 'pt_garantia') {

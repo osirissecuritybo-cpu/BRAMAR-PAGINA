@@ -21220,7 +21220,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
         '</div>'+
         '<div class="lk-item-actions">'+
           (r.archivo?'<a class="btn" href="'+esc(r.archivo)+'" target="_blank" rel="noopener">Ver comprobante</a>':'')+
-          (d?'<button type="button" class="btn primary" data-pb-reg="'+i+'">Registrar pago</button>':'')+
+          ((d||r.reserva_id)?'<button type="button" class="btn primary" data-pb-reg="'+i+'">'+(r.reserva_id||/^\[Alquiler\]/.test(r.nota||'')?'Cobrar reserva':'Registrar pago')+'</button>':'')+
           '<button type="button" class="btn" data-pb-rech="'+i+'">Rechazar</button>'+
         '</div></div>';
     }).join('')+'</div>';
@@ -21237,6 +21237,17 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 
   /* ---------- registrar con el formulario de pago de LUKA ---------- */
   function registrar(r){
+    // pago de una reserva: se cobra como alquiler (no como expensa)
+    if(r.reserva_id||/^\[Alquiler\]/.test(r.nota||'')){
+      var res=(DATA.reservasSociales||[]).filter(function(x){ return r.reserva_id&&x.portalId===r.reserva_id; })[0];
+      if(!res){ alert('Este comprobante es de una reserva, pero no la encontré aprobada en LUKA. Apruébela primero en «Reservar área social».'); return; }
+      document.getElementById('pb-bd').classList.remove('open');
+      var n=parseFloat(String(r.monto||'').replace(',','.'));
+      var marcar=function(){ api({action:'estado',fila:r.fila,archivo:r.archivo,estado:'Verificado'}).then(function(){ cargar(); }).catch(function(){}); };
+      if(res.pago){ if(confirm('Esta reserva ya está cobrada (recibo '+res.pago.no+'). ¿Marcar el comprobante como verificado?')) marcar(); return; }
+      window.lukaPagoReserva(res,{monto:n>0?n:0,fecha:/^\d{4}-\d{2}-\d{2}$/.test(r.fecha||'')?r.fecha:'',obs:'Comprobante del portal'+(r.nota?' — '+r.nota.replace(/^\[Alquiler\]\s*/,''):''),onDone:marcar});
+      return;
+    }
     var d=deptoDe(r); if(!d) return;
     document.getElementById('pb-bd').classList.remove('open');
     if(typeof openPayModal!=='function'){ alert('No se encontró el formulario de pago.'); return; }
@@ -21270,7 +21281,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
         var pago=(d.pagos_registrados||[])[d.pagos_registrados.length-1];
         if(pago){ pago.verificado=true; pago.portal={fila:p.fila,archivo:p.archivo}; guardar(); }
         api({action:'estado',fila:p.fila,archivo:p.archivo,estado:'Verificado'})
-          .then(function(){ toast('Pago registrado y marcado «Verificado» en el portal. Exporte el estado de cuenta para el portal dentro de 24 horas.'); cargar(); })
+          .then(function(){ toast('Pago registrado y verificado. El propietario ya lo ve en su portal.'); cargar(); })
           .catch(function(e){ alert('El pago quedó registrado en LUKA, pero no se pudo marcar en el portal: '+(e.message||e)+'\nMárquelo como Verificado en la hoja «Registro de comprobantes».'); });
       }
       return out;
@@ -21436,17 +21447,13 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     box.querySelectorAll('[data-gd]').forEach(function(b){ b.onclick=function(){ devolver(garantias[+b.dataset.gd],b); }; });
   }
   function devolver(r,btn){
-    var comp=prompt('N.º de comprobante de la devolución (opcional):',''); if(comp===null) return;
-    btn.disabled=true;
-    lukaCloud.api({action:'lk_garantia_devuelta',rid:r.id}).then(function(){
-      var x=(DATA.reservasSociales||[]).filter(function(z){ return z.portalId===r.id; })[0]
-        ||(DATA.reservasSociales||[]).filter(function(z){ return nd(z.depto)===nd(r.depto)&&String(z.fecha||'')===r.fecha&&z.areaId===r.areaId; })[0];
-      if(x){ if(!x.garDev||typeof x.garDev!=='object') x.garDev={estado:'pendiente',historial:[]}; if(!Array.isArray(x.garDev.historial)) x.garDev.historial=[];
-        x.garDev.historial.push({fecha:new Date().toISOString().slice(0,10),monto:+x.garantia||+r.garantia||0,comprobante:String(comp||'').trim(),recibio:r.responsable||'',obs:'Pedida desde el portal · '+String(r.garDatos||'').replace(/https?:\/\/\S+/,'').trim(),at:new Date().toISOString()});
-        x.garDev.estado='devuelta'; guardar(); }
-      try{ showSaveToast('Garantía marcada como devuelta.'); }catch(e){}
-      cargarSol(); try{ if(typeof renderAreasSociales==='function') renderAreasSociales(); }catch(e){}
-    }).catch(function(e){ btn.disabled=false; alert('No se pudo actualizar: '+e.message); });
+    var x=(DATA.reservasSociales||[]).filter(function(z){ return z.portalId===r.id; })[0]
+      ||(DATA.reservasSociales||[]).filter(function(z){ return nd(z.depto)===nd(r.depto)&&String(z.fecha||'')===r.fecha&&z.areaId===r.areaId; })[0];
+    if(!x){ alert('No encontré esta reserva en LUKA. Revise que esté aprobada y cargada en Reservas.'); return; }
+    window.lukaDevolverGarantia(x,r,function(){
+      lukaCloud.api({action:'lk_garantia_devuelta',rid:r.id}).then(function(){ try{ showSaveToast('Garantía devuelta. El propietario ya ve su comprobante.'); }catch(e){} cargarSol(); })
+        .catch(function(e){ alert('La devolución quedó en LUKA, pero no se pudo avisar al portal: '+e.message); });
+    });
   }
   /* cada tipo de área con su color (tonos sobrios) */
   var TONOS=['#1E4E86','#9A7330','#4E6E5D','#6A5A8C','#8A4F4F','#3D6C7A'];
@@ -21480,7 +21487,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     var t=(a.tramos||[]).filter(function(x){ return x.label===r.tramo; })[0]||{};
     DATA.reservaCounter=(DATA.reservaCounter||0)+1;
     DATA.reservasSociales.push({ id:'r'+DATA.reservaCounter, creado:new Date().toISOString().slice(0,10), garDev:{estado:'pendiente',historial:[]},
-      portalId:r.id, depto:r.depto, responsable:r.responsable, evento:r.evento, areaId:a.id||r.areaId, areaNombre:a.nombre||String(r.area).replace(/^[^·]*·\s*/,''), tramoLabel:r.tramo,
+      portalId:r.id, extrasLista:r.extras||[], depto:r.depto, responsable:r.responsable, evento:r.evento, areaId:a.id||r.areaId, areaNombre:a.nombre||String(r.area).replace(/^[^·]*·\s*/,''), tramoLabel:r.tramo,
       inicio:r.fecha+'T'+(r.hini||'00:00'), fin:r.hfin?(r.hfin<(r.hini||'')?r.fecha+'T23:59':r.fecha+'T'+r.hfin):'', fecha:r.fecha,
       monto:r.alquiler!=null?+r.alquiler:(+t.monto||0), garantia:r.garantia!=null?+r.garantia:(+a.garantia||0),
       sillas:cant('silla'), mesas:cant('mesa'), mesasNuevas:cant('mesaNueva'), extras:(r.extras||[]).reduce(function(s,x){ return s+(+x.subtotal||0); },0),
@@ -21900,6 +21907,16 @@ body{overscroll-behavior-y:none}
       var c=codigoDe(d,p);
       if((cod&&c===cod)||(nro&&String(p.recibo_no||'')===nro)) out.push({d:d,p:p,c:c,porCodigo:c===cod});
     }); });
+    // recibos de alquiler de áreas sociales y comprobantes de devolución de garantía
+    if(window.lukaDocCodigoReserva&&window.lukaCtxE){
+      (DATA.reservasSociales||[]).forEach(function(r){
+        var U=window.lukaUnidadDe(r);
+        if(r.pago){ var c=lukaDocCodigoReserva(lukaCtxE(),U,r.pago);
+          if((cod&&c===cod)||(nro&&String(r.pago.no)===nro.toUpperCase())) out.push({tipo:'reserva',r:r,c:c,porCodigo:c===cod}); }
+        ((r.garDev&&r.garDev.historial)||[]).forEach(function(h){ if(!h.no) return; var c2=lukaDocCodigoDevolucion(lukaCtxE(),U,h);
+          if((cod&&c2===cod)||(nro&&String(h.no)===nro.toUpperCase())) out.push({tipo:'devol',r:r,h:h,c:c2,porCodigo:c2===cod}); });
+      });
+    }
     // si pegaron el texto completo del QR, comprobar que los datos no fueron alterados
     var alterado=false;
     if(m&&out.length&&raw.indexOf('\n')>0){ var r=out.filter(function(x){ return x.porCodigo; })[0]; if(r){ try{ alterado=receiptQRText(r.d,r.p).trim()!==raw.replace(/\r/g,'').trim(); }catch(e){} } }
@@ -21923,14 +21940,21 @@ body{overscroll-behavior-y:none}
         if(!r){ res.innerHTML=''; return; }
         var nombre=(typeof buildingName==='function')?buildingName():'este edificio';
         if(!r.lista.length){ res.innerHTML='<div class="lk-ver-bad"><b>No existe ningún recibo con ese código en '+esc(nombre)+'.</b>Puede ser un recibo falso, estar mal escrito o pertenecer a otro edificio (abra ese edificio y vuelva a buscar).</div>'; return; }
-        res.innerHTML=r.lista.map(function(x,i){ var d=x.d,p=x.p;
+        res.innerHTML=r.lista.map(function(x,i){
+          if(x.tipo){ var R=x.r, P=x.tipo==='reserva'?R.pago:x.h;
+            return '<div class="lk-ver-ok" style="margin-bottom:10px"><b>'+(x.porCodigo?(x.tipo==='reserva'?'Recibo de alquiler auténtico':'Comprobante de devolución auténtico'):'Encontrado por número')+'</b>'+
+              '<div class="lk-ver-kv"><span>N.º</span><div>'+esc(P.no)+'</div><span>Departamento</span><div>'+esc(R.depto||'—')+'</div><span>Área</span><div>'+esc(R.areaNombre||'')+'</div>'+
+              '<span>Monto</span><div>'+esc(fmtMoney(x.tipo==='reserva'?P.total:P.monto))+'</div><span>Fecha</span><div>'+esc(fmtDate(P.fecha)||'')+'</div><span>Código</span><div>'+esc(x.c)+'</div></div>'+
+              '<button type="button" class="btn" data-ver="'+i+'">Ver documento</button></div>'; }
+          var d=x.d,p=x.p;
           var malo=r.alterado&&x.porCodigo;
           return '<div class="'+(malo?'lk-ver-bad':'lk-ver-ok')+'" style="margin-bottom:10px"><b>'+(malo?'El código existe, pero los datos del QR no coinciden: el recibo fue alterado.':(x.porCodigo?'Recibo auténtico':'Recibo encontrado por número'))+'</b>'+
             '<div class="lk-ver-kv"><span>Recibo</span><div>N.º '+esc(p.recibo_no)+'</div><span>Departamento</span><div>'+esc(d.depto)+(d.bloque?' · '+esc(d.bloque):'')+'</div>'+
             '<span>Monto</span><div>'+esc(fmtMoney(p.monto))+'</div><span>Fecha</span><div>'+esc(fmtDate(p.fecha)||'')+'</div><span>Método</span><div>'+esc(p.metodo||'')+'</div>'+
             (p.obs?'<span>Obs.</span><div>'+esc(p.obs)+'</div>':'')+'<span>Código</span><div>'+esc(x.c)+'</div></div>'+
             '<button type="button" class="btn" data-ver="'+i+'">Ver recibo original</button></div>'; }).join('');
-        res.querySelectorAll('[data-ver]').forEach(function(b){ b.onclick=function(){ var x=r.lista[+b.dataset.ver]; bd.classList.remove('open'); openReceipt(x.d,x.p); }; });
+        res.querySelectorAll('[data-ver]').forEach(function(b){ b.onclick=function(){ var x=r.lista[+b.dataset.ver]; bd.classList.remove('open');
+          if(x.tipo==='reserva') lukaVerReciboReserva(x.r); else if(x.tipo==='devol') lukaVerDevolucion(x.r); else openReceipt(x.d,x.p); }; });
       };
     }
     bd.querySelector('#lk-ver-q').value=''; bd.querySelector('#lk-ver-r').innerHTML='';
@@ -21965,6 +21989,334 @@ body{overscroll-behavior-y:none}
     b.parentNode.insertBefore(p,b.nextSibling);
   }
   new MutationObserver(function(){ if(document.getElementById('bramar-svc-rows')) poner(); }).observe(document.body,{childList:true});
+})();
+</script>
+
+<script>
+/* Documentos de reservas de Gestión LUKA (los usa LUKA y el portal de propietarios,
+   así el recibo es idéntico en los dos lados).
+   · Recibo de alquiler de área social: el alquiler y los extras son INGRESO; la
+     garantía se recibe como depósito en custodia (reembolsable), no es ingreso.
+   · Comprobante de devolución de garantía: salida del depósito en custodia (no es gasto).
+   Requiere el codificador QR (variable global QR) que ya traen LUKA y luka-recibo.js. */
+(function () {
+  var SECRET = 'LIMCO-II::clave-interna::9f3a7b2e5c1d';
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function money(n) { return 'Bs. ' + Number(n || 0).toLocaleString('es-BO', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
+  function fLarga(iso) { if (!iso) return '—'; var p = String(iso).slice(0, 10).split('-'); var M = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']; return parseInt(p[2], 10) + ' de ' + M[parseInt(p[1], 10) - 1] + ' de ' + p[0]; }
+  function fCorta(iso) { if (!iso) return ''; var p = String(iso).slice(0, 10).split('-'); var M = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']; return parseInt(p[2], 10) + ' ' + M[parseInt(p[1], 10) - 1] + ' ' + p[0]; }
+  function hoy() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function sinTildes(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/º/g, 'o'); }
+  function firma(t) { var h = 0x811c9dc5, s = t + '||' + SECRET; for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193); } return (h >>> 0).toString(36).toUpperCase().padStart(7, '0'); }
+  function qrSVG(text) {
+    try { var m = QR.encode(text), n = m.length, q = 4, T = n + q * 2, r = ''; for (var y = 0; y < n; y++) for (var x = 0; x < n; x++) if (m[y][x]) r += '<rect x="' + (x + q) + '" y="' + (y + q) + '" width="1" height="1"/>';
+      return '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 ' + T + ' ' + T + '" shape-rendering="crispEdges"><rect width="' + T + '" height="' + T + '" fill="#ffffff"/><g fill="#0b0b0b">' + r + '</g></svg>'; } catch (e) { return ''; }
+  }
+  function qrTexto(lineas) { var t = sinTildes(lineas.join('\n')); return t + '\nCod. verificacion: ' + firma(t); }
+  function textoPago(E, U, p) { return qrTexto([String(E.nombreRecibo || E.nombre || 'Gestión LUKA').toUpperCase(), 'Recibo No ' + p.no, 'Alquiler de area social', 'Depto ' + (U.depto || '-'), 'Recibido: ' + money(p.total), 'Fecha: ' + fCorta(p.fecha)]); }
+  function textoDev(E, U, d) { return qrTexto([String(E.nombreRecibo || E.nombre || 'Gestión LUKA').toUpperCase(), 'Devolucion No ' + d.no, 'Garantia de area social', 'Depto ' + (U.depto || '-'), 'Devuelto: ' + money(d.monto), 'Fecha: ' + fCorta(d.fecha)]); }
+  function cab(E, sub, no) {
+    var nombre = String(E.nombreRecibo || E.nombre || 'Gestión LUKA'), logo = E.logo || '';
+    return (logo ? '<img class="r-watermark" src="' + esc(logo) + '" alt="">' : '') + '<div class="r-band"></div>' +
+      '<div class="r-header">' + (logo ? '<img class="r-logo-img" src="' + esc(logo) + '" alt="">' : '') + '<div class="r-title">' + esc(nombre.toUpperCase()) + '</div><div class="r-sub">' + esc(sub) + '</div></div>' +
+      '<div class="r-no-wrap"><span class="r-no-badge">' + esc(no) + '</span></div>';
+  }
+  function pie(E, qr) {
+    var nombre = String(E.nombreRecibo || E.nombre || 'Gestión LUKA'), empresa = E.empresa || 'Gestión LUKA', sello = E.sello || E.logo || '';
+    return '<div class="r-qr-row"><div class="r-qr">' + qr + '</div></div>' +
+      '<div class="r-sign"><div class="r-seal">' + (sello ? '<img src="' + esc(sello) + '" alt="">' : '') + '<div class="r-seal-text">' + esc(empresa.toUpperCase()) + '</div></div><div class="line"></div>Firma / sello administración</div>' +
+      '<div class="r-footer">Documento generado digitalmente el ' + fLarga(hoy()) + ' · Administrado por ' + esc(empresa) + ' · ' + esc(nombre) + '</div>';
+  }
+  function tabla(filas) { return '<table class="r-lines">' + filas.map(function (f) { return '<tr class="' + (f[2] || '') + '"><td>' + f[0] + '</td><td>' + f[1] + '</td></tr>'; }).join('') + '</table>'; }
+
+  /* p = { no, fecha, metodo, recibido, obs, area, fechaEvento, horario, responsable, lineas:[{concepto,monto}], garantia, total } */
+  window.lukaDocReserva = function (E, U, p) {
+    var ingreso = (p.lineas || []).reduce(function (a, l) { return a + (+l.monto || 0); }, 0);
+    var filas = (p.lineas || []).map(function (l) { return [esc(l.concepto), money(l.monto)]; });
+    filas.push(['<b>Ingreso por alquiler</b>', '<b>' + money(ingreso) + '</b>', 'sub']);
+    if (+p.garantia > 0) filas.push(['Garantía (depósito reembolsable, no es ingreso)', money(p.garantia), 'gar']);
+    return '<div class="receipt-box r-reserva">' + cab(E, 'Recibo de alquiler de área social', 'Recibo N.º ' + p.no) +
+      '<div class="r-info-grid">' +
+      '<div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">' + esc(U.depto || '—') + (U.bloque ? ' · ' + esc(U.bloque) : '') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">Fecha de pago</div><div class="r-value">' + fLarga(p.fecha) + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">Método de pago</div><div class="r-value">' + esc(p.metodo || '—') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">Recibido por</div><div class="r-value">' + esc(p.recibido || '—') + '</div></div></div>' +
+      '<div class="r-concept-box"><div class="r-concept-label">Reserva</div>' + esc(p.area || '') + ' · ' + fLarga(p.fechaEvento) + (p.horario ? ' · ' + esc(p.horario) : '') +
+      (p.responsable ? '<br>Responsable: ' + esc(p.responsable) : '') + (p.obs ? '<br><span style="color:var(--r-muted)">Obs: ' + esc(p.obs) + '</span>' : '') + '</div>' +
+      tabla(filas) +
+      '<div class="r-total-band"><div class="r-total-label">Total recibido</div><div class="r-total-value">' + money(p.total) + '</div></div>' +
+      (+p.garantia > 0 ? '<p class="r-nota">La garantía de ' + money(p.garantia) + ' se devuelve después del evento, previa revisión del área.</p>' : '') +
+      pie(E, qrSVG(textoPago(E, U, p))) + '</div>';
+  };
+  /* d = { no, fecha, monto, garantia, metodo, destino, comprobante, obs, area, fechaEvento } */
+  window.lukaDocDevolucion = function (E, U, d) {
+    var desc = Math.max(0, (+d.garantia || 0) - (+d.monto || 0));
+    var filas = [['Garantía recibida', money(d.garantia)]];
+    if (desc > 0.004) filas.push(['Descuento' + (d.obs ? ' (' + esc(d.obs) + ')' : ''), '− ' + money(desc)]);
+    filas.push(['<b>Monto devuelto</b>', '<b>' + money(d.monto) + '</b>', 'sub']);
+    return '<div class="receipt-box r-reserva r-egreso">' + cab(E, 'Comprobante de devolución de garantía', 'Devolución N.º ' + d.no) +
+      '<div class="r-info-grid">' +
+      '<div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">' + esc(U.depto || '—') + (U.bloque ? ' · ' + esc(U.bloque) : '') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">Fecha de devolución</div><div class="r-value">' + fLarga(d.fecha) + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">Medio</div><div class="r-value">' + esc(d.metodo || '—') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">N.º de transacción</div><div class="r-value">' + esc(d.comprobante || '—') + '</div></div></div>' +
+      '<div class="r-concept-box"><div class="r-concept-label">Reserva</div>' + esc(d.area || '') + (d.fechaEvento ? ' · ' + fLarga(d.fechaEvento) : '') +
+      (d.destino ? '<br>Destino: ' + esc(d.destino) : '') + '</div>' + tabla(filas) +
+      '<div class="r-total-band"><div class="r-total-label">Devuelto al propietario</div><div class="r-total-value">' + money(d.monto) + '</div></div>' +
+      pie(E, qrSVG(textoDev(E, U, d))) + '</div>';
+  };
+  window.lukaDocCodigoReserva = function (E, U, p) { return textoPago(E, U, p).split('Cod. verificacion: ')[1]; };
+  window.lukaDocCodigoDevolucion = function (E, U, d) { return textoDev(E, U, d).split('Cod. verificacion: ')[1]; };
+  window.lukaDocCSS = '.receipt-box .r-lines{width:100%;border-collapse:collapse;margin:4px 0 6px;font-size:13px}' +
+    '.receipt-box .r-lines td{padding:7px 2px;border-bottom:1px dashed var(--r-line);color:var(--r-ink-soft)}' +
+    '.receipt-box .r-lines td:last-child{text-align:right;white-space:nowrap;color:var(--r-ink);font-variant-numeric:tabular-nums}' +
+    '.receipt-box .r-lines tr.sub td{color:var(--r-ink);border-bottom:1px solid var(--r-line)}' +
+    '.receipt-box .r-lines tr.gar td{color:var(--r-muted);font-style:italic}' +
+    '.receipt-box .r-nota{font-size:11px;color:var(--r-muted);text-align:center;margin:6px 0 0}' +
+    '.receipt-box.r-egreso .r-total-band{background:#eef2f7;border-color:#d5deea}' +
+    '.receipt-box.r-egreso .r-total-band .r-total-label,.receipt-box.r-egreso .r-total-band .r-total-value{color:#1e4e86}';
+  try { var st = document.createElement('style'); st.textContent = window.lukaDocCSS; (document.head || document.documentElement).appendChild(st); } catch (e) {}
+})();
+
+</script>
+<style>
+/* Módulo 38 · Cobro de reservas, devolución de garantías, numeración de recibos */
+.lkrp-sec{border:1px solid var(--gridline,#DDE5EE);border-radius:12px;padding:12px 14px;margin:10px 0}
+.lkrp-l{display:flex;justify-content:space-between;gap:12px;padding:5px 0;font-size:13.5px}
+.lkrp-l span{color:var(--text-secondary,#5B6B7F)}
+.lkrp-l b{font-variant-numeric:tabular-nums}
+.lkrp-l.gar span,.lkrp-l.gar b{color:#7A5B1E}
+.lkrp-l.tot{border-top:1px solid var(--gridline,#DDE5EE);margin-top:6px;padding-top:9px;font-size:15px}
+.lkrp-nota{font-size:12px;color:var(--text-secondary,#5B6B7F);margin:6px 0 0;line-height:1.45}
+.lkrp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lkrp-grid .full{grid-column:1/-1}
+.lkrp-grid label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600;color:var(--text-primary,#0B2440)}
+.lkrp-grid input,.lkrp-grid select{box-sizing:border-box;width:100%;min-width:0;font:inherit;font-size:14px;font-weight:400;padding:9px 11px;border:1px solid var(--gridline,#D5DEE8);border-radius:9px;background:var(--surface-1,#fff);color:inherit}
+.lkrp-foot{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.lkrp-acc{display:flex;gap:6px;align-items:center;margin-left:auto;flex:none}
+.lkrp-acc .btn{padding:6px 12px;font-size:12.5px;min-height:0}
+.lkrp-chip{font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:#EEF2F7;color:#1E4E86}
+.lkrp-modo{display:grid;gap:8px;margin:6px 0 12px}
+.lkrp-modo label{display:flex;gap:10px;align-items:flex-start;padding:11px 13px;border:1px solid var(--gridline,#DDE5EE);border-radius:11px;cursor:pointer}
+.lkrp-modo label b{display:block;font-size:14px}.lkrp-modo label span{font-size:12.5px;color:var(--text-secondary,#5B6B7F)}
+.lkrp-modo input{margin-top:3px}
+.lkrp-prev{font-size:13px;margin:8px 0 0}.lkrp-prev b{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px}
+html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
+.modal-backdrop .modal{overscroll-behavior:contain}
+@media (max-width:560px){ .lkrp-grid{grid-template-columns:1fr} }
+</style>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 38
+   · Numeración de recibos (talonario físico, correlativo virtual o aleatorio único).
+   · Cobro de una reserva de área social: el alquiler y los extras son INGRESO (van al
+     reporte diario); la garantía es un depósito en custodia: NO es ingreso, se controla
+     en «Garantías pendientes» y al devolverla no es gasto.
+   · Devolución de garantía con comprobante (egreso del depósito) que el propietario ve
+     en su portal.
+   ============================================================================ */
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function money(v){ return (typeof fmtMoney==='function')?fmtMoney(v):('Bs. '+v); }
+  function hoy(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+  function guardar(){ try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); else saveDataLocal(); }catch(e){} try{ saveDataLocal(); }catch(e){} }
+  function pad(n){ return String(n).padStart(6,'0'); }
+  function ctxE(){ var c=DATA.config||{}; return { nombreRecibo:(typeof buildingName==='function'?buildingName():(c.nombreEdificio||'Gestión LUKA')), logo:c.logo||'', sello:c.sello||'', empresa:(typeof empresaAdmin==='function'?empresaAdmin():'Gestión LUKA') }; }
+  function usuario(){ try{ var u=window.lukaCloud&&lukaCloud.user(); return (u&&u.nombre)||''; }catch(e){ return ''; } }
+
+  /* ---------------- Numeración de recibos ---------------- */
+  function cfgR(){ DATA.config=DATA.config||{}; var r=DATA.config.recibos||{}; if(!r.modo) r.modo='talonario'; return r; }
+  function usados(){
+    var s={};
+    (DATA.deptos||[]).forEach(function(d){ (d.pagos_registrados||[]).forEach(function(p){ if(p.recibo_no) s[String(p.recibo_no).trim().toUpperCase()]=1; }); });
+    (DATA.diario||[]).forEach(function(e){ if(e.recibo) s[String(e.recibo).trim().toUpperCase()]=1; });
+    (DATA.reservasSociales||[]).forEach(function(r){ if(r.pago&&r.pago.no) s[String(r.pago.no).toUpperCase()]=1; });
+    return s;
+  }
+  function maxNum(){ try{ return window.__lukaMaxRecibo?(+window.__lukaMaxRecibo()||0):0; }catch(e){ return 0; } }
+  function siguiente(){
+    var c=cfgR(), desde=parseInt(c.desde,10)||0, n=Math.max(maxNum()+1, desde||1);
+    if(c.modo==='aleatorio'){
+      var L='ABCDEFGHJKLMNPQRSTUVWXYZ', u=usados(), code;
+      do{ var a=crypto.getRandomValues(new Uint32Array(8)), t=''; for(var i=0;i<8;i++) t+=L[a[i]%L.length]; code='R-'+t.slice(0,4)+'-'+t.slice(4); }while(u[code]);
+      return code;
+    }
+    if(c.modo==='virtual') return String(c.prefijo||'').replace(/[^A-Za-z-]/g,'').toUpperCase()+pad(n);
+    return pad(n);
+  }
+  window.lukaSiguienteRecibo=siguiente;
+  // el formulario de pago de siempre sugiere el número según la configuración
+  function hookPay(){
+    if(window.__lkrpPay||typeof window.openPayModal!=='function') return; window.__lkrpPay=1;
+    var op=window.openPayModal;
+    window.openPayModal=function(){ var r=op.apply(this,arguments);
+      try{ var c=cfgR(), inp=$('pf-recibo-no'); if(inp){ inp.value=siguiente(); inp.readOnly=(c.modo==='aleatorio');
+        var h=inp.parentNode&&inp.parentNode.querySelector('.hint'); if(h) h.textContent=c.modo==='talonario'?'Correlativo del talonario físico. Cámbielo si usa otro talonario.':(c.modo==='virtual'?'Correlativo virtual automático.':'Número aleatorio único (no se repite).');
+        inp.dispatchEvent(new Event('input')); } }catch(e){}
+      return r; };
+    if(typeof window.registrarPago==='function'){ var rp=window.registrarPago;
+      window.registrarPago=function(d,monto,metodo,fecha,recibido,obs,reciboNo){
+        // si el número es el que sugirió el sistema, no preguntar por "recibos salteados" (cambio de talonario)
+        var sug=(String(reciboNo||'').trim().toUpperCase()===String(window.__lkrpUltimo||'').toUpperCase());
+        var oc=window.confirm; if(sug) window.confirm=function(){ return true; };
+        try{ return rp.apply(this,arguments); } finally { window.confirm=oc; } }; }
+  }
+  document.addEventListener('input',function(e){ if(e.target&&e.target.id==='pf-recibo-no') window.__lkrpUltimo=e.target.value; },true);
+
+  // pestaña «Recibos» en Configuraciones
+  function cfgTab(){
+    var nav=$('cfg2-nav'), cont=$('cfg2-cont'); if(!nav||!cont||$('lkrp-cfg')) return;
+    var tab=document.createElement('button'); tab.type='button'; tab.className='cfg2-tab'; tab.dataset.cat='recibos';
+    tab.innerHTML='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6"/></svg><span>Recibos<span class="cfg2-tab-n">Numeración</span></span>';
+    var ref=nav.children[1]||null; nav.insertBefore(tab,ref);
+    var sec=document.createElement('div'); sec.className='cfg2-sec'; sec.dataset.cat='recibos'; sec.id='lkrp-cfg'; cont.appendChild(sec);
+    tab.addEventListener('click',function(){ nav.querySelectorAll('.cfg2-tab').forEach(function(t){ t.classList.toggle('active',t===tab); }); cont.querySelectorAll('.cfg2-sec').forEach(function(x){ x.classList.toggle('active',x===sec); }); pintarCfg(); });
+    nav.addEventListener('click',function(e){ var t=e.target.closest('.cfg2-tab'); if(t&&t!==tab){ tab.classList.remove('active'); sec.classList.remove('active'); } });
+  }
+  function pintarCfg(){
+    var sec=$('lkrp-cfg'), c=cfgR();
+    sec.innerHTML='<h3 class="cfg2-sec-title">Numeración de recibos</h3><p class="cfg2-sec-desc">Cómo se numeran los recibos de expensas, multas y alquileres. Los números nunca se repiten.</p>'+
+      '<div class="lkrp-modo">'+
+      '<label><input type="radio" name="lkrp-m" value="talonario"'+(c.modo==='talonario'?' checked':'')+'><div><b>Talonario físico</b><span>Sigue la numeración de sus talonarios impresos. Ponga desde qué número empieza el talonario actual.</span></div></label>'+
+      '<label><input type="radio" name="lkrp-m" value="virtual"'+(c.modo==='virtual'?' checked':'')+'><div><b>Correlativo virtual</b><span>Números seguidos automáticos, con una serie opcional (ej. LIM-000125).</span></div></label>'+
+      '<label><input type="radio" name="lkrp-m" value="aleatorio"'+(c.modo==='aleatorio'?' checked':'')+'><div><b>Aleatorio único</b><span>Un código distinto en cada recibo (ej. R-KQWT-MZPA), difícil de adivinar o falsificar.</span></div></label></div>'+
+      '<div class="lkrp-grid"><label>Empezar desde el número<input id="lkrp-desde" inputmode="numeric" value="'+esc(c.desde||'')+'" placeholder="Ej. 5001"></label>'+
+      '<label>Serie (solo letras, opcional)<input id="lkrp-pref" value="'+esc(c.prefijo||'')+'" placeholder="Ej. LIM-" maxlength="8"></label></div>'+
+      '<p class="lkrp-prev">Próximo recibo: <b id="lkrp-next"></b></p>'+
+      '<div class="lkrp-foot"><button type="button" class="btn primary" id="lkrp-save">Guardar</button></div>';
+    var upd=function(){ var m=sec.querySelector('input[name=lkrp-m]:checked').value; $('lkrp-desde').disabled=(m==='aleatorio'); $('lkrp-pref').disabled=(m!=='virtual');
+      var bak=DATA.config.recibos; DATA.config.recibos={modo:m,desde:$('lkrp-desde').value,prefijo:$('lkrp-pref').value}; $('lkrp-next').textContent=siguiente(); DATA.config.recibos=bak; };
+    sec.querySelectorAll('input').forEach(function(i){ i.addEventListener('input',upd); i.addEventListener('change',upd); }); upd();
+    $('lkrp-save').onclick=function(){
+      var m=sec.querySelector('input[name=lkrp-m]:checked').value, de=parseInt($('lkrp-desde').value,10)||0;
+      if(m!=='aleatorio'&&de&&de<=maxNum()&&!confirm('El recibo más alto ya usado es '+pad(maxNum())+'. Se seguirá desde '+pad(maxNum()+1)+'. ¿Guardar igual?')) return;
+      DATA.config.recibos={modo:m,desde:de||'',prefijo:String($('lkrp-pref').value||'').replace(/[^A-Za-z-]/g,'').toUpperCase()};
+      if(de) DATA.config.reciboDesde=de;
+      guardar(); try{ showSaveToast('Numeración de recibos guardada.'); }catch(e){}
+      pintarCfg();
+    };
+  }
+
+  /* ---------------- Documentos (modal + imprimir en carta) ---------------- */
+  function mostrarDoc(html,titulo){
+    var mc=$('receipt-modal-content'), root=$('receipt-print-root');
+    if(!mc||!root){ var w=window.open(''); if(w){ w.document.write(html); } return; }
+    mc.innerHTML='<button class="close-btn no-print" id="lkrp-dclose">&times;</button>'+html+
+      '<div class="form-actions no-print"><button class="btn" id="lkrp-dclose2">Cerrar</button><button class="btn primary" id="lkrp-dprint">Imprimir / Guardar como PDF</button></div>';
+    root.innerHTML=html;
+    $('receipt-modal-backdrop').classList.add('open');
+    var cerrar=function(){ try{ closeReceipt(); }catch(e){ $('receipt-modal-backdrop').classList.remove('open'); } };
+    $('lkrp-dclose').onclick=cerrar; $('lkrp-dclose2').onclick=cerrar;
+    $('lkrp-dprint').onclick=function(){ try{ imprimirDoc(titulo,{pageSize:'Letter',marginMm:15,fit:'fill',naturalWidthPx:560}); }catch(e){ window.print(); } };
+  }
+  function unidadDe(r){ var d=(DATA.deptos||[]).filter(function(x){ return String(x.depto).toUpperCase()===String(r.depto||'').toUpperCase(); })[0]; return { depto:r.depto||'', bloque:(d&&d.bloque)||'' }; }
+  window.lukaCtxE=ctxE; window.lukaUnidadDe=unidadDe;
+  window.lukaVerReciboReserva=function(r){ if(r&&r.pago) mostrarDoc(lukaDocReserva(ctxE(),unidadDe(r),r.pago),'Recibo '+r.pago.no+' - Alquiler - Depto '+(r.depto||'')); };
+  window.lukaVerDevolucion=function(r){ var h=(r.garDev&&r.garDev.historial)||[], u=h[h.length-1]; if(u) mostrarDoc(lukaDocDevolucion(ctxE(),unidadDe(r),u),'Devolucion '+(u.no||'')+' - Depto '+(r.depto||'')); };
+
+  /* ---------------- Cobro de una reserva ---------------- */
+  function lineasDe(r){
+    var L=[{concepto:'Alquiler · '+(r.areaNombre||'Área social')+(r.tramoLabel?' ('+r.tramoLabel+')':''),monto:+r.monto||0}];
+    if(Array.isArray(r.extrasLista)&&r.extrasLista.length){ r.extrasLista.forEach(function(x){ L.push({concepto:x.nombre+' × '+x.cant,monto:+x.subtotal||0}); }); }
+    else {
+      var S=(DATA.config&&DATA.config.servicios)||{}, pr=function(k,d){ return (S[k]&&isFinite(+S[k].precio))?+S[k].precio:d; };
+      if(+r.sillas>0) L.push({concepto:'Sillas × '+r.sillas,monto:r.sillas*pr('silla',2)});
+      if(+r.mesas>0) L.push({concepto:'Mesas × '+r.mesas,monto:r.mesas*pr('mesa',3)});
+      if(+r.mesasNuevas>0) L.push({concepto:'Mesas nuevas × '+r.mesasNuevas,monto:r.mesasNuevas*pr('mesaNueva',10)});
+      var sum=L.slice(1).reduce(function(a,x){ return a+x.monto; },0);
+      if((+r.extras||0)-sum>0.004) L.push({concepto:'Otros extras',monto:(+r.extras)-sum});
+    }
+    return L;
+  }
+  function modal(id,html){
+    var bd=$(id); if(!bd){ bd=document.createElement('div'); bd.className='modal-backdrop no-print'; bd.id=id; document.body.appendChild(bd); bd.addEventListener('click',function(e){ if(e.target===bd) bd.classList.remove('open'); }); }
+    bd.innerHTML='<div class="modal lk-modal" style="max-width:520px"><button class="close-btn" title="Cerrar">&times;</button>'+html+'</div>';
+    bd.querySelector('.close-btn').onclick=function(){ bd.classList.remove('open'); };
+    bd.classList.add('open'); return bd;
+  }
+  window.lukaPagoReserva=function(r,opts){
+    opts=opts||{}; if(!r) return;
+    if(r.pago){ window.lukaVerReciboReserva(r); return; }
+    var L=lineasDe(r), ing=L.reduce(function(a,x){ return a+x.monto; },0), gar=+r.garantia||0, tot=ing+gar, c=cfgR();
+    var bd=modal('lkrp-bd','<h2>Cobrar reserva</h2><p class="modal-sub">'+esc(r.areaNombre||'')+' · '+esc(r.fecha||'')+' · '+(r.depto?'Depto '+esc(r.depto)+' · ':'')+esc(r.responsable||'')+'</p>'+
+      '<div class="lkrp-sec">'+L.map(function(x){ return '<div class="lkrp-l"><span>'+esc(x.concepto)+'</span><b>'+money(x.monto)+'</b></div>'; }).join('')+
+      '<div class="lkrp-l"><span><b>Ingreso por alquiler</b></span><b>'+money(ing)+'</b></div>'+
+      (gar?'<div class="lkrp-l gar"><span>Garantía (depósito en custodia)</span><b>'+money(gar)+'</b></div>':'')+
+      '<div class="lkrp-l tot"><span><b>Total a recibir</b></span><b>'+money(tot)+'</b></div>'+
+      '<p class="lkrp-nota">Contabilidad: solo '+money(ing)+' entra como ingreso en el reporte diario. '+(gar?'La garantía de '+money(gar)+' queda en custodia (no es ingreso) y se controla en «Garantías pendientes»; al devolverla no es un gasto.':'')+'</p></div>'+
+      '<div class="lkrp-grid"><label>N.º de recibo<input id="lkrp-no" value="'+esc(siguiente())+'"'+(c.modo==='aleatorio'?' readonly':'')+'></label>'+
+      '<label>Fecha de pago<input type="date" id="lkrp-f" value="'+esc(opts.fecha||hoy())+'"></label>'+
+      '<label>Método<select id="lkrp-m"><option>Transferencia</option><option>QR</option><option>Efectivo</option><option>Depósito</option></select></label>'+
+      '<label>Recibido por<input id="lkrp-rec" value="'+esc(usuario())+'"></label>'+
+      '<label class="full">Observación (ej. N.º de comprobante)<input id="lkrp-obs" value="'+esc(opts.obs||'')+'"></label></div>'+
+      (opts.monto&&Math.abs(opts.monto-tot)>0.004?'<p class="lk-warn" style="margin-top:10px">El comprobante del propietario dice '+money(opts.monto)+' y el total de la reserva es '+money(tot)+'. Revise antes de registrar.</p>':'')+
+      '<p class="lk-warn" id="lkrp-err"></p><div class="lkrp-foot"><button type="button" class="btn" id="lkrp-x">Cancelar</button><button type="button" class="btn primary" id="lkrp-ok">Registrar y ver recibo</button></div>');
+    $('lkrp-x').onclick=function(){ bd.classList.remove('open'); };
+    $('lkrp-ok').onclick=function(){
+      var no=String($('lkrp-no').value||'').trim().toUpperCase(); if(!no){ $('lkrp-err').textContent='Ponga el número de recibo.'; return; }
+      if(usados()[no]){ $('lkrp-err').textContent='El recibo '+no+' ya fue usado. Los recibos no se repiten.'; return; }
+      var f=$('lkrp-f').value||hoy(), m=$('lkrp-m').value;
+      r.pago={ no:no, fecha:f, metodo:m, recibido:$('lkrp-rec').value.trim(), obs:$('lkrp-obs').value.trim(), area:r.areaNombre||'', fechaEvento:r.fecha||String(r.inicio||'').slice(0,10),
+        horario:(String(r.inicio||'').slice(11,16)+(r.fin?' a '+String(r.fin).slice(11,16):'')).trim(), responsable:r.responsable||'', lineas:L, garantia:gar, total:tot, at:new Date().toISOString() };
+      if(ing>0&&typeof agregarMovimientoDiario==='function') agregarMovimientoDiario(f,'ingreso','otro','Alquiler '+(r.areaNombre||'área social')+(r.depto?' · Depto '+r.depto:''),ing,{recibo:no,depto:r.depto||'',reservaId:r.id});
+      if(c.modo!=='aleatorio'){ var n=parseInt(no.replace(/\D/g,''),10); if(n) DATA.receiptCounter=n+1; }
+      guardar(); bd.classList.remove('open');
+      try{ if(typeof renderAreasSociales==='function') renderAreasSociales(); }catch(e){}
+      if(opts.onDone) try{ opts.onDone(r); }catch(e){}
+      window.lukaVerReciboReserva(r);
+    };
+  };
+
+  /* ---------------- Devolución de garantía ---------------- */
+  window.lukaDevolverGarantia=function(r,sol,onDone){
+    var gar=+r.garantia||+(sol&&sol.garantia)||0;
+    var datos=String((sol&&sol.garDatos)||''), url=(datos.match(/https?:\/\/\S+/)||[''])[0];
+    var metodoSol=/^QR/.test(datos)?'QR':(/^Transferencia/.test(datos)?'Transferencia':'');
+    var bd=modal('lkrp-dev','<h2>Devolver garantía</h2><p class="modal-sub">'+esc(r.areaNombre||(sol&&sol.area)||'')+' · '+(r.depto?'Depto '+esc(r.depto):'')+' · Garantía recibida '+money(gar)+'</p>'+
+      (datos?'<div class="lkrp-sec"><div class="lkrp-l"><span>El propietario pidió</span><b>'+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">Ver su QR</a>':esc(datos))+'</b></div></div>':'')+
+      '<div class="lkrp-grid"><label>Fecha<input type="date" id="lkrp-df" value="'+hoy()+'"></label>'+
+      '<label>Monto devuelto (Bs.)<input type="number" id="lkrp-dm" min="0" step="0.01" value="'+gar+'"></label>'+
+      '<label>Medio<select id="lkrp-dmet"><option'+(metodoSol==='Transferencia'?' selected':'')+'>Transferencia</option><option'+(metodoSol==='QR'?' selected':'')+'>QR</option><option>Efectivo</option></select></label>'+
+      '<label>N.º de transacción<input id="lkrp-dc" placeholder="Del comprobante del banco"></label>'+
+      '<label class="full">Motivo del descuento (si devuelve menos)<input id="lkrp-do" placeholder="Ej. limpieza extra"></label></div>'+
+      '<p class="lkrp-nota">La devolución sale del depósito en custodia: no se registra como gasto. El propietario verá el comprobante en su portal.</p>'+
+      '<p class="lk-warn" id="lkrp-derr"></p><div class="lkrp-foot"><button type="button" class="btn" id="lkrp-dx">Cancelar</button><button type="button" class="btn primary" id="lkrp-dok">Confirmar devolución</button></div>');
+    $('lkrp-dx').onclick=function(){ bd.classList.remove('open'); };
+    $('lkrp-dok').onclick=function(){
+      var m=Math.round((parseFloat($('lkrp-dm').value)||0)*100)/100;
+      if(m>gar+0.004){ $('lkrp-derr').textContent='No puede devolver más que la garantía.'; return; }
+      if(m<gar-0.004&&!$('lkrp-do').value.trim()){ $('lkrp-derr').textContent='Explique el motivo del descuento.'; return; }
+      DATA.garDevCounter=(DATA.garDevCounter||0)+1;
+      var en={ no:'DG-'+String(DATA.garDevCounter).padStart(5,'0'), fecha:$('lkrp-df').value||hoy(), monto:m, garantia:gar, metodo:$('lkrp-dmet').value, destino:url?'QR del propietario':datos.replace(/^Transferencia · /,''),
+        comprobante:$('lkrp-dc').value.trim(), obs:$('lkrp-do').value.trim(), recibio:r.responsable||'', area:r.areaNombre||'', fechaEvento:r.fecha||'', at:new Date().toISOString() };
+      if(!r.garDev||typeof r.garDev!=='object') r.garDev={estado:'pendiente',historial:[]}; if(!Array.isArray(r.garDev.historial)) r.garDev.historial=[];
+      r.garDev.historial.push(en); r.garDev.estado='devuelta'; guardar(); bd.classList.remove('open');
+      if(onDone) try{ onDone(en); }catch(e){}
+      try{ if(typeof renderAreasSociales==='function') renderAreasSociales(); }catch(e){}
+      window.lukaVerDevolucion(r);
+    };
+  };
+
+  /* ---------------- Botones en la lista de reservas ---------------- */
+  function botones(){
+    document.querySelectorAll('.lkr-res[data-id]').forEach(function(row){
+      if(row.querySelector('.lkrp-acc')) return;
+      var r=(DATA.reservasSociales||[]).filter(function(x){ return String(x.id)===row.dataset.id; })[0]; if(!r||r.estado==='Cancelada') return;
+      var box=document.createElement('div'); box.className='lkrp-acc';
+      box.innerHTML=r.pago?'<span class="lkrp-chip">Pagada</span><button type="button" class="btn" data-a="rec">Recibo</button>':'<button type="button" class="btn primary" data-a="cob">Cobrar</button>';
+      var h=(r.garDev&&r.garDev.historial)||[];
+      if(r.garDev&&r.garDev.estado==='devuelta'&&h.length) box.innerHTML+='<button type="button" class="btn" data-a="dev">Devolución</button>';
+      box.addEventListener('click',function(e){ var b=e.target.closest('[data-a]'); if(!b) return; e.stopPropagation();
+        if(b.dataset.a==='cob') window.lukaPagoReserva(r); else if(b.dataset.a==='rec') window.lukaVerReciboReserva(r); else window.lukaVerDevolucion(r); });
+      var last=row.lastElementChild; row.insertBefore(box,last&&last.classList&&!last.classList.contains('lkrp-acc')&&row.children.length>1?last:null);
+    });
+  }
+  /* bloquear el scroll del fondo con una ventana abierta */
+  function lockScroll(){ document.documentElement.classList.toggle('lk-modal-abierto',!!document.querySelector('.modal-backdrop.open,#cfg2-bd.open')); }
+  var pend=false;
+  new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; botones(); cfgTab(); hookPay(); lockScroll(); }); })
+    .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 })();
 </script>
 

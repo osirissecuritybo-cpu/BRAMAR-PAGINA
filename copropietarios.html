@@ -346,6 +346,10 @@ footer a{color:var(--navy)}
 .rv-pay{display:inline-flex;margin-top:8px;min-height:38px;align-items:center;padding:0 16px;border:0;border-radius:999px;background:var(--navy);color:#fff;font:inherit;font-size:14px;font-weight:500;cursor:pointer}
 .rp-qr{display:grid;place-items:center;margin:16px 0 4px}.rp-qr img{width:210px;max-width:70%;border-radius:12px}
 .rp-bank{margin:8px 0 0}
+.rv-link{display:inline-block;margin:8px 12px 0 0;padding:0;border:0;background:none;color:var(--navy);font:inherit;font-size:13.5px;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+#p-name:focus,#p-name:focus-visible,[tabindex="-1"]:focus{outline:none!important;box-shadow:none!important}
+html.modal-abierto,html.modal-abierto body{overflow:hidden!important}
+.dialog{overscroll-behavior:contain}.dialog-card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
 .rv-st{display:block;margin-top:8px;font-size:13px;color:var(--navy);font-weight:500}
 .res-due{position:relative;z-index:1;display:flex;align-items:center;gap:8px;width:100%;margin-top:16px;padding:12px 14px;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(255,255,255,.08);color:#fff;font:inherit;font-size:14px;text-align:left;cursor:pointer}
 .res-due b{font-weight:500;color:var(--brass-soft)}.res-due span{margin-left:auto;font-size:13px;text-decoration:underline;text-underline-offset:3px}
@@ -626,6 +630,7 @@ html,body{overflow-x:clip;max-width:100%}
 
 <script src="js/portal-crypto.js"></script>
 <script src="js/luka-recibo.js"></script>
+<script src="js/luka-docs.js"></script>
 <script>
 /* ================================================================
    CONFIGURACIÓN DEL PORTAL
@@ -647,7 +652,7 @@ const PORTAL = {
   const $=s=>document.querySelector(s);
   const C=window.BramarCrypto;
   const MAX=8*1024*1024;
-  let data=null, file=null, showAll=false, session=null, shown=[];
+  let data=null, file=null, showAll=false, session=null, shown=[], rcCount=0;
   const SKEY='bramar.session';
 
   const money=(n,cur)=>(cur||'Bs')+' '+Number(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -746,6 +751,7 @@ const PORTAL = {
     try{
       const rk=await C.receiptKey(session.b,session.d,session.code);
       const r=await fetch(PORTAL.endpoint+'?action=recibos&rk='+rk,{cache:'no-store'}); const j=await r.json();
+      rcCount=(j.ok&&j.recibos)?j.recibos.length:0;
       if(!j.ok||!j.recibos||!j.recibos.length){ box.hidden=true; return; }
       const cur=(data.edificio||{}).moneda||'Bs';
       $('#rc-list').innerHTML=j.recibos.slice(0,8).map(x=>{
@@ -833,12 +839,12 @@ const PORTAL = {
   $('#p-more').addEventListener('click',()=>{showAll=true;renderTable();});
   /* ---------- Recibo (pagos registrados en Gestión LUKA) ---------- */
   $('#p-table').addEventListener('click',e=>{ const b=e.target.closest('[data-rec]'); if(!b) return; const c=shown[+b.dataset.rec]; if(c&&c.recibo) openRecibo(c.recibo); });
-  function openRecibo(r){
+  function openRecibo(r){ openDoc(window.lukaRecibo?window.lukaRecibo(data.edificio||{},data.unidad||{},r):'','Recibo '+(r.no||'')+' - Depto '+((data.unidad||{}).depto||'')); }
+  function openDoc(html,nombre){
     const dlgR=$('#rec-dialog');
-    const html=window.lukaRecibo?window.lukaRecibo(data.edificio||{},data.unidad||{},r):'';
     $('#rec-body').innerHTML=html;
     let root=$('#rec-print-root'); if(!root){ root=document.createElement('div'); root.id='rec-print-root'; document.body.appendChild(root); }
-    root.innerHTML=html; recNombre='Recibo '+(r.no||'')+' - Depto '+((data.unidad||{}).depto||'');
+    root.innerHTML=html; recNombre=nombre||'Recibo';
     document.body.classList.add('rec-abierto');
     dlgR.classList.add('open'); dlgR.setAttribute('aria-hidden','false');
   }
@@ -863,6 +869,9 @@ const PORTAL = {
   $('#rec-dialog').addEventListener('click',e=>{ if(e.target.id==='rec-dialog') closeRecibo(); });
   $('#rec-print-btn').addEventListener('click',imprimirRecibo);
 
+  /* con una ventana abierta, la página de fondo no se mueve */
+  new MutationObserver(()=>{ document.documentElement.classList.toggle('modal-abierto',!!document.querySelector('.dialog.open')); })
+    .observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
   /* ---------- Reservas de áreas sociales ---------- */
   let misReservas=[];
   const cur0=()=>(data&&data.edificio&&data.edificio.moneda)||'Bs';
@@ -929,19 +938,25 @@ const PORTAL = {
     }catch(e){}
   }
   function accion(x,i,cur){
+    const verRec=x.recibo?`<button type="button" class="rv-link" data-rrec="${i}">Ver recibo</button>`:'';
+    if(x.devolucion) return `<span class="rv-st">Garantía devuelta · ${money(x.devolucion.monto,cur)}</span><button type="button" class="rv-link" data-rdev="${i}">Ver comprobante de devolución</button>${verRec}`;
     if(x.terminado){
-      if(x.garEstado==='Solicitada') return '<span class="rv-st">Garantía solicitada · Bramar se la devolverá</span>';
-      return `<button type="button" class="rv-pay" data-gar="${i}">Solicitar garantía ${x.garantia?money(x.garantia,cur):''}</button>`;
+      if(x.garEstado==='Solicitada') return '<span class="rv-st">Garantía solicitada · Bramar se la devolverá</span>'+verRec;
+      return `<button type="button" class="rv-pay" data-gar="${i}">Solicitar garantía ${x.garantia?money(x.garantia,cur):''}</button>`+verRec;
     }
+    if(x.recibo) return '<span class="rv-st">Pagada</span>'+verRec;
     if(x.pago) return '<span class="rv-st">Pago enviado · en revisión</span>';
     return `<button type="button" class="rv-pay" data-pay="${i}">Pagar ${x.total!=null?money(x.total,cur):''}</button>`;
   }
   function resumenReserva(){
-    const cur=cur0(), x=misReservas.find(r=>r.estado==='Aprobada'&&!r.terminado&&!r.pago&&r.total>0), b=$('#p-res-due');
+    const cur=cur0(), x=misReservas.find(r=>r.estado==='Aprobada'&&!r.terminado&&!r.pago&&!r.recibo&&r.total>0), b=$('#p-res-due');
     if(!x){ b.hidden=true; return; }
     b.hidden=false; b.innerHTML=`Reserva aprobada por pagar <b>${money(x.total,cur)}</b><span>Ver</span>`;
     b.onclick=()=>{ const i=misReservas.indexOf(x); const el=document.querySelector('[data-pay="'+i+'"]'); if(el) el.click(); };
   }
+  $('#rv-list').addEventListener('click',e=>{ const b=e.target.closest('[data-rrec],[data-rdev]'); if(!b) return; const E=data.edificio||{}, U=data.unidad||{};
+    if(b.dataset.rrec!=null){ const x=misReservas[+b.dataset.rrec]; if(x&&x.recibo&&window.lukaDocReserva) openDoc(lukaDocReserva(E,U,x.recibo),'Recibo '+x.recibo.no+' - Alquiler - Depto '+(U.depto||'')); }
+    else { const x=misReservas[+b.dataset.rdev]; if(x&&x.devolucion&&window.lukaDocDevolucion) openDoc(lukaDocDevolucion(E,U,x.devolucion),'Devolucion '+x.devolucion.no+' - Depto '+(U.depto||'')); } });
   /* solicitar la garantía después del evento */
   const grDlg=$('#gr-dialog'); let grSel=null, grFile=null;
   function grShow(on){ grDlg.classList.toggle('open',on); grDlg.setAttribute('aria-hidden',on?'false':'true'); if(on) $('#gr-msg').innerHTML=''; }
@@ -1122,6 +1137,13 @@ const PORTAL = {
         alertBox(msg,'ok','Recibimos su comprobante. Lo verificaremos y su estado de cuenta se actualizará en un máximo de 24 horas.');
         clearFile(); $('#up-note').value=''; loadReceipts(); if(pagoReserva){ setPagoReserva(null); loadReservas(); }
       }catch(err){
+        // a veces Google guarda el comprobante pero la respuesta no llega: se revisa antes de dar error
+        let llego=false;
+        try{ await new Promise(r=>setTimeout(r,2500)); const rk=await C.receiptKey(session.b,session.d,session.code);
+          const j2=await (await fetch(PORTAL.endpoint+'?action=recibos&rk='+rk,{cache:'no-store'})).json();
+          llego=!!(j2.ok&&j2.recibos&&j2.recibos.length>rcCount); }catch(e){}
+        if(llego){ alertBox(msg,'ok','Recibimos su comprobante. Lo verificaremos y su estado de cuenta se actualizará en un máximo de 24 horas.');
+          clearFile(); $('#up-note').value=''; loadReceipts(); if(pagoReserva){ setPagoReserva(null); loadReservas(); } return; }
         alertBox(msg,'bad','No pudimos enviar el comprobante. Intente de nuevo o <a href="'+wa(text)+'" target="_blank" rel="noopener">envíelo por WhatsApp</a>.');
       }finally{ btn.disabled=false; btn.classList.remove('loading'); $('#up-btn-t').textContent='Enviar comprobante'; $('#up-bar').classList.remove('show'); }
       return;
