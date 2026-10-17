@@ -32,7 +32,8 @@ h1,h2,h3{margin:0;font-weight:300;line-height:1.15;letter-spacing:-.015em;text-w
 p{margin:0}
 a{color:inherit}
 button{font:inherit;color:inherit}
-:focus-visible{outline:2px solid var(--brass);outline-offset:3px;border-radius:6px}
+:focus-visible{outline:2px solid rgba(10,51,93,.28);outline-offset:2px}
+button:focus:not(:focus-visible),a:focus:not(:focus-visible){outline:none}
 .wrap{width:100%;max-width:1120px;margin:0 auto;padding-inline:var(--gutter)}
 .tag{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
 .tag::before{content:"";width:24px;height:2px;background:currentColor}
@@ -393,7 +394,7 @@ html,body{overflow-x:clip;max-width:100%}
 .table tr.last td{border-top:1px solid var(--line);color:var(--muted)}
 .table tr.last td small{display:block;font-size:12.5px;color:var(--muted)}
 .table td.empty.ok{color:var(--navy);text-align:left;padding:14px 0}
-@media (max-width:600px){
+@media all{
   :root{--g:16px}
   .top{padding-left:var(--g);padding-right:var(--g)}
   .profile .wrap{padding-left:var(--g);padding-right:var(--g)}
@@ -464,73 +465,38 @@ html,body{overflow-x:clip;max-width:100%}
   .table td.empty.ok{padding:4px 0 10px}
 }
 
-/* ---- Computadora: menú en la cabecera y una sección a la vez ---- */
-.d-nav,.d-ic{display:none}
+/* ---- Inicio tipo app (todas las pantallas) ---- */
+.d-nav,.d-ic,.m-row{display:none!important}
+#datos .bank>.sub,#comprobante>.sub{display:none}
+.hello h1{font-size:30px}
+.p-debt .meta{display:block;margin-top:14px;padding-top:12px}
+.p-debt .meta>div{display:none}
+.p-debt .meta>div:nth-child(3){display:flex!important;gap:6px;align-items:baseline}
+.p-debt .meta>div:nth-child(3) b{order:2;font-size:13px;font-weight:400;color:rgba(255,255,255,.75)}
+.p-debt .meta>div:nth-child(3) span{order:1}
+.m-acts{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:12px}
+.m-acts .tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:104px;padding:16px 8px;border:0;border-radius:20px;background:var(--paper);color:var(--navy);font:inherit;font-size:14.5px;font-weight:500;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.m-acts .tile:hover{box-shadow:0 10px 30px -18px rgba(6,33,69,.45)}
+.m-acts .tile:active{transform:scale(.97)}
+.m-acts .tile i{width:44px;height:44px;border-radius:14px;background:var(--sand);display:grid;place-items:center}
+.m-acts .tile.pri i{background:var(--navy);color:#fff}
+.m-acts .tile svg{width:22px;height:22px}
+.m-acts .tile[hidden]{display:none}
+.m-acts .tile em{position:absolute;top:10px;right:10px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#C0392B;color:#fff;font-style:normal;font-size:11.5px;font-weight:600;display:grid;place-items:center}
+.m-acts .tile em[hidden]{display:none}
+@media (max-width:380px){ .m-acts .tile{font-size:13.5px;min-height:96px} }
 @media (min-width:601px){
-  .top-bar{gap:16px}
-  .d-nav:not([hidden]){display:flex;gap:2px;margin:0 auto;min-width:0;overflow-x:auto;scrollbar-width:none}
-  .d-nav::-webkit-scrollbar{display:none}
-  .d-nav button{flex:none;min-height:40px;padding:0 15px;border:0;border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;transition:color .2s,background .2s;white-space:nowrap}
-  .d-nav button:hover{color:var(--navy)}
-  .d-nav button.on{background:var(--sand);color:var(--navy);font-weight:500}
-  .d-nav button[hidden]{display:none}
-  .d-ic:not([hidden]){display:inline-grid;place-items:center;width:44px;padding:0}
-  body.en-perfil .brand span{display:none}
-  .hello-actions{display:none}
-  .hello{margin-bottom:20px}
-  body.d-sec .hello,body.d-sec .p-debt,body.d-sec .m-home{display:none}
-  .grid{align-items:stretch}
-  .grid>section.panel:not(.p-debt):not(.m-open){display:none}
-  .grid>section.panel.m-open{grid-column:1/-1;animation:in .35s var(--soft) both}
-  .grid>section.panel.m-open>.m-head{display:none}
-  .panel>h2,.mov-head h2,.rv-head h2,.bank>h2{font-size:26px}
-  /* inicio */
-  .p-debt{grid-column:span 5;display:flex;flex-direction:column}
-  .p-debt .btn.gold{display:none}
-  .m-home{display:flex;flex-direction:column;gap:16px;grid-column:span 7;min-width:0}
-  .m-acts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-  .m-acts .btn{width:100%;min-height:56px;justify-content:center;font-size:15px}
-  .m-acts .btn.light{background:var(--paper);color:var(--navy)}
-  .m-acts .btn.light:hover{background:#fff;box-shadow:inset 0 0 0 1.5px var(--line)}
-  .m-pend{flex:1;background:var(--paper);border-radius:var(--radius);padding:24px 28px 14px}
-  .m-pend-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
-  .m-pend-h b{font-weight:400;color:var(--navy);font-size:22px}
-  .m-pend-h button{border:0;background:none;padding:0;color:var(--navy);font:inherit;font-size:14px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-  .m-pend ul{list-style:none;margin:0;padding:0}
-  .m-pend li{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line);font-size:15px}
-  .m-pend li:first-child{border-top:0}
-  .m-pend li b{font-weight:500;white-space:nowrap}
-  .m-pend li.multa span::after{content:"Multa";margin-left:8px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:#FBEFEF;color:#8E2A20;vertical-align:1px}
-  .m-ok,.m-more{margin:6px 0 10px;font-size:14px;color:var(--muted)}
-  .m-row:not([hidden]){display:flex;align-items:center;gap:10px;width:100%;min-height:60px;padding:0 28px;border:0;border-radius:var(--radius);background:var(--paper);color:var(--ink);font:inherit;font-size:16px;text-align:left;cursor:pointer;transition:box-shadow .2s}
-  .m-row:hover{box-shadow:inset 0 0 0 1.5px var(--line)}
-  .m-row span{flex:1}.m-row small{font-size:14px;color:var(--muted)}
-  .chev{width:8px;height:8px;border-right:1.6px solid var(--muted);border-top:1.6px solid var(--muted);transform:rotate(45deg);margin:0 4px 0 6px}
-  /* datos de pago */
-  .p-pay.m-open{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:24px 56px;align-items:start}
-  .p-pay .kv{grid-template-columns:180px 1fr;padding:14px 0}
-  .p-pay .qr .box{width:240px}
-  .p-pay .qr .box.vacio{width:240px;aspect-ratio:1;display:grid;place-items:center;text-align:center}
-  /* enviar comprobante: archivo a la izquierda, datos a la derecha */
-  #up-form{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;align-items:start}
-  #up-form .drop{grid-column:1;grid-row:1/span 2;min-height:100%;justify-content:center;margin-top:20px}
-  #up-form .file{grid-column:1;grid-row:3}
-  #up-form .up-fields{grid-column:2;grid-row:1;margin-top:20px}
-  #up-form .up-actions{grid-column:2;grid-row:2}
-  .rv-card .up-fields{margin-top:4px}
-}
-@media (min-width:601px){ .table td.st .rec-btn{margin-left:auto;display:inline-block} .table tr.last td.st{text-align:right} }
-@media (min-width:601px) and (max-width:1060px){
-  body.en-perfil .top-bar{height:auto;flex-wrap:wrap;border-radius:28px;padding:10px 10px 8px 16px;row-gap:6px}
-  body.en-perfil .d-nav{order:3;flex:1 0 100%;margin:0;padding-top:6px;border-top:1px solid var(--line);justify-content:center}
-}
-@media (min-width:601px) and (max-width:900px){
-  .p-debt,.m-home{grid-column:1/-1}
-  .d-nav{justify-content:flex-start!important}
-  .d-nav button{padding:0 12px;font-size:13.5px}
-  .p-pay.m-open{grid-template-columns:1fr}
-  #up-form{grid-template-columns:1fr}
-  #up-form .drop,#up-form .file,#up-form .up-fields,#up-form .up-actions{grid-column:1;grid-row:auto}
+  :root{--g:24px}
+  .top{padding-left:var(--gutter);padding-right:var(--gutter)}
+  .top-bar{max-width:640px}
+  .profile .wrap{max-width:640px;padding-inline:var(--gutter)}
+  .hello h1{font-size:34px}
+  .p-debt{padding:28px}
+  .p-debt .amount{font-size:52px}
+  .grid>section.panel.m-open{padding-inline:max(24px,calc(50vw - 300px))}
+  .m-open .m-head{margin-inline:calc(-1*max(24px,calc(50vw - 300px)));padding-inline:max(16px,calc(50vw - 308px))}
+  .p-pay.m-open{display:block}
+  .p-pay.m-open .qr .box{width:220px}
 }
 </style>
 </head>
@@ -634,8 +600,9 @@ html,body{overflow-x:clip;max-width:100%}
 
       <div class="m-home" id="m-home">
         <div class="m-acts">
-          <button type="button" class="btn light" data-sheet="datos">Datos para pagar</button>
-          <button type="button" class="btn navy" data-sheet="comprobante">Enviar comprobante</button>
+          <button type="button" class="tile pri" data-sheet="datos"><i><svg aria-hidden="true"><use href="#i-qr"/></svg></i>Pagar</button>
+          <button type="button" class="tile" data-sheet="comprobante"><i><svg aria-hidden="true"><use href="#i-upload"/></svg></i>Comprobante</button>
+          <button type="button" class="tile" data-sheet="rv" id="t-rv" hidden><i><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i>Reservar<em id="t-rv-b" hidden></em></button>
         </div>
         <div class="m-pend" id="m-pend"></div>
         <button type="button" class="m-row" data-sheet="rv" id="m-rv" hidden><span>Áreas sociales</span><small id="m-rv-t">Reservar</small><i class="chev"></i></button>
@@ -948,7 +915,7 @@ const PORTAL = {
     $('#p-name').textContent='Hola, '+(String(U.propietario||'').split(' ')[0]||'copropietario');
     const debt=Number(R.deuda||0);
     const estado=debt>0.009?'Tiene pagos pendientes':debt<-0.009?'Tiene saldo a favor':'Sin deudas';
-    $('#p-sub').innerHTML=`${esc(U.propietario||'')} · Departamento ${esc(U.depto||'')} · <b>${estado}</b>`;
+    $('#p-sub').textContent='Departamento '+(U.depto||'');
     $('#p-debt').innerHTML=`<span>${esc(cur)}</span>${Math.abs(debt).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
     $('#h-debt').textContent=debt<-0.009?'Saldo a favor':'Deuda total';
     $('#p-fee').textContent=U.expensa!=null?money(U.expensa,cur):'—';
@@ -1062,7 +1029,7 @@ const PORTAL = {
     document.querySelectorAll('.m-open').forEach(x=>x.classList.remove('m-open'));
     sec.classList.add('m-open'); sec.scrollTop=0;
     if(history.state&&history.state.hoja) history.replaceState({hoja:id},''); else history.pushState({hoja:id},'');
-    if(!esCel()) window.scrollTo(0,0); marcarNav(); }
+    marcarNav(); }
   function cerrarHojas(){ document.querySelectorAll('.m-open').forEach(x=>x.classList.remove('m-open')); marcarNav(); }
   function marcarNav(){ const o=document.querySelector('.grid>.m-open'), id=o?o.id:'';
     document.body.classList.toggle('d-sec',!!o);
@@ -1091,7 +1058,7 @@ const PORTAL = {
       (L.length?'<ul>'+L.map(c=>'<li class="'+(/multa|sanci|cargo/i.test(c.concepto||'')?'multa':'')+'"><span>'+esc(c.concepto)+'</span><b>'+money(c.resta,cur)+'</b></li>').join('')+'</ul>'+(pend.length>4?'<p class="m-more">y '+(pend.length-4)+' más</p>':''):'<p class="m-ok">No tiene pagos pendientes.</p>');
   }
   /* con una ventana abierta, la página de fondo no se mueve */
-  new MutationObserver(()=>{ document.documentElement.classList.toggle('modal-abierto',!!document.querySelector('.dialog.open,.m-drawer.open')||(esCel()&&!!document.querySelector('.m-open'))); })
+  new MutationObserver(()=>{ document.documentElement.classList.toggle('modal-abierto',!!document.querySelector('.dialog.open,.m-open,.m-drawer.open')); })
     .observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
   /* ---------- Reservas de áreas sociales ---------- */
   let misReservas=[];
@@ -1122,8 +1089,8 @@ const PORTAL = {
   }
   function renderReservas(){
     const box=$('#rv'), areas=(data&&data.areas)||[];
-    if(!PORTAL.endpoint||!areas.length){ box.hidden=true; $('#m-rv').hidden=true; $('#m-nav-rv').hidden=true; $('#d-nav-rv').hidden=true; return; }
-    box.hidden=false; $('#m-rv').hidden=false; $('#m-nav-rv').hidden=false; $('#d-nav-rv').hidden=false;
+    if(!PORTAL.endpoint||!areas.length){ box.hidden=true; $('#m-rv').hidden=true; $('#t-rv').hidden=true; $('#m-nav-rv').hidden=true; $('#d-nav-rv').hidden=true; return; }
+    box.hidden=false; $('#m-rv').hidden=false; $('#t-rv').hidden=false; $('#m-nav-rv').hidden=false; $('#d-nav-rv').hidden=false;
     const sa=$('#rv-area'); sa.innerHTML=areas.map(a=>`<option value="${esc(a.id)}">${esc(a.nombre)}</option>`).join('');
     const pintaTramos=()=>{ const a=areaSel(), cur=cur0();
       $('#rv-tramo').innerHTML=(a.tramos||[]).map(t=>`<option value="${esc(t.label)}">${esc(t.label)}${t.monto?' — '+money(t.monto,cur):''}</option>`).join('')||'<option value="">General</option>';
@@ -1157,7 +1124,7 @@ const PORTAL = {
           `<span class="s${lab==='Aprobada'?' ok':''}">${x.terminado?'Finalizada':lab}${lab==='Pendiente'?'<small>Bramar la revisará</small>':''}</span></li>`; }).join('')+'</ul>':'';
       resumenReserva();
       const bR=$('#m-badge-rv'), acc=misReservas.filter(r=>r.estado==='Aprobada'&&((!r.terminado&&!r.recibo&&!r.pago)||(r.terminado&&!r.garEstado&&!r.devolucion))).length;
-      bR.hidden=!acc; bR.textContent=acc; $('#m-rv-t').textContent=acc?'Tiene '+acc+' pendiente'+(acc>1?'s':''):'Reservar';
+      bR.hidden=!acc; bR.textContent=acc; $('#t-rv-b').hidden=!acc; $('#t-rv-b').textContent=acc; $('#m-rv-t').textContent=acc?'Tiene '+acc+' pendiente'+(acc>1?'s':''):'Reservar';
     }catch(e){}
   }
   function accion(x,i,cur){
