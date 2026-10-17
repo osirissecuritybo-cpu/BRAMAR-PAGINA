@@ -22502,7 +22502,7 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
 <style>
 /* ---- herramientas de cada vista en la cabecera ---- */
 #lk-ctrl-lista,#reserva-hoy-banner,#diario-stats,#pb-vinculo,#pb-bd .modal-sub,#pb-bd .lk-otros .lk-muted,.legend-row{display:none!important}
-.lk-tools{display:flex;align-items:center;gap:8px}
+.lk-tools{display:flex;align-items:center;justify-content:flex-end;gap:8px}
 .lk-tools[hidden]{display:none}
 .lk-ti{width:40px;height:40px;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;display:grid;place-items:center;cursor:pointer;padding:0;position:relative}
 .lk-ti:hover,.lk-pop.open>.lk-ti{background:rgba(255,255,255,.16)}
@@ -22555,7 +22555,7 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
   function svg(k){ return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+I[k]+'</svg>'; }
   function pop(id,ico,titulo){
     var w=document.createElement('div'); w.className='lk-pop'; w.id=id;
-    w.innerHTML='<button type="button" class="lk-ti" title="'+titulo+'" aria-label="'+titulo+'">'+svg(ico)+'<span class="lk-n" hidden></span></button><div class="lk-pop-p"></div>';
+    w.innerHTML='<button type="button" class="lk-ti" title="'+titulo+'" aria-label="'+titulo+'">'+svg(ico)+'<span class="lk-n" hidden></span></button><div class="lk-pop-p"><p class="lk-pop-t">'+titulo+'</p></div>';
     w.firstChild.onclick=function(e){ e.stopPropagation(); var o=w.classList.contains('open'); document.querySelectorAll('.lk-pop.open,#lk-dl.open').forEach(function(x){ x.classList.remove('open'); }); if(!o) w.classList.add('open'); if(w.onabrir) w.onabrir(); };
     w.lastChild.addEventListener('click',function(e){ e.stopPropagation(); });
     return w;
@@ -22628,6 +22628,74 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
   new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; try{ armar(); }catch(e){} }); })
     .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});
   setInterval(contar,30000);
+})();
+</script>
+<style>
+/* ---- Módulo 39b: orden y uniformidad en todas las vistas ---- */
+/* textos de ayuda fuera */
+.plan-wrap>p.no-print,.plan-field .hint,.plan-check span>span[style],.tarjetas-hint,#cajachica-container>p.no-print,.lkr-head,.lkr-sec-title{display:none!important}
+/* controles dentro de los menús de la cabecera: todos iguales */
+.lk-pop-p{padding:16px!important;min-width:320px}
+.lk-pop-p input:not([type=checkbox]):not([type=radio]),.lk-pop-p select{box-sizing:border-box!important;width:100%!important;height:44px!important;min-height:44px!important;padding:0 12px!important;margin:0!important;border:1px solid #D5DEE8!important;border-radius:10px!important;background:#F6F8FB!important;color:#0B2440!important;font:inherit!important;font-size:14px!important;flex:none!important}
+.lk-pop-p input:focus,.lk-pop-p select:focus{outline:none!important;border-color:#1E4E86!important;background:#fff!important}
+.lk-pop-p .btn,.lk-pop-p button.btn{box-sizing:border-box;width:100%!important;height:44px!important;min-height:44px!important;justify-content:center!important;margin:0!important;border-radius:10px!important;flex:none!important}
+.lk-pop-p .controls,.lk-pop-p .diario-form,.lk-pop-p .lk-tools-bar{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:10px!important;margin:0!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important}
+.lk-pop-p .chip-group{display:flex;flex-wrap:wrap;gap:6px}
+.lk-pop-p .chip{margin:0!important}
+.lk-pop-p h3{display:none}
+.lk-pop-p>*+*{margin-top:10px!important}
+.lk-pop-p>.lk-pop-t+*{margin-top:0!important}
+.lk-pop-p #lk-piz-hist>div{display:flex;flex-direction:column;gap:10px}
+.lk-pop-p #lk-piz-hist label,.lk-pop-p .lk-tools-bar>span{font-size:11px!important;font-weight:700!important;letter-spacing:.08em;text-transform:uppercase;color:#7d93ab!important}
+.lk-pop-p .tj-count,.lk-pop-p #tarjetas-count{font-size:12.5px;color:#5B6B7F}
+/* Reservas: pestañas como control segmentado */
+.lkr-tabs{display:flex!important;gap:4px!important;padding:4px!important;margin:0 0 16px!important;background:#fff;border:1px solid #DDE5EE!important;border-radius:12px;overflow-x:auto;scrollbar-width:none}
+.lkr-tabs::-webkit-scrollbar{display:none}
+.lkr-tab{flex:1 0 auto;display:flex!important;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 14px!important;border:0!important;border-radius:9px!important;background:none!important;color:#5B6B7F!important;font-size:13.5px!important;font-weight:600!important;white-space:nowrap}
+.lkr-tab.active{background:#0B2440!important;color:#fff!important}
+.lkr-tab .tcount{background:rgba(192,138,46,.18)!important;color:#9A6A1E!important;border-radius:999px;padding:0 7px;font-size:11.5px}
+.lkr-tab.active .tcount{background:rgba(255,255,255,.18)!important;color:#fff!important}
+.lkr-panel{max-width:none!important}
+/* caja chica: el alta queda en el botón ＋ de la cabecera */
+#view-cajachica:not(.lk-nueva) #cajachica-container>div.diario-form-card:first-of-type{display:none!important}
+/* ritmo vertical uniforme */
+#view-lista,#view-pizarra,#view-diario,#view-plan,#view-tarjetas,#view-areas-sociales,#view-cajachica{padding-top:0}
+.plan-card,.diario-form-card,.lk-tools-bar{border-radius:14px!important}
+</style>
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+  var I={ gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+    filtro:'<path d="M4 6h16M7 12h10M10 18h4"/>', mas:'<path d="M12 5v14M5 12h14"/>', print:'<path d="M7 9V4h10v5M7 18H5a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M7 14h10v6H7z"/>' };
+  function svg(k){ return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+I[k]+'</svg>'; }
+  function grupo(v){ return document.querySelector('.lk-tools[data-v="'+v+'"]')||(function(){ var rr=document.querySelector('.lk-top-r'); if(!rr) return null; var g=document.createElement('div'); g.className='lk-tools'; g.dataset.v=v; rr.insertBefore(g,rr.firstChild); return g; })(); }
+  function boton(id,ico,t,fn){ var b=document.createElement('button'); b.type='button'; b.className='lk-ti'; b.id=id; b.title=t; b.setAttribute('aria-label',t); b.innerHTML=svg(ico); b.onclick=fn; return b; }
+  function pop(id,ico,t){ var w=document.createElement('div'); w.className='lk-pop'; w.id=id;
+    w.innerHTML='<button type="button" class="lk-ti" title="'+t+'" aria-label="'+t+'">'+svg(ico)+'</button><div class="lk-pop-p"><p class="lk-pop-t">'+t+'</p></div>';
+    w.firstChild.onclick=function(e){ e.stopPropagation(); var o=w.classList.contains('open'); document.querySelectorAll('.lk-pop.open,#lk-dl.open').forEach(function(x){ x.classList.remove('open'); }); if(!o) w.classList.add('open'); };
+    w.lastChild.addEventListener('click',function(e){ e.stopPropagation(); }); return w; }
+  function mover(el,d){ if(el&&d&&el.parentNode!==d) d.appendChild(el); }
+  function armar(){
+    if(!document.querySelector('.lk-top-r')) return;
+    // Reservas: configurar áreas en la cabecera
+    var ga=grupo('areas-sociales');
+    if(ga&&!$('lk-h-areas')) ga.appendChild(boton('lk-h-areas','gear','Áreas y precios',function(){ if(window.__lukaOpenAreasEditor) window.__lukaOpenAreasEditor(); else { var c=$('lkr-cfg'); if(c) c.click(); } }));
+    // Caja chica: nueva caja
+    var gc=grupo('cajachica');
+    if(gc&&!$('lk-h-caja')) gc.appendChild(boton('lk-h-caja','mas','Nueva caja chica',function(){ var v=$('view-cajachica'); v.classList.toggle('lk-nueva'); if(v.classList.contains('lk-nueva')){ var i=$('cc-nombre'); if(i) i.focus(); } }));
+    // Tarjetas: buscador, filtros e impresión
+    var gt=grupo('tarjetas'), ts=$('tarjetas-search');
+    if(gt&&ts&&!ts.classList.contains('lk-hsearch')){ var pc=ts.parentNode; pc.id='lk-ctrl-tj'; ts.classList.add('lk-hsearch'); ts.placeholder='Buscar depto o tarjeta'; gt.appendChild(ts); }
+    if(gt&&$('lk-ctrl-tj')){ if(!$('lk-f-tj')) gt.appendChild(pop('lk-f-tj','filtro','Filtros')); mover($('lk-ctrl-tj'),$('lk-f-tj').lastChild); }
+    if(gt&&$('lk-tarjetas-tools')){ if(!$('lk-p-tj')) gt.appendChild(pop('lk-p-tj','print','Imprimir tarjetas')); mover($('lk-tarjetas-tools'),$('lk-p-tj').lastChild); }
+    ['view-lista','view-tarjetas','view-plan'].forEach(function(id){ var r=$(id); if(!r||r.style.display==='none') return;
+      var w=document.createTreeWalker(r,NodeFilter.SHOW_TEXT,{acceptNode:function(n){ return /bloque\s+bloque\s/i.test(n.nodeValue)?1:3; }}), n, L=[];
+      while((n=w.nextNode())) L.push(n); L.forEach(function(t){ t.nodeValue=t.nodeValue.replace(/bloque\s+bloque\s/ig,'Bloque '); }); });
+    var a=document.querySelector('.nav-item.active'), v=(a&&a.dataset.view)||'lista';
+    document.querySelectorAll('.lk-tools').forEach(function(g){ g.hidden=(g.dataset.v!==v); });
+  }
+  var pend=false;
+  new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; try{ armar(); }catch(e){} }); }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 })();
 </script>
 
