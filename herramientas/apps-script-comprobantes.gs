@@ -50,6 +50,7 @@ function doPost(e) {
     if (d.action === 'setPassword') return setPassword_(d);
     if (d.action === 'pendientes') return pendientes_(d);
     if (d.action === 'estado') return cambiarEstado_(d);
+    if (d.action === 'archivo') return verArchivo_(d);
     if (String(d.action || '').indexOf('lk_') === 0) return luka_(d);
     if (String(d.action || '').indexOf('pt_') === 0) return portal_(d);
     if (!d.data || !d.filename) return json({ ok: false, error: 'Falta el archivo.' });
@@ -174,6 +175,20 @@ function pendientes_(d) {
       depto: String(r[2]), propietario: String(r[3]), monto: String(r[4] || ''), fecha: fecha_(r[5]), nota: String(r[6] || ''), archivo: String(r[7] || ''), reserva_id: String(r[11] || '') });
   });
   return json({ ok: true, recibos: out, otros: Object.keys(otros).map(function (k) { return otros[k]; }) });
+}
+/* LUKA: ver y descargar un comprobante sin salir del programa.
+   Solo archivos registrados por el portal (comprobantes y QR de garantía). */
+function verArchivo_(d) {
+  if (!esAdmin_(d.k, d.t)) return json({ ok: false, error: 'Sin acceso.' });
+  const url = String(d.archivo || ''), m = url.match(/\/d\/([\w-]{20,})|[?&]id=([\w-]{20,})/);
+  if (!m) return json({ ok: false, error: 'Archivo no válido.' });
+  const id = m[1] || m[2];
+  const enRegistro = registro_().getRange('H:H').createTextFinder(id).findNext() ||
+    ptHojaRes_().getRange('X:Z').createTextFinder(id).findNext();
+  if (!enRegistro) return json({ ok: false, error: 'Archivo no registrado.' });
+  const f = DriveApp.getFileById(id), b = f.getBlob();
+  if (b.getBytes().length > 12 * 1024 * 1024) return json({ ok: false, error: 'El archivo es muy grande para verlo aquí.', url: url });
+  return json({ ok: true, nombre: f.getName(), mime: b.getContentType(), data: Utilities.base64Encode(b.getBytes()) });
 }
 function cambiarEstado_(d) {
   if (!esAdmin_(d.k, d.t)) return json({ ok: false, error: 'Clave de administración incorrecta.' });

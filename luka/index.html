@@ -21223,11 +21223,12 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
           (d?'':'<div class="lk-warn">El depto '+esc(r.depto)+' no existe en este edificio de LUKA. Revise que el edificio vinculado sea el correcto.</div>')+
         '</div>'+
         '<div class="lk-item-actions">'+
-          (r.archivo?'<a class="btn" href="'+esc(r.archivo)+'" target="_blank" rel="noopener">Ver comprobante</a>':'')+
+          (r.archivo?'<button type="button" class="btn" data-pb-ver="'+i+'">Ver comprobante</button>':'')+
           ((d||r.reserva_id)?'<button type="button" class="btn primary" data-pb-reg="'+i+'">'+(r.reserva_id||/^\[Alquiler\]/.test(r.nota||'')?'Cobrar reserva':'Registrar pago')+'</button>':'')+
           '<button type="button" class="btn" data-pb-rech="'+i+'">Rechazar</button>'+
         '</div></div>';
     }).join('')+'</div>';
+    b.querySelectorAll('[data-pb-ver]').forEach(function(x){ x.onclick=function(){ var r=lista[+x.dataset.pbVer]; verComprobante(r.archivo,'Depto '+r.depto+' · '+(r.propietario||'')); }; });
     b.querySelectorAll('[data-pb-reg]').forEach(function(x){ x.onclick=function(){ registrar(lista[+x.dataset.pbReg]); }; });
     b.querySelectorAll('[data-pb-rech]').forEach(function(x){ x.onclick=function(){ rechazar(lista[+x.dataset.pbRech],x); }; });
   }
@@ -21249,6 +21250,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       var n=parseFloat(String(r.monto||'').replace(',','.'));
       var marcar=function(){ api({action:'estado',fila:r.fila,archivo:r.archivo,estado:'Verificado'}).then(function(){ cargar(); }).catch(function(){}); };
       if(res.pago){ if(confirm('Esta reserva ya está cobrada (recibo '+res.pago.no+'). ¿Marcar el comprobante como verificado?')) marcar(); return; }
+      var marcar0=marcar; marcar=function(rr){ try{ if(rr&&rr.pago){ rr.pago.comprobante={fila:r.fila,archivo:r.archivo}; guardar(); } }catch(e){} marcar0(); };
       window.lukaPagoReserva(res,{monto:n>0?n:0,fecha:/^\d{4}-\d{2}-\d{2}$/.test(r.fecha||'')?r.fecha:'',obs:'Comprobante del portal'+(r.nota?' — '+r.nota.replace(/^\[Alquiler\]\s*/,''):''),onDone:marcar});
       return;
     }
@@ -21265,6 +21267,40 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       if(o&&!o.value) o.value='Comprobante enviado por el portal'+(r.nota?' — '+r.nota:'');
     },60);
   }
+  /* ---------- ver / descargar un comprobante sin salir de LUKA ---------- */
+  var verBlob=null;
+  function verComprobante(url,titulo){
+    var bd=document.getElementById('pb-ver-bd');
+    if(!bd){ bd=document.createElement('div'); bd.className='modal-backdrop no-print'; bd.id='pb-ver-bd'; document.body.appendChild(bd);
+      bd.addEventListener('click',function(e){ if(e.target===bd) cerrarVer(); }); }
+    bd.innerHTML='<div class="modal lk-modal pb-ver"><button class="close-btn" title="Cerrar">&times;</button><h2>Comprobante</h2><p class="modal-sub">'+esc(titulo||'')+'</p>'+
+      '<div class="pb-ver-box" id="pb-ver-box"><p class="lk-muted">Cargando…</p></div>'+
+      '<div class="lk-modal-foot"><a class="btn" href="'+esc(url)+'" target="_blank" rel="noopener">Abrir en Drive</a><a class="btn primary" id="pb-ver-dl" hidden>Descargar</a></div></div>';
+    bd.querySelector('.close-btn').onclick=cerrarVer; bd.classList.add('open');
+    api({action:'archivo',archivo:url}).then(function(j){
+      var bin=atob(j.data), a=new Uint8Array(bin.length); for(var i=0;i<bin.length;i++) a[i]=bin.charCodeAt(i);
+      if(verBlob) URL.revokeObjectURL(verBlob); verBlob=URL.createObjectURL(new Blob([a],{type:j.mime}));
+      var box=document.getElementById('pb-ver-box'); if(!box) return;
+      box.innerHTML=/pdf/.test(j.mime)?'<iframe src="'+verBlob+'" title="Comprobante"></iframe>':'<img src="'+verBlob+'" alt="Comprobante">';
+      var dl=document.getElementById('pb-ver-dl'); dl.href=verBlob; dl.download=j.nombre||'comprobante'; dl.hidden=false;
+    }).catch(function(e){ var box=document.getElementById('pb-ver-box'); if(box) box.innerHTML='<p class="lk-warn">'+esc(e.message)+'</p>'; });
+  }
+  function cerrarVer(){ var bd=document.getElementById('pb-ver-bd'); if(bd) bd.classList.remove('open'); }
+  window.lukaVerComprobante=verComprobante;
+  // en la ficha del departamento: botón «Comprobante» en los pagos que vinieron del portal
+  function botonesFicha(){
+    var mc=document.getElementById('modal-content'); if(!mc) return;
+    var chks=mc.querySelectorAll('[data-verificar-idx]'); if(!chks.length) return;
+    var h=mc.querySelector('h2'), dep=h?h.textContent.trim():'';
+    var d=(DATA.deptos||[]).filter(function(x){ return String(x.depto).trim()===dep; })[0]; if(!d) return;
+    chks.forEach(function(c){ var lab=c.closest('label')||c.parentNode; if(!lab||lab.parentNode.querySelector('.pb-ficha-ver')) return;
+      var p=(d.pagos_registrados||[])[+c.dataset.verificarIdx]; if(!p||!p.portal||!p.portal.archivo) return;
+      var b=document.createElement('button'); b.type='button'; b.className='btn pb-ficha-ver'; b.textContent='Comprobante';
+      b.onclick=function(e){ e.preventDefault(); e.stopPropagation(); verComprobante(p.portal.archivo,'Depto '+d.depto+' · recibo '+(p.recibo_no||'')); };
+      lab.parentNode.insertBefore(b,lab.nextSibling); });
+  }
+  var fichaPend=false;
+  new MutationObserver(function(){ if(fichaPend) return; fichaPend=true; requestAnimationFrame(function(){ fichaPend=false; botonesFicha(); }); }).observe(document.body,{childList:true,subtree:true});
   function rechazar(r,btn){
     if(!confirm('¿Rechazar el comprobante del depto '+r.depto+'?\nEl propietario verá «Rechazado» en su portal.')) return;
     btn.disabled=true;
@@ -21305,6 +21341,13 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 </script>
+<style>
+.pb-ver{max-width:760px!important}
+.pb-ver-box{min-height:220px;max-height:66vh;overflow:auto;border:1px solid var(--gridline,#DDE5EE);border-radius:12px;background:#F6F8FB;display:grid;place-items:center;margin:6px 0 14px}
+.pb-ver-box img{max-width:100%;height:auto;display:block}
+.pb-ver-box iframe{width:100%;height:62vh;border:0}
+.pb-ficha-ver{padding:5px 10px!important;font-size:12px!important;min-height:0!important;margin:4px 0 0}
+</style>
 
 <script>
 /* ============================================================================
@@ -21446,8 +21489,9 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     box.innerHTML='<div class="lkp-sol-h"><b>Garantías por devolver</b><span>'+garantias.length+'</span></div>'+garantias.map(function(r,i){
       var d=String(r.garDatos||''), url=(d.match(/https?:\/\/\S+/)||[''])[0];
       return '<div class="lk-item"><div class="lk-item-main"><div class="lk-item-title">Depto '+esc(r.depto)+' · '+esc(r.area.replace(/^[^·]*·\s*/,''))+' <span>· '+esc(r.fecha)+'</span></div>'+
-        '<div class="lk-item-meta">Garantía <b>'+esc(fmtMoney(r.garantia||0))+'</b> · '+(url?'Por QR · <a href="'+esc(url)+'" target="_blank" rel="noopener">Ver QR del propietario</a>':esc(d))+'</div></div>'+
+        '<div class="lk-item-meta">Garantía <b>'+esc(fmtMoney(r.garantia||0))+'</b> · '+(url?'Por QR · <a href="#" data-vqr="'+esc(url)+'">Ver QR del propietario</a>':esc(d))+'</div></div>'+
         '<div class="lk-item-actions"><button type="button" class="btn primary" data-gd="'+i+'">Marcar devuelta</button></div></div>'; }).join('');
+    box.querySelectorAll('[data-vqr]').forEach(function(a){ a.onclick=function(e){ e.preventDefault(); if(window.lukaVerComprobante) lukaVerComprobante(a.dataset.vqr,'QR para devolver la garantía'); else window.open(a.dataset.vqr); }; });
     box.querySelectorAll('[data-gd]').forEach(function(b){ b.onclick=function(){ devolver(garantias[+b.dataset.gd],b); }; });
   }
   function devolver(r,btn){
@@ -21879,7 +21923,7 @@ body{overscroll-behavior-y:none}
 @media (max-width:700px){
   #stat-grid,.stat-grid,.progress-bar-wrap,.qr-banner,.lkr-kpis,#lk-piz-hist,#pzbar,#btn-lista-estado-cuenta-pdf,#btn-cuota-masiva{display:none!important}
   #view-pizarra>p.no-print:first-child{display:none!important}
-  #topbar-download-slot,#btn-piz-personalizar,.topbar .btn-descarga,#lkr-cfg{display:none!important}
+  #lkr-cfg{display:none!important}
   .lista-toolbar{justify-content:stretch}
   .lista-toolbar #lk-ver-btn{flex:1}
 }
@@ -22335,7 +22379,7 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
     var datos=String((sol&&sol.garDatos)||''), url=(datos.match(/https?:\/\/\S+/)||[''])[0];
     var metodoSol=/^QR/.test(datos)?'QR':(/^Transferencia/.test(datos)?'Transferencia':'');
     var bd=modal('lkrp-dev','<h2>Devolver garantía</h2><p class="modal-sub">'+esc(r.areaNombre||(sol&&sol.area)||'')+' · '+(r.depto?'Depto '+esc(r.depto):'')+' · Garantía recibida '+money(gar)+'</p>'+
-      (datos?'<div class="lkrp-sec"><div class="lkrp-l"><span>El propietario pidió</span><b>'+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener">Ver su QR</a>':esc(datos))+'</b></div></div>':'')+
+      (datos?'<div class="lkrp-sec"><div class="lkrp-l"><span>El propietario pidió</span><b>'+(url?'<a href="#" id="lkrp-vqr">Ver su QR</a>':esc(datos))+'</b></div></div>':'')+
       '<div class="lkrp-grid"><label>Fecha<input type="date" id="lkrp-df" value="'+hoy()+'"></label>'+
       '<label>Monto devuelto (Bs.)<input type="number" id="lkrp-dm" min="0" step="0.01" value="'+gar+'"></label>'+
       '<label>Medio<select id="lkrp-dmet"><option'+(metodoSol==='Transferencia'?' selected':'')+'>Transferencia</option><option'+(metodoSol==='QR'?' selected':'')+'>QR</option><option>Efectivo</option></select></label>'+
@@ -22344,6 +22388,7 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
       '<p class="lkrp-nota">La devolución sale del depósito en custodia: no se registra como gasto. El propietario verá el comprobante en su portal.</p>'+
       '<p class="lk-warn" id="lkrp-derr"></p><div class="lkrp-foot"><button type="button" class="btn" id="lkrp-dx">Cancelar</button><button type="button" class="btn primary" id="lkrp-dok">Confirmar devolución</button></div>');
     $('lkrp-dx').onclick=function(){ bd.classList.remove('open'); };
+    var vq=$('lkrp-vqr'); if(vq) vq.onclick=function(e){ e.preventDefault(); if(window.lukaVerComprobante) lukaVerComprobante(url,'QR para devolver la garantía'); };
     $('lkrp-dok').onclick=function(){
       var m=Math.round((parseFloat($('lkrp-dm').value)||0)*100)/100;
       if(m>gar+0.004){ $('lkrp-derr').textContent='No puede devolver más que la garantía.'; return; }
@@ -22366,9 +22411,11 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
       var r=(DATA.reservasSociales||[]).filter(function(x){ return String(x.id)===row.dataset.id; })[0]; if(!r||r.estado==='Cancelada') return;
       var box=document.createElement('div'); box.className='lkrp-acc';
       box.innerHTML=r.pago?'<span class="lkrp-chip">Pagada</span><button type="button" class="btn" data-a="rec">Recibo</button>':'<button type="button" class="btn primary" data-a="cob">Cobrar</button>';
+      if(r.pago&&r.pago.comprobante&&r.pago.comprobante.archivo) box.innerHTML+='<button type="button" class="btn" data-a="comp">Comprobante</button>';
       var h=(r.garDev&&r.garDev.historial)||[];
       if(r.garDev&&r.garDev.estado==='devuelta'&&h.length) box.innerHTML+='<button type="button" class="btn" data-a="dev">Devolución</button>';
       box.addEventListener('click',function(e){ var b=e.target.closest('[data-a]'); if(!b) return; e.stopPropagation();
+        if(b.dataset.a==='comp'){ if(window.lukaVerComprobante) lukaVerComprobante(r.pago.comprobante.archivo,'Reserva · Depto '+(r.depto||'')); return; }
         if(b.dataset.a==='cob') window.lukaPagoReserva(r); else if(b.dataset.a==='rec') window.lukaVerReciboReserva(r); else window.lukaVerDevolucion(r); });
       var last=row.lastElementChild; row.insertBefore(box,last&&last.classList&&!last.classList.contains('lkrp-acc')&&row.children.length>1?last:null);
     });
@@ -22378,6 +22425,76 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
   var pend=false;
   new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; botones(); cfgTab(); hookPay(); lockScroll(); }); })
     .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+<style>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 39: interfaz sobria
+   · Cabecera: título a la izquierda; a la derecha solo dos íconos (descargas y
+     comprobantes). Las descargas de cada vista quedan en un menú.
+   · Sin textos que explican lo obvio ni tarjetas de cifras repetidas (esas
+     métricas están en el Panel financiero).
+   ============================================================================ */
+#updated-line{display:none!important}
+#stat-grid,#account-header .stat-grid,.progress-bar-wrap,.qr-banner,.lkr-kpis{display:none!important}
+.diario-form-hint,#lk-piz-hist>p,#view-pizarra>p.no-print:first-child,.lkr-head .sub,.cfg2-head>p,.cfg2-sec-desc,.luka-sel-hint,
+.recibo-no-field .hint,.lkrp-nota,.cc-hint,.lk-cuenta-nota,.lkp-sol-h span:empty{display:none!important}
+/* cabecera */
+.topbar{gap:10px}
+.topbar .lk-top-r{order:99;margin-left:auto;display:flex;align-items:center;gap:8px}
+.topbar .topbar-burger{order:0}.topbar .topbar-title{order:1;margin-right:auto!important;margin-left:0!important}
+#lk-piz-hist{padding:12px 16px!important}#lk-piz-hist h3{display:none}
+#lk-dl{position:relative}
+#lk-dl-btn,.topbar #pb-btn{width:40px;height:40px;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;display:grid;place-items:center;cursor:pointer;padding:0}
+#lk-dl-btn:hover,.topbar #pb-btn:hover{background:rgba(255,255,255,.14)}
+#lk-dl-btn[hidden]{display:none}
+#lk-dl-menu{position:absolute;top:calc(100% + 8px);right:0;min-width:240px;background:#fff;border:1px solid #DDE5EE;border-radius:12px;box-shadow:0 14px 34px rgba(6,24,43,.18);padding:6px;display:none;z-index:120}
+#lk-dl.open #lk-dl-menu{display:block}
+#lk-dl-menu .topbar-download-slot{display:flex!important;flex-direction:column;align-items:stretch;gap:2px}
+#lk-dl-menu .btn-descarga-top,#lk-dl-menu #btn-piz-personalizar,#lk-dl-menu button{width:100%;justify-content:flex-start!important;background:none!important;border:0!important;box-shadow:none!important;color:#0B2440!important;border-radius:8px!important;padding:9px 10px!important;margin:0!important;font-size:13.5px!important;font-weight:500!important;text-align:left}
+#lk-dl-menu .btn-descarga-top:hover,#lk-dl-menu button:hover{background:#F2F5F9!important}
+#lk-dl-menu .dl-icon{background:none!important;color:#1E4E86!important;width:22px!important;height:22px!important}
+#lk-dl-menu .dl-hint{display:inline!important;color:#7d93ab!important;font-size:12px!important;margin-left:6px!important}
+#lk-dl-menu *{color:#0B2440}#lk-dl-menu svg{color:#1E4E86!important}
+#lk-dl-menu .topbar-download-slot>*{margin:0!important}
+#lk-dl-menu .btn-descarga-top,#lk-dl-menu button{min-height:40px!important;height:auto!important;align-items:center;gap:10px}
+#lk-dl-menu .btn-descarga-top:not([style*="display: none"]):not([style*="display:none"]),#lk-dl-menu button:not([style*="display: none"]):not([style*="display:none"]){display:flex!important}
+#lk-dl-menu .dl-text{display:inline!important;color:#0B2440!important}
+@media (max-width:700px){ #lk-dl-menu{right:-48px} }
+</style>
+<script>
+(function(){
+  var ICO='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5"/><path d="M5 19h14"/></svg>';
+  function armar(){
+    var top=document.querySelector('.topbar'), slot=document.getElementById('topbar-download-slot');
+    if(!top||!slot) return false;
+    if(!document.getElementById('lk-dl')){
+      var r=document.createElement('div'); r.className='lk-top-r';
+      var w=document.createElement('div'); w.id='lk-dl';
+      w.innerHTML='<button type="button" id="lk-dl-btn" title="Descargas" aria-label="Descargas" aria-haspopup="true">'+ICO+'</button><div id="lk-dl-menu" role="menu"></div>';
+      r.appendChild(w); top.appendChild(r);
+      var menu=w.querySelector('#lk-dl-menu'); menu.appendChild(slot);
+      var pz=document.getElementById('btn-piz-personalizar'); if(pz) menu.appendChild(pz);
+      w.querySelector('#lk-dl-btn').onclick=function(e){ e.stopPropagation(); w.classList.toggle('open'); };
+      menu.addEventListener('click',function(){ setTimeout(function(){ w.classList.remove('open'); },50); });
+      document.addEventListener('click',function(e){ if(!w.contains(e.target)) w.classList.remove('open'); });
+    }
+    var pb=document.getElementById('pb-btn'), rr=document.querySelector('.lk-top-r');
+    if(pb&&rr&&pb.parentNode!==rr) rr.appendChild(pb);
+    var pz2=document.getElementById('btn-piz-personalizar'), m=document.getElementById('lk-dl-menu'); if(pz2&&m&&pz2.parentNode!==m) m.appendChild(pz2);
+    visibles();
+    return true;
+  }
+  function visibles(){
+    var m=document.getElementById('lk-dl-menu'), b=document.getElementById('lk-dl-btn'); if(!m||!b) return;
+    var n=[].slice.call(m.querySelectorAll('button,a')).filter(function(x){ return getComputedStyle(x).display!=='none'&&x.style.display!=='none'; }).length;
+    b.hidden=!n;
+  }
+  var pend=false;
+  new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; armar(); }); })
+    .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',armar); else armar();
 })();
 </script>
 
