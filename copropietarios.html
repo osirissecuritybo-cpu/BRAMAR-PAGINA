@@ -463,6 +463,75 @@ html,body{overflow-x:clip;max-width:100%}
   .table tr.last td.f{font-size:11px;letter-spacing:.1em;text-transform:uppercase}
   .table td.empty.ok{padding:4px 0 10px}
 }
+
+/* ---- Computadora: menú en la cabecera y una sección a la vez ---- */
+.d-nav,.d-ic{display:none}
+@media (min-width:601px){
+  .top-bar{gap:16px}
+  .d-nav:not([hidden]){display:flex;gap:2px;margin:0 auto;min-width:0;overflow-x:auto;scrollbar-width:none}
+  .d-nav::-webkit-scrollbar{display:none}
+  .d-nav button{flex:none;min-height:40px;padding:0 15px;border:0;border-radius:999px;background:none;color:var(--muted);font:inherit;font-size:14px;cursor:pointer;transition:color .2s,background .2s;white-space:nowrap}
+  .d-nav button:hover{color:var(--navy)}
+  .d-nav button.on{background:var(--sand);color:var(--navy);font-weight:500}
+  .d-nav button[hidden]{display:none}
+  .d-ic:not([hidden]){display:inline-grid;place-items:center;width:44px;padding:0}
+  body.en-perfil .brand span{display:none}
+  .hello-actions{display:none}
+  .hello{margin-bottom:20px}
+  body.d-sec .hello,body.d-sec .p-debt,body.d-sec .m-home{display:none}
+  .grid{align-items:stretch}
+  .grid>section.panel:not(.p-debt):not(.m-open){display:none}
+  .grid>section.panel.m-open{grid-column:1/-1;animation:in .35s var(--soft) both}
+  .grid>section.panel.m-open>.m-head{display:none}
+  .panel>h2,.mov-head h2,.rv-head h2,.bank>h2{font-size:26px}
+  /* inicio */
+  .p-debt{grid-column:span 5;display:flex;flex-direction:column}
+  .p-debt .btn.gold{display:none}
+  .m-home{display:flex;flex-direction:column;gap:16px;grid-column:span 7;min-width:0}
+  .m-acts{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .m-acts .btn{width:100%;min-height:56px;justify-content:center;font-size:15px}
+  .m-acts .btn.light{background:var(--paper);color:var(--navy)}
+  .m-acts .btn.light:hover{background:#fff;box-shadow:inset 0 0 0 1.5px var(--line)}
+  .m-pend{flex:1;background:var(--paper);border-radius:var(--radius);padding:24px 28px 14px}
+  .m-pend-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:8px}
+  .m-pend-h b{font-weight:400;color:var(--navy);font-size:22px}
+  .m-pend-h button{border:0;background:none;padding:0;color:var(--navy);font:inherit;font-size:14px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  .m-pend ul{list-style:none;margin:0;padding:0}
+  .m-pend li{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-top:1px solid var(--line);font-size:15px}
+  .m-pend li:first-child{border-top:0}
+  .m-pend li b{font-weight:500;white-space:nowrap}
+  .m-pend li.multa span::after{content:"Multa";margin-left:8px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:#FBEFEF;color:#8E2A20;vertical-align:1px}
+  .m-ok,.m-more{margin:6px 0 10px;font-size:14px;color:var(--muted)}
+  .m-row:not([hidden]){display:flex;align-items:center;gap:10px;width:100%;min-height:60px;padding:0 28px;border:0;border-radius:var(--radius);background:var(--paper);color:var(--ink);font:inherit;font-size:16px;text-align:left;cursor:pointer;transition:box-shadow .2s}
+  .m-row:hover{box-shadow:inset 0 0 0 1.5px var(--line)}
+  .m-row span{flex:1}.m-row small{font-size:14px;color:var(--muted)}
+  .chev{width:8px;height:8px;border-right:1.6px solid var(--muted);border-top:1.6px solid var(--muted);transform:rotate(45deg);margin:0 4px 0 6px}
+  /* datos de pago */
+  .p-pay.m-open{display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:24px 56px;align-items:start}
+  .p-pay .kv{grid-template-columns:180px 1fr;padding:14px 0}
+  .p-pay .qr .box{width:240px}
+  .p-pay .qr .box.vacio{width:240px;aspect-ratio:1;display:grid;place-items:center;text-align:center}
+  /* enviar comprobante: archivo a la izquierda, datos a la derecha */
+  #up-form{display:grid;grid-template-columns:1fr 1fr;gap:0 32px;align-items:start}
+  #up-form .drop{grid-column:1;grid-row:1/span 2;min-height:100%;justify-content:center;margin-top:20px}
+  #up-form .file{grid-column:1;grid-row:3}
+  #up-form .up-fields{grid-column:2;grid-row:1;margin-top:20px}
+  #up-form .up-actions{grid-column:2;grid-row:2}
+  .rv-card .up-fields{margin-top:4px}
+}
+@media (min-width:601px){ .table td.st .rec-btn{margin-left:auto;display:inline-block} .table tr.last td.st{text-align:right} }
+@media (min-width:601px) and (max-width:1060px){
+  body.en-perfil .top-bar{height:auto;flex-wrap:wrap;border-radius:28px;padding:10px 10px 8px 16px;row-gap:6px}
+  body.en-perfil .d-nav{order:3;flex:1 0 100%;margin:0;padding-top:6px;border-top:1px solid var(--line);justify-content:center}
+}
+@media (min-width:601px) and (max-width:900px){
+  .p-debt,.m-home{grid-column:1/-1}
+  .d-nav{justify-content:flex-start!important}
+  .d-nav button{padding:0 12px;font-size:13.5px}
+  .p-pay.m-open{grid-template-columns:1fr}
+  #up-form{grid-template-columns:1fr}
+  #up-form .drop,#up-form .file,#up-form .up-fields,#up-form .up-actions{grid-column:1;grid-row:auto}
+}
 </style>
 </head>
 <body>
@@ -490,7 +559,15 @@ html,body{overflow-x:clip;max-width:100%}
 <header class="top">
   <div class="top-bar">
     <a class="brand" href="index.html"><img src="img/isotipo-azul.png" alt="" width="200" height="163"><b>BRAMAR</b><span>Copropietarios</span></a>
+    <nav class="d-nav" id="d-nav" aria-label="Secciones" hidden>
+      <button type="button" data-sheet="" class="on">Inicio</button>
+      <button type="button" data-sheet="estado">Estado de cuenta</button>
+      <button type="button" data-sheet="datos">Datos de pago</button>
+      <button type="button" data-sheet="comprobante">Enviar comprobante</button>
+      <button type="button" data-sheet="rv" id="d-nav-rv" hidden>Áreas sociales</button>
+    </nav>
     <div class="top-actions">
+      <button class="pill-btn d-ic" id="d-pass" type="button" title="Cambiar contraseña" aria-label="Cambiar contraseña" hidden><svg aria-hidden="true"><use href="#i-lock"/></svg></button>
       <a class="pill-btn" id="back" href="index.html"><svg aria-hidden="true"><use href="#i-back"/></svg><span>Sitio web</span></a>
       <button class="pill-btn" id="logout" type="button" hidden><svg aria-hidden="true"><use href="#i-out"/></svg><span>Salir</span></button>
       <button class="m-burger" id="m-burger" type="button" aria-label="Menú" aria-expanded="false" hidden><span></span><span></span><span></span><em class="m-dot" id="m-dot" hidden></em></button>
@@ -891,7 +968,7 @@ const PORTAL = {
     renderReservas();
     $('#up-date').value=new Date().toISOString().slice(0,10);
     $('#p-pass').hidden=!PORTAL.endpoint; $('#m-clave').hidden=!PORTAL.endpoint;
-    $('#view-auto').hidden=true; $('#view-login').hidden=true; $('#view-profile').hidden=false; $('#logout').hidden=false; $('#m-burger').hidden=false; document.body.classList.add('en-perfil'); $('#back').hidden=true;
+    $('#view-auto').hidden=true; $('#view-login').hidden=true; $('#view-profile').hidden=false; $('#logout').hidden=false; $('#m-burger').hidden=false; $('#d-nav').hidden=false; $('#d-pass').hidden=!PORTAL.endpoint; document.body.classList.add('en-perfil'); $('#back').hidden=true;
     window.scrollTo(0,0); $('#p-name').focus({preventScroll:true});
   }
   const flong=s=>{ if(!s) return '—'; const d=new Date(s+'T00:00:00'); return isNaN(d)?s:d.toLocaleDateString('es-BO',{day:'2-digit',month:'long',year:'numeric'}); };
@@ -983,10 +1060,18 @@ const PORTAL = {
     sec.insertBefore(h,sec.firstChild); h.querySelector('.m-back').onclick=()=>history.back(); });
   function abrirHoja(id){ const sec=document.getElementById(id); if(!sec) return;
     document.querySelectorAll('.m-open').forEach(x=>x.classList.remove('m-open'));
-    sec.classList.add('m-open'); sec.scrollTop=0; history.pushState({hoja:id},''); }
-  function cerrarHojas(){ document.querySelectorAll('.m-open').forEach(x=>x.classList.remove('m-open')); }
+    sec.classList.add('m-open'); sec.scrollTop=0;
+    if(history.state&&history.state.hoja) history.replaceState({hoja:id},''); else history.pushState({hoja:id},'');
+    if(!esCel()) window.scrollTo(0,0); marcarNav(); }
+  function cerrarHojas(){ document.querySelectorAll('.m-open').forEach(x=>x.classList.remove('m-open')); marcarNav(); }
+  function marcarNav(){ const o=document.querySelector('.grid>.m-open'), id=o?o.id:'';
+    document.body.classList.toggle('d-sec',!!o);
+    document.querySelectorAll('#d-nav [data-sheet]').forEach(b=>b.classList.toggle('on',b.dataset.sheet===id)); }
+  $('#d-nav').addEventListener('click',e=>{ const b=e.target.closest('[data-sheet]'); if(!b) return;
+    if(b.dataset.sheet) abrirHoja(b.dataset.sheet); else if(history.state&&history.state.hoja) history.back(); else cerrarHojas(); });
+  $('#d-pass').addEventListener('click',()=>$('#p-pass').click());
   window.addEventListener('popstate',cerrarHojas);
-  function irA(id){ if(esCel()) abrirHoja(id); else document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}); }
+  function irA(id){ abrirHoja(id); }
   const drawer=$('#m-drawer');
   function menu(on){ drawer.classList.toggle('open',on); drawer.setAttribute('aria-hidden',on?'false':'true'); $('#m-burger').setAttribute('aria-expanded',on?'true':'false'); }
   $('#m-burger').addEventListener('click',()=>{ $('#m-dr-name').textContent=$('#p-name').textContent.replace(/^Hola,\s*/,''); $('#m-dr-sub').textContent=$('#p-bld').textContent+' · Depto '+((data&&data.unidad||{}).depto||''); menu(true); });
@@ -1006,7 +1091,7 @@ const PORTAL = {
       (L.length?'<ul>'+L.map(c=>'<li class="'+(/multa|sanci|cargo/i.test(c.concepto||'')?'multa':'')+'"><span>'+esc(c.concepto)+'</span><b>'+money(c.resta,cur)+'</b></li>').join('')+'</ul>'+(pend.length>4?'<p class="m-more">y '+(pend.length-4)+' más</p>':''):'<p class="m-ok">No tiene pagos pendientes.</p>');
   }
   /* con una ventana abierta, la página de fondo no se mueve */
-  new MutationObserver(()=>{ document.documentElement.classList.toggle('modal-abierto',!!document.querySelector('.dialog.open,.m-open,.m-drawer.open')); })
+  new MutationObserver(()=>{ document.documentElement.classList.toggle('modal-abierto',!!document.querySelector('.dialog.open,.m-drawer.open')||(esCel()&&!!document.querySelector('.m-open'))); })
     .observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
   /* ---------- Reservas de áreas sociales ---------- */
   let misReservas=[];
@@ -1037,8 +1122,8 @@ const PORTAL = {
   }
   function renderReservas(){
     const box=$('#rv'), areas=(data&&data.areas)||[];
-    if(!PORTAL.endpoint||!areas.length){ box.hidden=true; $('#m-rv').hidden=true; $('#m-nav-rv').hidden=true; return; }
-    box.hidden=false; $('#m-rv').hidden=false; $('#m-nav-rv').hidden=false;
+    if(!PORTAL.endpoint||!areas.length){ box.hidden=true; $('#m-rv').hidden=true; $('#m-nav-rv').hidden=true; $('#d-nav-rv').hidden=true; return; }
+    box.hidden=false; $('#m-rv').hidden=false; $('#m-nav-rv').hidden=false; $('#d-nav-rv').hidden=false;
     const sa=$('#rv-area'); sa.innerHTML=areas.map(a=>`<option value="${esc(a.id)}">${esc(a.nombre)}</option>`).join('');
     const pintaTramos=()=>{ const a=areaSel(), cur=cur0();
       $('#rv-tramo').innerHTML=(a.tramos||[]).map(t=>`<option value="${esc(t.label)}">${esc(t.label)}${t.monto?' — '+money(t.monto,cur):''}</option>`).join('')||'<option value="">General</option>';
@@ -1175,7 +1260,7 @@ const PORTAL = {
 
   $('#logout').addEventListener('click',()=>{
     data=null; session=null; store.del(SKEY); file=null; showAll=false; clearFile(); $('#up-msg').innerHTML='';
-    $('#view-profile').hidden=true; $('#view-login').hidden=false; $('#logout').hidden=true; $('#m-burger').hidden=true; document.body.classList.remove('en-perfil'); menu(false); $('#back').hidden=false;
+    $('#view-profile').hidden=true; $('#view-login').hidden=false; $('#logout').hidden=true; $('#m-burger').hidden=true; $('#d-nav').hidden=true; $('#d-pass').hidden=true; cerrarHojas(); document.body.classList.remove('en-perfil'); menu(false); $('#back').hidden=false;
     document.title='Portal de copropietarios · Bramar Group'; $('#l-code').focus();
   });
 
