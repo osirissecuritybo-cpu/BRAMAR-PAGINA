@@ -21157,8 +21157,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     bd=document.createElement('div'); bd.className='modal-backdrop no-print'; bd.id='pb-bd';
     bd.innerHTML='<div class="modal lk-modal" style="max-width:780px;">'+
       '<button class="close-btn" id="pb-close" title="Cerrar">&times;</button>'+
-      '<h2>Comprobantes del portal</h2>'+
-      '<p class="modal-sub">Pagos que los propietarios informaron desde el portal BRAMAR. Revise que el dinero llegó y registre el pago: el propietario verá «Verificado» al instante.</p>'+
+      '<h2>Comprobantes por verificar</h2>'+
       '<div class="lk-vinculo" id="pb-vinculo"></div>'+
       '<div id="pb-body"></div>'+
       '<div id="pb-otros"></div>'+
@@ -21175,12 +21174,14 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     var v=document.getElementById('pb-vinculo'); if(!v) return;
     var id=lukaPortalId(), c=cfg();
     var lista=portalEdificios||[], existe=lista.some(function(e){ return e.id===id; });
+    // solo se muestra si el edificio no coincide con uno del portal
+    v.style.display=(lista.length&&!existe)?'':'none';
     v.innerHTML='<div class="lk-vinculo-row"><div><span class="lk-k">Edificio en LUKA</span><b>'+esc(edificio())+'</b></div>'+
       '<span class="lk-arrow" aria-hidden="true">→</span>'+
       '<div><span class="lk-k">Edificio en el portal</span>'+
       (lista.length?'<select id="pb-portal-sel">'+lista.map(function(e){ return '<option value="'+esc(e.id)+'"'+(e.id===id?' selected':'')+'>'+esc(e.nombre)+'</option>'; }).join('')+(existe?'':'<option value="'+esc(id)+'" selected>'+esc(id)+' (no está publicado)</option>')+'</select>'
         :'<b>'+esc(id)+'</b>')+'</div></div>'+
-      (lista.length&&!existe?'<p class="lk-warn">Este edificio todavía no está publicado en el portal. Exporte su estado de cuenta y súbalo con el generador, o elija arriba el edificio que corresponde.</p>':'');
+      (lista.length&&!existe?'<p class="lk-warn">Elija el edificio del portal que corresponde.</p>':'');
     var sel=document.getElementById('pb-portal-sel');
     if(sel) sel.onchange=function(){ c.portalId=sel.value; guardar(); cargar(); };
   }
@@ -21213,7 +21214,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   }
   function pintar(){
     var b=document.getElementById('pb-body');
-    if(!lista.length){ b.innerHTML='<div class="lk-empty">No hay comprobantes pendientes de verificar para este edificio.</div>'; return; }
+    if(!lista.length){ b.innerHTML='<div class="lk-empty">Sin comprobantes pendientes.</div>'; return; }
     b.innerHTML='<div class="lk-list">'+lista.map(function(r,i){
       var d=deptoDe(r);
       return '<div class="lk-item">'+
@@ -21235,9 +21236,9 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   function pintarOtros(){
     var o=document.getElementById('pb-otros'); if(!o) return;
     if(!otros.length){ o.innerHTML=''; return; }
-    o.innerHTML='<div class="lk-otros"><div class="lk-k">Otros edificios con comprobantes pendientes</div><ul>'+
+    o.innerHTML='<div class="lk-otros"><div class="lk-k">Otros edificios</div><ul>'+
       otros.map(function(x){ return '<li><b>'+esc(nombrePortal(x.edificio_id)||x.edificio)+'</b><span>'+x.n+' pendiente'+(x.n>1?'s':'')+'</span></li>'; }).join('')+
-      '</ul><p class="lk-muted">Si el edificio se administra con LUKA, ábralo desde «Cambiar de edificio». Si no, verifíquelo en la hoja «Registro de comprobantes» de Google.</p></div>';
+      '</ul></div>';
   }
 
   /* ---------- registrar con el formulario de pago de LUKA ---------- */
@@ -21521,6 +21522,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     return L.length?(L[0].areaNombre||'esta área')+(L[0].inicio?' ('+String(L[0].inicio).slice(11,16)+')':''):'';
   }
   /* puntito en el menú cuando hay reservas por aprobar */
+  window.lukaSolicitudes=function(){ return solicitudes.length; }; window.lukaGarantias=function(){ return garantias.length; };
   function badge(){
     var n=solicitudes.length;
     var it=document.querySelector('.nav-item[data-view="areas-sociales"]');
@@ -22495,6 +22497,137 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
   new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; armar(); }); })
     .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['style','class']});
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',armar); else armar();
+})();
+</script>
+<style>
+/* ---- herramientas de cada vista en la cabecera ---- */
+#lk-ctrl-lista,#reserva-hoy-banner,#diario-stats,#pb-vinculo,#pb-bd .modal-sub,#pb-bd .lk-otros .lk-muted,.legend-row{display:none!important}
+.lk-tools{display:flex;align-items:center;gap:8px}
+.lk-tools[hidden]{display:none}
+.lk-ti{width:40px;height:40px;border-radius:11px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;display:grid;place-items:center;cursor:pointer;padding:0;position:relative}
+.lk-ti:hover,.lk-pop.open>.lk-ti{background:rgba(255,255,255,.16)}
+.lk-ti .lk-n{position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:#C08A2E;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 0 2px #0b2440}
+.lk-ti .lk-n[hidden]{display:none}
+.lk-pop{position:relative}
+.lk-pop-p{position:absolute;top:calc(100% + 8px);right:0;min-width:300px;max-width:min(560px,92vw);background:#fff;color:#0B2440;border:1px solid #DDE5EE;border-radius:14px;box-shadow:0 16px 40px rgba(6,24,43,.2);padding:14px;display:none;z-index:120}
+.lk-pop.open .lk-pop-p{display:block}
+.lk-pop-p .diario-form-card,.lk-pop-p #lk-piz-hist,.lk-pop-p #pzbar,.lk-pop-p .controls{margin:0!important;border:0!important;box-shadow:none!important;padding:0!important;background:none!important}
+.lk-pop-p .controls{display:flex!important;flex-direction:column;align-items:stretch;gap:10px}
+.lk-pop-p .controls>*{width:100%!important;max-width:none!important;min-width:0!important}
+.lk-pop-p .diario-form{display:grid!important;grid-template-columns:1fr 1fr;gap:8px}
+.lk-pop-p .diario-form #df-motivo,.lk-pop-p .diario-form #df-submit{grid-column:1/-1}
+.lk-pop-p h3{font-size:14px;margin:0 0 10px}
+.lk-pop-t{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7d93ab;margin:0 0 8px}
+.topbar input.lk-hsearch{height:40px!important;width:min(260px,30vw)!important;min-width:0!important;margin:0!important;border-radius:11px!important;border:1px solid rgba(255,255,255,.18)!important;background:rgba(255,255,255,.08)!important;color:#fff!important;padding:0 12px!important;font:inherit!important;font-size:14px!important;box-shadow:none!important}
+.topbar input.lk-hsearch::placeholder{color:rgba(255,255,255,.6)}
+.topbar input.lk-hsearch:focus{outline:none;background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.35)}
+.lk-noti{display:flex;flex-direction:column;gap:2px;min-width:300px}
+.lk-noti a,.lk-noti button{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:10px 8px;border:0;border-radius:9px;background:none;color:#0B2440;font:inherit;font-size:14px;text-align:left;cursor:pointer;text-decoration:none}
+.lk-noti a:hover,.lk-noti button:hover{background:#F2F5F9}
+.lk-noti small{display:block;font-size:12px;color:#5B6B7F!important}
+.lk-noti a,.lk-noti a span,.lk-noti button span{color:#0B2440!important}
+.lk-noti b.k{min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:#EEF2F7;color:#1E4E86;font-size:12px;display:grid;place-items:center}
+.lk-noti .vacio{padding:10px 8px;color:#7d93ab;font-size:14px}
+#pb-btn{display:none!important}
+@media (max-width:700px){
+  .topbar{flex-wrap:wrap;row-gap:10px}
+  .topbar .lk-top-r{width:100%;margin-left:0}
+  .lk-tools{flex:1 1 auto;min-width:0}
+  .topbar input.lk-hsearch{flex:1 1 0;width:auto!important}
+  .topbar .lk-top-r{min-width:0;gap:6px}
+  .lk-ti{width:38px;height:38px;flex:none}
+  #lk-h-cuota{display:none}
+  .lk-pop-p{position:fixed;left:12px;right:12px;top:116px;min-width:0;max-width:none}
+  #lk-bell .lk-pop-p{left:12px;right:12px}
+}
+</style>
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+  var I={
+    filtro:'<path d="M4 6h16M7 12h10M10 18h4"/>',
+    cal:'<rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+    mas:'<path d="M12 5v14M5 12h14"/>',
+    qr:'<path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/>',
+    cuota:'<path d="M4 20V8l8-4 8 4v12"/><path d="M9 20v-6h6v6M4 20h16"/>',
+    campana:'<path d="M6 16V11a6 6 0 1 1 12 0v5l1.5 2h-15z"/><path d="M10 20a2 2 0 0 0 4 0"/>'
+  };
+  function svg(k){ return '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+I[k]+'</svg>'; }
+  function pop(id,ico,titulo){
+    var w=document.createElement('div'); w.className='lk-pop'; w.id=id;
+    w.innerHTML='<button type="button" class="lk-ti" title="'+titulo+'" aria-label="'+titulo+'">'+svg(ico)+'<span class="lk-n" hidden></span></button><div class="lk-pop-p"></div>';
+    w.firstChild.onclick=function(e){ e.stopPropagation(); var o=w.classList.contains('open'); document.querySelectorAll('.lk-pop.open,#lk-dl.open').forEach(function(x){ x.classList.remove('open'); }); if(!o) w.classList.add('open'); if(w.onabrir) w.onabrir(); };
+    w.lastChild.addEventListener('click',function(e){ e.stopPropagation(); });
+    return w;
+  }
+  function boton(id,ico,titulo,fn){ var b=document.createElement('button'); b.type='button'; b.className='lk-ti'; b.id=id; b.title=titulo; b.setAttribute('aria-label',titulo); b.innerHTML=svg(ico); b.onclick=fn; return b; }
+  document.addEventListener('click',function(e){ document.querySelectorAll('.lk-pop.open').forEach(function(p){ if(!p.contains(e.target)) p.classList.remove('open'); }); });
+  function mover(el,dest){ if(el&&dest&&el.parentNode!==dest) dest.appendChild(el); }
+
+  var grupos={};
+  function grupo(v){
+    var rr=document.querySelector('.lk-top-r'); if(!rr) return null;
+    if(!grupos[v]){ var g=document.createElement('div'); g.className='lk-tools'; g.dataset.v=v; rr.insertBefore(g,rr.firstChild); grupos[v]=g; }
+    return grupos[v];
+  }
+  function vistaActual(){ var a=document.querySelector('.nav-item.active'); return (a&&a.dataset.view)||'lista'; }
+
+  function armar(){
+    var rr=document.querySelector('.lk-top-r'); if(!rr) return;
+    // Departamentos: buscador en la cabecera, filtros en un menú, acciones como íconos
+    var gl=grupo('lista');
+    var s=$('search'); if(s&&!s.classList.contains('lk-hsearch')){ var pc=s.parentNode; if(pc&&pc.classList.contains('controls')) pc.id='lk-ctrl-lista'; s.classList.add('lk-hsearch'); s.placeholder='Buscar depto'; gl.appendChild(s); }
+    var cl=$('lk-ctrl-lista'); if(cl) cl.style.setProperty('display','none','important');
+    if(!$('lk-f-lista')){ var p=pop('lk-f-lista','filtro','Filtros'); gl.appendChild(p); p.lastChild.innerHTML='<p class="lk-pop-t">Filtros</p><div class="controls"></div>'; }
+    var fc=$('lk-f-lista').querySelector('.controls'); ['bloque-chips','status-filter','sort-by'].forEach(function(id){ mover($(id),fc); });
+    if(!$('lk-h-ver')&&$('lk-ver-btn')){ gl.appendChild(boton('lk-h-ver','qr','Verificar recibo',function(){ $('lk-ver-btn').click(); })); }
+    if(!$('lk-h-cuota')&&$('btn-cuota-masiva')){ gl.appendChild(boton('lk-h-cuota','cuota','Cuota extraordinaria a todos',function(){ $('btn-cuota-masiva').click(); })); }
+    // Pizarra: fecha y columnas
+    var gp=grupo('pizarra');
+    if($('lk-piz-hist')){ if(!$('lk-f-piz-f')){ var p1=pop('lk-f-piz-f','cal','Pizarra de una fecha'); gp.appendChild(p1); } mover($('lk-piz-hist'),$('lk-f-piz-f').lastChild); }
+    if($('pzbar')){ if(!$('lk-f-piz-c')){ var p2=pop('lk-f-piz-c','filtro','Columnas y filtros'); gp.appendChild(p2); } mover($('pzbar'),$('lk-f-piz-c').lastChild); }
+    // Reporte diario: nuevo movimiento y filtros
+    var vd=$('view-diario'), gd=grupo('diario');
+    if(vd){
+      var card=vd.querySelector('.diario-form-card')||($('lk-f-dia-n')&&$('lk-f-dia-n').querySelector('.diario-form-card'));
+      if(card){ if(!$('lk-f-dia-n')){ var p3=pop('lk-f-dia-n','mas','Nuevo movimiento'); gd.appendChild(p3); } mover(card,$('lk-f-dia-n').lastChild); }
+      var ctr=vd.querySelector(':scope > .controls'); if(ctr){ if(!$('lk-f-dia-f')){ var p4=pop('lk-f-dia-f','filtro','Mes y búsqueda'); gd.appendChild(p4); p4.lastChild.innerHTML='<p class="lk-pop-t">Mes y búsqueda</p>'; } mover(ctr,$('lk-f-dia-f').lastChild); }
+    }
+    // Notificaciones (comprobantes, reservas, eventos de hoy)
+    if(!$('lk-bell')){ var b=pop('lk-bell','campana','Notificaciones'); rr.appendChild(b); b.lastChild.innerHTML='<div class="lk-noti" id="lk-noti"></div>'; b.onabrir=pintarNoti; }
+    var dl=$('lk-dl'); if(dl&&dl.nextSibling!==$('lk-bell')) rr.insertBefore(dl,$('lk-bell'));
+    var v=vistaActual(); Object.keys(grupos).forEach(function(k){ grupos[k].hidden=(k!==v); });
+    var lt=document.querySelector('.lista-toolbar'); if(lt) lt.style.display='none';
+    var vl=$('view-lista')||document.querySelector('#search-host'); document.querySelectorAll('.controls').forEach(function(c){ if(!c.closest('.lk-pop-p')&&!c.querySelector('input,select,button,.chip')&&c.children.length===0) c.style.display='none'; });
+    if(vd){ var rf=[].slice.call(vd.querySelectorAll('button')).filter(function(b){ return /recibos faltantes/i.test(b.textContent)&&!b.closest('.lk-pop-p'); })[0]; if(rf&&$('lk-f-dia-f')) mover(rf,$('lk-f-dia-f').lastChild); }
+    contar();
+  }
+  /* ---- notificaciones ---- */
+  function hoyISO(){ var d=new Date(); return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+  function datos(){
+    var pb=$('pb-badge'), nComp=pb&&!pb.hidden?parseInt(pb.textContent,10)||0:0;
+    var nRes=window.lukaSolicitudes?window.lukaSolicitudes():0, nGar=window.lukaGarantias?window.lukaGarantias():0;
+    var hoy=hoyISO(), H=(typeof DATA!=='undefined'&&DATA.reservasSociales||[]).filter(function(r){ return r.estado!=='Cancelada'&&String(r.fecha||r.inicio||'').slice(0,10)===hoy; });
+    return {nComp:nComp,nRes:nRes,nGar:nGar,hoy:H};
+  }
+  function contar(){ var d=datos(), n=d.nComp+d.nRes+d.nGar+d.hoy.length, e=document.querySelector('#lk-bell .lk-n'); if(e){ e.textContent=n>99?'99+':n; e.hidden=!n; } }
+  function pintarNoti(){
+    var d=datos(), box=$('lk-noti'); if(!box) return; var h='';
+    if(d.nComp) h+='<button type="button" data-n="comp"><span>Comprobantes por verificar</span><b class="k">'+d.nComp+'</b></button>';
+    if(d.nRes) h+='<button type="button" data-n="res"><span>Solicitudes de reserva</span><b class="k">'+d.nRes+'</b></button>';
+    if(d.nGar) h+='<button type="button" data-n="res"><span>Garantías por devolver</span><b class="k">'+d.nGar+'</b></button>';
+    d.hoy.forEach(function(r){
+      var hora=String(r.inicio||'').slice(11,16), msg='Recordatorio: hoy hay reserva de '+(r.areaNombre||'área social')+(hora?' a las '+hora:'')+'. Depto '+(r.depto||'')+(r.responsable?' · '+r.responsable:'')+'.';
+      var num=(typeof WHATSAPP_ADMIN_NUMERO!=='undefined'?WHATSAPP_ADMIN_NUMERO:'');
+      h+='<a href="https://wa.me/'+num+'?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener"><span>Hoy: '+(r.areaNombre||'Área social')+(hora?' · '+hora:'')+'<small>Depto '+(r.depto||'—')+(r.responsable?' · '+r.responsable:'')+' · enviar recordatorio</small></span></a>';
+    });
+    box.innerHTML=h||'<div class="vacio">Sin notificaciones</div>';
+    box.querySelectorAll('[data-n]').forEach(function(x){ x.onclick=function(){ $('lk-bell').classList.remove('open'); if(x.dataset.n==='comp'){ var pb=$('pb-btn'); if(pb) pb.click(); } else { try{ switchView('areas-sociales'); }catch(e){} } }; });
+  }
+  var pend=false;
+  new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; try{ armar(); }catch(e){} }); })
+    .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});
+  setInterval(contar,30000);
 })();
 </script>
 
