@@ -13545,6 +13545,7 @@ window.lukaCloud = (function(){
     decorate();
     setTimeout(hookNotas,2500);
     setInterval(checkRemote,45000);
+    setInterval(function(){ try{ var uq=(user()||{}).usuario, id=curId(); if(uq&&id) localStorage.setItem('luka.active.'+uq,id); }catch(e){} },4000);
     document.addEventListener('visibilitychange',function(){ if(!document.hidden) checkRemote(); });
     window.addEventListener('online',function(){ status('Conexión recuperada'); if(dirtyBase(curId())!=null) scheduleSave(200); });
   }
@@ -13580,6 +13581,12 @@ window.lukaCloud = (function(){
       var c=[]; try{ c=JSON.parse(localStorage.getItem(LS_LIST)||'[]'); }catch(_){}
       reg.list=c.map(function(e){ return {id:e.id,name:e.nombre,createdAt:String(e.creado||'').slice(0,10)}; });
     }
+    // cada usuario tiene su propio recorrido: si en esta computadora entra otra persona,
+    // no abre el edificio que dejó la anterior (vuelve al último de ESTE usuario o al selector)
+    var uid=(user()||{}).usuario||'';
+    if(uid){ var last=null; try{ last=localStorage.getItem('luka.cloud.lastUser'); }catch(e){}
+      if(last!==uid){ var mio=null; try{ mio=localStorage.getItem('luka.active.'+uid); }catch(e){} reg.activeId=mio||null; try{ localStorage.setItem('luka.cloud.lastUser',uid); }catch(e){} }
+      else if(reg.activeId){ try{ localStorage.setItem('luka.active.'+uid,reg.activeId); }catch(e){} } }
     if(!reg.list.some(function(b){ return b.id===reg.activeId; })) reg.activeId=null;
     return reg;
   }
@@ -13704,6 +13711,7 @@ window.lukaCloud = (function(){
   /* ---------------- Sesión y menú de usuario ---------------- */
   async function logout(expired){
     var id=curId();
+    try{ var uq=(user()||{}).usuario; if(uq&&id) localStorage.setItem('luka.active.'+uq,id); }catch(e){}
     if(!expired&&id&&dirtyBase(id)!=null){ try{ clearTimeout(saveTimer); await pushData(id,buildFullExportData(),dirtyBase(id),true); }catch(e){} }
     try{ if(!expired) await api({action:'lk_logout'}); }catch(e){}
     // borrar la copia local de los edificios de este usuario (celulares compartidos)
@@ -22858,10 +22866,11 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
   function idEdificio(){ try{ var k=LOCAL_DATA_KEY; return /^luka-b-/.test(k)?k.slice(7):null; }catch(e){ return null; } }
   function pintarCorreos(sec){
     if(!(window.lukaCloud&&lukaCloud.active())){ sec.innerHTML='<h3 class="cfg2-sec-title">Correos y Drive</h3><p class="lk40-msg">Disponible con la sesión en la nube.</p>'; return; }
-    sec.innerHTML='<h3 class="cfg2-sec-title">Correos y Drive de este edificio</h3>'+
-      '<label class="lk40-f"><span>Notificaciones</span><textarea id="lk40-av" placeholder="correo@ejemplo.com (uno por línea)"></textarea></label>'+
-      '<label class="lk40-f"><span>Almacenamiento de comprobantes (Drive)</span><textarea id="lk40-dr" placeholder="correo@gmail.com"></textarea></label>'+
-      '<label class="lk40-f"><span>Carpeta de Drive propia (opcional)</span><input id="lk40-cp" placeholder="Enlace de la carpeta"></label>'+
+    var coord=lukaCloud.isAdmin();
+    sec.innerHTML='<h3 class="cfg2-sec-title">Correos de este edificio</h3>'+
+      '<label class="lk40-f"><span>Correo del edificio (notificaciones)</span><textarea id="lk40-av" placeholder="edificio@correo.com"></textarea></label>'+
+      '<div'+(coord?'':' hidden')+'><label class="lk40-f"><span>Drive de comprobantes</span><textarea id="lk40-dr" placeholder="correo@gmail.com"></textarea></label>'+
+      '<label class="lk40-f"><span>Carpeta de Drive propia</span><input id="lk40-cp" placeholder="Enlace de la carpeta (opcional)"></label></div>'+
       '<div class="lk40-foot"><a class="btn" id="lk40-open" target="_blank" rel="noopener" hidden>Abrir carpeta</a><button type="button" class="btn primary" id="lk40-ok">Guardar</button></div><p class="lk40-msg" id="lk40-m"></p>';
     var m=$('lk40-m'), id=idEdificio();
     lukaCloud.api({action:'lk_edificio_cfg',id:id}).then(function(r){
@@ -22876,8 +22885,20 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
         m.className='lk40-msg ok'; m.textContent='Guardado'+((r.compartida||[]).length?' · carpeta compartida con '+r.compartida.join(', '):'')+'.';
       }).catch(function(e){ m.className='lk40-msg bad'; m.textContent=e.message; }).then(function(){ b.disabled=false; b.textContent='Guardar'; }); };
   }
+  /* Cuenta: cada usuario pone su propio correo de avisos */
+  function miCorreo(){
+    var mc=$('lk-mi-clave'); if(!mc||$('lk40-yo')||!(window.lukaCloud&&lukaCloud.active())) return;
+    var u=lukaCloud.user()||{}, d=document.createElement('div'); d.id='lk40-yo';
+    d.innerHTML='<label class="lk40-f"><span>Correo</span><input id="lk40-yo-c" type="email" inputmode="email" autocapitalize="none" value="'+esc(u.correo||'')+'" placeholder="nombre@correo.com"></label><div class="lk40-foot"><button type="button" class="btn primary" id="lk40-yo-ok">Guardar</button></div><p class="lk40-msg" id="lk40-yo-m"></p>';
+    mc.parentNode.insertBefore(d,mc);
+    if(window.lukaPlegar) window.lukaPlegar(d,'Mi correo de avisos','yo');
+    $('lk40-yo-ok').onclick=function(){ var b=this,m=$('lk40-yo-m'); b.disabled=true; m.textContent='';
+      lukaCloud.api({action:'lk_mi_correo',correo:$('lk40-yo-c').value}).then(function(r){ m.className='lk40-msg ok'; m.textContent='Guardado.'; try{ var S=JSON.parse(localStorage.getItem('luka.cloud.session')); S.usuario=r.usuario; localStorage.setItem('luka.cloud.session',JSON.stringify(S)); }catch(e){} })
+        .catch(function(e){ m.className='lk40-msg bad'; m.textContent=e.message; }).then(function(){ b.disabled=false; }); };
+  }
   function tabs(){
-    nuevaTab('lk40-mail','correos',SV+'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>','Correos y Drive','Avisos y comprobantes',pintarCorreos);
+    miCorreo();
+    nuevaTab('lk40-mail','correos',SV+'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>','Correos','Avisos y Drive',pintarCorreos);
   }
 
   /* ---------- comprobantes del portal: fuera de la lista al instante ---------- */

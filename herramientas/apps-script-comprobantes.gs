@@ -382,6 +382,14 @@ function luka_(d) {
     L[i].salt = Utilities.getUuid(); L[i].hash = lkHash_(L[i].salt, String(d.nueva));
     lkEscribir_('LUKA_USERS', L); lkLog_(u, '', 'Cambió su clave', ''); return json({ ok: true });
   }
+  if (a === 'lk_mi_correo') {
+    const c = String(d.correo || '').trim().toLowerCase();
+    if (!lkCorreoValido_(c)) return json({ ok: false, error: 'El correo no es válido.' });
+    const L = lkUsuarios_();
+    if (L.some(function (y) { return y.mail === c && y.u !== u.u; })) return json({ ok: false, error: 'Ese correo ya lo usa otro usuario.' });
+    const i = L.map(function (y) { return y.u; }).indexOf(u.u); L[i].mail = c; lkEscribir_('LUKA_USERS', L);
+    lkLog_(u, '', 'Cambió su correo', c); return json({ ok: true, usuario: lkPublico_(L[i]) });
+  }
   if (a === 'lk_logout') { lkProps_().deleteProperty('T_' + d.t); return json({ ok: true }); }
   if (a === 'lk_edificios') {
     const E = lkEdificios_();
@@ -459,15 +467,17 @@ function luka_(d) {
       const E = lkEdificios_(), e = E[d.id]; if (!e) return json({ ok: false, error: 'Guarde primero el edificio en la nube.' });
       if (d.guardar) {
         const lista = function (t) { return String(t || '').toLowerCase().split(/[\s,;]+/).map(function (c) { return c.trim(); }).filter(function (c) { return c && c !== 'y' && c !== 'u' && c !== 'o'; }); };
-        const av = lista(d.avisos), dr = lista(d.drive), malos = av.concat(dr).filter(function (c) { return !lkCorreoValido_(c); });
+        const av = lista(d.avisos); let dr = lista(d.drive); const malos = av.concat(dr).filter(function (c) { return !lkCorreoValido_(c); });
         if (malos.length) return json({ ok: false, error: 'Correo no válido: ' + malos.join(', ') });
         let carpeta = '';
         const m = String(d.carpeta || '').match(/[-\w]{25,}/);
-        if (m) { try { DriveApp.getFolderById(m[0]).getName(); carpeta = m[0]; } catch (x) { return json({ ok: false, error: 'No tengo acceso a esa carpeta. Compártala como «Editor» con ' + (lkCuentaServidor_() || 'la cuenta de Bramar') + '.' }); } }
-        e.avisos = av.join(','); e.drive = dr.join(','); e.carpeta = carpeta;
+        if (m && u.rol === 'admin') { try { DriveApp.getFolderById(m[0]).getName(); carpeta = m[0]; } catch (x) { return json({ ok: false, error: 'No tengo acceso a esa carpeta. Compártala como «Editor» con ' + (lkCuentaServidor_() || 'la cuenta de Bramar') + '.' }); } }
+        e.avisos = av.join(',');
+        // el Drive de comprobantes solo lo define el coordinador general
+        if (u.rol === 'admin') { e.drive = dr.join(','); e.carpeta = carpeta; } else { dr = String(e.drive || '').split(',').filter(Boolean); }
         lkEscribir_('LUKA_EDIFICIOS', E);
         let compartida = [];
-        if (dr.length) {
+        if (dr.length && u.rol === 'admin') {
           const f = carpetaEdificio_(e.portal || slug_(e.name), e.name), ya = f.getEditors().map(function (x) { return x.getEmail().toLowerCase(); });
           dr.forEach(function (c) { if (ya.indexOf(c) < 0) { try { f.addEditor(c); compartida.push(c); } catch (x) {} } });
         }
