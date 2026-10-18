@@ -13452,7 +13452,7 @@ window.lukaCloud = (function(){
   function snap(data){ try{ return JSON.stringify(data); }catch(e){ return null; } }
   /* lista de edificios: una sola consulta cada 30 s (antes se pedía 3 o 4 veces seguidas) */
   function listaNube(forzar){
-    if(!forzar&&listaCache&&Date.now()-listaT<30000) return listaCache;
+    if(listaCache&&Date.now()-listaT<(forzar?2500:30000)) return listaCache;
     listaT=Date.now(); listaCache=api({action:'lk_edificios'}).catch(function(e){ listaCache=null; throw e; });
     return listaCache;
   }
@@ -13538,7 +13538,7 @@ window.lukaCloud = (function(){
       // se entra de inmediato con la sesión guardada; se confirma con el servidor en segundo plano
       api({action:'lk_me'}).then(function(r){ ses.usuario=r.usuario; persistSes(); }).catch(function(e){ if(e.sesion===false) logout(true); });
     }
-    try{ await migrate(); }catch(e){}
+    setTimeout(function(){ migrate().catch(function(){}); },4000);
     if(window.lukaShowSelector&&!window.__lkSelWrap){ window.__lkSelWrap=1; var rs=window.lukaShowSelector;
       window.lukaShowSelector=function(){ resetCrear(); return rs.apply(this,arguments); }; }
     next();
@@ -13570,8 +13570,22 @@ window.lukaCloud = (function(){
   }
 
   /* Lista de edificios: la de la nube (los que este usuario puede ver) */
+  function aplicarLista(reg,L){
+    reg.list=L.map(function(e){ return {id:e.id,name:e.nombre,createdAt:String(e.creado||'').slice(0,10)}; });
+    edInfo={}; L.forEach(function(e){ edInfo[e.id]=e; });
+  }
   async function registry(reg){
-    try{
+    var cache=null; try{ cache=JSON.parse(localStorage.getItem(LS_LIST)||'null'); }catch(_){}
+    if(Array.isArray(cache)&&cache.length&&!window.__lkListaFresca){
+      aplicarLista(reg,cache);
+      listaNube(true).then(function(r){
+        var antes=JSON.stringify(cache.map(function(e){ return e.id+'|'+e.nombre; })), ahora=JSON.stringify(r.edificios.map(function(e){ return e.id+'|'+e.nombre; }));
+        try{ localStorage.setItem(LS_LIST,JSON.stringify(r.edificios)); }catch(e){}
+        r.edificios.forEach(function(e){ edInfo[e.id]=e; });
+        window.__lkListaFresca=true;
+        if(antes!==ahora){ var sel=document.getElementById('luka-selector'); if(sel&&getComputedStyle(sel).display!=='none'&&window.lukaShowSelector) window.lukaShowSelector(); }
+      }).catch(function(e){ if(e.sesion===false) logout(true); });
+    } else try{
       var r=await listaNube();
       try{ localStorage.setItem(LS_LIST,JSON.stringify(r.edificios)); }catch(e){}
       reg.list=r.edificios.map(function(e){ return {id:e.id,name:e.nombre,createdAt:String(e.creado||'').slice(0,10)}; });
@@ -13603,8 +13617,10 @@ window.lukaCloud = (function(){
       if(versions[id]){
         var local0=null; try{ local0=await idbGet('luka-b-'+id); }catch(e){}
         if(local0&&local0.deptos){
-          var vv=await api({action:'lk_version',id:id});
-          if(vv.v===versions[id]){ synced[id]=snap(local0); status('Sincronizado'); return null; }
+          synced[id]=snap(local0);
+          // se abre al instante; si otro dispositivo guardó algo nuevo, se actualiza solo
+          setTimeout(checkRemote,600);
+          return null;
         }
       }
       var r=await api({action:'lk_cargar',id:id});
@@ -13617,9 +13633,16 @@ window.lukaCloud = (function(){
       status('Sin conexión: trabajando con la copia de este dispositivo'); return null;
     }
   }
+  function listaLocal(fn){ try{ var L=JSON.parse(localStorage.getItem(LS_LIST)||'[]'); L=fn(L)||L; localStorage.setItem(LS_LIST,JSON.stringify(L)); }catch(e){} }
+  /* crear: se abre al instante y se sube a la nube por detrás */
   async function created(id,name){
-    try{ var data=await idbGet('luka-b-'+id); var r=await api({action:'lk_guardar',id:id,nombre:name,data:JSON.stringify(data),v:0,resumen:resumen(data),dev:DEV}); versions[id]=r.v; persistVer(); recien[id]=1; synced[id]=snap(data); olvidarLista(); }
-    catch(e){ alert('El edificio se creó en este dispositivo, pero no se pudo subir a la nube: '+e.message); }
+    recien[id]=1;
+    listaLocal(function(L){ if(!L.some(function(e){ return e.id===id; })) L.push({id:id,nombre:name,creado:new Date().toISOString()}); return L; });
+    creando[id]=(async function(){
+      try{ var data=await idbGet('luka-b-'+id); var r=await api({action:'lk_guardar',id:id,nombre:name,data:JSON.stringify(data),v:0,resumen:resumen(data),dev:DEV}); versions[id]=r.v; persistVer(); synced[id]=snap(data); olvidarLista(); status('Guardado en la nube'); }
+      catch(e){ status('Sin conexión: se subirá al reconectar'); setDirty(id,0); }
+      finally{ delete creando[id]; }
+    })();
   }
 
   /* ---------------- Guardado ---------------- */
@@ -13640,7 +13663,10 @@ window.lukaCloud = (function(){
     if(synced[id]!=null&&snap(data)===synced[id]){ setDirty(id,null); status('Guardado en la nube'); return; }
     pushData(id,data,dirtyBase(id),false);
   }
+  var creando={};
   async function pushData(id,data,base,silent){
+    if(creando[id]){ try{ await creando[id]; }catch(e){} }
+    if(base===0&&versions[id]) base=versions[id];   // cambios hechos mientras se creaba en la nube
     saving=true; status('Guardando en la nube…');
     var portal=(data.config&&data.config.portalBramar&&data.config.portalBramar.portalId)||(typeof window.lukaPortalId==='function'&&curId()===id?lukaPortalId():'');
     try{
@@ -13763,7 +13789,9 @@ window.lukaCloud = (function(){
   }
   function avisos(sec){
     var c=sec.querySelector('#lk-av-c'), a=sec.querySelector('#lk-av-a'), m=sec.querySelector('#lk-av-m');
-    api({action:'lk_avisos'}).then(function(r){ c.value=String(r.correos||'').split(',').filter(Boolean).join(', '); a.checked=!!r.admins; }).catch(function(e){ m.textContent=e.message; });
+    var box=sec.querySelector('#lk-avisos'), cargado=false;
+    function cargar(){ if(cargado) return; cargado=true; api({action:'lk_avisos'}).then(function(r){ c.value=String(r.correos||'').split(',').filter(Boolean).join(', '); a.checked=!!r.admins; }).catch(function(e){ m.textContent=e.message; }); }
+    if(box) box.addEventListener('click',cargar); else cargar();
     async function enviar(extra,btn,txt){ m.textContent=''; m.className='lk-warn'; btn.disabled=true; var t0=btn.textContent; btn.textContent=txt;
       try{ var r=await api(Object.assign({action:'lk_avisos',guardar:true,correos:c.value,admins:a.checked},extra));
         m.className='lk-ok'; m.textContent=r.enviado?('Correo de prueba enviado a: '+r.enviado.split(',').join(', ')):'Guardado. Los avisos llegarán a estos correos.'; }
@@ -13898,7 +13926,10 @@ window.lukaCloud = (function(){
   }
   async function cloudDelete(id){
     if(!isAdmin()){ alert('Solo un coordinador general puede eliminar edificios.'); return false; }
-    try{ await api({action:'lk_borrar',id:id}); setDirty(id,null); olvidarLista(); return true; }catch(err){ alert('No se pudo eliminar en la nube: '+err.message); return false; }
+    // se quita al instante; la nube se actualiza por detrás
+    setDirty(id,null); olvidarLista(); listaLocal(function(L){ return L.filter(function(e){ return e.id!==id; }); });
+    api({action:'lk_borrar',id:id}).catch(function(err){ alert('No se pudo eliminar en la nube: '+err.message); olvidarLista(); });
+    return true;
   }
 
   /* ---------------- Usuarios (administrador) ---------------- */
@@ -13907,7 +13938,7 @@ window.lukaCloud = (function(){
     var bd=document.getElementById('lk-users-bd');
     if(!bd){
       bd=document.createElement('div'); bd.className='modal-backdrop no-print'; bd.id='lk-users-bd';
-      bd.innerHTML='<div class="modal lk-modal" style="max-width:720px"><button class="close-btn" id="lk-users-x" title="Cerrar">&times;</button><h2>Usuarios de LUKA</h2><p class="modal-sub"><b>Coordinador general:</b> ve todos los edificios, crea y elimina edificios, da accesos y ve la actividad. <b>Administrador de edificio:</b> trabaja solo en los edificios que usted le asigne (pagos, reservas, comprobantes, reportes); no puede eliminar edificios ni dar accesos.</p><div id="lk-users-body"></div></div>';
+      bd.innerHTML='<div class="modal lk-modal" style="max-width:720px"><button class="close-btn" id="lk-users-x" title="Cerrar">&times;</button><h2>Usuarios</h2><div id="lk-users-body"></div></div>';
       document.body.appendChild(bd);
       bd.querySelector('#lk-users-x').onclick=function(){ bd.classList.remove('open'); };
       bd.addEventListener('click',function(e){ if(e.target===bd) bd.classList.remove('open'); });
@@ -21214,12 +21245,17 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     document.getElementById('pb-key-ok').onclick=function(){ var v=document.getElementById('pb-key').value.trim(); if(!v) return; cfg().clave=v; try{ localStorage.setItem(LS_KEY,v); }catch(e){} guardar(); cargar(); };
   }
   var cargadoEn=0;
+  var enVuelo=null, enVueloT=0, enVueloId='';
   function cargar(callado){
-    var b=document.getElementById('pb-body'); if(b&&!callado) b.innerHTML='<p class="lk-muted">Consultando el portal…</p>';
-    return api({action:'pendientes',edificio_id:lukaPortalId(),edificio:edificio()}).then(function(j){
+    var b=document.getElementById('pb-body'); if(b&&!callado&&!cargadoEn) b.innerHTML='<p class="lk-muted">Consultando…</p>';
+    var pid=lukaPortalId();
+    // una sola consulta a la vez por edificio
+    if(enVuelo&&enVueloId===pid&&Date.now()-enVueloT<8000) return enVuelo;
+    enVueloId=pid; enVueloT=Date.now();
+    return enVuelo=api({action:'pendientes',edificio_id:pid,edificio:edificio()}).then(function(j){ enVuelo=null;
       lista=j.recibos||[]; otros=j.otros||[]; cargadoEn=Date.now(); badge(lista.length); b=document.getElementById('pb-body'); if(b){ pintar(); pintarOtros(); }
     }).catch(function(e){
-      if(!b) return;
+      enVuelo=null; if(!b) return;
       var m=String(e.message||e);
       b.innerHTML='<p class="lk-warn">No se pudo consultar el portal: '+esc(m)+'</p>';
       if(/clave/i.test(m)) setTimeout(function(){ pedirClave(true); },1200);
@@ -22976,7 +23012,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
     var sv=document.getElementById('lk-secciones-block');
     if(sv&&!sv.classList.contains('lkx')){ quitarTitulo(sv,'.menu-section-title'); var dv=sv.querySelector('.menu-divider'); if(dv) dv.remove(); plegar(sv,'Secciones visibles','secc'); }
     var av=document.getElementById('lk-avisos');
-    if(av&&!av.classList.contains('lkx')){ quitarTitulo(av,'h4'); plegar(av,'Avisos por correo (todos los edificios)','avisos'); }
+    if(av&&!av.classList.contains('lkx')){ quitarTitulo(av,'h4'); plegar(av,'Correo general (todos los edificios)','avisos'); }
     // textos vacíos más cortos
     document.querySelectorAll('.lkr-empty').forEach(function(e){ if(e.textContent.length>40) e.textContent=/garant/i.test(e.textContent)?'Sin garantías':'Sin reservas'; });
   }

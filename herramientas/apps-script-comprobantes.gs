@@ -159,9 +159,14 @@ function pendientes_(d) {
   // Cada comprobante guarda el id del edificio del portal (columna K). Los más
   // antiguos no lo tienen: para ellos se compara el nombre del edificio.
   // "otros" cuenta los pendientes de los demás edificios, para avisar en LUKA.
-  const filas = sh.getRange(2, 1, last - 1, Math.max(11, Math.min(12, sh.getLastColumn()))).getValues(), id = slug_(d.edificio_id || d.edificio), out = [], otros = {};
+  // solo las filas pendientes (con muchas filas, leer toda la hoja se vuelve lento)
+  const cols = Math.max(11, Math.min(12, sh.getLastColumn())), id = slug_(d.edificio_id || d.edificio), out = [], otros = {};
+  const pend = sh.getRange(2, 9, last - 1, 1).createTextFinder('Pendiente de verificar').matchEntireCell(true).findAll().map(function (c) { return c.getRow(); });
+  let filas, nums;
+  if (pend.length > 60) { filas = sh.getRange(2, 1, last - 1, cols).getValues(); nums = filas.map(function (_, i) { return i + 2; }); }
+  else { filas = pend.map(function (n) { return sh.getRange(n, 1, 1, cols).getValues()[0]; }); nums = pend; }
   const usr = d.t ? sesion_(d.t) : null;
-  filas.forEach(function (r, i) {
+  filas.forEach(function (r, j) { const i = nums[j] - 2;
     if (String(r[8]) !== 'Pendiente de verificar') return;
     const rid = r[10] ? slug_(r[10]) : slug_(r[1]);
     if (usr && !puedeVer_(usr, rid) && !lkVinculado_(usr, rid)) return;
@@ -404,7 +409,7 @@ function luka_(d) {
   if (a === 'lk_cargar') {
     const e = lkEdificios_()[d.id];
     if (!e || !puedeVer_(u, d.id)) return json({ ok: false, error: 'Edificio no encontrado.' });
-    return json({ ok: true, v: e.v, data: DriveApp.getFileById(e.file).getBlob().getDataAsString('UTF-8') });
+    return json({ ok: true, v: e.v, data: lkDatosTxt_(e) });
   }
   if (a === 'lk_guardar') {
     if (!/^[A-Za-z0-9_-]{2,40}$/.test(d.id || '')) return json({ ok: false, error: 'Edificio inválido.' });
@@ -429,6 +434,7 @@ function luka_(d) {
       }
       if (d.resumen && typeof d.resumen === 'object') E[d.id].res = { deptos: +d.resumen.deptos || 0, alDia: +d.resumen.alDia || 0, deuda: +d.resumen.deuda || 0, mora: +d.resumen.mora || 0 };
       lkEscribir_('LUKA_EDIFICIOS', E);
+      lkCachePut_(E[d.id], d.data);
       return json({ ok: true, v: E[d.id].v });
     } finally { lock.releaseLock(); }
   }
@@ -626,7 +632,23 @@ function ptLuka_(portalId) {
     .sort(function (x, y) { return ((E[y].res || {}).deptos || 0) - ((E[x].res || {}).deptos || 0); })[0];
   return k ? { id: k, e: E[k] } : null;
 }
-function ptDatos_(lk) { return JSON.parse(DriveApp.getFileById(lk.e.file).getBlob().getDataAsString('UTF-8')); }
+function ptDatos_(lk) { return JSON.parse(lkDatosTxt_(lk.e)); }
+/* Datos de un edificio: se guardan en memoria (6 h) por versión, así el portal y LUKA
+   no leen el archivo de Drive en cada consulta. Al guardar cambia la versión. */
+function lkCacheKey_(e) { return 'df_' + e.file + '_' + e.v; }
+function lkCachePut_(e, t) {
+  try {
+    const k = lkCacheKey_(e), sz = 45000, n = Math.ceil(t.length / sz); if (n > 80) return;
+    const parts = {}; for (let i = 0; i < n; i++) parts[k + '_' + i] = t.substr(i * sz, sz);
+    parts[k + '_n'] = String(n); CacheService.getScriptCache().putAll(parts, 21600);
+  } catch (x) {}
+}
+function lkDatosTxt_(e) {
+  const c = CacheService.getScriptCache(), k = lkCacheKey_(e), n = +c.get(k + '_n') || 0;
+  if (n) { const keys = []; for (let i = 0; i < n; i++) keys.push(k + '_' + i); const m = c.getAll(keys); if (keys.every(function (x) { return m[x] != null; })) return keys.map(function (x) { return m[x]; }).join(''); }
+  const t = DriveApp.getFileById(e.file).getBlob().getDataAsString('UTF-8');
+  lkCachePut_(e, t); return t;
+}
 function ptInqHash_(pid, dep, code) { return ptHex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, 'inq|' + pid + '|' + dep + '|' + ptNormCode_(code), Utilities.Charset.UTF_8)); }
 function ptInquilino_(pid, dep, code) {
   if (ptNormCode_(code).length < 6) return null;

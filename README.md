@@ -3,22 +3,24 @@
 Sitio de Bramar Group, administración integral de edificios y condominios en Santa Cruz, Bolivia. HTML, CSS y JavaScript puro, sin servidor propio: se publica con GitHub Pages.
 
 - Sitio: https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/
-- Portal: https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/copropietarios.html
+- Portal de copropietarios: https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/copropietarios.html
+- Portal de inquilinos: https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/inquilinos.html
+- Gestión LUKA: https://osirissecuritybo-cpu.github.io/BRAMAR-PAGINA/luka/
 
 ## Estructura
 
 ```
 index.html                    Sitio público (5 páginas: inicio, nosotros, servicios, edificios, contacto)
-copropietarios.html           Portal de copropietarios (perfil, estado de cuenta, pago, comprobantes)
+copropietarios.html           Portal de copropietarios (deuda, pagar, comprobante, reservas, inquilino)
+inquilinos.html               Copia exacta de copropietarios.html: el modo inquilino sale de la dirección
 luka/                         Gestión LUKA (administración; los datos viven en el Drive de Bramar)
 js/portal-crypto.js           Lectura de los perfiles cifrados antiguos (códigos del Excel)
 js/luka-recibo.js, luka-docs.js  Recibos idénticos a los de LUKA (con QR y código de verificación)
 data/edificios.json           Lista de edificios que aparece en el portal (solo id y nombre)
-data/u/*.json                 Un archivo cifrado por departamento
+data/u/*.json                 Códigos antiguos del Excel (el servidor los usa solo para validar esos códigos)
 herramientas/
   apps-script-comprobantes.gs     Servidor (Google Apps Script): LUKA en la nube, portal en vivo, comprobantes y reservas
 img/                          Fotos, logos e íconos
-img/qr/                       Imágenes de QR de pago (una por edificio)
 ```
 
 ## Sitio público
@@ -67,10 +69,8 @@ Ya no se sube ningún Excel. El estado de cuenta, los recibos, los datos para pa
 - [ ] URL de la página de Facebook (`SITE.social.facebook` en `index.html`).
 - [x] Script de Google instalado (por ahora en la cuenta de prueba osirissecurity.bo@gmail.com, proyecto "Portal Bramar").
 - [ ] Pasar el script a la cuenta bramargroupsrl@gmail.com y reemplazar la URL en `PORTAL.endpoint`.
-- [ ] Cargar el Excel real de cada edificio, generar los datos y subir los QR.
 - [ ] Servicio de formularios (`SITE.formEndpoint`) para el formulario de contacto (opcional).
 - [ ] Testimonios reales y nombres de los edificios de la galería.
-- [ ] Borrar `Bramar Group2.html` (versión anterior que ya no se usa).
 
 ## Accesibilidad y rendimiento
 
