@@ -1,0 +1,1479 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Portal de copropietarios · Bramar Group</title>
+<meta name="description" content="Consulte su estado de cuenta, datos de pago y envíe su comprobante a Bramar Group.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#062145">
+<link rel="icon" type="image/png" href="img/favicon.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap">
+<style>
+/* ==========================================================
+   BRAMAR · Portal de copropietarios
+   Mismo sistema visual que el sitio principal.
+   ========================================================== */
+:root{
+  --navy:#0A335D;--navy-deep:#062145;--sand:#F4F1EB;--paper:#FFFFFF;--ink:#0E1C2C;--muted:#56636F;--line:#E2DDD3;
+  --brass:#B08A4E;--brass-soft:#C9A46A;--sky:#DCE7F3;--ok:#1F8A5B;--ok-bg:#EAF6F0;--err:#C0392B;--err-bg:#FDECEA;--warn-bg:#FFF6E6;
+  --font:"Roboto",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
+  --gutter:clamp(16px,4vw,48px);--radius:20px;--radius-l:28px;--soft:cubic-bezier(.2,.7,.2,1);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--sand);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+[hidden]{display:none!important}
+img{max-width:100%;display:block}
+h1,h2,h3{margin:0;font-weight:300;line-height:1.15;letter-spacing:-.015em;text-wrap:balance}
+p{margin:0}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px solid rgba(10,51,93,.28);outline-offset:2px}
+button:focus:not(:focus-visible),a:focus:not(:focus-visible){outline:none}
+.wrap{width:100%;max-width:1120px;margin:0 auto;padding-inline:var(--gutter)}
+.tag{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
+.tag::before{content:"";width:24px;height:2px;background:currentColor}
+.muted{color:var(--muted)}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+
+/* encabezado */
+.top{padding:calc(14px + env(safe-area-inset-top,0px)) var(--gutter) 0}
+.top-bar{max-width:1120px;margin:0 auto;height:64px;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 10px 0 16px;background:rgba(255,255,255,.9);border-radius:999px;box-shadow:0 12px 40px -20px rgba(6,33,69,.35)}
+.brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--navy);min-height:44px}
+.brand img{height:26px;width:auto}
+.brand b{font-weight:500;letter-spacing:.24em;font-size:13px}
+.brand span{font-size:13px;color:var(--muted);padding-left:12px;border-left:1px solid var(--line)}
+.top-actions{display:flex;gap:8px;align-items:center}
+.pill-btn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 18px;border-radius:999px;border:0;background:var(--sand);color:var(--navy);font-size:14px;font-weight:500;text-decoration:none;cursor:pointer;transition:background .25s}
+.pill-btn:hover{background:var(--line)}
+.pill-btn svg{width:18px;height:18px}
+
+/* botones */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:0 26px;border:0;border-radius:999px;font-size:15px;font-weight:500;cursor:pointer;text-decoration:none;transition:background .3s,transform .15s,opacity .3s}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{opacity:.6;cursor:progress}
+.btn.navy{background:var(--navy);color:#fff}.btn.navy:hover{background:var(--navy-deep)}
+.btn.gold{background:var(--brass);color:#fff}.btn.gold:hover{background:#97753F}
+.btn.light{background:var(--sand);color:var(--navy)}.btn.light:hover{background:var(--line)}
+.btn.block{width:100%}
+.btn svg{width:18px;height:18px}
+.spin{width:18px;height:18px;border-radius:50%;border:2px solid currentColor;border-right-color:transparent;animation:rot .7s linear infinite;display:none}
+.btn.loading .spin{display:block}.btn.loading .ic{display:none}
+@keyframes rot{to{transform:rotate(360deg)}}
+
+/* campos */
+.field{position:relative;min-width:0}
+.field input,.field select,.field textarea{width:100%;font:inherit;font-size:17px;color:var(--ink);background:var(--sand);border:1.5px solid transparent;border-radius:14px;padding:26px 16px 10px;transition:border-color .25s,background .25s}
+.field select{appearance:none;-webkit-appearance:none;cursor:pointer;padding-right:44px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%230A335D' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center}
+.field label{position:absolute;left:17.5px;top:8px;font-size:12px;color:var(--navy);pointer-events:none}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--navy);background:#fff}
+.field textarea{min-height:80px;resize:vertical}
+.field.pw input{padding-right:56px}
+.eye{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:44px;height:44px;border:0;background:none;border-radius:50%;cursor:pointer;display:grid;place-items:center;color:var(--muted)}
+.eye:hover{color:var(--navy);background:rgba(10,51,93,.06)}
+.eye svg{width:20px;height:20px}
+.meter{display:flex;gap:4px;margin-top:8px}
+.meter i{flex:1;height:4px;border-radius:4px;background:var(--line);transition:background .3s}
+.meter[data-s="1"] i:nth-child(1){background:var(--err)}
+.meter[data-s="2"] i:nth-child(-n+2){background:#D98A1E}
+.meter[data-s="3"] i{background:var(--ok)}
+.dialog{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:rgba(6,33,69,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.dialog.open{opacity:1;visibility:visible}
+.dialog-card{width:min(100%,460px);background:#fff;border-radius:var(--radius-l);padding:clamp(24px,5vw,40px);display:flex;flex-direction:column;gap:14px;transform:translateY(16px);transition:transform .4s var(--soft)}
+.dialog.open .dialog-card{transform:none}
+.dialog-card h2{font-size:26px;color:var(--navy);font-weight:400}
+.dialog-card .row{display:flex;gap:10px;flex-wrap:wrap}
+.dialog-card .row .btn{flex:1}
+.hello-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.autologin{flex:1;display:grid;place-items:center;padding:60px 20px;color:var(--muted)}
+.autologin .spin{display:block;width:32px;height:32px;margin:0 auto 14px;color:var(--navy)}
+.field .hint{display:block;font-size:13px;color:var(--muted);margin-top:6px}
+.alert{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;border-radius:14px;font-size:15px;animation:in .4s var(--soft)}
+.alert svg{width:20px;height:20px;flex:none;margin-top:2px}
+.alert.ok{background:var(--ok-bg);color:#155E3E}
+.alert.bad{background:var(--err-bg);color:#8E2A20}
+.alert.info{background:var(--sky);color:var(--navy)}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ------------- INGRESO ------------- */
+.login{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:1120px;margin:16px auto 0;width:calc(100% - 2*var(--gutter));padding-bottom:40px}
+.login-side{background:var(--navy-deep);color:#fff;border-radius:var(--radius-l);padding:clamp(28px,5vw,56px);display:flex;flex-direction:column;justify-content:space-between;gap:32px;position:relative;overflow:hidden;min-width:0}
+.login-side::after{content:"";position:absolute;right:-110px;bottom:-110px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(201,164,106,.3),transparent 65%);pointer-events:none}
+.login-side .tag{color:var(--brass-soft)}
+.login-side h1{font-size:clamp(34px,4.4vw,54px);margin-top:18px}
+.login-side h1 b{font-weight:500;color:var(--brass-soft)}
+.login-side ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px;position:relative;z-index:1}
+.login-side li{display:flex;gap:14px;align-items:center;color:rgba(255,255,255,.85)}
+.login-side li i{width:42px;height:42px;border-radius:12px;background:rgba(255,255,255,.1);display:grid;place-items:center;flex:none}
+.login-side li svg{width:20px;height:20px}
+.login-card{background:var(--paper);border-radius:var(--radius-l);padding:clamp(28px,5vw,56px);display:flex;flex-direction:column;gap:18px;justify-content:center;min-width:0}
+.login-card h2{font-size:clamp(26px,2.6vw,32px);color:var(--navy);font-weight:400}
+.check{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--muted);cursor:pointer;min-height:44px}
+.check input{width:20px;height:20px;accent-color:var(--navy)}
+.help{font-size:14px;color:var(--muted);text-align:center}
+.help a{color:var(--navy);font-weight:500}
+
+/* ------------- PERFIL ------------- */
+.profile{flex:1;padding-block:24px 48px}
+.hello{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+.hello h1{font-size:clamp(30px,4vw,46px);color:var(--navy);margin-top:10px}
+.hello p{color:var(--muted);margin-top:6px}
+.hello p b{font-weight:500;color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}
+.panel{background:var(--paper);border-radius:var(--radius);padding:clamp(22px,3vw,32px);min-width:0;animation:in .6s var(--soft) both}
+.panel h2{font-size:22px;color:var(--navy);font-weight:400}
+.panel .sub{color:var(--muted);font-size:14px;margin-top:4px}
+.p-debt{grid-column:span 5;background:var(--navy);color:#fff;position:relative;overflow:hidden}
+.p-debt::after{content:"";position:absolute;right:-90px;top:-90px;width:260px;height:260px;border-radius:50%;background:radial-gradient(circle,rgba(201,164,106,.28),transparent 65%)}
+.p-debt small{display:block;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.7)}
+.p-debt .amount{font-size:clamp(42px,5vw,60px);font-weight:300;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums;line-height:1.1}
+.p-debt .amount span{font-size:.45em;color:var(--brass-soft);margin-right:6px}
+.p-debt .meta{display:flex;gap:24px;flex-wrap:wrap;margin-top:22px;padding-top:18px;border-top:1px solid rgba(255,255,255,.15);position:relative;z-index:1}
+.p-debt .meta b{display:block;font-weight:500;font-size:17px}
+.p-debt .meta span{font-size:13px;color:rgba(255,255,255,.65)}
+.p-debt .btn{margin-top:24px;position:relative;z-index:1}
+.p-pay{grid-column:span 7;display:grid;grid-template-columns:1fr auto;gap:20px 28px}
+.p-pay .bank{display:flex;flex-direction:column;gap:2px;min-width:0}
+.kv{display:grid;grid-template-columns:120px 1fr;gap:10px;padding:11px 0;border-bottom:1px solid var(--line);align-items:center}
+.kv:last-child{border-bottom:0}
+.kv dt{font-size:14px;color:var(--muted)}
+.kv dd{margin:0;font-weight:500;color:var(--ink);word-break:break-word;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.copy{border:0;background:var(--sand);color:var(--navy);border-radius:999px;min-height:34px;padding:0 12px;font-size:13px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .25s}
+.copy:hover{background:var(--line)}
+.copy svg{width:15px;height:15px}
+.copy.done{background:var(--ok-bg);color:var(--ok)}
+.qr{display:flex;flex-direction:column;align-items:center;gap:10px;min-width:0}
+.qr .box{width:190px;max-width:100%;aspect-ratio:1;border-radius:16px;background:var(--sand);display:grid;place-items:center;overflow:hidden;padding:10px}
+.qr .box img{width:100%;height:100%;object-fit:contain;border-radius:8px}
+.qr .box .none{font-size:13px;color:var(--muted);text-align:center;padding:12px}
+.p-up{grid-column:span 5}
+.rc{margin-top:26px;padding-top:22px;border-top:1px solid var(--line)}
+.rc h3{font-size:17px;font-weight:500;color:var(--navy)}
+.rc-note{color:var(--muted);font-size:14px;margin-top:4px}
+.rc-list{list-style:none;margin:12px 0 0;padding:0}
+.rc-list li{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:12px 0;border-top:1px solid var(--line);font-size:15px}
+.rc-list li:first-child{border-top:0}
+.rc-list .d{color:var(--ink)}
+.rc-list .d small{display:block;color:var(--muted);font-size:13px;margin-top:2px}
+.rc-list .s{flex:none;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right}
+.rc-list .s.ok{color:var(--navy)}
+.rc-list .s small{display:block;text-transform:none;letter-spacing:0;font-weight:400;font-size:12px;margin-top:2px;color:var(--muted)}
+.p-mov{grid-column:span 7}
+.drop{margin-top:18px;border:1.5px dashed #BFC9D4;border-radius:16px;padding:26px 18px;text-align:center;cursor:pointer;transition:border-color .25s,background .25s;display:flex;flex-direction:column;align-items:center;gap:8px;background:#FBFAF7}
+.drop:hover,.drop.over{border-color:var(--navy);background:var(--sky)}
+.drop svg{width:34px;height:34px;color:var(--navy)}
+.drop b{color:var(--navy);font-weight:500}
+.drop small{color:var(--muted);font-size:13px}
+.file{margin-top:18px;display:none;gap:14px;align-items:center;padding:12px;border-radius:14px;background:var(--sand)}
+.file.show{display:flex;animation:in .35s var(--soft)}
+.file .thumb{width:56px;height:56px;border-radius:10px;background:#fff;display:grid;place-items:center;overflow:hidden;flex:none}
+.file .thumb img{width:100%;height:100%;object-fit:cover}
+.file .thumb svg{width:26px;height:26px;color:var(--err)}
+.file .nm{flex:1;min-width:0}
+.file .nm b{display:block;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.file .nm span{font-size:13px;color:var(--muted)}
+.file .x{border:0;background:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;display:grid;place-items:center;flex:none}
+.file .x svg{width:16px;height:16px}
+.up-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.up-fields .full{grid-column:1/-1}
+.up-actions{margin-top:16px;display:flex;flex-direction:column;gap:12px}
+.bar{height:4px;border-radius:4px;background:var(--line);overflow:hidden;display:none}
+.bar.show{display:block}
+.bar i{display:block;height:100%;width:30%;background:var(--navy);border-radius:4px;animation:load 1.2s ease-in-out infinite}
+@keyframes load{0%{transform:translateX(-100%)}100%{transform:translateX(340%)}}
+
+/* tabla de movimientos */
+.mov-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap}
+.table{width:100%;border-collapse:collapse;margin-top:18px;font-variant-numeric:tabular-nums}
+.table th{text-align:left;font-size:12px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:10px 8px;border-bottom:1px solid var(--line)}
+.table td{padding:13px 8px;border-bottom:1px solid var(--line);font-size:15px;vertical-align:top}
+.table .num{text-align:right;white-space:nowrap}
+.table td.f{white-space:nowrap}
+.table td.st{text-align:right;white-space:nowrap;font-size:13px;font-weight:500;letter-spacing:.06em;text-transform:uppercase}
+.table td.st.paid{color:var(--muted)}
+.table td.st.due{color:var(--ink)}
+.table td.st small{display:block;text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted);font-size:12px;margin-top:2px}
+.table tr.due td:first-child{box-shadow:inset 3px 0 0 var(--brass);padding-left:12px}
+.credit-note{margin-top:14px;font-size:14px;color:var(--muted)}
+.table tr{animation:in .4s var(--soft) both}
+.empty{padding:28px 8px;text-align:center;color:var(--muted)}
+.more{margin-top:14px}
+
+footer{padding:24px var(--gutter) calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:13px;color:var(--muted)}
+footer a{color:var(--navy)}
+
+@media (max-width:900px){
+  .login{grid-template-columns:1fr}
+  .login-side{order:2}
+  .p-debt,.p-pay,.p-up,.p-mov{grid-column:1/-1}
+}
+@media (max-width:600px){
+  .brand span{display:none}
+  .p-pay{grid-template-columns:1fr}
+  .kv{grid-template-columns:1fr;gap:2px}
+  .up-fields{grid-template-columns:1fr}
+  .table thead{display:none}
+  .table,.table tbody,.table tr,.table td{display:block;width:100%}
+  .table tr{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:12px 0;border-bottom:1px solid var(--line)}
+  .table td{border:0;padding:0}
+  .table td.f{grid-column:1/-1;font-size:13px;color:var(--muted)}
+  .table tr.due td:first-child{box-shadow:none;padding-left:0}
+  .table tr.due{box-shadow:inset 3px 0 0 var(--brass);padding-left:12px}
+  .table td.st{grid-column:1/-1;text-align:left}
+  .table td.st small{display:inline;margin-left:6px}
+  .table td:empty{display:none}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+.rec-btn{display:block;margin-top:6px;padding:0;border:0;background:none;font:inherit;font-size:13px;font-weight:500;color:var(--navy);text-decoration:underline;text-underline-offset:3px;cursor:pointer;text-transform:none;letter-spacing:0}
+.rec-card{width:min(100%,560px);max-height:calc(100dvh - 32px);overflow:auto;padding:16px}
+.rec-card .row{position:sticky;bottom:-16px;background:#fff;padding:12px 0 4px;margin-bottom:-4px}
+/* Recibo: mismo diseño que Gestión LUKA */
+  /* Fixed light palette, independent of app dark mode, for a reliably printable receipt */
+  .receipt-box {
+    --r-ink: #17160f;
+    --r-ink-soft: #5b5a52;
+    --r-muted: #96948a;
+    --r-line: #e7e4da;
+    --r-accent: #2a78d6;
+    --r-accent-bg: #eaf2fc;
+    --r-good: #0a8a2f;
+    --r-good-bg: #e9f8ee;
+    --r-surface: #ffffff;
+    background: var(--r-surface); color: var(--r-ink);
+    border: 1px solid var(--r-line); border-radius: 14px;
+    padding: 26px 28px; font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .receipt-box { position: relative; overflow: hidden; }
+  .receipt-box .r-watermark {
+    position: absolute; top: 50%; left: 50%; width: 340px; height: auto;
+    transform: translate(-50%, -50%) rotate(-8deg); opacity: 0.05; pointer-events: none; z-index: 0;
+  }
+  .receipt-box > *:not(.r-watermark) { position: relative; z-index: 1; }
+  .receipt-box .r-band { height: 6px; background: var(--r-accent); border-radius: 6px 6px 0 0; margin: -26px -28px 20px; }
+  .receipt-box .r-header { text-align: center; margin-bottom: 4px; }
+  .receipt-box .r-header .r-logo-img { height: 44px; width: auto; margin-bottom: 6px; }
+  .receipt-box .r-header .r-logo { font-size: 26px; margin-bottom: 4px; }
+  .receipt-box .r-stamp {
+    position: absolute; right: 22px; bottom: 78px; width: 108px; height: 108px;
+    border: 3px solid var(--r-good); border-radius: 50%; color: var(--r-good);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transform: rotate(-14deg); opacity: 0.85; text-align: center; z-index: 2;
+  }
+  .receipt-box .r-stamp .r-stamp-check { font-size: 26px; line-height: 1; }
+  .receipt-box .r-stamp .r-stamp-text { font-size: 10px; font-weight: 800; letter-spacing: .06em; margin-top: 2px; }
+  .receipt-box .r-stamp .r-stamp-sub { font-size: 7.5px; font-weight: 700; letter-spacing: .04em; }
+  .receipt-box .r-header .r-title { font-size: 18px; font-weight: 800; letter-spacing: .01em; }
+  .receipt-box .r-header .r-sub { font-size: 12px; color: var(--r-ink-soft); margin-top: 2px; }
+  .receipt-box .r-divider { border: none; border-top: 1px dashed var(--r-line); margin: 16px 0; }
+  .receipt-box .r-no-badge {
+    display: inline-block; margin: 10px auto 0; padding: 5px 14px; border-radius: 999px;
+    background: var(--r-accent-bg); color: var(--r-accent); font-size: 12.5px; font-weight: 700;
+    text-align: center;
+  }
+  .receipt-box .r-no-wrap { text-align: center; }
+  .receipt-box .r-info-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px 18px; margin: 18px 0;
+  }
+  .receipt-box .r-info-item .r-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--r-muted); margin-bottom: 2px; }
+  .receipt-box .r-info-item .r-value { font-size: 14.5px; font-weight: 700; }
+  .receipt-box .r-concept-box {
+    background: #faf9f6; border: 1px solid var(--r-line); border-radius: 10px;
+    padding: 12px 14px; margin: 4px 0 18px; font-size: 12.5px; line-height: 1.5; color: var(--r-ink-soft);
+  }
+  .receipt-box .r-concept-box .r-concept-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--r-muted); margin-bottom: 5px; font-weight: 700; }
+  .receipt-box .r-total-band {
+    text-align: center; margin: 16px 0; padding: 14px; background: var(--r-good-bg);
+    border: 1px solid #c9ecd4; border-radius: 10px;
+  }
+  .receipt-box .r-total-band .r-total-label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--r-good); font-weight: 700; }
+  .receipt-box .r-total-band .r-total-value { font-size: 26px; font-weight: 800; color: var(--r-good); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .receipt-box .r-balance-row {
+    display: flex; justify-content: space-between; font-size: 13px; padding: 4px 2px 0; color: var(--r-ink-soft);
+  }
+  .receipt-box .r-balance-row strong { color: var(--r-ink); font-variant-numeric: tabular-nums; }
+  .receipt-box .r-sign { margin-top: 20px; text-align: center; font-size: 11.5px; color: var(--r-muted); }
+  .receipt-box .r-sign .line { border-top: 1px solid var(--r-muted); width: 55%; margin: 0 auto 6px; }
+  .receipt-box .r-seal {
+    width: 88px; height: 88px; border-radius: 50%; border: 2px dashed var(--brand-gold, #c7a24a);
+    margin: 0 auto 10px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: #fffdf7;
+  }
+  .receipt-box .r-seal img { height: 26px; width: auto; opacity: 0.9; }
+  .receipt-box .r-seal .r-seal-text { font-size: 6.5px; font-weight: 800; letter-spacing: .04em; color: #8a742f; margin-top: 3px; line-height: 1.2; }
+  .receipt-box .r-footer { text-align: center; font-size: 10.5px; color: var(--r-muted); margin-top: 18px; }
+  .receipt-box .r-qr-row { display: flex; justify-content: center; margin-top: 16px; padding: 10px; border: 1px solid var(--r-line); border-radius: 10px; background: #fbfbf9; }
+  .receipt-box .r-qr { flex-shrink: 0; width: 92px; height: 92px; }
+  .receipt-box .r-qr svg { display: block; width: 100%; height: 100%; }
+.rec-top{display:flex;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:1px solid var(--line)}
+.rec-top b{display:block;color:var(--navy);font-size:17px}.rec-top span{font-size:13px;color:var(--muted)}
+.rec-no{text-align:right}.rec-no span{display:block;text-transform:uppercase;letter-spacing:.1em;font-size:11px}
+.rec-amt{padding:18px 0;border-bottom:1px solid var(--line)}.rec-amt span{display:block;font-size:13px;color:var(--muted)}.rec-amt b{font-size:28px;font-weight:500;color:var(--navy)}
+.rec-kv{display:grid;grid-template-columns:1fr 1fr;gap:12px 18px;margin:16px 0 0}
+.rec-kv .full{grid-column:1/-1}.rec-kv dt{font-size:12px;color:var(--muted)}.rec-kv dd{margin:2px 0 0;font-size:15px;color:var(--ink)}
+.rec-foot{margin:18px 0 0;font-size:12px;color:var(--muted)}
+.p-rv{grid-column:1/-1}
+.rv-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.rv-head .btn{flex:none}
+.rv-card{width:min(100%,560px);max-height:calc(100dvh - 32px);overflow:auto}
+.rv-card .up-fields{margin-top:4px}
+#rv-ok:not(:empty){margin-top:14px}
+.rv-gar{font-size:13px;color:var(--muted);margin:10px 0 0}.rv-gar:empty{display:none}
+#rv-form .row{margin-top:14px}.rv-list h3{font-size:15px;font-weight:500;color:var(--navy);margin:24px 0 0}
+/* Impresión del recibo: siempre carta, una sola hoja, igual que en LUKA */
+#rec-print-root{display:none}
+@media print{
+  body.rec-abierto>*:not(#rec-print-root){display:none!important}
+  body.rec-abierto{background:#fff!important;margin:0;padding:0}
+  body.rec-abierto #rec-print-root{display:block!important}
+  #rec-print-root .receipt-box{width:560px;margin:0 auto;box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+/* Reservas */
+.field.err input,.field.err select{border-color:#C0392B!important;background:#FDF1F0!important}
+.rv-warn{margin:0;padding:12px 14px;border-radius:12px;background:var(--sky);color:var(--navy);font-size:14px;line-height:1.45}
+.rv-warn.fuerte{background:#FBEFE3;color:#7A4A12}
+.rv-extras{margin-top:16px}
+.rv-ex-t{font-size:14px;font-weight:500;color:var(--navy);margin:0 0 8px}.rv-ex-t span{color:var(--muted);font-weight:400}
+.rv-ex{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-top:1px solid var(--line)}
+.rv-ex span{font-size:15px;color:var(--ink)}.rv-ex small{display:block;font-size:12.5px;color:var(--muted)}
+.rv-ex input{width:84px;flex:none;font:inherit;font-size:17px;text-align:center;padding:10px 8px;border-radius:12px;border:1.5px solid transparent;background:var(--sand)}
+.rv-ex input:focus{outline:none;border-color:var(--navy);background:#fff}
+.rv-sum{margin-top:16px;padding:14px 16px;border-radius:14px;background:var(--sand);font-size:14px}
+.rv-sum>div{display:flex;justify-content:space-between;gap:12px;padding:4px 0}.rv-sum span{color:var(--muted)}.rv-sum b{font-weight:500;color:var(--ink);white-space:nowrap}
+.rv-sum .tot{border-top:1px solid var(--line);margin-top:6px;padding-top:10px}.rv-sum .tot span{color:var(--navy);font-weight:500}.rv-sum .tot b{font-size:18px;color:var(--navy)}
+.rv-pay{display:inline-flex;margin-top:8px;min-height:38px;align-items:center;padding:0 16px;border:0;border-radius:999px;background:var(--navy);color:#fff;font:inherit;font-size:14px;font-weight:500;cursor:pointer}
+.rp-qr{display:grid;place-items:center;margin:16px 0 4px}.rp-qr img{width:210px;max-width:70%;border-radius:12px}
+.rp-bank{margin:8px 0 0}
+.rv-link{display:inline-block;margin:8px 12px 0 0;padding:0;border:0;background:none;color:var(--navy);font:inherit;font-size:13.5px;font-weight:500;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+#p-name:focus,#p-name:focus-visible,[tabindex="-1"]:focus{outline:none!important;box-shadow:none!important}
+html.modal-abierto,html.modal-abierto body{overflow:hidden!important}
+.dialog{overscroll-behavior:contain}.dialog-card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.rv-st{display:block;margin-top:8px;font-size:13px;color:var(--navy);font-weight:500}
+.res-due{position:relative;z-index:1;display:flex;align-items:center;gap:8px;width:100%;margin-top:16px;padding:12px 14px;border:1px solid rgba(255,255,255,.18);border-radius:14px;background:rgba(255,255,255,.08);color:#fff;font:inherit;font-size:14px;text-align:left;cursor:pointer}
+.res-due b{font-weight:500;color:var(--brass-soft)}.res-due span{margin-left:auto;font-size:13px;text-decoration:underline;text-underline-offset:3px}
+.up-tipo{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-radius:12px;background:var(--sky);color:var(--navy);font-size:14px}
+.up-tipo button{border:0;background:none;color:var(--navy);text-decoration:underline;font:inherit;font-size:13px;cursor:pointer}
+.gr-op{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:16px 0 12px}
+.gr-op label{display:block;cursor:pointer}.gr-op input{position:absolute;opacity:0}
+.gr-op span{display:grid;place-items:center;min-height:48px;border-radius:12px;background:var(--sand);color:var(--navy);font-weight:500;border:1.5px solid transparent}
+.gr-op input:checked+span{border-color:var(--navy);background:#fff}
+.gr-op input:focus-visible+span{outline:2px solid var(--brass)}
+#gr-drop{display:grid;place-items:center;min-height:110px;padding:16px;border:1.5px dashed var(--line);border-radius:14px;color:var(--navy);text-align:center;cursor:pointer;font-size:14px}
+#gr-drop.has{border-style:solid;border-color:var(--navy)}
+#gr-form .row{margin-top:14px}
+
+/* ---- Celular (también Safari y el navegador interno de WhatsApp) ---- */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{overflow-x:clip;max-width:100%}
+.panel{overflow-wrap:anywhere}
+.field input[type=date],.field input[type=time]{-webkit-appearance:none;appearance:none;display:block;min-width:0;min-height:60px;text-align:left}
+.field input::-webkit-date-and-time-value{text-align:left}
+.qr .box.vacio{width:100%;aspect-ratio:auto;min-height:0;padding:14px;font-size:13px}
+.rec-card .row{z-index:5}
+@media (max-width:600px){
+  .kv{grid-template-columns:minmax(90px,auto) 1fr;gap:10px;padding:10px 0}
+  .kv dd{justify-content:flex-end;text-align:right}
+  .p-debt .btn,.rv-head .btn,#up-btn{width:100%;justify-content:center;min-height:52px}
+  .rv-head{flex-direction:column;align-items:stretch}
+  .rv-card .up-fields{grid-template-columns:1fr 1fr}
+  .rv-card .up-fields .full{grid-column:1/-1}
+  #p-pass{min-height:44px;padding:0 18px;background:var(--sand);border-radius:999px}
+  .dialog{padding:10px;align-items:end}
+  .dialog-card{max-height:calc(100dvh - 20px);overflow:auto;border-radius:22px}
+  .rec-card{padding:10px}
+  .rec-card .receipt-box{padding:20px 16px;border-radius:12px}
+  .rec-card .receipt-box .r-band{margin:-20px -16px 16px}
+  .rec-card .receipt-box .r-stamp{width:88px;height:88px;right:10px}
+}
+
+/* ---- Celular: cabecera con ☰, inicio corto (deuda, dos acciones, pendientes) y pantallas por opción ---- */
+.m-home,.m-head,.m-burger,.m-drawer{display:none}
+.table tr.last td{border-top:1px solid var(--line);color:var(--muted)}
+.table tr.last td small{display:block;font-size:12.5px;color:var(--muted)}
+.table td.empty.ok{color:var(--navy);text-align:left;padding:14px 0}
+@media all{
+  :root{--g:16px}
+  .top{padding-left:var(--g);padding-right:var(--g)}
+  .profile .wrap{padding-left:var(--g);padding-right:var(--g)}
+  body.en-perfil #logout{display:none}
+  .m-burger:not([hidden]){display:grid;align-content:center;justify-items:center;gap:5px;position:relative;width:44px;height:44px;border:0;border-radius:999px;background:var(--sand);cursor:pointer}
+  .m-burger span{display:block;width:18px;height:1.8px;border-radius:2px;background:var(--navy)}
+  .m-dot{position:absolute;top:9px;right:9px;width:8px;height:8px;border-radius:50%;background:#C0392B;box-shadow:0 0 0 2px var(--sand)}
+  .m-dot[hidden]{display:none}
+  .hello{padding:2px 0 0}
+  .hello .tag{margin-bottom:6px}
+  .hello h1{font-size:30px}
+  .hello p{font-size:14px}
+  .hello-actions{display:none}
+  .grid{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+  .p-debt{padding:20px var(--g);border-radius:20px}
+  .p-debt .amount{font-size:44px}
+  .p-debt .meta{gap:16px;margin-top:14px;padding-top:12px}
+  .p-debt .meta>div:nth-child(1),.p-debt .meta>div:nth-child(2){display:none}
+  .p-debt .btn.gold{display:none}
+  .m-home{display:flex;flex-direction:column;gap:12px}
+  .m-acts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .m-acts .btn{width:100%;min-height:52px;padding:0 10px;justify-content:center;font-size:15px}
+  .m-acts .btn.light{background:var(--paper);color:var(--navy)}
+  .m-pend{background:var(--paper);border-radius:20px;padding:16px var(--g) 8px}
+  .m-pend-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:6px}
+  .m-pend-h b{font-weight:500;color:var(--navy);font-size:16px}
+  .m-pend-h button{border:0;background:none;padding:0;color:var(--navy);font:inherit;font-size:13.5px;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+  .m-pend ul{list-style:none;margin:0;padding:0}
+  .m-pend li{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--line);font-size:15px}
+  .m-pend li:first-child{border-top:0}
+  .m-pend li span{color:var(--ink)}.m-pend li b{font-weight:500;white-space:nowrap;color:var(--ink)}
+  .m-pend li.multa span::after{content:"Multa";margin-left:8px;font-size:11px;font-weight:600;padding:2px 7px;border-radius:999px;background:#FBEFEF;color:#8E2A20;vertical-align:1px}
+  .m-ok,.m-more{margin:4px 0 10px;font-size:14px;color:var(--muted)}
+  .m-row:not([hidden]){display:flex;align-items:center;gap:10px;width:100%;min-height:56px;padding:0 var(--g);border:0;border-radius:20px;background:var(--paper);color:var(--ink);font:inherit;font-size:16px;text-align:left;cursor:pointer}
+  .m-row span{flex:1}.m-row small{font-size:13.5px;color:var(--muted)}
+  .chev{width:8px;height:8px;border-right:1.6px solid var(--muted);border-top:1.6px solid var(--muted);transform:rotate(45deg);margin:0 4px 0 6px}
+  .m-badge{font-style:normal;min-width:22px;height:22px;padding:0 8px;border-radius:999px;background:var(--sand);color:var(--navy);font-size:12px;font-weight:600;display:inline-grid;place-items:center}
+  .m-badge.alerta{background:#FBEFEF;color:#8E2A20}
+  .m-badge[hidden]{display:none}
+  /* menú lateral */
+  .m-drawer{display:block;position:fixed;inset:0;z-index:85;background:rgba(6,33,69,.4);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+  .m-drawer.open{opacity:1;visibility:visible}
+  .m-drawer-in{position:absolute;top:0;right:0;bottom:0;width:min(84vw,320px);background:var(--paper);display:flex;flex-direction:column;padding:calc(18px + env(safe-area-inset-top,0px)) var(--g) calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(100%);transition:transform .3s var(--soft)}
+  .m-drawer.open .m-drawer-in{transform:none}
+  .m-drawer-h{position:relative;padding:4px 44px 16px 0;border-bottom:1px solid var(--line)}
+  .m-drawer-h b{display:block;font-weight:500;font-size:18px;color:var(--navy)}
+  .m-drawer-h span{font-size:13px;color:var(--muted)}
+  .m-x{position:absolute;top:-6px;right:-8px;width:44px;height:44px;border:0;background:none;font-size:28px;line-height:1;color:var(--navy);cursor:pointer}
+  .m-nav{display:flex;flex-direction:column;padding:8px 0}
+  .m-nav button{display:flex;align-items:center;gap:10px;min-height:54px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:16px;text-align:left;cursor:pointer;padding:0}
+  .m-nav button[hidden]{display:none}
+  .m-nav button span{flex:1}
+  .m-out{margin-top:auto;min-height:50px;border:0;border-radius:999px;background:var(--sand);color:var(--navy);font:inherit;font-size:15px;font-weight:500;cursor:pointer}
+  /* pantallas de cada opción */
+  .grid>section.panel:not(.p-debt){display:none}
+  .grid>section.panel.m-open{display:block;position:fixed;inset:0;z-index:70;border-radius:0;margin:0;padding:0 var(--g) calc(28px + env(safe-area-inset-bottom,0px));overflow-y:auto;overscroll-behavior:contain;background:var(--paper);animation:none}
+  .grid>section.panel.m-open[hidden]{display:none}
+  .m-open .m-head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;position:sticky;top:0;z-index:2;margin:0 calc(-1*var(--g)) 16px;padding:calc(8px + env(safe-area-inset-top,0px)) calc(var(--g) - 8px) 8px;background:var(--paper);border-bottom:1px solid var(--line)}
+  .m-head b{text-align:center;font-weight:500;font-size:16px;color:var(--navy)}
+  .m-back{width:44px;height:44px;border:0;background:none;color:var(--navy);display:grid;place-items:center;cursor:pointer}
+  .m-back svg{width:22px;height:22px}
+  .m-open>h2:first-of-type,.m-open .mov-head h2,.m-open .rv-head h2,.m-open .bank>h2{display:none}
+  .p-pay.m-open .qr{margin-top:18px;align-items:center}
+  .dialog{z-index:90}
+  .table tr.last{margin-top:10px;border-bottom:0;padding:14px 0 0;border-top:1px solid var(--line)}
+  .table tr.last td{border-top:0}
+  .table tr.last td.f{font-size:11px;letter-spacing:.1em;text-transform:uppercase}
+  .table td.empty.ok{padding:4px 0 10px}
+}
+
+/* ---- Inicio tipo app (todas las pantallas) ---- */
+.d-nav,.d-ic,.m-row{display:none!important}
+#datos .bank>.sub,#comprobante>.sub{display:none}
+.hello h1{font-size:30px}
+.p-debt .meta{display:block;margin-top:14px;padding-top:12px}
+.p-debt .meta>div{display:none}
+.p-debt .meta>div:nth-child(3){display:flex!important;gap:6px;align-items:baseline}
+.p-debt .meta>div:nth-child(3) b{order:2;font-size:13px;font-weight:400;color:rgba(255,255,255,.75)}
+.p-debt .meta>div:nth-child(3) span{order:1}
+.m-acts{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:12px}
+.m-acts .tile{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:104px;padding:16px 8px;border:0;border-radius:20px;background:var(--paper);color:var(--navy);font:inherit;font-size:14.5px;font-weight:500;cursor:pointer;transition:transform .15s,box-shadow .2s}
+.m-acts .tile:hover{box-shadow:0 10px 30px -18px rgba(6,33,69,.45)}
+.m-acts .tile:active{transform:scale(.97)}
+.m-acts .tile i{width:44px;height:44px;border-radius:14px;background:var(--sand);display:grid;place-items:center}
+.m-acts .tile.pri i{background:var(--navy);color:#fff}
+.m-acts .tile svg{width:22px;height:22px}
+.m-acts .tile[hidden]{display:none}
+.m-acts .tile em{position:absolute;top:10px;right:10px;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#C0392B;color:#fff;font-style:normal;font-size:11.5px;font-weight:600;display:grid;place-items:center}
+.m-acts .tile em[hidden]{display:none}
+@media (max-width:380px){ .m-acts .tile{font-size:13.5px;min-height:96px} }
+@media (min-width:601px){
+  :root{--g:24px}
+  .top{padding-left:var(--gutter);padding-right:var(--gutter)}
+  .top-bar{max-width:640px}
+  .profile .wrap{max-width:640px;padding-inline:var(--gutter)}
+  .hello h1{font-size:34px}
+  .p-debt{padding:28px}
+  .p-debt .amount{font-size:52px}
+  .grid>section.panel.m-open{padding-inline:max(24px,calc(50vw - 300px))}
+  .m-open .m-head{margin-inline:calc(-1*max(24px,calc(50vw - 300px)));padding-inline:max(16px,calc(50vw - 308px))}
+  .p-pay.m-open{display:block}
+  .p-pay.m-open .qr .box{width:220px}
+}
+
+/* ---- Ingreso simple ---- */
+.login{grid-template-columns:minmax(0,440px)!important;justify-content:center;align-items:start}
+.login-card{padding:32px 28px}
+.login-card{gap:14px}
+.login-card .tag{margin-bottom:-6px}
+.login-card .help{margin-top:2px}
+/* ---- Calendario de reservas ---- */
+.rv-cal{background:var(--sand);border-radius:16px;padding:12px}
+.cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.cal-h b{font-weight:500;color:var(--navy)}
+.cal-h button{width:38px;height:38px;border:0;border-radius:50%;background:#fff;color:var(--navy);font-size:20px;cursor:pointer}
+.cal-h button:disabled{opacity:.3;cursor:default}
+.cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.cal-g i{font-style:normal;font-size:11.5px;color:var(--muted);padding:2px 0}
+.cal-g button{position:relative;height:38px;border:0;border-radius:10px;background:#fff;color:var(--ink);font:inherit;font-size:14px;cursor:pointer}
+.cal-g button:disabled{background:transparent;color:#B9C2CC;cursor:default}
+.cal-g button.oc{color:#8E2A20;background:#FBEFEF}
+.cal-g button.oc::after{content:"";position:absolute;left:50%;bottom:5px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:#C0392B}
+.cal-g button.sel{background:var(--navy);color:#fff}
+.cal-g button.sel.oc{background:#8E2A20;color:#fff}
+.cal-ley{display:flex;align-items:center;gap:6px;margin:8px 2px 0;font-size:12px;color:var(--muted)}
+.rv-cal.err{box-shadow:inset 0 0 0 1.5px var(--err)}
+.cal-ley .dot{width:8px;height:8px;border-radius:50%;background:#C0392B}
+/* ---- Inquilino ---- */
+.inq-card{display:flex;flex-direction:column;gap:2px;padding:16px;border-radius:16px;background:var(--sand);margin-top:6px}
+.inq-card b{font-weight:500;color:var(--navy);font-size:17px}.inq-card span{font-size:13px;color:var(--muted)}
+.inq-acts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.inq-acts .btn{min-height:48px;justify-content:center}
+.inq-del{color:#8E2A20!important}
+.inq-form{display:flex;flex-direction:column;gap:12px;margin-top:6px}
+.inq-code{margin-top:14px;padding:16px;border-radius:16px;border:1.5px dashed var(--line);text-align:center}
+.inq-code small{display:block;font-size:12px;color:var(--muted)}
+.inq-code b{font-size:26px;letter-spacing:.14em;color:var(--navy);font-weight:500}
+#inq-msg .alert{margin-top:12px}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16M14 6l6 6-6 6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12H4M10 6l-6 6 6 6"/></symbol>
+  <symbol id="i-out" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+  <symbol id="i-qr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zM20 14v.01M14 20h.01M17 20h4v-3"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4M7 9l5-5 5 5M4 16v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></symbol>
+  <symbol id="i-pdf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 012-2h10"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 16.5v.5"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v12M7 11l5 5 5-5M4 20h16"/></symbol>
+  <symbol id="i-wa" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 20l1.3-4A8 8 0 1112 20a8 8 0 01-3.8-1z"/><path d="M9 9c0 3 3 6 6 6l1-1.5-2-1-1 1c-1-.5-2-1.5-2.5-2.5l1-1-1-2z"/></symbol>
+ <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20l6-7 4 3 8-10M15 6h6v6"/></symbol>
+</defs></svg>
+
+<header class="top">
+  <div class="top-bar">
+    <a class="brand" href="index.html"><img src="img/isotipo-azul.png" alt="" width="200" height="163"><b>BRAMAR</b><span>Copropietarios</span></a>
+    <nav class="d-nav" id="d-nav" aria-label="Secciones" hidden>
+      <button type="button" data-sheet="" class="on">Inicio</button>
+      <button type="button" data-sheet="estado">Estado de cuenta</button>
+      <button type="button" data-sheet="datos">Datos de pago</button>
+      <button type="button" data-sheet="comprobante">Enviar comprobante</button>
+      <button type="button" data-sheet="rv" id="d-nav-rv" hidden>Áreas sociales</button>
+    </nav>
+    <div class="top-actions">
+      <button class="pill-btn d-ic" id="d-pass" type="button" title="Cambiar contraseña" aria-label="Cambiar contraseña" hidden><svg aria-hidden="true"><use href="#i-lock"/></svg></button>
+      <a class="pill-btn" id="back" href="index.html"><svg aria-hidden="true"><use href="#i-back"/></svg><span>Sitio web</span></a>
+      <button class="pill-btn" id="logout" type="button" hidden><svg aria-hidden="true"><use href="#i-out"/></svg><span>Salir</span></button>
+      <button class="m-burger" id="m-burger" type="button" aria-label="Menú" aria-expanded="false" hidden><span></span><span></span><span></span><em class="m-dot" id="m-dot" hidden></em></button>
+    </div>
+  </div>
+</header>
+
+<!-- ======================= INGRESO ======================= -->
+<main class="login" id="view-login">
+  <section class="login-side" hidden>
+    <div>
+      <span class="tag">Portal de copropietarios</span>
+      <h1>Su departamento, <b>al día</b> y a la vista.</h1>
+    </div>
+    <ul>
+      <li><i><svg aria-hidden="true"><use href="#i-chart"/></svg></i>Estado de cuenta y deudas</li>
+      <li><i><svg aria-hidden="true"><use href="#i-qr"/></svg></i>Número de cuenta y QR de pago</li>
+      <li><i><svg aria-hidden="true"><use href="#i-upload"/></svg></i>Envío de comprobantes</li>
+      <li><i><svg aria-hidden="true"><use href="#i-lock"/></svg></i>Sus datos protegidos con su código</li>
+    </ul>
+  </section>
+
+  <form class="login-card" id="login-form" novalidate>
+    <span class="tag">Portal de copropietarios</span>
+    <h2>Ingresar</h2>
+    <div class="field"><select id="l-bld" required><option value="">Cargando edificios…</option></select><label for="l-bld">Edificio</label></div>
+    <div class="field"><input id="l-dep" required autocomplete="off" placeholder="Ej. 4B o 401"><label for="l-dep">Departamento</label></div>
+    <div class="field pw"><input id="l-code" type="password" required autocomplete="current-password" autocapitalize="off" spellcheck="false" placeholder="Contraseña o código"><label for="l-code">Contraseña o código</label><button class="eye" type="button" data-eye="l-code" aria-label="Mostrar contraseña"><svg aria-hidden="true"><use href="#i-eye"/></svg></button></div>
+    <label class="check"><input type="checkbox" id="l-remember" checked> Recordarme</label>
+    <div id="l-msg" role="alert"></div>
+    <button class="btn navy block" type="submit" id="l-btn"><span id="l-btn-t">Ingresar</span><span class="spin" aria-hidden="true"></span><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+    <p class="help"><a id="l-ask" target="_blank" rel="noopener">¿No tiene su código?</a> · <a id="l-otro" href="inquilinos.html">Soy inquilino</a></p>
+  </form>
+</main>
+
+<div class="autologin" id="view-auto" hidden><div><span class="spin" aria-hidden="true"></span>Abriendo su perfil…</div></div>
+
+<!-- ======================= PERFIL ======================= -->
+<main class="profile" id="view-profile" hidden>
+  <div class="wrap">
+    <div class="hello">
+      <div>
+        <span class="tag" id="p-bld"></span>
+        <h1 id="p-name" tabindex="-1"></h1>
+        <p id="p-sub"></p>
+      </div>
+      <div class="hello-actions">
+        <button class="pill-btn" type="button" id="p-pass" hidden><svg aria-hidden="true"><use href="#i-lock"/></svg>Cambiar contraseña</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <section class="panel p-debt" aria-labelledby="h-debt">
+        <small id="h-debt">Deuda total</small>
+        <div class="amount" id="p-debt"></div>
+        <div class="meta">
+          <div><b id="p-fee"></b><span>Expensa mensual</span></div>
+          <div><b id="p-due"></b><span>Vencimiento</span></div>
+          <div><b id="p-upd"></b><span>Actualizado al</span></div>
+        </div>
+        <button type="button" class="res-due" id="p-res-due" hidden></button>
+        <a class="btn gold" href="#comprobante"><svg aria-hidden="true"><use href="#i-upload"/></svg>Enviar comprobante</a>
+      </section>
+
+      <div class="m-home" id="m-home">
+        <div class="m-acts">
+          <button type="button" class="tile pri" data-sheet="datos"><i><svg aria-hidden="true"><use href="#i-qr"/></svg></i>Pagar</button>
+          <button type="button" class="tile" data-sheet="comprobante"><i><svg aria-hidden="true"><use href="#i-upload"/></svg></i>Comprobante</button>
+          <button type="button" class="tile" data-sheet="rv" id="t-rv" hidden><i><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i>Reservar<em id="t-rv-b" hidden></em></button>
+        </div>
+        <div class="m-pend" id="m-pend"></div>
+        <button type="button" class="m-row" data-sheet="rv" id="m-rv" hidden><span>Áreas sociales</span><small id="m-rv-t">Reservar</small><i class="chev"></i></button>
+      </div>
+
+      <section class="panel p-pay" id="datos" aria-labelledby="h-pay" style="animation-delay:.06s">
+        <div class="bank">
+          <h2 id="h-pay">Datos para el pago</h2>
+          <p class="sub">Deposite o transfiera a la cuenta del edificio.</p>
+          <dl id="p-bank" style="margin:12px 0 0"></dl>
+        </div>
+        <div class="qr">
+          <div class="box" id="p-qr"></div>
+          <a class="copy" id="p-qr-dl" download hidden><svg aria-hidden="true"><use href="#i-down"/></svg>Descargar QR</a>
+        </div>
+      </section>
+
+      <section class="panel p-up" id="comprobante" aria-labelledby="h-up" style="animation-delay:.12s">
+        <h2 id="h-up">Enviar comprobante</h2>
+        <p class="sub">Foto o PDF de su depósito o transferencia.</p>
+        <form id="up-form" novalidate>
+          <label class="drop" id="drop" for="up-file">
+            <svg aria-hidden="true"><use href="#i-upload"/></svg>
+            <b>Toque para elegir o arrastre aquí</b>
+            <small>JPG, PNG o PDF · máximo 8 MB</small>
+          </label>
+          <input type="file" id="up-file" accept="image/*,application/pdf" class="sr-only">
+          <div class="file" id="up-preview">
+            <div class="thumb" id="up-thumb"></div>
+            <div class="nm"><b id="up-name"></b><span id="up-size"></span></div>
+            <button class="x" type="button" id="up-clear" aria-label="Quitar archivo"><svg aria-hidden="true"><use href="#i-x"/></svg></button>
+          </div>
+          <div class="up-fields">
+            <div class="field"><input id="up-amount" inputmode="decimal" placeholder="0.00"><label for="up-amount">Monto pagado</label></div>
+            <div class="field"><input id="up-date" type="date"><label for="up-date">Fecha del pago</label></div>
+            <div class="field full"><input id="up-note" placeholder="Opcional"><label for="up-note">Nota (ej. expensa de octubre)</label></div>
+            <div class="up-tipo full" id="up-tipo" hidden><span id="up-tipo-t"></span><button type="button" id="up-tipo-x" aria-label="Quitar">Quitar</button></div>
+          </div>
+          <div class="up-actions">
+            <div class="bar" id="up-bar"><i></i></div>
+            <div id="up-msg" role="status"></div>
+            <button class="btn navy block" type="submit" id="up-btn"><span id="up-btn-t">Enviar comprobante</span><span class="spin" aria-hidden="true"></span><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+          </div>
+        </form>
+        <div class="rc" id="rc" hidden>
+          <h3>En verificación</h3>
+          <p class="rc-note">Su estado de cuenta se actualizará en un máximo de 24 horas después de verificar su pago.</p>
+          <ul class="rc-list" id="rc-list"></ul>
+        </div>
+      </section>
+
+      <section class="panel p-mov" id="estado" aria-labelledby="h-mov" style="animation-delay:.18s">
+        <div class="mov-head"><div><h2 id="h-mov">Estado de cuenta</h2><p class="sub" id="p-mov-sub"></p></div></div>
+        <table class="table" id="p-table">
+          <thead><tr><th>Fecha</th><th>Concepto</th><th class="num">Monto</th><th class="num">Estado</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <p class="credit-note" id="p-credit" hidden></p>
+        <button class="btn light more" type="button" id="p-more" hidden>Ver historial completo</button>
+      </section>
+
+      <section class="panel p-inq" id="inq" aria-labelledby="h-inq">
+        <h2 id="h-inq">Inquilino</h2>
+        <div id="inq-body"></div>
+      </section>
+
+      <section class="panel p-rv" id="rv" aria-labelledby="h-rv" hidden style="animation-delay:.15s">
+        <div class="rv-head">
+          <div><h2 id="h-rv">Áreas sociales</h2><p class="sub">Reserve la churrasquera o el salón. Bramar confirmará su solicitud.</p></div>
+          <button class="btn navy" type="button" id="rv-open"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Reservar</button>
+        </div>
+        <div id="rv-ok" role="status"></div>
+        <div class="rv-list" id="rv-list"></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<!-- Cambiar contraseña -->
+<div class="m-drawer" id="m-drawer" aria-hidden="true">
+  <div class="m-drawer-in" role="dialog" aria-label="Menú">
+    <div class="m-drawer-h"><b id="m-dr-name"></b><span id="m-dr-sub"></span><button type="button" class="m-x" id="m-dr-x" aria-label="Cerrar">&times;</button></div>
+    <nav class="m-nav" id="m-nav">
+      <button type="button" data-sheet="estado"><span>Estado de cuenta</span><em class="m-badge" id="m-badge-estado" hidden></em></button>
+      <button type="button" data-sheet="rv" id="m-nav-rv" hidden style="display:none!important"><span>Áreas sociales</span><em class="m-badge" id="m-badge-rv" hidden></em></button>
+      <button type="button" data-sheet="inq" id="m-inq" hidden><span>Inquilino</span><em class="m-badge" id="m-badge-inq" hidden>Activo</em></button>
+      <button type="button" data-sheet="clave" id="m-clave" hidden><span>Cambiar contraseña</span></button>
+    </nav>
+    <button type="button" class="m-out" id="m-out">Cerrar sesión</button>
+  </div>
+</div>
+<div class="dialog" id="rv-dialog" role="dialog" aria-modal="true" aria-labelledby="rv-title" aria-hidden="true">
+  <div class="dialog-card rv-card">
+    <span class="tag">Áreas sociales</span>
+    <h2 id="rv-title">Reservar un área</h2>
+    <form id="rv-form" novalidate>
+          <div class="up-fields">
+            <div class="field full"><select id="rv-area"></select><label for="rv-area">Área</label></div>
+            <div class="field full"><select id="rv-tramo"></select><label for="rv-tramo">Horario / tarifa</label></div>
+            <div class="rv-cal full" id="rv-cal"></div>
+            <input id="rv-fecha" type="hidden">
+            <p class="rv-warn full" id="rv-warn" hidden></p>
+            <div class="field full"><input id="rv-pers" inputmode="numeric" placeholder="0" required><label for="rv-pers">Personas</label></div>
+            <div class="field"><input id="rv-hini" type="time" value="19:00"><label for="rv-hini">Desde</label></div>
+            <div class="field"><input id="rv-hfin" type="time" value="23:00"><label for="rv-hfin">Hasta</label></div>
+            <div class="field full"><input id="rv-resp" placeholder="Nombre"><label for="rv-resp">Responsable</label></div>
+            <div class="field full"><input id="rv-tel" type="tel" inputmode="tel" placeholder="7xxxxxxx"><label for="rv-tel">Teléfono</label></div>
+            <div class="field full wide"><input id="rv-evento" placeholder="Ej. cumpleaños, reunión"><label for="rv-evento">Evento</label></div>
+          </div>
+          <div class="rv-extras" id="rv-extras" hidden>
+            <p class="rv-ex-t">Alquiler de extras <span>(opcional)</span></p>
+            <div id="rv-ex-list"></div>
+          </div>
+          <div class="rv-sum" id="rv-sum"></div>
+          <div id="rv-msg" role="status"></div>
+          <div class="row"><button class="btn light" type="button" id="rv-cancel">Cancelar</button><button class="btn navy" type="submit" id="rv-btn"><span id="rv-btn-t">Solicitar reserva</span><span class="spin" aria-hidden="true"></span></button></div>
+        </form>
+  </div>
+</div>
+<div class="dialog" id="rp-dialog" role="dialog" aria-modal="true" aria-labelledby="rp-title" aria-hidden="true">
+  <div class="dialog-card rv-card">
+    <span class="tag">Reserva aprobada</span>
+    <h2 id="rp-title">Pagar la reserva</h2>
+    <div id="rp-body"></div>
+    <div class="row"><button class="btn light" type="button" id="rp-close">Cerrar</button><button class="btn navy" type="button" id="rp-send">Enviar comprobante</button></div>
+  </div>
+</div>
+<div class="dialog" id="gr-dialog" role="dialog" aria-modal="true" aria-labelledby="gr-title" aria-hidden="true">
+  <form class="dialog-card rv-card" id="gr-form" novalidate>
+    <span class="tag">Garantía</span>
+    <h2 id="gr-title">Solicitar devolución de garantía</h2>
+    <p class="sub" id="gr-sub" style="margin:0"></p>
+    <div class="gr-op" role="radiogroup" aria-label="Cómo recibir la garantía">
+      <label><input type="radio" name="gr-m" value="qr" checked><span>Por QR</span></label>
+      <label><input type="radio" name="gr-m" value="transferencia"><span>Por transferencia</span></label>
+    </div>
+    <div id="gr-qr">
+      <label class="drop" id="gr-drop"><input type="file" id="gr-file" accept="image/*" class="sr-only"><span id="gr-file-t">Toque para subir la imagen de su QR de cobro</span></label>
+    </div>
+    <div id="gr-tr" hidden>
+      <div class="up-fields">
+        <div class="field full"><input id="gr-banco" placeholder="Ej. Banco Unión"><label for="gr-banco">Banco</label></div>
+        <div class="field full"><input id="gr-cuenta" inputmode="numeric" placeholder="N.º de cuenta"><label for="gr-cuenta">Número de cuenta</label></div>
+        <div class="field full"><input id="gr-titular" placeholder="Nombre completo"><label for="gr-titular">Titular de la cuenta</label></div>
+      </div>
+    </div>
+    <div id="gr-msg" role="status"></div>
+    <div class="row"><button class="btn light" type="button" id="gr-cancel">Cancelar</button><button class="btn navy" type="submit" id="gr-btn"><span id="gr-btn-t">Enviar solicitud</span><span class="spin" aria-hidden="true"></span></button></div>
+  </form>
+</div>
+<div class="dialog" id="rec-dialog" role="dialog" aria-modal="true" aria-labelledby="rec-title" aria-hidden="true">
+  <div class="dialog-card rec-card">
+    <h2 id="rec-title" class="sr-only">Recibo</h2>
+    <div id="rec-body"></div>
+    <div class="row"><button class="btn light" type="button" id="rec-close">Cerrar</button><button class="btn navy" type="button" id="rec-print-btn">Guardar PDF</button></div>
+  </div>
+</div>
+<div class="dialog" id="pw-dialog" role="dialog" aria-modal="true" aria-labelledby="pw-title" aria-hidden="true">
+  <form class="dialog-card" id="pw-form" novalidate>
+    <span class="tag">Seguridad</span>
+    <h2 id="pw-title">Cree su contraseña</h2>
+    <p class="muted">Elija una contraseña fácil de recordar para usted. Su código original de Bramar seguirá funcionando como respaldo.</p>
+    <input type="text" autocomplete="username" id="pw-user" hidden>
+    <div class="field pw"><input id="pw-new" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"><label for="pw-new">Nueva contraseña</label><button class="eye" type="button" data-eye="pw-new" aria-label="Mostrar contraseña"><svg aria-hidden="true"><use href="#i-eye"/></svg></button></div>
+    <div class="meter" id="pw-meter" aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="field pw"><input id="pw-rep" type="password" autocomplete="new-password" placeholder="Repita la contraseña"><label for="pw-rep">Repita la contraseña</label></div>
+    <div id="pw-msg" role="status"></div>
+    <div class="row"><button class="btn light" type="button" id="pw-cancel">Cancelar</button><button class="btn navy" type="submit" id="pw-btn"><span id="pw-btn-t">Guardar</span><span class="spin" aria-hidden="true"></span></button></div>
+  </form>
+</div>
+
+<footer>© <span id="yr">2026</span> Bramar Group · <a href="index.html">Volver al sitio</a></footer>
+
+<script src="js/portal-crypto.js"></script>
+<script src="js/luka-recibo.js"></script>
+<script src="js/luka-docs.js"></script>
+<script>
+/* ================================================================
+   CONFIGURACIÓN DEL PORTAL
+   · whatsapp: número de Bramar (código de país, sin + ni espacios).
+   · endpoint: URL de la aplicación web de Google Apps Script
+     (herramientas/apps-script-comprobantes.gs). Con ella funcionan:
+       - el envío de comprobantes a Google Drive,
+       - las contraseñas personales de los propietarios.
+     Si está vacío: los comprobantes se envían por WhatsApp y solo
+     se puede entrar con el código original.
+   ================================================================ */
+const PORTAL = {
+  whatsapp: "59178155275",
+  endpoint: "https://script.google.com/macros/s/AKfycbwIPnPGQPIpK6NTiTXrbsTtR5e90ETrqByyrzwErl4t0yJNSoIae8IJtb8S-7cG-AVA/exec"   // cuenta de prueba: osirissecurity.bo@gmail.com
+};
+
+(function(){
+  "use strict";
+  const $=s=>document.querySelector(s);
+  const C=window.BramarCrypto;
+  const MAX=8*1024*1024;
+  let data=null, file=null, filePrep=null, showAll=false, session=null, shown=[], rcCount=0;
+  /* inquilinos.html es una copia exacta de esta página: el modo sale de la dirección */
+  const MODO=/inquilino/i.test(location.pathname)?'inquilino':'propietario';
+  const SKEY=MODO==='inquilino'?'bramar.inq.session':'bramar.session';
+  if(MODO==='inquilino'){
+    document.title='Portal de inquilinos · Bramar Group';
+    document.querySelectorAll('.tag').forEach(t=>{ if(/Portal de copropietarios/.test(t.textContent)) t.textContent='Portal de inquilinos'; });
+    const bs=document.querySelector('.brand span'); if(bs) bs.textContent='Inquilinos';
+    document.documentElement.classList.add('modo-inq');
+    const lo=document.getElementById('l-otro'); if(lo){ lo.href='copropietarios.html'; lo.textContent='Soy propietario'; }
+  }
+
+  const money=(n,cur)=>(cur||'Bs')+' '+Number(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fdate=s=>{ if(!s) return '—'; const d=new Date(s+'T00:00:00'); return isNaN(d)?s:d.toLocaleDateString('es-BO',{day:'2-digit',month:'short',year:'numeric'}); };
+  const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const wa=t=>'https://wa.me/'+PORTAL.whatsapp+(t?'?text='+encodeURIComponent(t):'');
+  function alertBox(el,type,text){ const ic={ok:'check',bad:'alert',info:'info'}[type]; el.innerHTML=`<div class="alert ${type}"><svg aria-hidden="true"><use href="#i-${ic}"/></svg><span>${text}</span></div>`; }
+  const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+
+  $('#yr').textContent=new Date().getFullYear();
+  $('#l-ask').href=wa(MODO==='inquilino'?'Hola, necesito mi código de acceso al portal de inquilinos. Edificio: ___ Depto: ___':'Hola Bramar, necesito mi código de acceso al portal de copropietarios. Edificio: ___ Depto: ___');
+
+  /* ---------- Lista de edificios ---------- */
+  const sel=$('#l-bld');
+  const listaSitio=fetch('data/edificios.json',{cache:'no-cache'}).then(r=>r.ok?r.json():[]).catch(()=>[]);
+  const listaLuka=PORTAL.endpoint?fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'pt_edificios'})}).then(r=>r.json()).then(j=>j.ok?j.edificios:[]).catch(()=>[]):Promise.resolve([]);
+  Promise.all([listaSitio,listaLuka]).then(([a,b])=>{ const m=new Map(); (b.length?b:a).forEach(x=>{ if(x&&x.id&&!m.has(x.id)) m.set(x.id,x); }); const list=[...m.values()].sort((x,y)=>String(x.nombre).localeCompare(String(y.nombre),'es')); if(!list.length) throw 0; return list; }).then(list=>{
+    sel.innerHTML='<option value="">Seleccione su edificio</option>'+list.map(b=>`<option value="${esc(b.id)}">${esc(b.nombre)}</option>`).join('');
+    const rb=store.get('bramar.bld'), rd=store.get('bramar.dep');
+    if(rb&&list.some(b=>b.id===rb)){ sel.value=rb; $('#l-dep').value=rd||''; if(!session) (rd?$('#l-code'):$('#l-dep')).focus(); }
+  }).catch(()=>{ sel.innerHTML='<option value="">No se pudo cargar la lista</option>'; alertBox($('#l-msg'),'bad','No pudimos cargar la lista de edificios. Revise su conexión e intente de nuevo.'); });
+
+  /* ---------- Mostrar / ocultar contraseña ---------- */
+  document.addEventListener('click',e=>{ const b=e.target.closest('[data-eye]'); if(!b) return;
+    const i=document.getElementById(b.dataset.eye), show=i.type==='password'; i.type=show?'text':'password';
+    b.setAttribute('aria-label',show?'Ocultar contraseña':'Mostrar contraseña'); i.focus(); });
+
+  /* ---------- Acceso: código original o contraseña personal ---------- */
+  async function openWithCode(b,d,code){
+    const r=await fetch('data/u/'+await C.fileId(b,d,code)+'.json',{cache:'no-cache'});
+    if(r.status===404) return null;
+    if(!r.ok) throw new Error('net');
+    return C.decrypt(await r.json(),code);
+  }
+  async function codeFromPassword(b,d,pass){
+    if(!PORTAL.endpoint||pass.length<6) return null;
+    const id=await C.aliasId(b,d,pass);
+    const r=await fetch(PORTAL.endpoint+'?action=alias&id='+id);
+    if(!r.ok) throw new Error('net');
+    const j=await r.json();
+    if(!j.ok||!j.blob) return null;
+    try{ return await C.unwrapCode(j.blob,pass); }catch(e){ return null; }
+  }
+  /* En línea: el estado de cuenta sale de Gestión LUKA en el momento. Devuelve
+     null si el edificio no está en LUKA (entonces se usa el archivo del sitio). */
+  async function live(b,d,code){
+    if(!PORTAL.endpoint) return undefined;
+    for(let i=0;i<3;i++){
+      try{
+        const r=await fetch(PORTAL.endpoint,{method:'POST',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'pt_estado',portal:MODO,edificio_id:b,depto:C.normDepto(d),codigo:C.normCode(code)})});
+        const j=await r.json();
+        if(j.ok) return j.data;
+        if(j.error==='otro_portal') throw Object.assign(new Error('otro'),{otro:1});
+        if(j.error==='codigo'||j.error==='no_vinculado') return null;
+      }catch(e){ if(e.otro) throw new Error('otro_portal'); }
+      await new Promise(r=>setTimeout(r,800*(i+1)));
+    }
+    return undefined;
+  }
+  /* Los datos SIEMPRE salen de Gestión LUKA en el momento (nunca de archivos guardados) */
+  async function openCode(b,d,code){
+    const v=await live(b,d,code);
+    if(v===undefined) throw new Error('net');
+    return v;
+  }
+  async function access(b,d,secret){
+    let code=null, res=null;
+    if(C.normCode(secret).length===10){ res=await openCode(b,d,secret); if(res) code=C.normCode(secret); }
+    if(!res){ code=await codeFromPassword(b,d,secret); if(code) res=await openCode(b,d,code); }
+    return res?{data:res,code}:null;
+  }
+
+  /* ---------- Ingreso ---------- */
+  $('#login-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const b=sel.value, d=$('#l-dep').value, c=$('#l-code').value, msg=$('#l-msg'), btn=$('#l-btn');
+    msg.innerHTML='';
+    if(!b) return alertBox(msg,'bad','Seleccione su edificio.'),sel.focus();
+    if(!C.normDepto(d)) return alertBox(msg,'bad','Escriba su número de departamento.'),$('#l-dep').focus();
+    if(!c.trim()) return alertBox(msg,'bad','Escriba su contraseña o su código de acceso.'),$('#l-code').focus();
+    btn.disabled=true; btn.classList.add('loading'); $('#l-btn-t').textContent='Verificando…';
+    try{
+      const ok=await access(b,d,c.trim());
+      if(!ok) throw new Error('nf');
+      data=ok.data; session={b,d:C.normDepto(d),code:ok.code};
+      store.set('bramar.bld',b); store.set('bramar.dep',C.normDepto(d));
+      if($('#l-remember').checked) store.set(SKEY,JSON.stringify(session)); else store.del(SKEY);
+      $('#l-code').value=''; $('#l-code').type='password';
+      renderProfile(); loadReceipts();
+    }catch(err){
+      if(err.message==='otro_portal') return alertBox(msg,'bad',MODO==='inquilino'?'Ese código es de propietario. Ingrese por el <a href="copropietarios.html">portal de copropietarios</a>.':'Ese código es de inquilino. Ingrese por el <a href="inquilinos.html">portal de inquilinos</a>.');
+      alertBox(msg,'bad',err.message==='net'
+        ?'No pudimos conectarnos. Revise su internet e intente otra vez.'
+        :'Los datos no coinciden. Revise el edificio, el departamento y su contraseña o código. Si el problema sigue, <a href="'+wa('Hola Bramar, no puedo ingresar al portal. Edificio: '+(sel.selectedOptions[0]||{}).text+' Depto: '+d)+'" target="_blank" rel="noopener">escríbanos por WhatsApp</a>.');
+    }finally{ btn.disabled=false; btn.classList.remove('loading'); $('#l-btn-t').textContent='Ingresar'; }
+  });
+
+  /* ---------- Perfil ---------- */
+  /* Estado de los comprobantes enviados (lo cambia Bramar en la hoja "Registro de comprobantes") */
+  async function loadReceipts(){
+    const box=$('#rc'); if(!PORTAL.endpoint||!session){ box.hidden=true; return; }
+    try{
+      const rk=await C.receiptKey(session.b,session.d,session.code);
+      const r=await fetch(PORTAL.endpoint+'?action=recibos&rk='+rk,{cache:'no-store'}); const j=await r.json();
+      rcCount=(j.ok&&j.recibos)?j.recibos.length:0;
+      if(j.ok&&j.recibos) j.recibos=j.recibos.filter(x=>!/^(verific|rechaz)/i.test(String(x.estado||'')));
+      if(!j.ok||!j.recibos||!j.recibos.length){ box.hidden=true; return; }
+      const cur=(data.edificio||{}).moneda||'Bs';
+      $('#rc-list').innerHTML=j.recibos.slice(0,8).map(x=>{
+        const st=String(x.estado||'').toLowerCase();
+        const lab=st.startsWith('verific')?'Verificado':st.startsWith('rechaz')?'Rechazado':'En verificación';
+        const extra=lab==='En verificación'?'<small>máximo 24 horas</small>':lab==='Rechazado'?'<small>comuníquese con Bramar</small>':'';
+        const det=[x.monto?money(Number(String(x.monto).replace(',','.')),cur):'',x.fecha?'pago del '+fdate(x.fecha):''].filter(Boolean).join(' · ');
+        return `<li><span class="d">Enviado el ${fdate(x.recibido)}${det?`<small>${esc(det)}</small>`:''}</span><span class="s${lab==='Verificado'?' ok':''}">${lab}${extra}</span></li>`;
+      }).join('');
+      box.hidden=false;
+    }catch(e){ box.hidden=true; }
+  }
+  function renderProfile(sil){
+    const E=data.edificio||{}, U=data.unidad||{}, R=data.resumen||{}, cur=E.moneda||'Bs';
+    document.title=`${U.propietario||'Mi perfil'} · Portal Bramar`;
+    $('#p-bld').textContent=E.nombre||'';
+    const quien=data.rol==='inquilino'?(U.inquilino||''):(U.propietario||'');
+    $('#p-name').textContent='Hola, '+(String(quien).split(' ')[0]||'');
+    $('#p-sub').dataset.r=data.rol||'';
+    pintarInquilino();
+    const debt=Number(R.deuda||0);
+    const estado=debt>0.009?'Tiene pagos pendientes':debt<-0.009?'Tiene saldo a favor':'Sin deudas';
+    $('#p-sub').textContent='Departamento '+(U.depto||'')+(data.rol==='inquilino'?' · Inquilino':'');
+    $('#p-debt').innerHTML=`<span>${esc(cur)}</span>${Math.abs(debt).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2})}`;
+    $('#h-debt').textContent=debt<-0.009?'Saldo a favor':'Deuda total';
+    $('#p-fee').textContent=U.expensa!=null?money(U.expensa,cur):'—';
+    $('#p-due').textContent=fdate(R.vencimiento);
+    $('#p-upd').textContent=fdate(R.actualizado);
+    if(debt>0.009&&!sil) $('#up-amount').value=debt.toFixed(2);
+    // banco
+    const rows=[['Titular',E.titular],['Banco',E.banco],['N.º de cuenta',E.cuenta,true],['Tipo',E.tipo_cuenta],['Moneda',E.moneda_cuenta||E.moneda],['NIT / CI',E.nit,true]].filter(r=>r[1]);
+    $('#p-bank').innerHTML=rows.length?rows.map(([k,v])=>`<div class="kv"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')
+      :'<p class="muted" style="padding:12px 0">Consulte los datos de pago con la administración.</p>';
+    const qr=U.qr||E.qr, box=$('#p-qr'), dl=$('#p-qr-dl');
+    if(qr){ box.classList.remove('vacio'); box.innerHTML=`<img src="${esc(qr)}" alt="Código QR de pago de ${esc(E.nombre)}">`; dl.href=qr; dl.hidden=false;
+      box.querySelector('img').onerror=()=>{box.innerHTML='<p class="none">QR no disponible por ahora.</p>';dl.hidden=true;}; }
+    else { box.innerHTML='<p class="none">Este edificio aún no tiene un QR cargado.</p>'; dl.hidden=true; }
+    box.classList.toggle('vacio',!qr);
+    renderTable();
+    renderReservas();
+    if(!sil) $('#up-date').value=new Date().toISOString().slice(0,10);
+    $('#p-pass').hidden=!PORTAL.endpoint; $('#m-clave').hidden=!PORTAL.endpoint;
+    $('#view-auto').hidden=true; $('#view-login').hidden=true; $('#view-profile').hidden=false; $('#logout').hidden=false; $('#m-burger').hidden=false; $('#d-nav').hidden=false; $('#d-pass').hidden=!PORTAL.endpoint; document.body.classList.add('en-perfil'); $('#back').hidden=true;
+    if(!sil){ window.scrollTo(0,0); $('#p-name').focus({preventScroll:true}); }
+  }
+  const flong=s=>{ if(!s) return '—'; const d=new Date(s+'T00:00:00'); return isNaN(d)?s:d.toLocaleDateString('es-BO',{day:'2-digit',month:'long',year:'numeric'}); };
+  /* Cada cargo (expensa, multa…) es una fila. Los pagos se aplican a los cargos
+     más antiguos primero; el cargo cubierto se muestra como "Pagado". */
+  function statement(){
+    const mv=(data.movimientos||[]).slice().sort((a,b)=>String(a.fecha).localeCompare(String(b.fecha)));
+    const charges=mv.filter(m=>Number(m.cargo)>0).map(m=>({fecha:m.fecha,concepto:m.concepto,monto:Number(m.cargo),resta:Number(m.cargo),pagado:null}));
+    /* Formato tipo Gestión LUKA: el Excel trae solo los cargos que siguen pendientes
+       (su suma es igual a la deuda) y los pagos ya hechos, cada uno con lo que pagó en el concepto.
+       En ese caso cada pago se muestra como su propia fila "Pagado" y no se cruza con los cargos. */
+    const sumCargos=charges.reduce((s,c)=>s+c.monto,0), R=data.resumen||{};
+    if(data.modo==='luka'||(R.deuda!=null&&Math.abs(sumCargos-Number(R.deuda))<0.01)){
+      const paid=mv.filter(m=>Number(m.abono)>0).map(m=>({fecha:m.fecha,concepto:m.concepto,monto:Number(m.abono),resta:0,pagado:m.fecha,recibo:m.recibo||null}));
+      const all=charges.concat(paid).sort((a,b)=>String(b.fecha).localeCompare(String(a.fecha)));
+      return {charges:all,credit:0};
+    }
+    let credit=0, i=0;
+    mv.filter(m=>Number(m.abono)>0).forEach(p=>{
+      let amt=Number(p.abono);
+      while(amt>0.009&&i<charges.length){
+        const c=charges[i], use=Math.min(amt,c.resta);
+        c.resta=Math.round((c.resta-use)*100)/100; amt-=use;
+        if(c.resta<=0.009){ c.pagado=p.fecha; i++; }
+      }
+      credit+=Math.max(0,amt);
+    });
+    return {charges:charges.reverse(),credit:Math.round(credit*100)/100};
+  }
+  function renderTable(){
+    const cur=(data.edificio||{}).moneda||'Bs';
+    const {charges,credit}=statement();
+    // sin historial: lo que debe y, aparte, su último pago (con su recibo)
+    const pend=charges.filter(c=>c.resta>0.009), ult=charges.find(c=>c.resta<=0.009);
+    const list=ult?pend.concat([ult]):pend; shown=list;
+    $('#p-table tbody').innerHTML=list.length?list.map((c,i)=>{
+      const paid=c.resta<=0.009, partial=!paid&&c.resta<c.monto;
+      const st=paid?`Pagado${c.pagado?`<small>el ${fdate(c.pagado)}</small>`:''}${c.recibo?`<button type="button" class="rec-btn" data-rec="${i}">Ver recibo</button>`:''}`
+        :partial?`Deuda<small>falta ${money(c.resta,cur)}</small>`:'Deuda';
+      if(paid) return `<tr class="last"><td class="f">Último pago</td><td>${esc(c.concepto)}<small>${c.pagado?'pagado el '+fdate(c.pagado):''}</small></td><td class="num">${money(c.monto,cur)}</td><td class="st paid">${c.recibo?`<button type="button" class="rec-btn" data-rec="${i}">Ver recibo</button>`:'Pagado'}</td></tr>`;
+      return `<tr class="${paid?'':'due'}" style="animation-delay:${Math.min(i,10)*.03}s"><td class="f">${flong(c.fecha)}</td><td>${esc(c.concepto)}</td><td class="num">${money(c.monto,cur)}</td><td class="st ${paid?'paid':'due'}">${st}</td></tr>`;
+    }).join(''):'<tr><td colspan="4" class="empty">Aún no hay movimientos registrados.</td></tr>';
+    if(!pend.length&&list.length) $('#p-table tbody').insertAdjacentHTML('afterbegin','<tr><td colspan="4" class="empty ok">Está al día. No tiene pagos pendientes.</td></tr>');
+    const due=pend.length;
+    $('#p-mov-sub').textContent=due?`${due} pendiente${due>1?'s':''} de pago`:'Sin deudas pendientes';
+    menuBadges(pend);
+    const cn=$('#p-credit'); cn.hidden=!(credit>0.009); if(credit>0.009) cn.textContent=`Tiene ${money(credit,cur)} pagados por adelantado, que se aplicarán a sus próximas expensas.`;
+    $('#p-more').hidden=true;
+  }
+  $('#p-more').addEventListener('click',()=>{showAll=true;renderTable();});
+  /* ---------- Recibo (pagos registrados en Gestión LUKA) ---------- */
+  $('#p-table').addEventListener('click',e=>{ const b=e.target.closest('[data-rec]'); if(!b) return; const c=shown[+b.dataset.rec]; if(c&&c.recibo) openRecibo(c.recibo); });
+  function openRecibo(r){ openDoc(window.lukaRecibo?window.lukaRecibo(data.edificio||{},data.unidad||{},r):'','Recibo '+(r.no||'')+' - Depto '+((data.unidad||{}).depto||'')); }
+  function openDoc(html,nombre){
+    const dlgR=$('#rec-dialog');
+    $('#rec-body').innerHTML=html;
+    let root=$('#rec-print-root'); if(!root){ root=document.createElement('div'); root.id='rec-print-root'; document.body.appendChild(root); }
+    root.innerHTML=html; recNombre=nombre||'Recibo';
+    document.body.classList.add('rec-abierto');
+    dlgR.classList.add('open'); dlgR.setAttribute('aria-hidden','false');
+  }
+  let recNombre='';
+  function closeRecibo(){ const d=$('#rec-dialog'); d.classList.remove('open'); d.setAttribute('aria-hidden','true'); document.body.classList.remove('rec-abierto'); }
+  /* Carta (216 × 279 mm), márgenes de 15 mm: el recibo se escala para llenar UNA hoja, como en LUKA */
+  function imprimirRecibo(){
+    const root=$('#rec-print-root'); if(!root) return;
+    const PX=96/25.4, wPx=(215.9-30)*PX, hPx=(279.4-30)*PX, natW=560;
+    const m=document.createElement('div'); m.style.cssText='position:fixed;left:-99999px;top:0;width:'+natW+'px;visibility:hidden';
+    m.innerHTML=root.innerHTML; document.body.appendChild(m);
+    const h=(m.firstElementChild||m).getBoundingClientRect().height||1100; m.remove();
+    const z=Math.max(0.4,Math.min(wPx/natW,hPx/h)*0.985);
+    let st=$('#rec-page'); if(!st){ st=document.createElement('style'); st.id='rec-page'; document.head.appendChild(st); }
+    st.textContent='@media print{@page{size:letter portrait;margin:15mm}#rec-print-root .receipt-box{zoom:'+z.toFixed(4)+'}}';
+    const t=document.title; document.title=recNombre||t;
+    const fin=()=>{ document.title=t; window.removeEventListener('afterprint',fin); };
+    window.addEventListener('afterprint',fin); setTimeout(fin,60000);
+    window.print();
+  }
+  $('#rec-close').addEventListener('click',closeRecibo);
+  $('#rec-dialog').addEventListener('click',e=>{ if(e.target.id==='rec-dialog') closeRecibo(); });
+  $('#rec-print-btn').addEventListener('click',imprimirRecibo);
+
+  /* ---------- Celular: menú minimalista; cada opción se abre en su propia pantalla ---------- */
+  const esCel=()=>window.matchMedia('(max-width:600px)').matches;
+  const TIT={comprobante:'Enviar comprobante',estado:'Estado de cuenta',datos:'Datos para pagar',rv:'Áreas sociales',inq:'Inquilino'};
+  Object.keys(TIT).forEach(id=>{ const sec=document.getElementById(id); if(!sec) return;
+    const h=document.createElement('div'); h.className='m-head';
+    h.innerHTML='<button type="button" class="m-back" aria-label="Volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><b>'+TIT[id]+'</b><span></span>';
+    sec.insertBefore(h,sec.firstChild); h.querySelector('.m-back').onclick=()=>history.back(); });
+  function abrirHoja(id){ const sec=document.getElementById(id); if(!sec) return;
+    document.querySelectorAll('.m-open').forEach(x=>x.classList.remove('m-open'));
+    sec.classList.add('m-open'); sec.scrollTop=0;
+    if(history.state&&history.state.hoja) history.replaceState({hoja:id},''); else history.pushState({hoja:id},'');
+    marcarNav(); }
+  function cerrarHojas(){ document.querySelectorAll('.m-open').forEach(x=>x.classList.remove('m-open')); marcarNav(); }
+  function marcarNav(){ const o=document.querySelector('.grid>.m-open'), id=o?o.id:'';
+    document.body.classList.toggle('d-sec',!!o);
+    document.querySelectorAll('#d-nav [data-sheet]').forEach(b=>b.classList.toggle('on',b.dataset.sheet===id)); }
+  $('#d-nav').addEventListener('click',e=>{ const b=e.target.closest('[data-sheet]'); if(!b) return;
+    if(b.dataset.sheet) abrirHoja(b.dataset.sheet); else if(history.state&&history.state.hoja) history.back(); else cerrarHojas(); });
+  $('#d-pass').addEventListener('click',()=>$('#p-pass').click());
+  window.addEventListener('popstate',cerrarHojas);
+  function irA(id){ abrirHoja(id); }
+  const drawer=$('#m-drawer');
+  function menu(on){ drawer.classList.toggle('open',on); drawer.setAttribute('aria-hidden',on?'false':'true'); $('#m-burger').setAttribute('aria-expanded',on?'true':'false'); }
+  $('#m-burger').addEventListener('click',()=>{ $('#m-dr-name').textContent=$('#p-name').textContent.replace(/^Hola,\s*/,''); $('#m-dr-sub').textContent=$('#p-bld').textContent+' · Depto '+((data&&data.unidad||{}).depto||''); menu(true); });
+  $('#m-dr-x').addEventListener('click',()=>menu(false));
+  drawer.addEventListener('click',e=>{ if(e.target===drawer) menu(false); });
+  $('#m-out').addEventListener('click',()=>{ menu(false); $('#logout').click(); });
+  document.addEventListener('click',e=>{ const b=e.target.closest('#m-nav [data-sheet],#m-home [data-sheet]'); if(!b) return;
+    menu(false); if(b.dataset.sheet==='clave') return $('#p-pass').click(); abrirHoja(b.dataset.sheet); });
+  document.querySelector('.p-debt a[href="#comprobante"]').addEventListener('click',e=>{ e.preventDefault(); irA('comprobante'); });
+  function menuBadges(pend){
+    const b=$('#m-badge-estado'), multa=pend.some(c=>/multa|sanci|cargo/i.test(c.concepto||'')), cur=(data.edificio||{}).moneda||'Bs';
+    b.hidden=!pend.length; b.textContent=multa?'Multa':String(pend.length); b.classList.toggle('alerta',multa);
+    $('#m-dot').hidden=!multa;
+    // inicio del celular: lo que debe, corto
+    const L=pend.slice(0,4);
+    $('#m-pend').innerHTML='<div class="m-pend-h"><b>'+(pend.length?'Pendiente de pago':'Está al día')+'</b>'+(pend.length?'<button type="button" data-sheet="estado">Ver estado de cuenta</button>':'')+'</div>'+
+      (L.length?'<ul>'+L.map(c=>'<li class="'+(/multa|sanci|cargo/i.test(c.concepto||'')?'multa':'')+'"><span>'+esc(c.concepto)+'</span><b>'+money(c.resta,cur)+'</b></li>').join('')+'</ul>'+(pend.length>4?'<p class="m-more">y '+(pend.length-4)+' más</p>':''):'<p class="m-ok">No tiene pagos pendientes.</p>');
+  }
+  /* con una ventana abierta, la página de fondo no se mueve */
+  new MutationObserver(()=>{ document.documentElement.classList.toggle('modal-abierto',!!document.querySelector('.dialog.open,.m-open,.m-drawer.open')); })
+    .observe(document.body,{subtree:true,attributes:true,attributeFilter:['class']});
+  /* ---------- Reservas de áreas sociales ---------- */
+  let misReservas=[];
+  const cur0=()=>(data&&data.edificio&&data.edificio.moneda)||'Bs';
+  const areaSel=()=>{ const A=(data&&data.areas)||[]; return A.find(x=>x.id===$('#rv-area').value)||A[0]||{}; };
+  const tramoSel=()=>{ const a=areaSel(); return (a.tramos||[]).find(t=>t.label===$('#rv-tramo').value)||{label:'',monto:0}; };
+  function extrasSel(){ const o={}; document.querySelectorAll('#rv-ex-list input[data-ex]').forEach(i=>{ const q=parseInt(i.value,10); if(q>0) o[i.dataset.ex]=q; }); return o; }
+  function pintarSuma(){
+    const a=areaSel(), t=tramoSel(), ex=extrasSel(), S=(data.servicios||[]), cur=cur0();
+    let tot=+t.monto||0, filas=`<div><span>Alquiler · ${esc(a.nombre||'')}${t.label?' ('+esc(t.label)+')':''}</span><b>${money(t.monto,cur)}</b></div>`;
+    S.forEach(x=>{ if(ex[x.id]){ const sub=ex[x.id]*x.precio; tot+=sub; filas+=`<div><span>${esc(x.nombre)} × ${ex[x.id]}</span><b>${money(sub,cur)}</b></div>`; } });
+    if(a.garantia){ tot+=+a.garantia; filas+=`<div><span>Garantía (se devuelve después del evento)</span><b>${money(a.garantia,cur)}</b></div>`; }
+    $('#rv-sum').innerHTML=filas+`<div class="tot"><span>Total a pagar si se aprueba</span><b>${money(tot,cur)}</b></div>`;
+  }
+  let ocupT=0;
+  async function revisarFecha(){
+    const f=$('#rv-fecha').value, w=$('#rv-warn'); w.hidden=true; if(!f) return; mostrarOcupadas([]);
+    const my=++ocupT;
+    try{ const j=await ptCall({action:'pt_ocupado',fecha:f}); if(my!==ocupT||!j.ok) return; mostrarOcupadas(j.ocupadas||[]); }catch(e){}
+  }
+  function mostrarOcupadas(L){
+    const w=$('#rv-warn'), a=areaSel(), mismo=L.filter(o=>o.areaId===a.id), o=(ocupCache[a.id]||{})[$('#rv-fecha').value];
+    if(!mismo.length&&!o){ w.hidden=true; return; }
+    const hora=(mismo[0]&&mismo[0].hora)||(o&&o.hora)||'';
+    w.innerHTML=`<b>${esc(a.nombre)} ya está reservada esa fecha${hora?' ('+esc(hora)+')':''}.</b> Elija otra fecha o envíe la solicitud y Bramar le confirmará.`;
+    w.classList.add('fuerte'); w.hidden=false;
+  }
+  function renderReservas(){
+    const box=$('#rv'), areas=(data&&data.areas)||[];
+    if(!PORTAL.endpoint||!areas.length){ box.hidden=true; $('#m-rv').hidden=true; $('#t-rv').hidden=true; $('#m-nav-rv').hidden=true; $('#d-nav-rv').hidden=true; return; }
+    box.hidden=false; $('#m-rv').hidden=false; $('#t-rv').hidden=false; $('#m-nav-rv').hidden=false; $('#d-nav-rv').hidden=false;
+    const sa=$('#rv-area'); sa.innerHTML=areas.map(a=>`<option value="${esc(a.id)}">${esc(a.nombre)}</option>`).join('');
+    const pintaTramos=()=>{ const a=areaSel(), cur=cur0();
+      $('#rv-tramo').innerHTML=(a.tramos||[]).map(t=>`<option value="${esc(t.label)}">${esc(t.label)}${t.monto?' — '+money(t.monto,cur):''}</option>`).join('')||'<option value="">General</option>';
+      pintarSuma(); if(rvDlg.classList.contains('open')) cargarOcupadas(); };
+    sa.onchange=pintaTramos; $('#rv-tramo').onchange=pintarSuma;
+    const S=data.servicios||[];
+    $('#rv-extras').hidden=!S.length;
+    $('#rv-ex-list').innerHTML=S.map(x=>`<label class="rv-ex"><span>${esc(x.nombre)}<small>${money(x.precio,cur0())} ${esc(x.unidad||'c/u')}</small></span><input type="number" inputmode="numeric" min="0" max="500" step="1" placeholder="0" data-ex="${esc(x.id)}"></label>`).join('');
+    $('#rv-ex-list').oninput=pintarSuma;
+    pintaTramos();
+    const hoy=new Date(); hoy.setDate(hoy.getDate()+1); $('#rv-fecha').min=hoy.toISOString().slice(0,10);
+    $('#rv-fecha').onchange=revisarFecha;
+    if(!$('#rv-resp').value) $('#rv-resp').value=(data.rol==='inquilino'?(data.unidad||{}).inquilino:(data.unidad||{}).propietario)||'';
+    ocupCache={};
+    loadReservas();
+  }
+  async function ptCall(body){
+    const r=await fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({portal:MODO,edificio_id:session.b,depto:session.d,codigo:session.code},body))});
+    return r.json();
+  }
+  const fechaCorta=f=>{ const d=new Date(f+'T00:00:00'); return isNaN(d)?f:d.toLocaleDateString('es-BO',{weekday:'short',day:'numeric',month:'short'}); };
+  async function loadReservas(){
+    try{
+      const j=await ptCall({action:'pt_reservas'}); misReservas=(j.ok&&j.reservas)||[];
+      const cur=cur0();
+      $('#rv-list').innerHTML=misReservas.length?'<h3>Mis reservas</h3><ul class="rc-list rv-ul">'+misReservas.map((x,i)=>{
+        const lab=x.estado==='Aprobada'?'Aprobada':x.estado==='Rechazada'?'Rechazada':'Pendiente';
+        const hora=x.hini?(x.hfin?x.hini+' a '+x.hfin:x.hini):'';
+        return `<li><span class="d">${esc(x.area.replace(/^[^·]*·\s*/,''))} · ${esc(fechaCorta(x.fecha))}${hora?' · '+esc(hora):''}`+
+          `<small>${[x.tramo,x.extrasTxt].filter(Boolean).map(esc).join(' · ')}${x.total!=null?' · Total '+money(x.total,cur):''}${x.nota?' · '+esc(x.nota):''}</small>`+
+          `${lab==='Aprobada'?accion(x,i,cur):''}</span>`+
+          `<span class="s${lab==='Aprobada'?' ok':''}">${x.terminado?'Finalizada':lab}${lab==='Pendiente'?'<small>Bramar la revisará</small>':''}</span></li>`; }).join('')+'</ul>':'';
+      resumenReserva();
+      const bR=$('#m-badge-rv'), acc=misReservas.filter(r=>r.estado==='Aprobada'&&((!r.terminado&&!r.recibo&&!r.pago)||(r.terminado&&!r.garEstado&&!r.devolucion))).length;
+      bR.hidden=!acc; bR.textContent=acc; $('#t-rv-b').hidden=!acc; $('#t-rv-b').textContent=acc; $('#m-rv-t').textContent=acc?'Tiene '+acc+' pendiente'+(acc>1?'s':''):'Reservar';
+    }catch(e){}
+  }
+  function accion(x,i,cur){
+    const verRec=x.recibo?`<button type="button" class="rv-link" data-rrec="${i}">Ver recibo</button>`:'';
+    if(x.devolucion) return `<span class="rv-st">Garantía devuelta · ${money(x.devolucion.monto,cur)}</span><button type="button" class="rv-link" data-rdev="${i}">Ver comprobante de devolución</button>${verRec}`;
+    if(x.terminado){
+      if(x.garEstado==='Solicitada') return '<span class="rv-st">Garantía solicitada · Bramar se la devolverá</span>'+verRec;
+      return `<button type="button" class="rv-pay" data-gar="${i}">Solicitar garantía ${x.garantia?money(x.garantia,cur):''}</button>`+verRec;
+    }
+    if(x.recibo) return '<span class="rv-st">Pagada</span>'+verRec;
+    if(x.pago) return '<span class="rv-st">Pago enviado · en revisión</span>';
+    return `<button type="button" class="rv-pay" data-pay="${i}">Pagar ${x.total!=null?money(x.total,cur):''}</button>`;
+  }
+  function resumenReserva(){
+    const cur=cur0(), x=misReservas.find(r=>r.estado==='Aprobada'&&!r.terminado&&!r.pago&&!r.recibo&&r.total>0), b=$('#p-res-due');
+    if(!x){ b.hidden=true; return; }
+    b.hidden=false; b.innerHTML=`Reserva aprobada por pagar <b>${money(x.total,cur)}</b><span>Ver</span>`;
+    b.onclick=()=>{ const i=misReservas.indexOf(x); const el=document.querySelector('[data-pay="'+i+'"]'); if(el) el.click(); };
+  }
+  $('#rv-list').addEventListener('click',e=>{ const b=e.target.closest('[data-rrec],[data-rdev]'); if(!b) return; const E=data.edificio||{}, U=data.unidad||{};
+    if(b.dataset.rrec!=null){ const x=misReservas[+b.dataset.rrec]; if(x&&x.recibo&&window.lukaDocReserva) openDoc(lukaDocReserva(E,U,x.recibo),'Recibo '+x.recibo.no+' - Alquiler - Depto '+(U.depto||'')); }
+    else { const x=misReservas[+b.dataset.rdev]; if(x&&x.devolucion&&window.lukaDocDevolucion) openDoc(lukaDocDevolucion(E,U,x.devolucion),'Devolucion '+x.devolucion.no+' - Depto '+(U.depto||'')); } });
+  /* solicitar la garantía después del evento */
+  const grDlg=$('#gr-dialog'); let grSel=null, grFile=null;
+  function grShow(on){ grDlg.classList.toggle('open',on); grDlg.setAttribute('aria-hidden',on?'false':'true'); if(on) $('#gr-msg').innerHTML=''; }
+  $('#rv-list').addEventListener('click',e=>{ const b=e.target.closest('[data-gar]'); if(!b) return; grSel=misReservas[+b.dataset.gar]; if(!grSel) return;
+    $('#gr-sub').textContent=`${grSel.area.replace(/^[^·]*·\s*/,'')} · ${fechaCorta(grSel.fecha)} · Garantía ${money(grSel.garantia,cur0())}`; grShow(true); });
+  grDlg.querySelectorAll('input[name=gr-m]').forEach(r=>r.addEventListener('change',()=>{ $('#gr-msg').innerHTML=''; const qr=grDlg.querySelector('input[name=gr-m]:checked').value==='qr'; $('#gr-qr').hidden=!qr; $('#gr-tr').hidden=qr; }));
+  $('#gr-file').addEventListener('change',e=>{ grFile=e.target.files[0]||null; $('#gr-file-t').textContent=grFile?grFile.name:'Toque para subir la imagen de su QR de cobro'; $('#gr-drop').classList.toggle('has',!!grFile); });
+  $('#gr-cancel').addEventListener('click',()=>grShow(false));
+  grDlg.addEventListener('click',e=>{ if(e.target===grDlg) grShow(false); });
+  $('#gr-form').addEventListener('submit',async e=>{
+    e.preventDefault(); const msg=$('#gr-msg'), btn=$('#gr-btn'), m=grDlg.querySelector('input[name=gr-m]:checked').value;
+    const body={action:'pt_garantia',rid:grSel&&grSel.id,metodo:m};
+    if(m==='qr'){ if(!grFile) return alertBox(msg,'bad','Suba la imagen de su QR de cobro.'); }
+    else { const f=[['gr-banco','banco'],['gr-cuenta','número de cuenta'],['gr-titular','titular']].filter(([id])=>!$('#'+id).value.trim());
+      if(f.length) return alertBox(msg,'bad','Complete: '+f.map(x=>x[1]).join(', ')+'.');
+      body.banco=$('#gr-banco').value.trim(); body.cuenta=$('#gr-cuenta').value.trim(); body.titular=$('#gr-titular').value.trim(); }
+    btn.disabled=true; btn.classList.add('loading'); $('#gr-btn-t').textContent='Enviando…';
+    try{
+      if(m==='qr'){ const f=await prepare(grFile); body.mimeType=f.type; body.data=await toB64(f); }
+      const j=await ptCall(body); if(!j.ok) throw new Error(j.error||'error');
+      grShow(false); alertBox($('#rv-ok'),'ok','Recibimos su solicitud de devolución de garantía. Bramar se la devolverá por el medio que eligió.'); loadReservas();
+    }catch(err){ alertBox(msg,'bad',err.message&&err.message!=='error'?esc(err.message):'No se pudo enviar. Intente de nuevo.'); }
+    finally{ btn.disabled=false; btn.classList.remove('loading'); $('#gr-btn-t').textContent='Enviar solicitud'; }
+  });
+  /* comprobante de una reserva: va a "Alquileres y otros", no a expensas */
+  let pagoReserva=null;
+  function setPagoReserva(x){ pagoReserva=x; $('#up-tipo').hidden=!x; if(x) $('#up-tipo-t').textContent='Pago de reserva · '+x.area.replace(/^[^·]*·\s*/,'')+' '+fechaCorta(x.fecha); }
+  $('#up-tipo-x').addEventListener('click',()=>{ setPagoReserva(null); $('#up-note').value=''; });
+  /* pagar una reserva aprobada: total, QR y datos de la cuenta */
+  const rpDlg=$('#rp-dialog'); let rpSel=null;
+  function rpShow(on){ rpDlg.classList.toggle('open',on); rpDlg.setAttribute('aria-hidden',on?'false':'true'); }
+  $('#rv-list').addEventListener('click',e=>{ const b=e.target.closest('[data-pay]'); if(!b) return; const x=misReservas[+b.dataset.pay]; if(!x) return; rpSel=x;
+    const E=data.edificio||{}, U=data.unidad||{}, cur=cur0(), qr=U.qr||E.qr;
+    let filas=`<div><span>Alquiler · ${esc(x.area.replace(/^[^·]*·\s*/,''))}${x.tramo?' ('+esc(x.tramo)+')':''}</span><b>${money(x.alquiler,cur)}</b></div>`;
+    (x.extras||[]).forEach(z=>{ filas+=`<div><span>${esc(z.nombre)} × ${z.cant}</span><b>${money(z.subtotal,cur)}</b></div>`; });
+    if(x.garantia) filas+=`<div><span>Garantía (se devuelve después del evento)</span><b>${money(x.garantia,cur)}</b></div>`;
+    $('#rp-body').innerHTML=`<p class="sub" style="margin:0 0 12px">${esc(fechaCorta(x.fecha))}${x.hini?' · '+esc(x.hini)+(x.hfin?' a '+esc(x.hfin):''):''}</p>`+
+      `<div class="rv-sum">${filas}<div class="tot"><span>Total a pagar</span><b>${money(x.total,cur)}</b></div></div>`+
+      (qr?`<div class="rp-qr"><img src="${esc(qr)}" alt="QR de pago"></div>`:'')+
+      `<dl class="rp-bank">${[['Titular',E.titular],['Banco',E.banco],['N.º de cuenta',E.cuenta]].filter(r=>r[1]).map(([k,v])=>`<div class="kv"><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>`+
+      `<p class="sub" style="margin-top:10px">Después de pagar, envíe el comprobante para que Bramar lo confirme.</p>`;
+    rpShow(true); });
+  $('#rp-close').addEventListener('click',()=>rpShow(false));
+  rpDlg.addEventListener('click',e=>{ if(e.target===rpDlg) rpShow(false); });
+  $('#rp-send').addEventListener('click',()=>{ const x=rpSel; rpShow(false); if(!x) return;
+    $('#up-amount').value=(+x.total||0).toFixed(2); $('#up-note').value=('Reserva '+x.area.replace(/^[^·]*·\s*/,'')+' '+fechaCorta(x.fecha)).slice(0,120); setPagoReserva(x);
+    irA('comprobante'); });
+  /* ---------- Inquilino: el propietario le comparte su propio acceso ---------- */
+  function pintarInquilino(){
+    const esProp=data.rol!=='inquilino'&&!!PORTAL.endpoint, I=data.inquilino;
+    $('#m-inq').hidden=!esProp; $('#m-badge-inq').hidden=!I;
+    if(!esProp){ $('#inq-body').innerHTML=''; return; }
+    $('#inq-body').innerHTML=I
+      ?`<div class="inq-card"><b>${esc(I.nombre)}</b><span>Con acceso desde ${esc(fdate(I.desde))}</span></div>
+        <div class="inq-acts"><button type="button" class="btn light" id="inq-new">Nuevo código</button><button type="button" class="btn light inq-del" id="inq-del">Quitar acceso</button></div>`
+      :`<form class="inq-form" id="inq-form"><div class="field"><input id="inq-n" placeholder="Nombre" autocomplete="off"><label for="inq-n">Nombre del inquilino</label></div>
+        <button class="btn navy block" type="submit" id="inq-btn">Crear acceso</button></form>`;
+    $('#inq-body').insertAdjacentHTML('beforeend','<div id="inq-msg" role="status"></div>');
+  }
+  async function crearInq(nombre){
+    const j=await ptCall({action:'pt_inquilino',op:'crear',nombre}); if(!j.ok) throw new Error(j.error||'error');
+    data.inquilino={nombre:j.nombre,desde:new Date().toISOString().slice(0,10)}; pintarInquilino();
+    const E=data.edificio||{}, U=data.unidad||{}, url=location.origin+location.pathname.replace(/[^/]*$/,'')+'inquilinos.html';
+    const txt=`Hola ${j.nombre}, este es su acceso al portal del edificio ${E.nombre||''}:\n${url}\nEdificio: ${E.nombre||''}\nDepartamento: ${U.depto||''}\nCódigo: ${j.codigo}`;
+    $('#inq-msg').innerHTML=`<div class="inq-code"><small>Código del inquilino</small><b>${esc(j.codigo)}</b></div>
+      <div class="inq-acts"><a class="btn navy" href="${wa(txt).replace(/wa\.me\/\d*/,'wa.me/')}" target="_blank" rel="noopener">WhatsApp</a><button type="button" class="btn light" id="inq-copy">Copiar</button></div>`;
+    $('#inq-copy').onclick=()=>{ navigator.clipboard&&navigator.clipboard.writeText(txt); $('#inq-copy').textContent='Copiado'; };
+  }
+  $('#inq-body').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('#inq-n').value.trim(), b=$('#inq-btn');
+    if(!n) return alertBox($('#inq-msg'),'bad','Escriba el nombre.');
+    b.disabled=true; try{ await crearInq(n); }catch(err){ alertBox($('#inq-msg'),'bad',esc(err.message)); } finally{ b.disabled=false; } });
+  $('#inq-body').addEventListener('click',async e=>{
+    if(e.target.id==='inq-new'){ e.target.disabled=true; try{ await crearInq(data.inquilino.nombre); }catch(err){ alertBox($('#inq-msg'),'bad',esc(err.message)); } }
+    if(e.target.id==='inq-del'){ if(!confirm('¿Quitar el acceso del inquilino?')) return; e.target.disabled=true;
+      try{ const j=await ptCall({action:'pt_inquilino',op:'quitar'}); if(!j.ok) throw new Error(j.error); data.inquilino=null; pintarInquilino(); }
+      catch(err){ e.target.disabled=false; alertBox($('#inq-msg'),'bad','No se pudo quitar. Intente de nuevo.'); } }
+  });
+
+  /* ---------- Calendario de la reserva: fechas ocupadas de esa área ---------- */
+  let ocupCache={}, calMes=null;
+  async function cargarOcupadas(){
+    const a=areaSel(); if(!a.id) return;
+    if(!ocupCache[a.id]){ ocupCache[a.id]={}; try{ const j=await ptCall({action:'pt_ocupadas',areaId:a.id}); (j.fechas||[]).forEach(x=>ocupCache[a.id][x.fecha]=x); }catch(e){} }
+    pintarCal(); revisarFecha();
+  }
+  function iso(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function pintarCal(){
+    const box=$('#rv-cal'), a=areaSel(), oc=ocupCache[a.id]||{}, sel=$('#rv-fecha').value, min=$('#rv-fecha').min;
+    if(!calMes){ const b=new Date((sel||min)+'T00:00:00'); calMes=new Date(b.getFullYear(),b.getMonth(),1); }
+    const y=calMes.getFullYear(), m=calMes.getMonth(), ini=(new Date(y,m,1).getDay()+6)%7, n=new Date(y,m+1,0).getDate();
+    const minM=new Date(min+'T00:00:00'); const puedeAtras=y>minM.getFullYear()||(y===minM.getFullYear()&&m>minM.getMonth());
+    let h=`<div class="cal-h"><button type="button" data-cm="-1" ${puedeAtras?'':'disabled'} aria-label="Mes anterior">‹</button><b>${(t=>t.charAt(0).toUpperCase()+t.slice(1))(calMes.toLocaleDateString('es-BO',{month:'long'}))} ${y}</b><button type="button" data-cm="1" aria-label="Mes siguiente">›</button></div><div class="cal-g">`+
+      ['L','M','M','J','V','S','D'].map(x=>`<i>${x}</i>`).join('')+'<span></span>'.repeat(ini);
+    for(let d=1;d<=n;d++){ const f=iso(new Date(y,m,d)), o=oc[f], past=f<min;
+      h+=`<button type="button" data-cd="${f}" class="${o?'oc':''}${f===sel?' sel':''}" ${past?'disabled':''} title="${o?(o.estado==='Solicitada'?'Solicitada':'Reservada'):''}">${d}</button>`; }
+    box.innerHTML=h+'</div><p class="cal-ley"><span class="dot"></span>Reservada</p>';
+  }
+  $('#rv-cal').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b||b.disabled) return;
+    if(b.dataset.cm){ calMes=new Date(calMes.getFullYear(),calMes.getMonth()+(+b.dataset.cm),1); pintarCal(); return; }
+    $('#rv-fecha').value=b.dataset.cd; $('#rv-fecha').closest('.field')&&$('#rv-fecha').closest('.field').classList.remove('err'); pintarCal(); revisarFecha(); });
+  const rvDlg=$('#rv-dialog');
+  function rvShow(on){ rvDlg.classList.toggle('open',on); rvDlg.setAttribute('aria-hidden',on?'false':'true'); if(on){ $('#rv-msg').innerHTML=''; rvDlg.querySelectorAll('.err').forEach(x=>x.classList.remove('err')); calMes=null; pintarCal(); cargarOcupadas(); } }
+  $('#rv-open').addEventListener('click',()=>rvShow(true));
+  $('#rv-cancel').addEventListener('click',()=>rvShow(false));
+  rvDlg.addEventListener('click',e=>{ if(e.target===rvDlg) rvShow(false); });
+  rvDlg.addEventListener('input',e=>{ const f=e.target.closest('.field'); if(f) f.classList.remove('err'); });
+  $('#rv-form').addEventListener('submit',async e=>{
+    e.preventDefault(); const msg=$('#rv-msg'), btn=$('#rv-btn'); msg.innerHTML='';
+    const req=[['rv-fecha','la fecha'],['rv-pers','la cantidad de personas'],['rv-hini','la hora de inicio'],['rv-hfin','la hora de fin'],['rv-resp','el responsable'],['rv-tel','el teléfono'],['rv-evento','el tipo de evento']];
+    const faltan=req.filter(([id])=>!$('#'+id).value.trim());
+    rvDlg.querySelectorAll('.err').forEach(x=>x.classList.remove('err'));
+    faltan.forEach(([id])=>{ const el=$('#'+id); (el.closest('.field')||(id==='rv-fecha'?$('#rv-cal'):el)).classList.add('err'); });
+    if(faltan.length){ alertBox(msg,'bad','Complete todos los campos: falta '+faltan.map(f=>f[1]).join(', ')+'.'); if(faltan[0][0]!=='rv-fecha') $('#'+faltan[0][0]).focus(); return; }
+    if($('#rv-hfin').value<=$('#rv-hini').value&&$('#rv-hfin').value>'06:00') { $('#rv-hfin').closest('.field').classList.add('err'); return alertBox(msg,'bad','La hora de fin debe ser después de la de inicio.'); }
+    btn.disabled=true; btn.classList.add('loading'); $('#rv-btn-t').textContent='Enviando…';
+    try{
+      const j=await ptCall({action:'pt_reserva',areaId:$('#rv-area').value,tramo:$('#rv-tramo').value,fecha:$('#rv-fecha').value,hini:$('#rv-hini').value,hfin:$('#rv-hfin').value,
+        responsable:$('#rv-resp').value.trim(),telefono:$('#rv-tel').value.trim(),personas:$('#rv-pers').value.trim(),evento:$('#rv-evento').value.trim(),extras:extrasSel()});
+      if(!j.ok) throw new Error(j.error||'error');
+      const a=areaSel(), mismo=(j.ocupadas||[]).filter(o=>o.areaId===a.id);
+      rvShow(false);
+      alertBox($('#rv-ok'),mismo.length?'info':'ok','Recibimos su solicitud.'+(mismo.length?' <b>Ojo: ese día ya hay una reserva de '+esc(a.nombre)+'.</b> Bramar revisará si se puede y le avisará aquí.':' Bramar la revisará y aquí verá si fue aprobada.'));
+      $('#rv-evento').value=''; document.querySelectorAll('#rv-ex-list input').forEach(i=>i.value=''); pintarSuma(); loadReservas();
+    }catch(err){ alertBox(msg,'bad',(err.message&&err.message!=='error'&&err.message.length<160?esc(err.message):'No pudimos enviar la solicitud. Intente de nuevo.')); }
+    finally{ btn.disabled=false; btn.classList.remove('loading'); $('#rv-btn-t').textContent='Solicitar reserva'; }
+  });
+  document.addEventListener('click',async e=>{ const b=e.target.closest('[data-copy]'); if(!b) return;
+    const v=b.dataset.copy; let ok=false;
+    try{ await navigator.clipboard.writeText(v); ok=true; }catch(err){ const t=document.createElement('textarea');t.value=v;document.body.appendChild(t);t.select();try{ok=document.execCommand('copy');}catch(e2){}t.remove(); }
+    if(ok){ b.classList.add('done'); b.lastChild.textContent='Copiado'; setTimeout(()=>{b.classList.remove('done');b.lastChild.textContent='Copiar';},1800); } });
+
+  $('#logout').addEventListener('click',()=>{
+    data=null; session=null; store.del(SKEY); file=null; showAll=false; clearFile(); $('#up-msg').innerHTML='';
+    $('#view-profile').hidden=true; $('#view-login').hidden=false; $('#logout').hidden=true; $('#m-burger').hidden=true; $('#d-nav').hidden=true; $('#d-pass').hidden=true; cerrarHojas(); document.body.classList.remove('en-perfil'); menu(false); $('#back').hidden=false;
+    document.title=MODO==='inquilino'?'Portal de inquilinos · Bramar Group':'Portal de copropietarios · Bramar Group'; $('#l-code').focus();
+  });
+
+  /* ---------- Cambiar contraseña ---------- */
+  const dlg=$('#pw-dialog'), pn=$('#pw-new'), pr=$('#pw-rep');
+  function strength(p){ let s=0; if(p.length>=6) s++; if(p.length>=10) s++; if(/\d/.test(p)&&/[a-zA-Z]/.test(p)) s++; return Math.min(3,p?Math.max(1,s):0); }
+  pn.addEventListener('input',()=>$('#pw-meter').dataset.s=strength(pn.value));
+  function openPw(){ $('#pw-user').value=`${session.b}-${session.d}`; pn.value=pr.value=''; $('#pw-meter').dataset.s=0; $('#pw-msg').innerHTML='';
+    dlg.classList.add('open'); dlg.setAttribute('aria-hidden','false'); setTimeout(()=>pn.focus(),50); }
+  function closePw(){ dlg.classList.remove('open'); dlg.setAttribute('aria-hidden','true'); $('#p-pass').focus(); }
+  $('#p-pass').addEventListener('click',openPw);
+  $('#pw-cancel').addEventListener('click',closePw);
+  dlg.addEventListener('click',e=>{ if(e.target===dlg) closePw(); });
+  addEventListener('keydown',e=>{ if(e.key==='Escape'&&dlg.classList.contains('open')) closePw(); });
+  $('#pw-form').addEventListener('submit',async e=>{
+    e.preventDefault(); const msg=$('#pw-msg'), btn=$('#pw-btn'), p=pn.value;
+    if(p.length<6) return alertBox(msg,'bad','La contraseña debe tener al menos 6 caracteres.'),pn.focus();
+    if(p!==pr.value) return alertBox(msg,'bad','Las contraseñas no coinciden.'),pr.focus();
+    if(C.normCode(p)===session.code) return alertBox(msg,'bad','Elija una contraseña distinta de su código original.');
+    btn.disabled=true; btn.classList.add('loading'); $('#pw-btn-t').textContent='Guardando…';
+    try{
+      const body=JSON.stringify({action:'setPassword',alias:await C.aliasId(session.b,session.d,p),blob:await C.wrapCode(session.code,p),edificio_id:session.b,depto:session.d});
+      const r=await fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok||!j.ok) throw new Error(j.error||r.status);
+      alertBox(msg,'ok','Listo. Desde ahora puede entrar con su nueva contraseña o con su código original.');
+      pn.value=pr.value=''; $('#pw-meter').dataset.s=0; setTimeout(closePw,2200);
+    }catch(err){ alertBox(msg,'bad','No pudimos guardar la contraseña. Revise su conexión e intente de nuevo.'); }
+    finally{ btn.disabled=false; btn.classList.remove('loading'); $('#pw-btn-t').textContent='Guardar'; }
+  });
+
+  /* ---------- Datos al día: se vuelven a pedir al volver a la página y cada 2 minutos ---------- */
+  let refrescando=false;
+  async function refrescar(){
+    if(!session||refrescando||document.hidden||document.querySelector('.dialog.open')) return;
+    refrescando=true;
+    try{ const v=await live(session.b,session.d,session.code); if(v){ data=v; renderProfile(true); loadReceipts(); } }
+    finally{ refrescando=false; }
+  }
+  document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refrescar(); });
+  window.addEventListener('pageshow',e=>{ if(e.persisted) refrescar(); });
+  setInterval(refrescar,120000);
+
+  /* ---------- Sesión guardada en este dispositivo ---------- */
+  (async()=>{
+    let s=null; try{ s=JSON.parse(store.get(SKEY)||'null'); }catch(e){}
+    if(!s||!s.b||!s.code) return;
+    $('#view-login').hidden=true; $('#view-auto').hidden=false;
+    try{ const d=await openCode(s.b,s.d,s.code); if(!d) throw 0; data=d; session=s; renderProfile(); loadReceipts(); }
+    catch(e){ $('#view-auto').hidden=true; $('#view-login').hidden=false;
+      if(e&&e.message==='net'){ alertBox($('#l-msg'),'bad','Sin conexión con el servidor. <a href="#" id="l-retry">Reintentar</a>'); $('#l-retry').onclick=ev=>{ ev.preventDefault(); location.reload(); }; }
+      else { store.del(SKEY); alertBox($('#l-msg'),'info','Su sesión se cerró. Ingrese nuevamente.'); } }
+  })();
+
+  /* ---------- Comprobante ---------- */
+  const inp=$('#up-file'), drop=$('#drop');
+  function setFile(f){
+    $('#up-msg').innerHTML='';
+    if(!f) return;
+    const okType=/^image\//.test(f.type)||f.type==='application/pdf';
+    if(!okType) return alertBox($('#up-msg'),'bad','Elija una imagen (JPG o PNG) o un PDF.');
+    if(f.size>MAX) return alertBox($('#up-msg'),'bad','El archivo pesa más de 8 MB. Pruebe con una foto más liviana.');
+    file=f; filePrep=prepare(f).then(async g=>({name:g.name,type:g.type,b64:await toB64(g)})).catch(()=>null);
+    $('#up-name').textContent=f.name; $('#up-size').textContent=f.size<1024*1024?Math.max(1,Math.round(f.size/1024))+' KB':(f.size/1024/1024).toFixed(1)+' MB';
+    const th=$('#up-thumb');
+    if(f.type==='application/pdf') th.innerHTML='<svg aria-hidden="true"><use href="#i-pdf"/></svg>';
+    else { const u=URL.createObjectURL(f); th.innerHTML=`<img src="${u}" alt="">`; }
+    $('#up-preview').classList.add('show'); drop.hidden=true;
+  }
+  function clearFile(){ file=null; inp.value=''; $('#up-preview').classList.remove('show'); drop.hidden=false; }
+  inp.addEventListener('change',()=>setFile(inp.files[0]));
+  $('#up-clear').addEventListener('click',clearFile);
+  ['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.add('over');}));
+  ['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault();drop.classList.remove('over');}));
+  drop.addEventListener('drop',e=>setFile(e.dataTransfer.files[0]));
+
+  // reduce fotos grandes antes de enviarlas (máx. 1800 px, JPEG)
+  async function prepare(f){
+    if(!/^image\/(jpeg|png|webp|heic|heif)/.test(f.type)||f.size<350*1024) return f;
+    try{
+      const bmp=await createImageBitmap(f); const s=Math.min(1,1600/Math.max(bmp.width,bmp.height));
+      const cv=document.createElement('canvas'); cv.width=Math.round(bmp.width*s); cv.height=Math.round(bmp.height*s);
+      cv.getContext('2d').drawImage(bmp,0,0,cv.width,cv.height);
+      const blob=await new Promise(r=>cv.toBlob(r,'image/jpeg',.8));
+      return blob&&blob.size<f.size?new File([blob],f.name.replace(/\.\w+$/,'')+'.jpg',{type:'image/jpeg'}):f;
+    }catch(e){ return f; }
+  }
+  const toB64=f=>new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(f);});
+
+  $('#up-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    const msg=$('#up-msg'), btn=$('#up-btn');
+    msg.innerHTML='';
+    if(!file) return alertBox(msg,'bad','Primero elija la foto o el PDF del comprobante.');
+    const amount=$('#up-amount').value.replace(',','.').trim();
+    if(amount&&!(Number(amount)>0)) return alertBox(msg,'bad','Revise el monto: use solo números, por ejemplo 450.50.'),$('#up-amount').focus();
+    const E=data.edificio||{}, U=data.unidad||{};
+    const info={edificio:E.nombre||E.id, edificio_id:E.id, depto:U.depto, propietario:data.rol==='inquilino'?(U.inquilino||'')+' (inquilino)':U.propietario, monto:amount, fecha:$('#up-date').value, nota:$('#up-note').value.trim()};
+    if(pagoReserva){ info.tipo='alquiler'; info.reserva_id=pagoReserva.id; }
+    const text=`Comprobante de pago\nEdificio: ${info.edificio}\nDepto: ${info.depto}\nPropietario: ${info.propietario}\nMonto: ${amount||'—'}\nFecha: ${info.fecha||'—'}${info.nota?'\nNota: '+info.nota:''}`;
+
+    if(PORTAL.endpoint){
+      btn.disabled=true; btn.classList.add('loading'); $('#up-btn-t').textContent='Enviando…'; $('#up-bar').classList.add('show');
+      try{
+        let f=await filePrep; if(!f){ const g=await prepare(file); f={name:g.name,type:g.type,b64:await toB64(g)}; }
+        const body=JSON.stringify({...info, rk:await C.receiptKey(session.b,session.d,session.code), filename:f.name, mimeType:f.type, data:f.b64});
+        const r=await fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body});
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok||j.ok===false) throw new Error(j.error||r.status);
+        alertBox(msg,'ok','Recibimos su comprobante. Lo verificaremos y su estado de cuenta se actualizará en un máximo de 24 horas.');
+        clearFile(); $('#up-note').value=''; loadReceipts(); if(pagoReserva){ setPagoReserva(null); loadReservas(); }
+      }catch(err){
+        // a veces Google guarda el comprobante pero la respuesta no llega: se revisa antes de dar error
+        let llego=false;
+        try{ await new Promise(r=>setTimeout(r,2500)); const rk=await C.receiptKey(session.b,session.d,session.code);
+          const j2=await (await fetch(PORTAL.endpoint+'?action=recibos&rk='+rk,{cache:'no-store'})).json();
+          llego=!!(j2.ok&&j2.recibos&&j2.recibos.length>rcCount); }catch(e){}
+        if(llego){ alertBox(msg,'ok','Recibimos su comprobante. Lo verificaremos y su estado de cuenta se actualizará en un máximo de 24 horas.');
+          clearFile(); $('#up-note').value=''; loadReceipts(); if(pagoReserva){ setPagoReserva(null); loadReservas(); } return; }
+        alertBox(msg,'bad','No pudimos enviar el comprobante. Intente de nuevo o <a href="'+wa(text)+'" target="_blank" rel="noopener">envíelo por WhatsApp</a>.');
+      }finally{ btn.disabled=false; btn.classList.remove('loading'); $('#up-btn-t').textContent='Enviar comprobante'; $('#up-bar').classList.remove('show'); }
+      return;
+    }
+    // Sin servidor configurado: compartir el archivo (celular) o abrir WhatsApp con el texto
+    try{
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        await navigator.share({files:[file],text,title:'Comprobante Bramar'});
+        alertBox(msg,'ok','Elija WhatsApp y envíelo al número de Bramar. Verificaremos su pago y su estado de cuenta se actualizará en un máximo de 24 horas.');
+        return;
+      }
+    }catch(err){ if(err&&err.name==='AbortError') return; }
+    window.open(wa(text),'_blank','noopener');
+    alertBox(msg,'info','Abrimos WhatsApp con los datos del pago. Adjunte allí la foto o el PDF del comprobante (ícono del clip) y envíelo.');
+  });
+})();
+</script>
+</body>
+</html>

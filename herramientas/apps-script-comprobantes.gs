@@ -759,6 +759,9 @@ function portal_(d) {
   const dep = ptNormDepto_(d.depto);
   let inq = null;
   if (!okc) { inq = ptInquilino_(pid, dep, d.codigo); if (!inq) return json({ ok: false, error: okc === null ? 'no_vinculado' : 'codigo' }); }
+  // cada portal acepta solo sus códigos: propietarios en copropietarios.html, inquilinos en inquilinos.html
+  if (d.portal === 'inquilino' && !inq) return json({ ok: false, error: okc ? 'otro_portal' : 'codigo' });
+  if (d.portal === 'propietario' && inq) return json({ ok: false, error: 'otro_portal' });
   const est = ptEstado_(pid, lk, data, d.depto);
   if (!est) return json({ ok: false, error: 'codigo' });
   const INQ = lkLeer_('PT_INQ', {}), ik = pid + '|' + dep;

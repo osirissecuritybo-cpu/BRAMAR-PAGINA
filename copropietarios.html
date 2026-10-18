@@ -600,7 +600,7 @@ html,body{overflow-x:clip;max-width:100%}
     <label class="check"><input type="checkbox" id="l-remember" checked> Recordarme</label>
     <div id="l-msg" role="alert"></div>
     <button class="btn navy block" type="submit" id="l-btn"><span id="l-btn-t">Ingresar</span><span class="spin" aria-hidden="true"></span><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></button>
-    <p class="help"><a id="l-ask" target="_blank" rel="noopener">¿No tiene su código?</a></p>
+    <p class="help"><a id="l-ask" target="_blank" rel="noopener">¿No tiene su código?</a> · <a id="l-otro" href="inquilinos.html">Soy inquilino</a></p>
   </form>
 </main>
 
@@ -722,9 +722,7 @@ html,body{overflow-x:clip;max-width:100%}
     <div class="m-drawer-h"><b id="m-dr-name"></b><span id="m-dr-sub"></span><button type="button" class="m-x" id="m-dr-x" aria-label="Cerrar">&times;</button></div>
     <nav class="m-nav" id="m-nav">
       <button type="button" data-sheet="estado"><span>Estado de cuenta</span><em class="m-badge" id="m-badge-estado" hidden></em></button>
-      <button type="button" data-sheet="comprobante"><span>Enviar comprobante</span></button>
-      <button type="button" data-sheet="datos"><span>Datos para pagar</span></button>
-      <button type="button" data-sheet="rv" id="m-nav-rv" hidden><span>Áreas sociales</span><em class="m-badge" id="m-badge-rv" hidden></em></button>
+      <button type="button" data-sheet="rv" id="m-nav-rv" hidden style="display:none!important"><span>Áreas sociales</span><em class="m-badge" id="m-badge-rv" hidden></em></button>
       <button type="button" data-sheet="inq" id="m-inq" hidden><span>Inquilino</span><em class="m-badge" id="m-badge-inq" hidden>Activo</em></button>
       <button type="button" data-sheet="clave" id="m-clave" hidden><span>Cambiar contraseña</span></button>
     </nav>
@@ -838,7 +836,16 @@ const PORTAL = {
   const C=window.BramarCrypto;
   const MAX=8*1024*1024;
   let data=null, file=null, filePrep=null, showAll=false, session=null, shown=[], rcCount=0;
-  const SKEY='bramar.session';
+  /* inquilinos.html es una copia exacta de esta página: el modo sale de la dirección */
+  const MODO=/inquilino/i.test(location.pathname)?'inquilino':'propietario';
+  const SKEY=MODO==='inquilino'?'bramar.inq.session':'bramar.session';
+  if(MODO==='inquilino'){
+    document.title='Portal de inquilinos · Bramar Group';
+    document.querySelectorAll('.tag').forEach(t=>{ if(/Portal de copropietarios/.test(t.textContent)) t.textContent='Portal de inquilinos'; });
+    const bs=document.querySelector('.brand span'); if(bs) bs.textContent='Inquilinos';
+    document.documentElement.classList.add('modo-inq');
+    const lo=document.getElementById('l-otro'); if(lo){ lo.href='copropietarios.html'; lo.textContent='Soy propietario'; }
+  }
 
   const money=(n,cur)=>(cur||'Bs')+' '+Number(n||0).toLocaleString('es-BO',{minimumFractionDigits:2,maximumFractionDigits:2});
   const fdate=s=>{ if(!s) return '—'; const d=new Date(s+'T00:00:00'); return isNaN(d)?s:d.toLocaleDateString('es-BO',{day:'2-digit',month:'short',year:'numeric'}); };
@@ -848,7 +855,7 @@ const PORTAL = {
   const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
 
   $('#yr').textContent=new Date().getFullYear();
-  $('#l-ask').href=wa('Hola Bramar, necesito mi código de acceso al portal de copropietarios. Edificio: ___ Depto: ___');
+  $('#l-ask').href=wa(MODO==='inquilino'?'Hola, necesito mi código de acceso al portal de inquilinos. Edificio: ___ Depto: ___':'Hola Bramar, necesito mi código de acceso al portal de copropietarios. Edificio: ___ Depto: ___');
 
   /* ---------- Lista de edificios ---------- */
   const sel=$('#l-bld');
@@ -887,11 +894,12 @@ const PORTAL = {
     if(!PORTAL.endpoint) return undefined;
     for(let i=0;i<3;i++){
       try{
-        const r=await fetch(PORTAL.endpoint,{method:'POST',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'pt_estado',edificio_id:b,depto:C.normDepto(d),codigo:C.normCode(code)})});
+        const r=await fetch(PORTAL.endpoint,{method:'POST',cache:'no-store',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'pt_estado',portal:MODO,edificio_id:b,depto:C.normDepto(d),codigo:C.normCode(code)})});
         const j=await r.json();
         if(j.ok) return j.data;
+        if(j.error==='otro_portal') throw Object.assign(new Error('otro'),{otro:1});
         if(j.error==='codigo'||j.error==='no_vinculado') return null;
-      }catch(e){}
+      }catch(e){ if(e.otro) throw new Error('otro_portal'); }
       await new Promise(r=>setTimeout(r,800*(i+1)));
     }
     return undefined;
@@ -927,6 +935,7 @@ const PORTAL = {
       $('#l-code').value=''; $('#l-code').type='password';
       renderProfile(); loadReceipts();
     }catch(err){
+      if(err.message==='otro_portal') return alertBox(msg,'bad',MODO==='inquilino'?'Ese código es de propietario. Ingrese por el <a href="copropietarios.html">portal de copropietarios</a>.':'Ese código es de inquilino. Ingrese por el <a href="inquilinos.html">portal de inquilinos</a>.');
       alertBox(msg,'bad',err.message==='net'
         ?'No pudimos conectarnos. Revise su internet e intente otra vez.'
         :'Los datos no coinciden. Revise el edificio, el departamento y su contraseña o código. Si el problema sigue, <a href="'+wa('Hola Bramar, no puedo ingresar al portal. Edificio: '+(sel.selectedOptions[0]||{}).text+' Depto: '+d)+'" target="_blank" rel="noopener">escríbanos por WhatsApp</a>.');
@@ -1156,7 +1165,7 @@ const PORTAL = {
     loadReservas();
   }
   async function ptCall(body){
-    const r=await fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({edificio_id:session.b,depto:session.d,codigo:session.code},body))});
+    const r=await fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({portal:MODO,edificio_id:session.b,depto:session.d,codigo:session.code},body))});
     return r.json();
   }
   const fechaCorta=f=>{ const d=new Date(f+'T00:00:00'); return isNaN(d)?f:d.toLocaleDateString('es-BO',{weekday:'short',day:'numeric',month:'short'}); };
@@ -1258,7 +1267,7 @@ const PORTAL = {
   async function crearInq(nombre){
     const j=await ptCall({action:'pt_inquilino',op:'crear',nombre}); if(!j.ok) throw new Error(j.error||'error');
     data.inquilino={nombre:j.nombre,desde:new Date().toISOString().slice(0,10)}; pintarInquilino();
-    const E=data.edificio||{}, U=data.unidad||{}, url=location.origin+location.pathname;
+    const E=data.edificio||{}, U=data.unidad||{}, url=location.origin+location.pathname.replace(/[^/]*$/,'')+'inquilinos.html';
     const txt=`Hola ${j.nombre}, este es su acceso al portal del edificio ${E.nombre||''}:\n${url}\nEdificio: ${E.nombre||''}\nDepartamento: ${U.depto||''}\nCódigo: ${j.codigo}`;
     $('#inq-msg').innerHTML=`<div class="inq-code"><small>Código del inquilino</small><b>${esc(j.codigo)}</b></div>
       <div class="inq-acts"><a class="btn navy" href="${wa(txt).replace(/wa\.me\/\d*/,'wa.me/')}" target="_blank" rel="noopener">WhatsApp</a><button type="button" class="btn light" id="inq-copy">Copiar</button></div>`;
@@ -1330,7 +1339,7 @@ const PORTAL = {
   $('#logout').addEventListener('click',()=>{
     data=null; session=null; store.del(SKEY); file=null; showAll=false; clearFile(); $('#up-msg').innerHTML='';
     $('#view-profile').hidden=true; $('#view-login').hidden=false; $('#logout').hidden=true; $('#m-burger').hidden=true; $('#d-nav').hidden=true; $('#d-pass').hidden=true; cerrarHojas(); document.body.classList.remove('en-perfil'); menu(false); $('#back').hidden=false;
-    document.title='Portal de copropietarios · Bramar Group'; $('#l-code').focus();
+    document.title=MODO==='inquilino'?'Portal de inquilinos · Bramar Group':'Portal de copropietarios · Bramar Group'; $('#l-code').focus();
   });
 
   /* ---------- Cambiar contraseña ---------- */
