@@ -7423,10 +7423,10 @@ function renderGrid() {
       <div class="debt-col">
         <div class="debt-line">${fmtMoney(d.total_debt)}</div>
         <div class="debt-sub">${d.num_meses_mora > 0
-          ? `Debe ${d.num_meses_mora} expensa(s) a la fecha${d.cargos_debt > 0 ? ' · ' + d.cargos_extra.length + ' cargo(s) extra' : ''}`
-          : (d.tiene_deuda_extra ? (d.cargos_debt > 0 ? 'Cuota extra / multas pendientes' : 'Solo cuota extraordinaria pendiente') : 'Sin deuda')}</div>
+          ? `${d.num_meses_mora} ${d.num_meses_mora > 1 ? 'meses' : 'mes'}${d.cargos_debt > 0 ? ' · ' + d.cargos_extra.length + (d.cargos_extra.length > 1 ? ' cargos' : ' cargo') : ''}`
+          : (d.tiene_deuda_extra ? (d.cargos_debt > 0 ? 'Multas / cargos' : 'Cuota extraordinaria') : '')}</div>
       </div>
-      <div class="last-pay-col">${d.ultimo_pago ? 'Últ. pago<br>' + fmtDate(d.ultimo_pago) : 'Sin pagos<br>registrados'}</div>
+      <div class="last-pay-col">${d.ultimo_pago ? 'Últ. pago<br>' + fmtDate(d.ultimo_pago) : ''}</div>
       <div class="actions-col no-print">
         <button class="btn small primary btn-registrar-pago" data-depto="${d.id||d.depto}">${icon('banknote', 14)} Registrar pago</button>
       </div>
@@ -8337,7 +8337,7 @@ function renderDiario() {
 
   const table = document.getElementById('diario-table');
   if (!list.length) {
-    table.innerHTML = `<tr><td class="diario-empty">Sin movimientos en este período. Registra un ingreso o gasto con el formulario de arriba.</td></tr>`;
+    table.innerHTML = `<tr><td class="diario-empty">Sin movimientos</td></tr>`;
     return;
   }
 
@@ -16518,7 +16518,7 @@ window.lukaCloud = (function(){
     const host = ensurePlanResumen(); if (!host) return;
     const conPlan = (DATA.deptos||[]).filter(d => d.planPago);
     if (!conPlan.length){
-      host.innerHTML = `<h3>Departamentos con plan de pagos</h3><div class="lk-empty">Todavía no hay departamentos con un plan de pagos guardado. Generá y guardá un plan arriba y aparecerá acá.</div>`;
+      host.innerHTML = `<h3>Departamentos con plan de pagos</h3><div class="lk-empty">Sin planes</div>`;
       return;
     }
     conPlan.sort((a,b)=> String(a.depto).localeCompare(String(b.depto),'es',{numeric:true}));
@@ -19059,7 +19059,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     // Historial
     var list=cajas();
     html+='<h3 style="margin:6px 0 10px;font-size:15px;">Historial de cajas chicas</h3>';
-    if(!list.length){ html+='<p style="font-size:13px;color:var(--text-secondary);">Todavía no cargaste ninguna caja chica.</p>'; }
+    if(!list.length){ html+='<p style="font-size:13px;color:var(--text-secondary);">Sin cajas chicas</p>'; }
     else {
       html+='<div style="display:flex;flex-direction:column;gap:8px;">';
       list.forEach(function(c){
@@ -22816,7 +22816,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
     var orig=window.setDeudaManual;
     window.setDeudaManual=function(d,montoTotal,expensaMensual){
       var propia=Array.isArray(d.tarifasHist)&&d.tarifasHist.filter(function(x){ return /^\d{4}-\d{2}$/.test(x.desde)&&+x.monto>0; }).length;
-      var T=propia?d.tarifasHist.filter(function(x){ return /^\d{4}-\d{2}$/.test(x.desde)&&+x.monto>0; }).sort(function(a,b){ return a.desde<b.desde?-1:1; }):tarifas();
+      var T=propia?d.tarifasHist.filter(function(x){ return /^\d{4}-\d{2}$/.test(x.desde)&&+x.monto>0; }).sort(function(a,b){ return a.desde<b.desde?-1:1; }):[];
       if(!T.length) return orig.apply(this,arguments);
       var cuota=Number(expensaMensual)>0?Number(expensaMensual):(d.expensaMensual||cfg().expensaMensual);
       d.expensaMensual=cuota;
@@ -22877,7 +22877,6 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
       }).catch(function(e){ m.className='lk40-msg bad'; m.textContent=e.message; }).then(function(){ b.disabled=false; b.textContent='Guardar'; }); };
   }
   function tabs(){
-    nuevaTab('lk40-exp','expensas',SV+'<path d="M4 19V5M4 19h16"/><path d="M8 15l4-4 3 3 5-6"/></svg>','Expensas','Monto por período',pintarExpensas);
     nuevaTab('lk40-mail','correos',SV+'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>','Correos y Drive','Avisos y comprobantes',pintarCorreos);
   }
 
@@ -22895,6 +22894,74 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
   /* sin parpadeo al recargar: la página se muestra cuando ya tiene su diseño final */
   function mostrar(){ todo(); requestAnimationFrame(function(){ requestAnimationFrame(function(){ document.documentElement.classList.remove('lk-pre'); }); }); }
   if(document.readyState==='complete') setTimeout(mostrar,150); else window.addEventListener('load',function(){ setTimeout(mostrar,150); });
+})();
+</script>
+
+<style>
+/* ============ Módulo 42 · Bloques plegables y sin textos de ayuda (todo LUKA) ============ */
+.lkx{background:#fff;border:1px solid #E3EAF2;border-radius:14px;margin:0 0 10px;overflow:hidden}
+.lkx>.lkx-h{display:flex;align-items:center;gap:10px;width:100%;min-height:52px;padding:0 16px;border:0;background:#fff;color:#0B2440;font:inherit;font-size:15px;font-weight:700;text-align:left;cursor:pointer}
+.lkx>.lkx-h>span{flex:1;display:flex;align-items:center;gap:8px}
+.lkx>.lkx-h>span svg{width:16px;height:16px;flex:none}
+.lkx>.lkx-h::after{content:"";width:8px;height:8px;border-right:2px solid #7d93ab;border-bottom:2px solid #7d93ab;transform:rotate(45deg);margin:-4px 4px 0 0;transition:transform .2s}
+.lkx.open>.lkx-h::after{transform:rotate(-135deg);margin-top:4px}
+.lkx>.lkx-b{display:none;padding:2px 16px 16px}
+.lkx.open>.lkx-b{display:block}
+.plan-card.lkx,#view-diario>.diario-form-card.lkx,#view-cajachica #cajachica-container>div.diario-form-card.lkx,#lk-secciones-block.lkx,#lk-avisos.lkx{padding:0!important;margin:0 0 12px!important;border:1px solid #E3EAF2!important;border-radius:14px!important;background:#fff!important;box-shadow:none!important}
+.lkx-quieto{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0 0 10px!important}
+.lkx-quieto>h3{display:none!important}
+/* ficha del departamento: bloques de Ajustes */
+.f41-pan .lkx{margin:0 0 8px}
+.f41-pan .lkx>.lkx-b{padding:4px 14px 14px}
+/* textos que explicaban de más */
+.cfg2-sec-desc,.mi-desc,.cfg2-kind,.cfg2-leyenda,.save-hint,.lk-cuenta-nota,.lkrp-modo label span,.lkrp-nota,.lk-avisos>.lk-muted,
+#lk-secciones-block>div[style*="font-size"],.plan-field .hint,.plan-wrap>p,.lkr-head .sub,.diario-form-hint,.plan-empty,#luka-footer,
+.lkrp-prev:has(#lkc-prev),.save-info,.cfg2-tab-n,.plan-card:has(>.plan-empty),.last-pay-col:empty{display:none!important}
+.debt-sub:empty{display:none}
+</style>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 42: bloques plegables en todo el programa
+   Cada formulario de alta (nuevo movimiento, nueva caja chica, nuevo plan,
+   ajustes de la ficha, secciones de Configuración) queda como un bloque
+   cerrado: al tocar su título se despliega y al tocarlo de nuevo se cierra.
+   ============================================================================ */
+(function(){
+  var abiertos={};
+  function plegar(card,titulo,clave,icono){
+    if(!card||card.classList.contains('lkx')) return card&&card.querySelector(':scope > .lkx-b');
+    card.classList.add('lkx'); if(abiertos[clave]) card.classList.add('open');
+    var b=document.createElement('div'); b.className='lkx-b';
+    while(card.firstChild) b.appendChild(card.firstChild);
+    var h=document.createElement('button'); h.type='button'; h.className='lkx-h'; h.innerHTML='<span>'+(icono||'')+titulo+'</span>';
+    h.onclick=function(){ var o=!card.classList.contains('open'); card.classList.toggle('open',o); abiertos[clave]=o; if(o){ var i=b.querySelector('input:not([type=hidden]):not([type=checkbox]),select'); if(i&&window.innerWidth>700) try{ i.focus({preventScroll:true}); }catch(e){} } };
+    card.appendChild(h); card.appendChild(b); return b;
+  }
+  window.lukaPlegar=plegar;
+  var MAS='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+  function quitarTitulo(card,sel){ var t=card.querySelector(sel); if(t) t.remove(); }
+  function todo(){
+    // Reporte diario: nuevo movimiento
+    var dc=document.querySelector('#view-diario>.diario-form-card');
+    if(dc&&!dc.classList.contains('lkx')){ quitarTitulo(dc,'#diario-form-title'); plegar(dc,'Nuevo movimiento','diario',MAS); }
+    var ib=document.getElementById('lk-items-btn'), db=dc&&dc.querySelector(':scope > .lkx-b'); if(ib&&db&&ib.parentNode!==db) db.appendChild(ib);
+    // Caja chica: nueva caja chica
+    var cc=document.querySelector('#cajachica-container>div.diario-form-card:first-of-type');
+    if(cc&&!cc.classList.contains('lkx')){ quitarTitulo(cc,'h3'); plegar(cc,'Nueva caja chica','caja',MAS); }
+    // Plan de pagos: datos del plan
+    var pc=[].slice.call(document.querySelectorAll('#view-plan .plan-card')).filter(function(c){ var h=c.querySelector(':scope > h3'); return h&&/datos del plan/i.test(h.textContent); })[0];
+    if(pc&&!pc.classList.contains('lkx')){ quitarTitulo(pc,':scope > h3'); plegar(pc,'Nuevo plan','plan',MAS); }
+    // Configuración: secciones visibles y avisos por correo
+    var sv=document.getElementById('lk-secciones-block');
+    if(sv&&!sv.classList.contains('lkx')){ quitarTitulo(sv,'.menu-section-title'); var dv=sv.querySelector('.menu-divider'); if(dv) dv.remove(); plegar(sv,'Secciones visibles','secc'); }
+    var av=document.getElementById('lk-avisos');
+    if(av&&!av.classList.contains('lkx')){ quitarTitulo(av,'h4'); plegar(av,'Avisos por correo (todos los edificios)','avisos'); }
+    // textos vacíos más cortos
+    document.querySelectorAll('.lkr-empty').forEach(function(e){ if(e.textContent.length>40) e.textContent=/garant/i.test(e.textContent)?'Sin garantías':'Sin reservas'; });
+  }
+  var pend=false;
+  new MutationObserver(function(){ if(pend) return; pend=true; setTimeout(function(){ pend=false; try{ todo(); }catch(e){ try{ console.error('mod42',e); }catch(_){} } },40); }).observe(document.body,{childList:true,subtree:true});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',todo); else todo();
 })();
 </script>
 
@@ -23030,7 +23097,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
       f.querySelector('.f41-tot-in').appendChild(dt); dc.type='hidden'; f.appendChild(dc); ap.textContent='Repartir en meses'; f.appendChild(ap);
       pa.insertAdjacentHTML('beforeend','<p class="f41-h">Cargar deuda</p>'); pa.appendChild(f);
       var yb=f.querySelector('.f41-years'), hoyY=new Date().getFullYear();
-      var H=(Array.isArray(d.tarifasHist)&&d.tarifasHist.length?d.tarifasHist:((DATA.config||{}).tarifasHist||[])).filter(function(x){ return /^\d{4}-\d{2}$/.test(x.desde)&&+x.monto>0; }).sort(function(a,b){ return a.desde<b.desde?1:-1; });
+      var H=(Array.isArray(d.tarifasHist)?d.tarifasHist:[]).filter(function(x){ return /^\d{4}-\d{2}$/.test(x.desde)&&+x.monto>0; }).sort(function(a,b){ return a.desde<b.desde?1:-1; });
       if(!H.length) H=[{desde:hoyY+'-01',monto:+d.expensaMensual||+(DATA.config||{}).expensaMensual||''}];
       function fila(desde,v){ var y=+desde.slice(0,4), mo=+desde.slice(5,7)-1, r=document.createElement('div'); r.className='f41-yr';
         r.innerHTML='<select class="f41-m">'+MES.map(function(n,i){ return '<option value="'+i+'"'+(i===mo?' selected':'')+'>'+n+'</option>'; }).join('')+'</select>'+
@@ -23057,6 +23124,12 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
       pa.insertAdjacentHTML('beforeend','<div class="f41-sep"></div><p class="f41-h">Cuota extraordinaria</p>'); pa.appendChild(f2); }
     var cf=$('cargo-form'); if(cf){ $('cargo-nombre').placeholder='Concepto (ej. Multa)'; $('cargo-monto').placeholder='Monto Bs.'; pa.insertAdjacentHTML('beforeend','<div class="f41-sep"></div><p class="f41-h">Nueva multa o cargo</p>'); pa.appendChild(cf); }
     var al=$('btn-marcar-al-dia'); if(al&&meses.length){ al.className='f41-alDia'; al.textContent='Marcar al día en expensas'; pa.appendChild(al); }
+    // Ajustes en bloques plegables: se abren al tocarlos
+    (function(){ var hs=[].slice.call(pa.querySelectorAll(':scope > .f41-h')); pa.querySelectorAll(':scope > .f41-sep').forEach(function(x){ x.remove(); });
+      hs.forEach(function(h){ var card=document.createElement('div'), n=h.nextSibling, cuerpo=[];
+        while(n&&!(n.classList&&(n.classList.contains('f41-h')||n.classList.contains('f41-alDia')))){ cuerpo.push(n); n=n.nextSibling; }
+        pa.insertBefore(card,h); cuerpo.forEach(function(x){ card.appendChild(x); }); var t=h.textContent; h.remove();
+        if(window.lukaPlegar) window.lukaPlegar(card,t,'f41-'+t); }); })();
     // pestañas
     function ver(t){ tabActual=t; w.querySelectorAll('.f41-tabs button').forEach(function(b){ b.classList.toggle('on',b.dataset.t===t); }); w.querySelectorAll('.f41-pan').forEach(function(p){ p.hidden=p.dataset.p!==t; }); }
     w.querySelector('.f41-tabs').addEventListener('click',function(e){ var b=e.target.closest('button'); if(b) ver(b.dataset.t); });
