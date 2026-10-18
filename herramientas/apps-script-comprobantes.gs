@@ -246,6 +246,14 @@ function carpeta_(padre, nombre) {
 /* Carpeta de Drive de cada edificio: la que se configuró en LUKA (Correos y Drive) o
    «Comprobantes Bramar / EDIFICIO». Si se indicaron correos de almacenamiento, la carpeta
    queda compartida con ellos (la ven en su Drive, separada de los demás edificios). */
+/* correo de la cuenta dueña del servidor (sin pedir permisos extra a Google) */
+function lkCuentaServidor_() {
+  const P = PropertiesService.getScriptProperties(); let c = P.getProperty('CUENTA_SERVIDOR');
+  if (c) return c;
+  try { c = DriveApp.getRootFolder().getOwner().getEmail(); } catch (e) { c = ''; }
+  if (c) P.setProperty('CUENTA_SERVIDOR', c);
+  return c;
+}
 function lkEntrada_(portalId) {
   const id = slug_(portalId), E = lkEdificios_();
   const k = Object.keys(E).filter(function (x) { return (E[x].portal || slug_(E[x].name)) === id; })
@@ -455,7 +463,7 @@ function luka_(d) {
         if (malos.length) return json({ ok: false, error: 'Correo no válido: ' + malos.join(', ') });
         let carpeta = '';
         const m = String(d.carpeta || '').match(/[-\w]{25,}/);
-        if (m) { try { DriveApp.getFolderById(m[0]).getName(); carpeta = m[0]; } catch (x) { return json({ ok: false, error: 'No tengo acceso a esa carpeta. Compártala como «Editor» con ' + Session.getEffectiveUser().getEmail() + '.' }); } }
+        if (m) { try { DriveApp.getFolderById(m[0]).getName(); carpeta = m[0]; } catch (x) { return json({ ok: false, error: 'No tengo acceso a esa carpeta. Compártala como «Editor» con ' + (lkCuentaServidor_() || 'la cuenta de Bramar') + '.' }); } }
         e.avisos = av.join(','); e.drive = dr.join(','); e.carpeta = carpeta;
         lkEscribir_('LUKA_EDIFICIOS', E);
         let compartida = [];
@@ -467,7 +475,7 @@ function luka_(d) {
         return json({ ok: true, avisos: av, drive: dr, carpeta: carpeta, compartida: compartida, url: carpetaEdificio_(e.portal || slug_(e.name), e.name).getUrl() });
       }
       let url = ''; try { url = carpetaEdificio_(e.portal || slug_(e.name), e.name).getUrl(); } catch (x) {}
-      return json({ ok: true, avisos: String(e.avisos || '').split(',').filter(Boolean), drive: String(e.drive || '').split(',').filter(Boolean), carpeta: e.carpeta || '', url: url, cuenta: Session.getEffectiveUser().getEmail() });
+      return json({ ok: true, avisos: String(e.avisos || '').split(',').filter(Boolean), drive: String(e.drive || '').split(',').filter(Boolean), carpeta: e.carpeta || '', url: url, cuenta: lkCuentaServidor_() });
     } finally { lock.releaseLock(); }
   }
   if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un administrador puede hacer esto.' });
