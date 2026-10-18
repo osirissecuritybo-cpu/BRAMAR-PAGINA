@@ -22896,4 +22896,134 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 })();
 </script>
 
+<style>
+/* ============ Módulo 41 · Ficha del departamento ordenada ============ */
+#modal-content.f41{padding:0!important;overflow:hidden auto;font-size:15px}
+#modal-content.f41>*:not(.f41-wrap):not(.close-btn){display:none!important}
+#modal-content.f41 .close-btn{position:absolute;top:14px;right:14px;z-index:3;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:#F2F5F9!important;border:0!important;color:#0B2440}
+.f41-wrap{display:flex;flex-direction:column}
+.f41-top{padding:22px 22px 18px;border-bottom:1px solid #EEF2F6}
+.f41-tag{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d93ab}
+.f41-dep{display:flex;align-items:center;gap:10px;margin:2px 0 14px}
+.f41-dep b{font-size:26px;font-weight:700;color:#0B2440;letter-spacing:-.01em}
+.f41-dep .status-pill{margin:0!important}
+.f41-tot{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:16px 18px;border-radius:14px;background:#0B2440;color:#fff}
+.f41-tot small{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#B9C8DA}
+.f41-tot b{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.f41-tot.cero{background:#F2F5F9;color:#0B2440}.f41-tot.cero small{color:#7d93ab}
+.f41-acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
+.f41-acts .btn{height:44px!important;min-height:44px!important;margin:0!important;justify-content:center!important;border-radius:10px!important;font-size:13.5px!important;padding:0 8px!important;white-space:nowrap}
+.f41-tabs{display:flex;gap:4px;margin:16px 22px 0;padding:4px;background:#F2F5F9;border-radius:12px}
+.f41-tabs button{flex:1;height:40px;border:0;border-radius:9px;background:none;color:#5B6B7F;font:inherit;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+.f41-tabs button.on{background:#fff;color:#0B2440;box-shadow:0 1px 3px rgba(11,36,64,.12)}
+.f41-tabs i{font-style:normal;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#E3EAF2;color:#0B2440;font-size:11.5px;display:inline-grid;place-items:center}
+.f41-pan{padding:14px 22px 22px}
+.f41-pan[hidden]{display:none}
+.f41-h{font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7d93ab;margin:14px 0 6px}
+.f41-h:first-child{margin-top:4px}
+.f41-li{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:46px;padding:0 2px;border-bottom:1px solid #EEF2F6}
+.f41-li span{color:#0B2440}.f41-li b{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.f41-vacio{padding:18px 0;text-align:center;color:#7d93ab;font-size:14px}
+/* cargos (lista original de LUKA) con el mismo estilo */
+.f41-pan #cargos-list>*{display:flex!important;justify-content:space-between;align-items:center;gap:10px;min-height:46px;padding:0 2px!important;margin:0!important;border:0!important;border-bottom:1px solid #EEF2F6!important;background:none!important;border-radius:0!important}
+.f41-pan #cargos-list small,.f41-pan #cargos-list .muted{display:none}
+.f41-pan #cargos-list:empty,.f41-pan #cargos-list>p,.f41-pan #cargos-list>span:only-child{display:none!important}
+/* pagos */
+.f41-pan .pay-history-row{display:grid!important;grid-template-columns:22px minmax(0,1fr);gap:4px 12px;align-items:start;padding:12px 2px!important;border-bottom:1px solid #EEF2F6!important;text-align:left!important;margin:0!important;background:none!important}
+.f41-pan .phr-check{margin:2px 0 0!important}
+.f41-pan .phr-main{font-size:14px;line-height:1.45;text-align:left!important}
+.f41-pan .phr-main>span{font-size:12.5px}
+.f41-pan .phr-actions{grid-column:2;display:flex!important;gap:6px;flex-wrap:wrap;margin:6px 0 0!important}
+.f41-pan .phr-actions .btn svg:only-child:empty{display:none}
+.f41-pan .phr-actions .btn{height:34px!important;min-height:34px!important;padding:0 12px!important;font-size:12.5px!important;border-radius:9px!important;margin:0!important}
+/* ajustes: formularios iguales */
+.f41-form{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:end}
+.f41-form label{display:flex;flex-direction:column;gap:4px;font-size:12px;color:#5B6B7F}
+.f41-pan input[type=number],.f41-pan input[type=text]{box-sizing:border-box!important;width:100%!important;height:44px!important;padding:0 12px!important;border:1px solid #D5DEE8!important;border-radius:10px!important;background:#F6F8FB!important;font:inherit!important;font-size:15px!important;color:#0B2440!important;margin:0!important}
+.f41-pan #cargo-form .btn{grid-column:auto!important}
+.f41-form .btn,.f41-pan #cargo-form .btn{grid-column:1/-1;height:44px!important;min-height:44px!important;justify-content:center!important;border-radius:10px!important;margin:0!important}
+.f41-pan #cargo-form{display:grid!important;grid-template-columns:1fr 1fr;gap:8px;margin:0!important}
+.f41-pan #cargo-form #cargo-nombre{grid-column:1/-1}
+.f41-sep{height:1px;background:#EEF2F6;margin:18px 0 4px}
+.f41-alDia{width:100%;height:44px;margin-top:16px;border:1px solid #F0D0D0!important;border-radius:10px;background:#fff!important;color:#B42318!important;font:inherit;font-weight:600;cursor:pointer}
+@media (max-width:640px){
+  #modal-backdrop .modal:has(#modal-content.f41),#modal-content.f41{border-radius:18px 18px 0 0!important}
+  .f41-top{padding:20px 16px 16px}.f41-tabs{margin:14px 16px 0}.f41-pan{padding:12px 16px 20px}
+  .f41-dep b{font-size:24px}
+}
+</style>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 41: ficha del departamento
+   Arriba el total y las tres acciones; abajo tres pestañas:
+   Deuda (lo que debe, ítem por ítem) · Pagos (recibos) · Ajustes (cargar deuda,
+   cuota extraordinaria, multas, marcar al día). Se reacomodan los mismos
+   controles de LUKA, así siguen funcionando igual.
+   ============================================================================ */
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function m(n){ try{ return fmtMoney(n); }catch(e){ return 'Bs. '+n; } }
+  var tabActual='deuda';
+  function seccion(mc,re){ return [].slice.call(mc.querySelectorAll('.modal-section')).filter(function(s){ var h=s.querySelector('h3'); return h&&re.test(h.textContent.trim()); })[0]; }
+  function armar(){
+    var mc=$('modal-content'); if(!mc||mc.querySelector(':scope > .f41-wrap')||!$('modal-pay-btn')){ if(mc&&!$('modal-pay-btn')) mc.classList.remove('f41'); return; }
+    var h2=mc.querySelector(':scope > h2'); if(!h2) return;
+    var dep=h2.textContent.trim(), d=(DATA.deptos||[]).filter(function(x){ return String(x.depto).trim()===dep; })[0]; if(!d) return;
+    mc.classList.add('f41');
+    var w=document.createElement('div'); w.className='f41-wrap';
+    var total=+d.total_debt||0;
+    w.innerHTML='<div class="f41-top"><span class="f41-tag">'+esc(d.bloque?String(d.bloque).replace(/^bloque\s+/i,'Bloque '):'Departamento')+'</span>'+
+      '<div class="f41-dep"><b>'+esc(d.depto)+'</b></div>'+
+      '<div class="f41-tot'+(total>0.004?'':' cero')+'"><small>Deuda</small><b>'+m(total)+'</b></div><div class="f41-acts"></div></div>'+
+      '<div class="f41-tabs" role="tablist"><button type="button" data-t="deuda">Deuda</button><button type="button" data-t="pagos">Pagos</button><button type="button" data-t="ajustes">Ajustes</button></div>'+
+      '<div class="f41-pan" data-p="deuda"></div><div class="f41-pan" data-p="pagos" hidden></div><div class="f41-pan" data-p="ajustes" hidden></div>';
+    mc.appendChild(w);
+    var pill=mc.querySelector(':scope > .status-pill'); if(pill&&total>0.004) w.querySelector('.f41-dep').appendChild(pill);
+    // acciones
+    var acts=w.querySelector('.f41-acts');
+    ['modal-pay-btn','modal-plan-btn','modal-comunicado-btn'].forEach(function(id){ var b=$(id); if(b) acts.appendChild(b); });
+    var pPlan=$('modal-plan-btn'); if(pPlan) pPlan.lastChild.textContent=d.planPago?' Plan':' Plan';
+    var pCom=$('modal-comunicado-btn'); if(pCom) pCom.lastChild.textContent=' Aviso';
+    // DEUDA: ítem por ítem
+    var pd=w.querySelector('[data-p=deuda]'), filas='';
+    var meses=(d.meses_adeudados||[]).slice().sort(function(a,b){ try{ return monthIdx(a.mes,a.anio)-monthIdx(b.mes,b.anio); }catch(e){ return 0; } });
+    if(meses.length){ filas+='<p class="f41-h">Expensas</p>'+meses.map(function(x){ return '<div class="f41-li"><span>'+esc(x.mes)+' '+esc(x.anio)+'</span><b>'+m(x.monto)+'</b></div>'; }).join(''); }
+    pd.innerHTML=filas;
+    var cl=$('cargos-list');
+    if(cl&&(cl.textContent||'').replace(/sin multas[^]*/i,'').trim()){ var h=document.createElement('p'); h.className='f41-h'; h.textContent='Cuotas, multas y cargos'; pd.appendChild(h); pd.appendChild(cl); }
+    var plan=[].slice.call(mc.querySelectorAll(':scope > .modal-section, :scope > div')).filter(function(s){ return /plan de pagos/i.test((s.querySelector('h3')||{}).textContent||'')&&!/no tiene un plan/i.test(s.textContent); })[0];
+    if(plan){ pd.appendChild(plan); plan.style.cssText='display:block!important;margin-top:14px'; }
+    var pre=seccion(mc,/meses prepagados/i); if(pre){ pd.appendChild(pre); pre.style.setProperty('display','block','important'); }
+    if(!pd.children.length) pd.innerHTML='<div class="f41-vacio">Sin pendientes</div>';
+    // PAGOS
+    var pp=w.querySelector('[data-p=pagos]'), rows=mc.querySelectorAll('.pay-history-row');
+    rows.forEach(function(r){ var a=r.querySelector('.phr-actions'); r.querySelectorAll(':scope > .pb-ficha-ver, :scope > button').forEach(function(b){ if(a){ b.classList.add('small'); a.insertBefore(b,a.firstChild); } }); pp.appendChild(r); });
+    if(!rows.length) pp.innerHTML='<div class="f41-vacio">Sin pagos registrados</div>';
+    w.querySelector('[data-t=pagos]').innerHTML='Pagos'+(rows.length?' <i>'+rows.length+'</i>':'');
+    if(meses.length||(+d.ascensor_debt||0)>0||(+d.cargos_debt||0)>0){ var nd=meses.length+((d.cargos_extra||[]).length)+((+d.ascensor_debt||0)>0?1:0); w.querySelector('[data-t=deuda]').innerHTML='Deuda <i>'+nd+'</i>'; }
+    // AJUSTES
+    var pa=w.querySelector('[data-p=ajustes]');
+    var dt=$('deuda-manual-total'), dc=$('deuda-manual-cuota'), ap=$('btn-aplicar-deuda-manual');
+    if(dt&&dc&&ap){ var f=document.createElement('div'); f.className='f41-form';
+      f.innerHTML='<label>Deuda de expensas</label><label>Expensa mensual</label>';
+      f.children[0].appendChild(dt); f.children[1].appendChild(dc); ap.textContent='Repartir en meses'; f.appendChild(ap);
+      pa.insertAdjacentHTML('beforeend','<p class="f41-h">Cargar deuda</p>'); pa.appendChild(f); }
+    var am=$('ascensor-manual-monto'), ab=$('btn-aplicar-ascensor-manual');
+    if(am&&ab&&!(seccion(mc,/cuota extraordinaria/i)||{}).hidden&&getComputedStyle(seccion(mc,/cuota extraordinaria/i)||document.body).display!=='none'){
+      var f2=document.createElement('div'); f2.className='f41-form'; f2.innerHTML='<label style="grid-column:1/-1">Monto</label>'; f2.children[0].appendChild(am); ab.textContent='Guardar'; f2.appendChild(ab);
+      pa.insertAdjacentHTML('beforeend','<div class="f41-sep"></div><p class="f41-h">Cuota extraordinaria</p>'); pa.appendChild(f2); }
+    var cf=$('cargo-form'); if(cf){ $('cargo-nombre').placeholder='Concepto (ej. Multa)'; $('cargo-monto').placeholder='Monto Bs.'; pa.insertAdjacentHTML('beforeend','<div class="f41-sep"></div><p class="f41-h">Nueva multa o cargo</p>'); pa.appendChild(cf); }
+    var al=$('btn-marcar-al-dia'); if(al&&meses.length){ al.className='f41-alDia'; al.textContent='Marcar al día en expensas'; pa.appendChild(al); }
+    // pestañas
+    function ver(t){ tabActual=t; w.querySelectorAll('.f41-tabs button').forEach(function(b){ b.classList.toggle('on',b.dataset.t===t); }); w.querySelectorAll('.f41-pan').forEach(function(p){ p.hidden=p.dataset.p!==t; }); }
+    w.querySelector('.f41-tabs').addEventListener('click',function(e){ var b=e.target.closest('button'); if(b) ver(b.dataset.t); });
+    ver(window.__f41Dep===d.depto?tabActual:'deuda'); window.__f41Dep=d.depto;
+  }
+  function sueltos(){ document.querySelectorAll('.f41-pan .pay-history-row').forEach(function(r){ var a=r.querySelector('.phr-actions'); r.querySelectorAll(':scope > .pb-ficha-ver, :scope > button').forEach(function(b){ if(a){ b.classList.add('small'); a.insertBefore(b,a.firstChild); } }); }); }
+  new MutationObserver(function(){ try{ armar(); sueltos(); }catch(e){ try{ console.error('ficha41',e); }catch(_){} } })
+    .observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
 </body></html>
