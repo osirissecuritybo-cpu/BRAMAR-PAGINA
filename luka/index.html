@@ -15,6 +15,8 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
+<style>html.lk-pre{background:#F2F5F9}html.lk-pre body{visibility:hidden}</style>
+<script>document.documentElement.classList.add('lk-pre');setTimeout(function(){document.documentElement.classList.remove('lk-pre')},2500);</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15207,7 +15209,8 @@ window.lukaCloud = (function(){
     const row = document.createElement('div'); row.className='asx-tramo';
     row.innerHTML = `
       <input type="text" class="asx-tr-label" placeholder="Cantidad de personas (ej. Hasta 10)" value="${esc(t.label||'')}">
-      <input type="number" class="asx-tr-monto" placeholder="Bs." min="0" step="1" value="${t.monto===''||t.monto==null?'':t.monto}">
+      <input type="number" class="asx-tr-monto" placeholder="Propietario Bs." title="Precio propietario" min="0" step="1" value="${t.monto===''||t.monto==null?'':t.monto}">
+      <input type="number" class="asx-tr-inq" placeholder="Inquilino Bs." title="Precio inquilino (vacío = igual)" min="0" step="1" value="${t.montoInq===''||t.montoInq==null?'':t.montoInq}">
       <button type="button" class="asx-tr-del" title="Quitar precio">✕</button>`;
     row.querySelector('.asx-tr-del').onclick = ()=> row.remove();
     container.appendChild(row);
@@ -15219,6 +15222,7 @@ window.lukaCloud = (function(){
       <div class="asx-area-head">
         <input type="text" class="asx-nombre" placeholder="Nombre del área (ej. Salón social)" value="${esc(a.nombre||'')}">
         <input type="number" class="asx-garantia" placeholder="Garantía Bs." min="0" step="1" value="${a.garantia===''||a.garantia==null?'':a.garantia}" title="Garantía reembolsable">
+        <input type="number" class="asx-garantia-inq" placeholder="Garantía inquilino" min="0" step="1" value="${a.garantiaInq===''||a.garantiaInq==null?'':a.garantiaInq}" title="Garantía inquilino (vacío = igual)">
         <button type="button" class="asx-area-del" title="Quitar área">✕</button>
       </div>
       <div class="asx-tramos"></div>
@@ -15244,11 +15248,12 @@ window.lukaCloud = (function(){
       const nombre = card.querySelector('.asx-nombre').value.trim();
       if (!nombre) return;
       const garantia = parseFloat(card.querySelector('.asx-garantia').value) || 0;
-      const tramos = [...card.querySelectorAll('.asx-tramo')].map(tr => ({
+      const gi = card.querySelector('.asx-garantia-inq').value.trim(), garantiaInq = gi === '' ? null : (parseFloat(gi) || 0);
+      const tramos = [...card.querySelectorAll('.asx-tramo')].map(tr => { const mi = tr.querySelector('.asx-tr-inq').value.trim(); return {
         label: tr.querySelector('.asx-tr-label').value.trim() || 'General',
-        monto: parseFloat(tr.querySelector('.asx-tr-monto').value) || 0
-      })).filter(t => t.monto > 0 || t.label);
-      arr.push({ id: newAreaId(nombre), nombre, garantia, tramos: tramos.length ? tramos : [{label:'General', monto:0}] });
+        monto: parseFloat(tr.querySelector('.asx-tr-monto').value) || 0,
+        montoInq: mi === '' ? null : (parseFloat(mi) || 0) }; }).filter(t => t.monto > 0 || t.label);
+      arr.push({ id: newAreaId(nombre), nombre, garantia, garantiaInq, tramos: tramos.length ? tramos : [{label:'General', monto:0}] });
     });
     saveAreas(arr);
     _('asx-editor-bd').classList.remove('open');
@@ -21249,7 +21254,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       if(!res){ alert('Este comprobante es de una reserva, pero no la encontré aprobada en LUKA. Apruébela primero en «Reservar área social».'); return; }
       document.getElementById('pb-bd').classList.remove('open');
       var n=parseFloat(String(r.monto||'').replace(',','.'));
-      var marcar=function(){ api({action:'estado',fila:r.fila,archivo:r.archivo,estado:'Verificado'}).then(function(){ cargar(); }).catch(function(){}); };
+      var marcar=function(){ lista=lista.filter(function(x){ return x!==r; }); badge(lista.length); api({action:'estado',fila:r.fila,archivo:r.archivo,estado:'Verificado'}).then(function(){ cargar(true); }).catch(function(){ cargar(true); }); };
       if(res.pago){ if(confirm('Esta reserva ya está cobrada (recibo '+res.pago.no+'). ¿Marcar el comprobante como verificado?')) marcar(); return; }
       var marcar0=marcar; marcar=function(rr){ try{ if(rr&&rr.pago){ rr.pago.comprobante={fila:r.fila,archivo:r.archivo}; guardar(); } }catch(e){} marcar0(); };
       window.lukaPagoReserva(res,{monto:n>0?n:0,fecha:/^\d{4}-\d{2}-\d{2}$/.test(r.fecha||'')?r.fecha:'',obs:'Comprobante del portal'+(r.nota?' — '+r.nota.replace(/^\[Alquiler\]\s*/,''):''),onDone:marcar});
@@ -21304,10 +21309,10 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   new MutationObserver(function(){ if(fichaPend) return; fichaPend=true; requestAnimationFrame(function(){ fichaPend=false; botonesFicha(); }); }).observe(document.body,{childList:true,subtree:true});
   function rechazar(r,btn){
     if(!confirm('¿Rechazar el comprobante del depto '+r.depto+'?\nEl propietario verá «Rechazado» en su portal.')) return;
-    btn.disabled=true;
+    btn.disabled=true; var antes=lista.slice(); lista=lista.filter(function(x){ return x!==r; }); badge(lista.length); pintar();
     api({action:'estado',fila:r.fila,archivo:r.archivo,estado:'Rechazado'})
-      .then(function(){ toast('Comprobante rechazado. El propietario ya lo ve en su portal.'); cargar(); })
-      .catch(function(e){ btn.disabled=false; alert('No se pudo actualizar el portal: '+(e.message||e)); });
+      .then(function(){ toast('Comprobante rechazado.'); cargar(true); })
+      .catch(function(e){ lista=antes; badge(lista.length); pintar(); alert('No se pudo actualizar el portal: '+(e.message||e)); });
   }
   function hook(){
     if(window.__pbHooked||typeof window.registrarPago!=='function'||typeof window.closePayModal!=='function') return;
@@ -21318,11 +21323,11 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       var p=pend; window.__pbBusy=true;
       var out; try{ out=_reg.apply(this,arguments); } finally { window.__pbBusy=false; }
       if(p&&d&&d.depto===p.depto){
-        pend=null;
+        pend=null; lista=lista.filter(function(x){ return x.fila!==p.fila; }); badge(lista.length); try{ pintar(); }catch(e){}
         var pago=(d.pagos_registrados||[])[d.pagos_registrados.length-1];
         if(pago){ pago.verificado=true; pago.portal={fila:p.fila,archivo:p.archivo}; guardar(); }
         api({action:'estado',fila:p.fila,archivo:p.archivo,estado:'Verificado'})
-          .then(function(){ toast('Pago registrado y verificado. El propietario ya lo ve en su portal.'); cargar(); })
+          .then(function(){ toast('Pago registrado y verificado.'); cargar(true); })
           .catch(function(e){ alert('El pago quedó registrado en LUKA, pero no se pudo marcar en el portal: '+(e.message||e)+'\nMárquelo como Verificado en la hoja «Registro de comprobantes».'); });
       }
       return out;
@@ -22590,7 +22595,6 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
     var vd=$('view-diario'), gd=grupo('diario');
     if(vd){
       var card=vd.querySelector('.diario-form-card')||($('lk-f-dia-n')&&$('lk-f-dia-n').querySelector('.diario-form-card'));
-      if(card){ if(!$('lk-f-dia-n')){ var p3=pop('lk-f-dia-n','mas','Nuevo movimiento'); gd.appendChild(p3); } mover(card,$('lk-f-dia-n').lastChild); }
       var ctr=vd.querySelector(':scope > .controls'); if(ctr){ if(!$('lk-f-dia-f')){ var p4=pop('lk-f-dia-f','filtro','Mes y búsqueda'); gd.appendChild(p4); p4.lastChild.innerHTML='<p class="lk-pop-t">Mes y búsqueda</p>'; } mover(ctr,$('lk-f-dia-f').lastChild); }
     }
     // Notificaciones (comprobantes, reservas, eventos de hoy)
@@ -22625,7 +22629,7 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
     box.querySelectorAll('[data-n]').forEach(function(x){ x.onclick=function(){ $('lk-bell').classList.remove('open'); if(x.dataset.n==='comp'){ var pb=$('pb-btn'); if(pb) pb.click(); } else { try{ switchView('areas-sociales'); }catch(e){} } }; });
   }
   var pend=false;
-  new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; try{ armar(); }catch(e){} }); })
+  new MutationObserver(function(){ if(pend) return; pend=true; setTimeout(function(){ pend=false; try{ armar(); }catch(e){} },90); })
     .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class','hidden']});
   setInterval(contar,30000);
 })();
@@ -22657,7 +22661,6 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
 .lkr-tab.active .tcount{background:rgba(255,255,255,.18)!important;color:#fff!important}
 .lkr-panel{max-width:none!important}
 /* caja chica: el alta queda en el botón ＋ de la cabecera */
-#view-cajachica:not(.lk-nueva) #cajachica-container>div.diario-form-card:first-of-type{display:none!important}
 /* ritmo vertical uniforme */
 #view-lista,#view-pizarra,#view-diario,#view-plan,#view-tarjetas,#view-areas-sociales,#view-cajachica{padding-top:0}
 .plan-card,.diario-form-card,.lk-tools-bar{border-radius:14px!important}
@@ -22695,7 +22698,201 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
     document.querySelectorAll('.lk-tools').forEach(function(g){ g.hidden=(g.dataset.v!==v); });
   }
   var pend=false;
-  new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; try{ armar(); }catch(e){} }); }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+  new MutationObserver(function(){ if(pend) return; pend=true; setTimeout(function(){ pend=false; try{ armar(); }catch(e){} },90); }).observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+<style>
+/* ============ Módulo 40 · Ajustes de uso diario ============ */
+/* Reporte diario y caja chica: el formulario de alta siempre a la vista, en una sola fila */
+.diario-form-hint{display:none!important}
+#view-diario>.diario-form-card,#view-cajachica #cajachica-container>div.diario-form-card:first-of-type{display:block!important;background:#fff!important;border:1px solid #DDE5EE!important;border-radius:14px!important;padding:16px 18px!important;margin:0 0 16px!important;box-shadow:none!important}
+#view-diario>.diario-form-card h3,#view-cajachica #cajachica-container>div.diario-form-card:first-of-type h3{display:flex!important;align-items:center;gap:8px;margin:0 0 12px!important;font-size:15px!important;font-weight:700!important;color:#0B2440!important}
+#diario-form{display:grid!important;grid-template-columns:160px 160px minmax(0,1fr) 150px auto;gap:10px!important;align-items:center;margin:0!important}
+#diario-form>*{box-sizing:border-box;width:100%!important;height:44px!important;min-height:44px!important;margin:0!important;border-radius:10px!important;font-size:14px!important}
+#diario-form select,#diario-form input{padding:0 12px!important;border:1px solid #D5DEE8!important;background:#F6F8FB!important;color:#0B2440!important}
+#diario-form .btn{padding:0 18px!important;justify-content:center}
+#lk-h-caja{display:none!important}
+@media (max-width:800px){
+  #diario-form{grid-template-columns:1fr 1fr}
+  #diario-form #df-motivo,#diario-form .btn{grid-column:1/-1}
+}
+/* Ficha del departamento: sin textos que sobreexpliquen */
+#modal-content .modal-section>p[style*="font-size:11.5px"],#modal-content .modal-section p[style*="font-size:11.5px"]{display:none!important}
+#modal-content .lk-sin-mora,#modal-content .lk-sin-plan,#modal-content .lk-ult-pago{display:none!important}
+/* pagos registrados: filas limpias */
+#modal-content .pay-history-row{display:grid!important;grid-template-columns:22px minmax(0,1fr);gap:4px 12px;align-items:center;padding:12px 2px!important;border-bottom:1px solid #EEF2F6!important;text-align:left!important}
+#modal-content .pay-history-row:last-child{border-bottom:0!important}
+#modal-content .phr-check{grid-column:1;margin:0!important}
+#modal-content .phr-main{grid-column:2;min-width:0;text-align:left!important;font-size:14px;line-height:1.45}
+#modal-content .phr-main>span{font-size:12.5px}
+#modal-content .phr-actions{grid-column:2;display:flex!important;gap:6px;flex-wrap:wrap;justify-content:flex-start;margin:4px 0 0!important}
+#modal-content .phr-actions .btn{height:32px!important;min-height:32px!important;padding:0 10px!important;font-size:12.5px!important;border-radius:8px!important;gap:5px;white-space:nowrap}
+#modal-content .phr-actions .btn svg{width:13px;height:13px}
+@media (max-width:640px){
+  #modal-content .pay-history-row{grid-template-columns:22px minmax(0,1fr)}
+  #modal-content .phr-actions{grid-column:2;justify-content:flex-start;flex-wrap:wrap}
+}
+/* Configuración: expensas por período y correos/Drive */
+.lk40-sec h3{margin:0 0 14px}
+.lk40-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.lk40-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px;gap:8px;align-items:center}
+.lk40-row input,.lk40-f input,.lk40-f textarea{box-sizing:border-box;width:100%;height:44px;padding:0 12px;border:1px solid #D5DEE8;border-radius:10px;background:#F6F8FB;color:#0B2440;font:inherit;font-size:14px}
+.lk40-f textarea{height:auto;min-height:70px;padding:10px 12px;resize:vertical}
+.lk40-row button{height:40px;border:0;border-radius:10px;background:#F2F5F9;color:#8E2A20;font-size:18px;cursor:pointer}
+.lk40-head{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) 40px;gap:8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7d93ab;margin-bottom:6px}
+.lk40-f{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.lk40-f>span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7d93ab}
+.lk40-foot{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:6px}
+.lk40-msg{font-size:13px;margin:8px 0 0}.lk40-msg.ok{color:#15803D}.lk40-msg.bad{color:#B42318}
+.lk40-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:#EEF2F7;color:#0B2440;font-size:12.5px;margin:0 6px 6px 0}
+/* áreas: precio de inquilino */
+.asx-tramo{display:grid!important;grid-template-columns:minmax(0,1fr) 120px 120px 36px!important;gap:8px!important}
+.asx-area-head{display:grid!important;grid-template-columns:minmax(0,1fr) 120px 120px 36px!important;gap:8px!important}
+@media (max-width:640px){ .asx-tramo,.asx-area-head{grid-template-columns:1fr 1fr 36px!important} .asx-tr-label,.asx-nombre{grid-column:1/-1} }
+/* respuesta inmediata al tocar */
+button,.btn{transition:transform .08s ease,background-color .15s,opacity .15s}
+button:active:not(:disabled),.btn:active{transform:scale(.97)}
+.lk40-busy{opacity:.6;pointer-events:none}
+</style>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 40
+   · QR de pago siempre a mano (ícono en la cabecera).
+   · Reporte diario y caja chica: el formulario de alta queda fijo.
+   · Ficha del depto: sin textos de ayuda, sin «al día», pagos en filas limpias.
+   · Expensas por período: la deuda cargada a mano se reparte con la expensa
+     de cada año (Configuración → Expensas).
+   · Correos y Drive de cada edificio (Configuración → Correos y Drive).
+   · Comprobantes del portal: se quitan de la lista al instante al registrarlos.
+   ============================================================================ */
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function guardar(){ try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); }catch(e){} try{ saveDataLocal(); }catch(e){} }
+  var SV='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+  var ICO={ qr:SV+'<rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1"/><path d="M14 14h2.5v2.5H14zM18 18h2.5v2.5H18zM14 18.5v2M18.5 14h2"/></svg>',
+    ver:SV+'<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></svg>' };
+
+  /* ---------- cabecera: QR de pago ---------- */
+  function cabecera(){
+    var rr=document.querySelector('.lk-top-r'); if(!rr) return;
+    if(!$('lk-h-qr')&&$('qr-fab-btn')){ var b=document.createElement('button'); b.type='button'; b.className='lk-ti'; b.id='lk-h-qr'; b.title='QR de pago'; b.setAttribute('aria-label','QR de pago'); b.innerHTML=ICO.qr;
+      b.onclick=function(){ $('qr-fab-btn').click(); }; var bell=$('lk-bell'); rr.insertBefore(b,bell||null); }
+    var hv=$('lk-h-ver'); if(hv&&!hv.dataset.i40){ hv.dataset.i40=1; hv.innerHTML=ICO.ver; }
+  }
+  /* ---------- reporte diario: formulario fijo arriba ---------- */
+  function diario(){
+    var vd=$('view-diario'), card=document.querySelector('.diario-form-card #diario-form'); if(!vd||!card) return;
+    card=card.closest('.diario-form-card');
+    if(card.parentNode!==vd){ vd.insertBefore(card,vd.firstChild); var p=$('lk-f-dia-n'); if(p) p.remove(); }
+    var t=$('diario-form-title'); if(t&&!t.dataset.i40){ t.dataset.i40=1; t.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg> Nuevo movimiento'; }
+    var m=$('df-motivo'); if(m) m.placeholder='Motivo';
+  }
+  /* ---------- ficha del departamento ---------- */
+  function ficha(){
+    var mc0=$('modal-content');
+    // botón «Comprobante» del portal dentro de las acciones de cada pago
+    if(mc0) mc0.querySelectorAll('.pay-history-row').forEach(function(r){ var a=r.querySelector('.phr-actions'); r.querySelectorAll(':scope > .pb-ficha-ver, :scope > button').forEach(function(b){ if(a&&b.parentNode===r){ b.classList.add('small'); a.insertBefore(b,a.firstChild); } }); });
+    var mc=mc0; if(!mc||!mc.querySelector('#modal-pay-btn')||mc.dataset.f40===mc.querySelector('h2').textContent+'|'+mc.children.length) return;
+    mc.querySelectorAll('.modal-section').forEach(function(s){
+      var h=s.querySelector('h3'), t=h?h.textContent.trim().toLowerCase():'';
+      if(t.indexOf('meses de expensa en mora')===0&&s.querySelector('.no-debt-note')) s.classList.add('lk-sin-mora');
+      if(t.indexOf('último pago')===0) s.classList.add('lk-ult-pago');
+      if(t.indexOf('plan de pagos')===0&&/no tiene un plan de pagos activo/i.test(s.textContent)) s.classList.add('lk-sin-plan');
+    });
+    mc.querySelectorAll('p').forEach(function(p){ if(/no tiene un plan de pagos activo/i.test(p.textContent)){ var s=p.closest('.modal-section,.plan-modal-section,div'); (s||p).classList.add('lk-sin-plan'); } });
+    var lab=mc.querySelector('label[for="deuda-manual-cuota"]')||[].slice.call(mc.querySelectorAll('label')).filter(function(l){ return /Expensa mensual de este depto/.test(l.textContent); })[0];
+    if(lab&&tarifas().length) lab.textContent='Expensa actual (Bs.)';
+    mc.dataset.f40=mc.querySelector('h2').textContent+'|'+mc.children.length;
+  }
+
+  /* ---------- expensas por período ---------- */
+  function cfg(){ if(!DATA.config) DATA.config={}; return DATA.config; }
+  function tarifas(){ var t=cfg().tarifasHist; return Array.isArray(t)?t.filter(function(x){ return /^\d{4}-\d{2}$/.test(x.desde)&&+x.monto>0; }).sort(function(a,b){ return a.desde<b.desde?-1:1; }):[]; }
+  function idxDe(ym){ var p=ym.split('-'); return (+p[0])*12+(+p[1]-1); }
+  function tarifaEn(idx,T){ var r=null; T.forEach(function(x){ if(idxDe(x.desde)<=idx) r=+x.monto; }); return r==null?(T.length?+T[0].monto:null):r; }
+  if(typeof window.setDeudaManual==='function'){
+    var orig=window.setDeudaManual;
+    window.setDeudaManual=function(d,montoTotal,expensaMensual){
+      var T=tarifas(); if(!T.length) return orig.apply(this,arguments);
+      var cuota=Number(expensaMensual)>0?Number(expensaMensual):(d.expensaMensual||cfg().expensaMensual);
+      d.expensaMensual=cuota;
+      var now=new Date(), nowIdx=now.getFullYear()*12+now.getMonth();
+      var curIdx=(DATA.accrual&&DATA.accrual[d.bloque]!==undefined)?DATA.accrual[d.bloque]:nowIdx;
+      // si este depto paga distinto al edificio (por tamaño), se mantiene la proporción en cada año
+      var base=tarifaEn(curIdx,T), k=base>0?cuota/base:1;
+      var total=Math.round((Number(montoTotal)||0)*100)/100, out=[], idx=curIdx, guard=0;
+      while(total>0.005&&guard++<600){
+        var t=Math.round((tarifaEn(idx,T)||cuota)*k*100)/100, m=total>t+0.005?t:total;
+        out.push({mes:MESES_LARGOS[((idx%12)+12)%12],anio:String(Math.floor(idx/12)),monto:Math.round(m*100)/100});
+        total=Math.round((total-m)*100)/100; idx-=1;
+      }
+      d.meses_adeudados=out; recalcDepto(d);
+    };
+  }
+  function nuevaTab(id,cat,ico,titulo,sub,pintar){
+    var nav=$('cfg2-nav'), cont=$('cfg2-cont'); if(!nav||!cont||$(id)) return;
+    var tab=document.createElement('button'); tab.type='button'; tab.className='cfg2-tab'; tab.dataset.cat=cat;
+    tab.innerHTML=ico.replace('width="18" height="18"','width="17" height="17"')+'<span>'+titulo+'<span class="cfg2-tab-n">'+sub+'</span></span>';
+    nav.appendChild(tab);
+    var sec=document.createElement('div'); sec.className='cfg2-sec lk40-sec'; sec.dataset.cat=cat; sec.id=id; cont.appendChild(sec);
+    tab.addEventListener('click',function(){ nav.querySelectorAll('.cfg2-tab').forEach(function(t){ t.classList.toggle('active',t===tab); }); cont.querySelectorAll('.cfg2-sec').forEach(function(x){ x.classList.toggle('active',x===sec); }); pintar(sec); });
+    nav.addEventListener('click',function(e){ var t=e.target.closest('.cfg2-tab'); if(t&&t!==tab){ tab.classList.remove('active'); sec.classList.remove('active'); } });
+  }
+  function pintarExpensas(sec){
+    var T=tarifas(); if(!T.length) T=[{desde:new Date().getFullYear()+'-01',monto:cfg().expensaMensual||''}];
+    sec.innerHTML='<h3 class="cfg2-sec-title">Expensas por período</h3>'+
+      '<div class="lk40-head"><span>Desde</span><span>Expensa (Bs.)</span><span></span></div><div class="lk40-rows" id="lk40-tr"></div>'+
+      '<div class="lk40-foot"><button type="button" class="btn" id="lk40-tr-add">＋ Período</button><button type="button" class="btn primary" id="lk40-tr-ok">Guardar</button></div><p class="lk40-msg" id="lk40-tr-m"></p>';
+    var box=$('lk40-tr');
+    function fila(x){ var r=document.createElement('div'); r.className='lk40-row'; r.innerHTML='<input type="month" value="'+esc(x.desde||'')+'"><input type="number" min="0" step="0.01" placeholder="0" value="'+esc(x.monto)+'"><button type="button" title="Quitar">×</button>'; r.lastChild.onclick=function(){ r.remove(); }; box.appendChild(r); }
+    T.slice().reverse().forEach(fila);
+    $('lk40-tr-add').onclick=function(){ fila({desde:'',monto:''}); box.lastChild.firstChild.focus(); };
+    $('lk40-tr-ok').onclick=function(){
+      var L=[].slice.call(box.children).map(function(r){ var i=r.querySelectorAll('input'); return {desde:i[0].value,monto:+i[1].value||0}; }).filter(function(x){ return /^\d{4}-\d{2}$/.test(x.desde)&&x.monto>0; });
+      cfg().tarifasHist=L; guardar(); var m=$('lk40-tr-m'); m.className='lk40-msg ok'; m.textContent='Guardado.'; };
+  }
+  function idEdificio(){ try{ var k=LOCAL_DATA_KEY; return /^luka-b-/.test(k)?k.slice(7):null; }catch(e){ return null; } }
+  function pintarCorreos(sec){
+    if(!(window.lukaCloud&&lukaCloud.active())){ sec.innerHTML='<h3 class="cfg2-sec-title">Correos y Drive</h3><p class="lk40-msg">Disponible con la sesión en la nube.</p>'; return; }
+    sec.innerHTML='<h3 class="cfg2-sec-title">Correos y Drive de este edificio</h3>'+
+      '<label class="lk40-f"><span>Notificaciones</span><textarea id="lk40-av" placeholder="correo@ejemplo.com (uno por línea)"></textarea></label>'+
+      '<label class="lk40-f"><span>Almacenamiento de comprobantes (Drive)</span><textarea id="lk40-dr" placeholder="correo@gmail.com"></textarea></label>'+
+      '<label class="lk40-f"><span>Carpeta de Drive propia (opcional)</span><input id="lk40-cp" placeholder="Enlace de la carpeta"></label>'+
+      '<div class="lk40-foot"><a class="btn" id="lk40-open" target="_blank" rel="noopener" hidden>Abrir carpeta</a><button type="button" class="btn primary" id="lk40-ok">Guardar</button></div><p class="lk40-msg" id="lk40-m"></p>';
+    var m=$('lk40-m'), id=idEdificio();
+    lukaCloud.api({action:'lk_edificio_cfg',id:id}).then(function(r){
+      $('lk40-av').value=(r.avisos||[]).join('\n'); $('lk40-dr').value=(r.drive||[]).join('\n'); $('lk40-cp').value=r.carpeta?'https://drive.google.com/drive/folders/'+r.carpeta:'';
+      if(r.url){ $('lk40-open').href=r.url; $('lk40-open').hidden=false; }
+      if(r.cuenta) $('lk40-cp').title='Compártala como Editor con '+r.cuenta;
+    }).catch(function(e){ m.className='lk40-msg bad'; m.textContent=e.message; });
+    $('lk40-ok').onclick=function(){ var b=this; b.disabled=true; b.textContent='Guardando…'; m.textContent='';
+      lukaCloud.api({action:'lk_edificio_cfg',id:id,guardar:true,avisos:$('lk40-av').value,drive:$('lk40-dr').value,carpeta:$('lk40-cp').value}).then(function(r){
+        $('lk40-av').value=(r.avisos||[]).join('\n'); $('lk40-dr').value=(r.drive||[]).join('\n');
+        if(r.url){ $('lk40-open').href=r.url; $('lk40-open').hidden=false; }
+        m.className='lk40-msg ok'; m.textContent='Guardado'+((r.compartida||[]).length?' · carpeta compartida con '+r.compartida.join(', '):'')+'.';
+      }).catch(function(e){ m.className='lk40-msg bad'; m.textContent=e.message; }).then(function(){ b.disabled=false; b.textContent='Guardar'; }); };
+  }
+  function tabs(){
+    nuevaTab('lk40-exp','expensas',SV+'<path d="M4 19V5M4 19h16"/><path d="M8 15l4-4 3 3 5-6"/></svg>','Expensas','Monto por período',pintarExpensas);
+    nuevaTab('lk40-mail','correos',SV+'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>','Correos y Drive','Avisos y comprobantes',pintarCorreos);
+  }
+
+  /* ---------- comprobantes del portal: fuera de la lista al instante ---------- */
+  function rapido(){
+    var bd=$('pb-bd'); if(!bd||bd.dataset.r40) return; bd.dataset.r40=1;
+    bd.addEventListener('click',function(e){ var b=e.target.closest('[data-pb-rech],[data-pb-reg]'); if(!b) return;
+      var it=b.closest('.lk-item'); if(it&&b.hasAttribute('data-pb-rech')) setTimeout(function(){ if(b.disabled) it.classList.add('lk40-busy'); },0); },true);
+  }
+
+  var pend=false;
+  function todo(){ pend=false; try{ cabecera(); diario(); ficha(); tabs(); rapido(); }catch(e){ try{ console.error('mod40',e); }catch(_){} } }
+  new MutationObserver(function(){ if(pend) return; pend=true; setTimeout(todo,60); }).observe(document.body,{childList:true,subtree:true});
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',todo); else todo();
+  /* sin parpadeo al recargar: la página se muestra cuando ya tiene su diseño final */
+  function mostrar(){ todo(); requestAnimationFrame(function(){ requestAnimationFrame(function(){ document.documentElement.classList.remove('lk-pre'); }); }); }
+  if(document.readyState==='complete') setTimeout(mostrar,150); else window.addEventListener('load',function(){ setTimeout(mostrar,150); });
 })();
 </script>
 

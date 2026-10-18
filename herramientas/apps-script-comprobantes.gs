@@ -59,8 +59,7 @@ function doPost(e) {
     if (bytes.length > MAX_BYTES) return json({ ok: false, error: 'El archivo es demasiado grande.' });
 
     const ahora = new Date();
-    const raiz = carpeta_(DriveApp.getRootFolder(), CARPETA_RAIZ);
-    const edificio = carpeta_(raiz, limpiar_(d.edificio || d.edificio_id || 'Sin edificio'));
+    const edificio = carpetaEdificio_(d.edificio_id, d.edificio);
     const mes = carpeta_(edificio, Utilities.formatDate(ahora, 'America/La_Paz', 'yyyy-MM') + ' ' + MESES[Number(Utilities.formatDate(ahora, 'America/La_Paz', 'M')) - 1]);
     let depto = carpeta_(mes, 'Depto ' + limpiar_(d.depto || 'sin número'));
     if (d.tipo === 'alquiler') depto = carpeta_(depto, 'Alquileres y otros');
@@ -237,8 +236,26 @@ function json(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
 function carpeta_(padre, nombre) {
-  const it = padre.getFoldersByName(nombre);
-  return it.hasNext() ? it.next() : padre.createFolder(nombre);
+  // las carpetas se recuerdan 6 h: subir un comprobante no tiene que buscarlas cada vez
+  const c = CacheService.getScriptCache(), k = 'cf_' + padre.getId() + '_' + Utilities.base64EncodeWebSafe(Utilities.newBlob(nombre).getBytes()).slice(0, 150);
+  const id = c.get(k);
+  if (id) { try { const f = DriveApp.getFolderById(id); if (!f.isTrashed()) return f; } catch (e) {} }
+  const it = padre.getFoldersByName(nombre), f = it.hasNext() ? it.next() : padre.createFolder(nombre);
+  c.put(k, f.getId(), 21600); return f;
+}
+/* Carpeta de Drive de cada edificio: la que se configuró en LUKA (Correos y Drive) o
+   «Comprobantes Bramar / EDIFICIO». Si se indicaron correos de almacenamiento, la carpeta
+   queda compartida con ellos (la ven en su Drive, separada de los demás edificios). */
+function lkEntrada_(portalId) {
+  const id = slug_(portalId), E = lkEdificios_();
+  const k = Object.keys(E).filter(function (x) { return (E[x].portal || slug_(E[x].name)) === id; })
+    .sort(function (x, y) { return ((E[y].res || {}).deptos || 0) - ((E[x].res || {}).deptos || 0); })[0];
+  return k ? E[k] : null;
+}
+function carpetaEdificio_(portalId, nombre) {
+  const e = portalId ? lkEntrada_(portalId) : null;
+  if (e && e.carpeta) { try { return DriveApp.getFolderById(e.carpeta); } catch (x) {} }
+  return carpeta_(carpeta_(DriveApp.getRootFolder(), CARPETA_RAIZ), limpiar_((e && e.name) || nombre || portalId || 'Sin edificio'));
 }
 function limpiar_(s) { return String(s || '').replace(/[\\/:*?"<>|]/g, '-').slice(0, 80); }
 function registro_() {
@@ -427,6 +444,32 @@ function luka_(d) {
     lkLog_(u, String(row[3]), d.estado === 'Aprobada' ? 'Aprobó una reserva' : 'Rechazó una reserva', 'Depto ' + row[4] + ' · ' + row[6] + ' · ' + fecha_(row[8]));
     return json({ ok: true });
   }
+  if (a === 'lk_edificio_cfg') {
+    if (!puedeVer_(u, d.id)) return json({ ok: false, error: 'Sin acceso a este edificio.' });
+    const lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try {
+      const E = lkEdificios_(), e = E[d.id]; if (!e) return json({ ok: false, error: 'Guarde primero el edificio en la nube.' });
+      if (d.guardar) {
+        const lista = function (t) { return String(t || '').toLowerCase().split(/[\s,;]+/).map(function (c) { return c.trim(); }).filter(function (c) { return c && c !== 'y' && c !== 'u' && c !== 'o'; }); };
+        const av = lista(d.avisos), dr = lista(d.drive), malos = av.concat(dr).filter(function (c) { return !lkCorreoValido_(c); });
+        if (malos.length) return json({ ok: false, error: 'Correo no válido: ' + malos.join(', ') });
+        let carpeta = '';
+        const m = String(d.carpeta || '').match(/[-\w]{25,}/);
+        if (m) { try { DriveApp.getFolderById(m[0]).getName(); carpeta = m[0]; } catch (x) { return json({ ok: false, error: 'No tengo acceso a esa carpeta. Compártala como «Editor» con ' + Session.getEffectiveUser().getEmail() + '.' }); } }
+        e.avisos = av.join(','); e.drive = dr.join(','); e.carpeta = carpeta;
+        lkEscribir_('LUKA_EDIFICIOS', E);
+        let compartida = [];
+        if (dr.length) {
+          const f = carpetaEdificio_(e.portal || slug_(e.name), e.name), ya = f.getEditors().map(function (x) { return x.getEmail().toLowerCase(); });
+          dr.forEach(function (c) { if (ya.indexOf(c) < 0) { try { f.addEditor(c); compartida.push(c); } catch (x) {} } });
+        }
+        lkLog_(u, e.name, 'Cambió correos y Drive', 'Avisos: ' + av.join(', ') + ' · Drive: ' + dr.join(', ') + (carpeta ? ' · carpeta propia' : ''));
+        return json({ ok: true, avisos: av, drive: dr, carpeta: carpeta, compartida: compartida, url: carpetaEdificio_(e.portal || slug_(e.name), e.name).getUrl() });
+      }
+      let url = ''; try { url = carpetaEdificio_(e.portal || slug_(e.name), e.name).getUrl(); } catch (x) {}
+      return json({ ok: true, avisos: String(e.avisos || '').split(',').filter(Boolean), drive: String(e.drive || '').split(',').filter(Boolean), carpeta: e.carpeta || '', url: url, cuenta: Session.getEffectiveUser().getEmail() });
+    } finally { lock.releaseLock(); }
+  }
   if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un administrador puede hacer esto.' });
   if (a === 'lk_actividad') {
     const sh = lkHojaLog_(), n = sh.getLastRow();
@@ -541,6 +584,7 @@ function destinatarios_(portalId) {
     const ve = u.rol === 'admin' || (u.eds || []).indexOf('*') >= 0 || idsLuka.some(function (k) { return (u.eds || []).indexOf(k) >= 0; });
     if (ve) lista[u.mail] = 1;
   });
+  idsLuka.forEach(function (k) { String(E[k].avisos || '').split(',').filter(Boolean).forEach(function (c) { lista[c] = 1; }); });
   const fijos = PropertiesService.getScriptProperties().getProperty('CORREOS_AVISO');
   (fijos === null ? 'bramargroupsrl@gmail.com' : fijos).split(/[,;\s]+/).filter(Boolean).forEach(function (c) { lista[c.toLowerCase()] = 1; });
   return Object.keys(lista).join(',');
@@ -565,6 +609,12 @@ function ptLuka_(portalId) {
   return k ? { id: k, e: E[k] } : null;
 }
 function ptDatos_(lk) { return JSON.parse(DriveApp.getFileById(lk.e.file).getBlob().getDataAsString('UTF-8')); }
+function ptInqHash_(pid, dep, code) { return ptHex_(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, 'inq|' + pid + '|' + dep + '|' + ptNormCode_(code), Utilities.Charset.UTF_8)); }
+function ptInquilino_(pid, dep, code) {
+  if (ptNormCode_(code).length < 6) return null;
+  const x = lkLeer_('PT_INQ', {})[pid + '|' + dep];
+  return x && x.h === ptInqHash_(pid, dep, code) ? x : null;
+}
 function ptCodigoOk_(portalId, depto, code, data) {
   const c = ptNormCode_(code), dep = ptNormDepto_(depto);
   if (c.length < 6) return false;
@@ -618,7 +668,7 @@ function ptEstado_(portalId, lk, data, depto) {
     resumen: { deuda: deuda, vencimiento: '', actualizado: String(lk.e.upd || '').slice(0, 10) },
     movimientos: mov,
     servicios: ptServicios_(cfg),
-    areas: ptAreas_(cfg).map(function (a) { return { id: a.id, nombre: a.nombre, garantia: +a.garantia || 0, tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: +t.monto || 0 }; }) }; })
+    areas: ptAreas_(cfg).map(function (a) { return { id: a.id, nombre: a.nombre, garantia: +a.garantia || 0, garantiaInq: a.garantiaInq, tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: +t.monto || 0, montoInq: t.montoInq }; }) }; })
   };
 }
 const PT_AREAS_DEF = {
@@ -655,9 +705,8 @@ function ptHojaRes_() {
   return sh;
 }
 /* Carpeta del departamento para alquileres y otros pagos (separada de las expensas) */
-function ptCarpetaAlquiler_(edificio, depto) {
-  const ahora = new Date(), raiz = carpeta_(DriveApp.getRootFolder(), CARPETA_RAIZ);
-  const ed = carpeta_(raiz, limpiar_(edificio || 'Sin edificio'));
+function ptCarpetaAlquiler_(edificio, depto, pid) {
+  const ahora = new Date(), ed = carpetaEdificio_(pid, edificio);
   const mes = carpeta_(ed, Utilities.formatDate(ahora, 'America/La_Paz', 'yyyy-MM') + ' ' + MESES[Number(Utilities.formatDate(ahora, 'America/La_Paz', 'M')) - 1]);
   return carpeta_(carpeta_(mes, 'Depto ' + limpiar_(depto || 'sin número')), 'Alquileres y otros');
 }
@@ -695,8 +744,11 @@ function ptReservasLista_(filtro) {
 function portal_(d) {
   if (freno_()) return json({ ok: false, error: 'Demasiadas consultas, espere un minuto.' });
   if (d.action === 'pt_edificios') {
-    const E = lkEdificios_();
-    return json({ ok: true, edificios: Object.keys(E).map(function (k) { return { id: E[k].portal || slug_(E[k].name), nombre: E[k].name }; }) });
+    const E = lkEdificios_(), m = {};
+    Object.keys(E).forEach(function (k) { const e = E[k], id = e.portal || slug_(e.name), n = e.res ? +e.res.deptos || 0 : 1;
+      if (!e.file || n < 1) return;
+      if (!m[id] || n > m[id].n) m[id] = { id: id, nombre: e.name, n: n }; });
+    return json({ ok: true, edificios: Object.keys(m).map(function (k) { return { id: m[k].id, nombre: m[k].nombre }; }) });
   }
   const pid = slug_(d.edificio_id), lk = ptLuka_(pid);
   if (!lk) return json({ ok: false, error: 'no_vinculado' });
@@ -704,11 +756,28 @@ function portal_(d) {
   // edificio aún sin departamentos en LUKA: el portal sigue usando el archivo del sitio
   if (!(data.deptos || []).some(function (x) { return ptNormDepto_(x.depto) === ptNormDepto_(d.depto); })) return json({ ok: false, error: 'no_vinculado' });
   const okc = ptCodigoOk_(pid, d.depto, d.codigo, data);
-  if (okc === null) return json({ ok: false, error: 'no_vinculado' });
-  if (!okc) return json({ ok: false, error: 'codigo' });
+  const dep = ptNormDepto_(d.depto);
+  let inq = null;
+  if (!okc) { inq = ptInquilino_(pid, dep, d.codigo); if (!inq) return json({ ok: false, error: okc === null ? 'no_vinculado' : 'codigo' }); }
   const est = ptEstado_(pid, lk, data, d.depto);
   if (!est) return json({ ok: false, error: 'codigo' });
-  const dep = ptNormDepto_(d.depto);
+  const INQ = lkLeer_('PT_INQ', {}), ik = pid + '|' + dep;
+  est.rol = inq ? 'inquilino' : 'propietario';
+  est.areas = (est.areas || []).map(function (a) {
+    const g = inq && a.garantiaInq != null && a.garantiaInq !== '' ? +a.garantiaInq : a.garantia;
+    return { id: a.id, nombre: a.nombre, garantia: g, tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: inq && t.montoInq != null && t.montoInq !== '' ? +t.montoInq : t.monto }; }) }; });
+  if (inq) { est.unidad.inquilino = inq.n; }
+  else if (INQ[ik]) est.inquilino = { nombre: INQ[ik].n, desde: INQ[ik].c };
+  if (d.action === 'pt_inquilino') {
+    if (inq) return json({ ok: false, error: 'Solo el propietario puede hacer esto.' });
+    if (d.op === 'quitar') { delete INQ[ik]; lkEscribir_('PT_INQ', INQ); return json({ ok: true }); }
+    const nombre = String(d.nombre || '').trim().slice(0, 60);
+    if (!nombre) return json({ ok: false, error: 'Escriba el nombre del inquilino.' });
+    const A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; let c = ''; for (let i = 0; i < 10; i++) c += A.charAt(Math.floor(Math.random() * A.length));
+    INQ[ik] = { n: nombre, h: ptInqHash_(pid, dep, c), c: Utilities.formatDate(new Date(), 'America/La_Paz', 'yyyy-MM-dd') };
+    lkEscribir_('PT_INQ', INQ);
+    return json({ ok: true, codigo: c, nombre: nombre });
+  }
   if (d.action === 'pt_estado') return json({ ok: true, data: est });
   if (d.action === 'pt_reservas') {
     const ahora = new Date(), hoy = Utilities.formatDate(ahora, 'America/La_Paz', "yyyy-MM-dd'T'HH:mm");
@@ -755,7 +824,7 @@ function portal_(d) {
     } else if (d.metodo === 'qr') {
       if (!d.data || TIPOS.indexOf(d.mimeType) < 0) return json({ ok: false, error: 'Suba la imagen de su QR.' });
       const bytes = Utilities.base64Decode(d.data); if (bytes.length > MAX_BYTES) return json({ ok: false, error: 'La imagen es demasiado grande.' });
-      const carp = ptCarpetaAlquiler_(est.edificio.nombre, est.unidad.depto);
+      const carp = ptCarpetaAlquiler_(est.edificio.nombre, est.unidad.depto, pid);
       const file = carp.createFile(Utilities.newBlob(bytes, d.mimeType, Utilities.formatDate(new Date(), 'America/La_Paz', 'yyyy-MM-dd HH.mm') + ' · QR para devolver garantía'));
       datos = 'QR · ' + file.getUrl();
     } else return json({ ok: false, error: 'Elija cómo quiere recibir la garantía.' });
@@ -763,6 +832,14 @@ function portal_(d) {
     try { const to = destinatarios_(pid); if (to) MailApp.sendEmail({ to: to, name: 'Portal Bramar', subject: 'Devolución de garantía · ' + est.edificio.nombre + ' · Depto ' + est.unidad.depto,
       htmlBody: '<div style="font-family:Arial,sans-serif;font-size:15px;color:#0B2440"><p>El Depto ' + est.unidad.depto + ' pide la devolución de su garantía (' + r.area.replace(/^[^·]*·\s*/, '') + ', ' + r.fecha + ').</p><p>' + datos.replace(/</g, '&lt;') + '</p><p><a href="' + LUKA_URL + '">Abrir Gestión LUKA</a></p></div>' }); } catch (e) {}
     return json({ ok: true });
+  }
+  if (d.action === 'pt_ocupadas') {
+    const hoy = Utilities.formatDate(new Date(), 'America/La_Paz', 'yyyy-MM-dd'), out = {};
+    (data.reservasSociales || []).forEach(function (x) { const f = String(x.fecha || x.inicio || '').slice(0, 10);
+      if (f >= hoy && x.estado !== 'Cancelada' && (!d.areaId || String(x.areaId || '') === d.areaId)) out[f] = { fecha: f, hora: String(x.inicio || '').slice(11, 16), estado: 'Reservada' }; });
+    ptReservasLista_(function (r) { return r.edificio_id === pid && r.fecha >= hoy && (r.estado === 'Pendiente' || r.estado === 'Aprobada') && (!d.areaId || r.areaId === d.areaId); })
+      .forEach(function (r) { if (!out[r.fecha]) out[r.fecha] = { fecha: r.fecha, hora: r.hini, estado: r.estado === 'Aprobada' ? 'Reservada' : 'Solicitada' }; });
+    return json({ ok: true, fechas: Object.keys(out).sort().map(function (k) { return out[k]; }) });
   }
   if (d.action === 'pt_ocupado') {
     if (!/^\d{4}-\d{2}-\d{2}$/.test(d.fecha || '')) return json({ ok: true, ocupadas: [] });
@@ -787,7 +864,7 @@ function portal_(d) {
     const totExtras = pedidos.reduce(function (a, x) { return a + x.subtotal; }, 0), total = alquiler + garantia + totExtras;
     const ocup = ptOcupadas_(pid, data, d.fecha);
     const id = Utilities.getUuid().replace(/-/g, '').slice(0, 16), T = function (v, n) { return "'" + String(v || '').slice(0, n); };
-    ptHojaRes_().appendRow([id, new Date(), pid, est.edificio.nombre, T(est.unidad.depto, 20), String(d.responsable).slice(0, 80),
+    ptHojaRes_().appendRow([id, new Date(), pid, est.edificio.nombre, T(est.unidad.depto, 20), (inq ? 'Inquilino · ' : '') + String(d.responsable).slice(0, 80),
       area.id + ' · ' + area.nombre, T(d.tramo, 60), d.fecha, T(d.hini, 5), T(d.hfin, 5),
       String(d.evento).slice(0, 120), 'Pendiente', '', '', T(d.personas, 10), T(d.telefono, 30),
       pedidos.map(function (x) { return x.nombre + ' x' + x.cant; }).join(', '), alquiler, garantia, total, JSON.stringify(pedidos)]);
