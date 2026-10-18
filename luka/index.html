@@ -22955,7 +22955,8 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 }
 .f41-carga{display:flex;flex-direction:column;gap:8px}
 .f41-l{font-size:12px;color:#5B6B7F}
-.f41-yh,.f41-yr{display:grid;grid-template-columns:96px minmax(0,1fr) 40px;gap:8px;align-items:center}
+.f41-yh,.f41-yr{display:grid;grid-template-columns:minmax(0,1fr) 82px minmax(0,1.2fr) 40px;gap:8px;align-items:center}
+.f41-yr select{box-sizing:border-box;width:100%;height:44px;padding:0 10px;border:1px solid #D5DEE8;border-radius:10px;background:#F6F8FB;font:inherit;font-size:15px;color:#0B2440}
 .f41-yh{font-size:12px;color:#5B6B7F;margin-top:6px}
 .f41-years{display:flex;flex-direction:column;gap:8px}
 .f41-yr button{height:40px;border:0;border-radius:10px;background:#F2F5F9;color:#8E2A20;font-size:18px;cursor:pointer}
@@ -22964,6 +22965,8 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 .f41-prev:empty{display:none}
 .f41-prev div{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #E6ECF2;font-size:13.5px;color:#0B2440}
 .f41-prev div:last-child{border-bottom:0}
+.f41-prev small{display:block;font-size:12px;color:#7d93ab}
+.f41-prev b{white-space:nowrap;align-self:center}
 .f41-carga .btn{height:44px!important;min-height:44px!important;justify-content:center!important;border-radius:10px!important;margin:4px 0 0!important}
 </style>
 <script>
@@ -23020,30 +23023,33 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
     var pa=w.querySelector('[data-p=ajustes]');
     var dt=$('deuda-manual-total'), dc=$('deuda-manual-cuota'), ap=$('btn-aplicar-deuda-manual');
     if(dt&&dc&&ap){ var f=document.createElement('div'); f.className='f41-carga';
+      var MES=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
       f.innerHTML='<label class="f41-l">Deuda total de expensas</label><div class="f41-tot-in"></div>'+
-        '<div class="f41-yh"><span>Año</span><span>Expensa mensual</span><span></span></div><div class="f41-years"></div>'+
-        '<button type="button" class="f41-add">＋ Año anterior</button><div class="f41-prev"></div>';
+        '<div class="f41-yh"><span>Desde</span><span></span><span>Expensa</span><span></span></div><div class="f41-years"></div>'+
+        '<button type="button" class="f41-add">＋ Período anterior</button><div class="f41-prev"></div>';
       f.querySelector('.f41-tot-in').appendChild(dt); dc.type='hidden'; f.appendChild(dc); ap.textContent='Repartir en meses'; f.appendChild(ap);
       pa.insertAdjacentHTML('beforeend','<p class="f41-h">Cargar deuda</p>'); pa.appendChild(f);
       var yb=f.querySelector('.f41-years'), hoyY=new Date().getFullYear();
-      var H=(Array.isArray(d.tarifasHist)&&d.tarifasHist.length?d.tarifasHist:((DATA.config||{}).tarifasHist||[])).filter(function(x){ return /^\d{4}-\d{2}$/.test(x.desde)&&+x.monto>0; });
-      var porAnio={}; H.forEach(function(x){ porAnio[x.desde.slice(0,4)]=+x.monto; });
-      if(!porAnio[hoyY]) porAnio[hoyY]=+d.expensaMensual||+(DATA.config||{}).expensaMensual||'';
-      function fila(y,v){ var r=document.createElement('div'); r.className='f41-yr';
-        r.innerHTML='<input type="number" class="f41-y" min="2000" max="2100" step="1" value="'+y+'"><input type="number" class="f41-v" min="0" step="0.01" placeholder="Bs." value="'+(v===''?'':v)+'"><button type="button" title="Quitar">×</button>';
+      var H=(Array.isArray(d.tarifasHist)&&d.tarifasHist.length?d.tarifasHist:((DATA.config||{}).tarifasHist||[])).filter(function(x){ return /^\d{4}-\d{2}$/.test(x.desde)&&+x.monto>0; }).sort(function(a,b){ return a.desde<b.desde?1:-1; });
+      if(!H.length) H=[{desde:hoyY+'-01',monto:+d.expensaMensual||+(DATA.config||{}).expensaMensual||''}];
+      function fila(desde,v){ var y=+desde.slice(0,4), mo=+desde.slice(5,7)-1, r=document.createElement('div'); r.className='f41-yr';
+        r.innerHTML='<select class="f41-m">'+MES.map(function(n,i){ return '<option value="'+i+'"'+(i===mo?' selected':'')+'>'+n+'</option>'; }).join('')+'</select>'+
+          '<input type="number" class="f41-y" min="2000" max="2100" step="1" value="'+y+'"><input type="number" class="f41-v" min="0" step="0.01" placeholder="Bs." value="'+(v===''?'':v)+'"><button type="button" title="Quitar">×</button>';
         r.lastChild.onclick=function(){ if(yb.children.length>1){ r.remove(); prev(); } }; yb.appendChild(r); }
-      Object.keys(porAnio).sort().reverse().forEach(function(y){ fila(y,porAnio[y]); });
-      f.querySelector('.f41-add').onclick=function(){ var ys=[].map.call(yb.querySelectorAll('.f41-y'),function(i){ return +i.value||hoyY; }); fila(Math.min.apply(null,ys)-1,''); yb.lastChild.querySelector('.f41-v').focus(); prev(); };
-      function leer(){ return [].map.call(yb.children,function(r){ return {y:+r.querySelector('.f41-y').value, v:+r.querySelector('.f41-v').value||0}; }).filter(function(x){ return x.y>1990&&x.v>0; }).sort(function(a,b){ return a.y-b.y; }); }
+      H.forEach(function(x){ fila(x.desde,x.monto); });
+      function leer(){ return [].map.call(yb.children,function(r){ var y=+r.querySelector('.f41-y').value, mo=+r.querySelector('.f41-m').value;
+          return {idx:y*12+mo, desde:y+'-'+('0'+(mo+1)).slice(-2), v:+r.querySelector('.f41-v').value||0}; }).filter(function(x){ return x.idx>1990*12&&x.v>0; }).sort(function(a,b){ return a.idx-b.idx; }); }
+      f.querySelector('.f41-add').onclick=function(){ var L=leer(), min=L.length?L[0].idx-12:(hoyY-1)*12; fila(Math.floor(min/12)+'-'+('0'+(min%12+1)).slice(-2),''); yb.lastChild.querySelector('.f41-v').focus(); prev(); };
+      function nom(i){ return MES[((i%12)+12)%12]+' '+Math.floor(i/12); }
       function prev(){ var L=leer(), tot=+dt.value||0, box=f.querySelector('.f41-prev'); if(!L.length||!(tot>0)){ box.innerHTML=''; return; }
-        var now=new Date(), idx=now.getFullYear()*12+now.getMonth(), cnt={}, rest=Math.round(tot*100)/100, g=0;
+        var now=new Date(), idx=now.getFullYear()*12+now.getMonth(), G=[], rest=Math.round(tot*100)/100, g=0;
         try{ if(DATA.accrual&&DATA.accrual[d.bloque]!==undefined) idx=DATA.accrual[d.bloque]; }catch(e){}
-        while(rest>0.005&&g++<600){ var y=Math.floor(idx/12), r=null; L.forEach(function(x){ if(x.y<=y) r=x.v; }); if(r==null) r=L[0].v; var q=rest>r+0.005?r:rest;
-          var k=y+'|'+r; cnt[k]=cnt[k]||{y:y,r:r,n:0,s:0}; cnt[k].n++; cnt[k].s+=q; rest=Math.round((rest-q)*100)/100; idx--; }
-        box.innerHTML=Object.keys(cnt).map(function(k){ var c=cnt[k]; return '<div><span>'+c.y+' · '+c.n+(c.n>1?' meses':' mes')+'</span><b>'+m(c.s)+'</b></div>'; }).join(''); }
-      f.addEventListener('input',prev); prev();
+        while(rest>0.005&&g++<600){ var r=null; L.forEach(function(x){ if(x.idx<=idx) r=x.v; }); if(r==null) r=L[0].v; var q=rest>r+0.005?r:rest;
+          var u=G[G.length-1]; if(u&&u.r===r){ u.ini=idx; u.n++; u.s+=q; } else G.push({r:r,ini:idx,fin:idx,n:1,s:q}); rest=Math.round((rest-q)*100)/100; idx--; }
+        box.innerHTML=G.map(function(c){ return '<div><span>'+(c.n>1?nom(c.ini)+' – '+nom(c.fin):nom(c.ini))+'<small>'+c.n+(c.n>1?' meses':' mes')+' × '+m(c.r)+'</small></span><b>'+m(c.s)+'</b></div>'; }).join(''); }
+      f.addEventListener('input',prev); f.addEventListener('change',prev); prev();
       ap.addEventListener('click',function(){ var L=leer(); if(!L.length) return;
-        d.tarifasHist=L.map(function(x){ return {desde:x.y+'-01',monto:x.v}; }); dc.value=L[L.length-1].v; },true);
+        d.tarifasHist=L.map(function(x){ return {desde:x.desde,monto:x.v}; }); dc.value=L[L.length-1].v; },true);
     }
     var am=$('ascensor-manual-monto'), ab=$('btn-aplicar-ascensor-manual');
     if(am&&ab&&!(seccion(mc,/cuota extraordinaria/i)||{}).hidden&&getComputedStyle(seccion(mc,/cuota extraordinaria/i)||document.body).display!=='none'){
