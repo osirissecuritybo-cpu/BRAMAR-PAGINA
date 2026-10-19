@@ -23070,6 +23070,11 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
   #view-diario .diario-table-wrap{max-height:none!important;overflow:visible!important}
   #view-diario .diario-table th{top:66px!important}
   #view-diario .diario-table tfoot td{position:sticky;bottom:0;z-index:2;box-shadow:0 -6px 16px -8px rgba(11,36,64,.35)}
+  /* aunque haya pocos movimientos, la tabla llega hasta abajo y el total queda al pie de la pantalla */
+  #view-diario .diario-table{height:calc(100vh - 66px - 128px)}
+  #view-diario .diario-table tbody tr{height:1px}
+  #view-diario .diario-table tbody tr.lk-relleno{height:100%}
+  #view-diario .diario-table tbody tr.lk-relleno td{border:0!important;padding:0!important;background:#fff}
 }
 @media (max-width:700px){ #view-diario .diario-table-wrap{max-height:none!important} }
 .list-scroll{max-height:none!important;overflow:visible!important;padding-right:0!important}
@@ -23111,6 +23116,9 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
     if(sv&&!sv.classList.contains('lkx')){ quitarTitulo(sv,'.menu-section-title'); var dv=sv.querySelector('.menu-divider'); if(dv) dv.remove(); plegar(sv,'Secciones visibles','secc'); }
     var av=document.getElementById('lk-avisos');
     if(av&&!av.classList.contains('lkx')){ quitarTitulo(av,'h4'); plegar(av,'Correo general (todos los edificios)','avisos'); }
+    // reporte diario: fila de relleno al final para que la tabla ocupe todo el alto
+    var tb=document.querySelector('#view-diario .diario-table tbody');
+    if(tb&&!(tb.lastElementChild&&tb.lastElementChild.classList.contains('lk-relleno'))){ var old=tb.querySelector('.lk-relleno'); if(old) old.remove(); var tr=document.createElement('tr'); tr.className='lk-relleno'; tr.innerHTML='<td colspan="7"></td>'; tb.appendChild(tr); }
     // textos vacíos más cortos
     document.querySelectorAll('.lkr-empty').forEach(function(e){ if(e.textContent.length>40) e.textContent=/garant/i.test(e.textContent)?'Sin garantías':'Sin reservas'; });
   }
