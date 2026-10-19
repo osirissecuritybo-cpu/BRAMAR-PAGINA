@@ -13928,16 +13928,33 @@ window.lukaCloud = (function(){
     }catch(e){ b.innerHTML='<p class="lk-warn">'+esc(e.message)+'</p>'; }
   }
 
+  /* Eliminar un edificio: siempre se pide escribir su nombre completo */
+  function pedirNombre(nombre,detalle){
+    return new Promise(function(res){
+      var bd=document.createElement('div'); bd.className='modal-backdrop no-print open'; bd.style.zIndex='9999';
+      bd.innerHTML='<div class="modal lk-modal" style="max-width:420px"><h2 style="margin:0 0 6px">Eliminar edificio</h2>'+
+        '<p style="margin:0 0 14px;color:#5B6B7F;font-size:14px">Escriba <b style="color:#0B2440">'+esc(nombre)+'</b>'+(detalle?' · '+esc(detalle):'')+'</p>'+
+        '<input id="lk-del-n" autocomplete="off" autocapitalize="characters" spellcheck="false" style="box-sizing:border-box;width:100%;height:46px;padding:0 12px;border:1px solid #D5DEE8;border-radius:10px;font:inherit;font-size:15px">'+
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px"><button type="button" class="btn" id="lk-del-x">Cancelar</button><button type="button" class="btn" id="lk-del-ok" disabled style="background:#B42318;color:#fff;border-color:#B42318;opacity:.45">Eliminar</button></div></div>';
+      document.body.appendChild(bd);
+      var i=bd.querySelector('#lk-del-n'), ok=bd.querySelector('#lk-del-ok');
+      function fin(v){ bd.remove(); res(v); }
+      i.oninput=function(){ var bien=i.value.trim()===nombre; ok.disabled=!bien; ok.style.opacity=bien?'1':'.45'; };
+      i.onkeydown=function(e){ if(e.key==='Enter'&&!ok.disabled) fin(true); if(e.key==='Escape') fin(false); };
+      ok.onclick=function(){ fin(true); }; bd.querySelector('#lk-del-x').onclick=function(){ fin(false); };
+      bd.addEventListener('click',function(e){ if(e.target===bd) fin(false); });
+      setTimeout(function(){ i.focus(); },50);
+    });
+  }
+  window.lukaPedirNombre=pedirNombre;
   async function eliminarEdificio(id){
     var e=edInfo[id]||{}, nombre=String(e.nombre||'').trim(), r=e.resumen;
-    var vacio=!r||!r.deptos;
-    if(vacio){ if(!confirm('¿Eliminar «'+nombre+'»? No tiene departamentos cargados.')) return; }
-    else { var t=prompt('Va a ELIMINAR «'+nombre+'» con '+r.deptos+' departamentos y todos sus pagos, pizarra y finanzas.\nEl archivo queda 30 días en la papelera de Google Drive.\n\nPara confirmar, escriba el nombre del edificio:'); if(t===null) return; if(t.trim()!==nombre){ alert('El nombre no coincide; no se eliminó nada.'); return; } }
+    if(!await pedirNombre(nombre,r&&r.deptos?r.deptos+' departamentos':'')) return;
     var fila=document.querySelector('.luka-sel-item[data-id="'+id+'"]'); if(fila) fila.classList.add('lk-borrando');
     try{ await api({action:'lk_borrar',id:id}); }catch(err){ if(fila) fila.classList.remove('lk-borrando'); alert('No se pudo eliminar: '+err.message); return; }
     if(fila) fila.remove();
     try{ await idbSet('luka-b-'+id,undefined); }catch(_){}
-    delete edInfo[id]; setDirty(id,null); olvidarLista();
+    delete edInfo[id]; setDirty(id,null); olvidarLista(); listaLocal(function(L){ return L.filter(function(x){ return x.id!==id; }); });
     try{ var reg=await idbGet('luka-registry'); if(reg&&Array.isArray(reg.list)){ reg.list=reg.list.filter(function(b){ return b.id!==id; }); if(reg.activeId===id) reg.activeId=null; await idbSet('luka-registry',reg); } }catch(_){}
   }
   async function cloudDelete(id){
@@ -14343,9 +14360,8 @@ window.lukaCloud = (function(){
     const id = reg.activeId;
     const e = reg.list.find(b => b.id === id);
     const name = ((e ? e.name : buildingName()) || '').trim();
-    const typed = prompt('Vas a ELIMINAR el condominio "' + name + '" y TODOS sus datos (departamentos, pagos, pizarra y finanzas).\n\nEsta acción NO se puede deshacer.\nPara confirmar, escribí el nombre exacto del edificio:');
-    if (typed === null) return;
-    if (typed.trim() !== name){ alert('El nombre no coincide, no se eliminó nada.'); return; }
+    if (window.lukaPedirNombre) { if (!(await window.lukaPedirNombre(name, ''))) return; }
+    else { const typed = prompt('Para eliminar, escriba el nombre exacto del edificio:'); if (typed === null || typed.trim() !== name) return; }
     await window.__luka.deleteBuilding(id);
   }
 
