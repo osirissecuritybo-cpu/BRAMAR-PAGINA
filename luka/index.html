@@ -13555,9 +13555,17 @@ window.lukaCloud = (function(){
     if(!isAdmin()) return;
     var raw=null; try{ raw=await idbGet('luka-registry'); }catch(e){}
     if(!raw||!Array.isArray(raw.list)||!raw.list.length) return;
-    var srv; try{ srv=(await listaNube()).edificios; }catch(e){ return; }
-    var ids=srv.map(function(e){ return e.id; });
-    var faltan=raw.list.filter(function(b){ return ids.indexOf(b.id)<0; });
+    var lr; try{ lr=await listaNube(); }catch(e){ return; }
+    var srv=lr.edificios, borr=lr.borrados||[];
+    var ids=srv.map(function(e){ return e.id; }), nombres=srv.map(function(e){ return String(e.nombre||'').trim().toLowerCase(); });
+    // nunca se vuelve a subir un edificio eliminado, uno vacío o uno que ya está en la nube con el mismo nombre
+    var faltan=[];
+    for(var k=0;k<raw.list.length;k++){ var x=raw.list[k];
+      if(ids.indexOf(x.id)>=0) continue;
+      if(borr.indexOf(x.id)>=0||nombres.indexOf(String(x.name||'').trim().toLowerCase())>=0){ await olvidarLocal(x.id); continue; }
+      var dx=null; try{ dx=await idbGet('luka-b-'+x.id); }catch(e){}
+      if(!dx||!(dx.deptos||[]).length){ await olvidarLocal(x.id); continue; }
+      faltan.push(x); }
     if(!faltan.length) return;
     if(!confirm('Hay '+faltan.length+' edificio(s) guardados solo en esta computadora:\n\n'+faltan.map(function(b){return '· '+b.name;}).join('\n')+'\n\n¿Subirlos a la nube para usarlos también en el celular?')) return;
     for(var i=0;i<faltan.length;i++){
@@ -13569,6 +13577,12 @@ window.lukaCloud = (function(){
     }
   }
 
+  /* quita de este dispositivo un edificio que ya no existe en la nube */
+  async function olvidarLocal(id){
+    try{ var reg=await idbGet('luka-registry'); if(reg&&Array.isArray(reg.list)){ reg.list=reg.list.filter(function(b){ return b.id!==id; }); if(reg.activeId===id) reg.activeId=null; await idbSet('luka-registry',reg); } }catch(e){}
+    try{ if(dirtyBase(id)==null) await idbSet('luka-b-'+id,undefined); }catch(e){}
+    setDirty(id,null);
+  }
   /* Lista de edificios: la de la nube (los que este usuario puede ver) */
   function aplicarLista(reg,L){
     reg.list=L.map(function(e){ return {id:e.id,name:e.nombre,createdAt:String(e.creado||'').slice(0,10)}; });
@@ -13582,6 +13596,7 @@ window.lukaCloud = (function(){
         var antes=JSON.stringify(cache.map(function(e){ return e.id+'|'+e.nombre; })), ahora=JSON.stringify(r.edificios.map(function(e){ return e.id+'|'+e.nombre; }));
         try{ localStorage.setItem(LS_LIST,JSON.stringify(r.edificios)); }catch(e){}
         r.edificios.forEach(function(e){ edInfo[e.id]=e; });
+        (r.borrados||[]).forEach(function(id){ olvidarLocal(id); });
         window.__lkListaFresca=true;
         if(antes!==ahora){ var sel=document.getElementById('luka-selector'); if(sel&&getComputedStyle(sel).display!=='none'&&window.lukaShowSelector) window.lukaShowSelector(); }
       }).catch(function(e){ if(e.sesion===false) logout(true); });
@@ -13682,6 +13697,7 @@ window.lukaCloud = (function(){
       if(e.sesion===false){ logout(true); return false; }
       if(e.offline){ status('Sin conexión: se subirá al volver internet'); clearTimeout(retryTimer); retryTimer=setTimeout(function(){ if(dirtyBase(id)!=null) pushCurrent(); },20000); return false; }
       if(e.data&&e.data.conflicto){ await conflict(id,data,e.data,silent); return false; }
+      if(e.data&&e.data.borrado){ await olvidarLocal(id); olvidarLista(); listaLocal(function(L){ return L.filter(function(x){ return x.id!==id; }); }); alert('Este edificio fue eliminado por un coordinador.'); if(window.lukaShowSelector) window.lukaShowSelector(); return false; }
       status('No se pudo guardar: '+e.message); return false;
     }finally{ saving=false; }
   }

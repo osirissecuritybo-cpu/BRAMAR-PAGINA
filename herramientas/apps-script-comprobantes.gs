@@ -398,7 +398,7 @@ function luka_(d) {
   if (a === 'lk_logout') { lkProps_().deleteProperty('T_' + d.t); return json({ ok: true }); }
   if (a === 'lk_edificios') {
     const E = lkEdificios_();
-    return json({ ok: true, edificios: Object.keys(E).filter(function (id) { return puedeVer_(u, id); })
+    return json({ ok: true, borrados: lkLeer_('LUKA_BORRADOS', []), edificios: Object.keys(E).filter(function (id) { return puedeVer_(u, id); })
       .map(function (id) { return { id: id, nombre: E[id].name, v: E[id].v, actualizado: E[id].upd, por: E[id].by, creado: E[id].created, resumen: E[id].res || null }; }) });
   }
   if (a === 'lk_version') {
@@ -418,7 +418,8 @@ function luka_(d) {
     try {
       const E = lkEdificios_(), e = E[d.id], now = new Date().toISOString();
       if (!e) {
-        if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un administrador puede crear edificios.' });
+        if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un coordinador general puede crear edificios.' });
+        if (lkLeer_('LUKA_BORRADOS', []).indexOf(d.id) >= 0) return json({ ok: false, borrado: true, error: 'Este edificio fue eliminado.' });
         const f = lkCarpeta_().createFile(Utilities.newBlob(d.data, 'application/json', limpiar_(d.nombre || d.id) + ' (' + d.id + ').json'));
         E[d.id] = { name: String(d.nombre || d.id).slice(0, 80), file: f.getId(), v: 1, upd: now, by: u.n, dev: String(d.dev || '').slice(0, 40), created: now, portal: d.portal ? slug_(d.portal) : '' };
         lkLog_(u, E[d.id].name, 'Creó el edificio', '');
@@ -506,7 +507,7 @@ function luka_(d) {
     const E = lkEdificios_(), e = E[d.id]; if (!e) return json({ ok: true });
     lkLog_(u, e.name, 'Borró el edificio', '');
     try { DriveApp.getFileById(e.file).setTrashed(true); } catch (x) {}
-    delete E[d.id]; lkEscribir_('LUKA_EDIFICIOS', E); return json({ ok: true });
+    delete E[d.id]; lkEscribir_('LUKA_EDIFICIOS', E); lkBorrado_(d.id); return json({ ok: true });
   }
   if (a === 'lk_avisos') {
     const P = PropertiesService.getScriptProperties();
@@ -555,6 +556,18 @@ function luka_(d) {
     lkEscribir_('LUKA_USERS', L); return json({ ok: true, usuarios: L.map(lkPublico_) });
   }
   return json({ ok: false, error: 'Acción desconocida.' });
+}
+/* Edificios eliminados: se recuerdan para que ninguna computadora los vuelva a subir */
+function lkBorrado_(id) { const B = lkLeer_('LUKA_BORRADOS', []); if (B.indexOf(id) < 0) B.push(id); lkEscribir_('LUKA_BORRADOS', B.slice(-300)); }
+/* Ejecutar desde el editor: elimina los edificios que no tienen departamentos (quedan 30 días en la papelera de Drive) */
+function limpiarEdificiosVacios() {
+  const E = lkEdificios_();
+  Object.keys(E).forEach(function (id) {
+    let n = 0; try { n = (JSON.parse(DriveApp.getFileById(E[id].file).getBlob().getDataAsString('UTF-8')).deptos || []).length; } catch (x) {}
+    Logger.log((n ? 'QUEDA   ' : 'BORRADO ') + E[id].name + ' (' + id + ') · ' + n + ' deptos');
+    if (!n) { try { DriveApp.getFileById(E[id].file).setTrashed(true); } catch (x) {} delete E[id]; lkBorrado_(id); }
+  });
+  lkEscribir_('LUKA_EDIFICIOS', E);
 }
 function lkNuevo_(usuario, nombre, clave, rol, eds, correo) {
   usuario = String(usuario || '').trim().toLowerCase(); correo = String(correo || '').trim().toLowerCase();
