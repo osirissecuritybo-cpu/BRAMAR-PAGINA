@@ -1481,7 +1481,8 @@
   <aside class="sidebar no-print" id="sidebar">
     <div class="sidebar-brand">
       <img id="brand-logo" alt="Logo del edificio">
-      <div class="sb-text"><strong id="sb-edificio">Gestión LUKA</strong><span id="sb-sub">Administración de condominios</span></div>
+      <div class="sb-text"><strong id="sb-edificio"></strong><span id="sb-sub">Gestión LUKA</span></div>
+      <script>(function(){try{var s=JSON.parse(localStorage.getItem('luka.splash')||'null');if(s){if(s.n)document.getElementById('sb-edificio').textContent=s.n;if(s.l)document.getElementById('brand-logo').src=s.l;}}catch(e){}})();</script>
       <button class="sidebar-close" id="sidebar-close" title="Cerrar menú">✕</button>
     </div>
     <div class="sidebar-actions">
@@ -14086,14 +14087,19 @@ window.lukaCloud = (function(){
   window.brandLogo = function(){ return (hasCfg() && DATA.config.logo) ? DATA.config.logo : DEFAULT_LOGO; };
   window.brandLogoWhite = function(){ return (hasCfg() && (DATA.config.logoWhite || DATA.config.logo)) ? (DATA.config.logoWhite||DATA.config.logo) : DEFAULT_LOGO; };
   window.brandQR = function(){ return (hasCfg() && DATA.config.qr) ? DATA.config.qr : ''; };
-  window.buildingName = function(){ return (hasCfg() && DATA.config.nombreEdificio) ? DATA.config.nombreEdificio : 'Gestión LUKA'; };
+  window.buildingName = function(){
+    if (hasCfg() && DATA.config.nombreEdificio) return DATA.config.nombreEdificio;
+    // sin nombre en la configuración: el nombre con que figura en la lista de edificios
+    try { const id = (typeof LOCAL_DATA_KEY==='string' && LOCAL_DATA_KEY.indexOf('luka-b-')===0) ? LOCAL_DATA_KEY.slice(7) : '';
+      const L = JSON.parse(localStorage.getItem('luka.cloud.list')||'[]'); const e = L.find(x => x.id === id); if (e && e.nombre) return e.nombre; } catch(e){}
+    return 'Gestión LUKA'; };
 
   function applyBranding(){
     const logo = brandLogo(), qr = brandQR(), name = buildingName();
     const set = (id, src) => { const el = document.getElementById(id); if (el) el.src = src; };
     set('brand-logo', logo); set('__pizLogo', logo);
     const sbE = document.getElementById('sb-edificio'); if (sbE) sbE.textContent = name;
-    const sbS = document.getElementById('sb-sub'); if (sbS) sbS.textContent = (name === 'Gestión LUKA') ? 'Administración de condominios' : 'Gestión LUKA';
+    const sbS = document.getElementById('sb-sub'); if (sbS) sbS.textContent = 'Gestión LUKA';
     // QR modal
     const qrImg = document.getElementById('qr-pago-img');
     const qrHint = document.getElementById('qr-empty-hint');
@@ -23304,4 +23310,13 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 })();
 </script>
 
+<script>
+/* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
+(function(){ var B='20261019102314';
+  function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
+    if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
+    fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
+  if(location.protocol!=='file:'){ setTimeout(revisar,1500); setInterval(revisar,300000); document.addEventListener('visibilitychange',function(){ if(!document.hidden) revisar(); }); }
+})();
+</script>
 </body></html>
