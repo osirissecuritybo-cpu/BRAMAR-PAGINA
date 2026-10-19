@@ -366,18 +366,19 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .svc .card.own:hover .partner.bm-btn svg{color:var(--navy-deep)}
 .svc .card.own:hover .who{background:var(--brass-soft);color:var(--navy-deep)}
 /* ascensores: tarjeta verde de proveedores */
-.svc .card.lift-p{--lp:#5f9b2b;--lp-hi:#86bd3a;--lp-deep:#33621a;background:linear-gradient(150deg,var(--lp-hi) 0%,var(--lp) 55%,var(--lp-deep) 100%);color:#fff;isolation:isolate}
+.svc .card.lift-p{--lp:#1f9e3a;--lp-hi:#36b84f;--lp-deep:#0f6526;background:linear-gradient(150deg,var(--lp-hi) 0%,var(--lp) 55%,var(--lp-deep) 100%);color:#fff;isolation:isolate}
 .svc .card.lift-p::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(120% 80% at 100% 0%,rgba(255,255,255,.2),transparent 55%)}
 .svc .card.lift-p .who{background:rgba(255,255,255,.18);color:#fff}
-.svc .card.lift-p .lp-ico{width:52px;height:52px;border-radius:16px;background:rgba(255,255,255,.16);display:grid;place-items:center}
-.svc .card.lift-p .lp-ico svg{width:28px;height:28px;color:#fff}
+.svc .card.lift-p .lp-mark{position:absolute;z-index:-1;width:260px;right:-60px;bottom:-70px;opacity:.12;pointer-events:none;transition:transform .9s var(--soft),opacity .5s}
+.svc .card.lift-p:hover .lp-mark{transform:rotate(12deg) scale(1.05);opacity:.18}
+.svc .card.lift-p .lp-logo{display:block;width:124px;height:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.15))}
 .svc-ally{grid-template-columns:repeat(2,minmax(0,1fr))!important}
 @media (max-width:640px){ .svc-ally{grid-template-columns:1fr!important} }
 .svc .card.lift-p h3{color:#fff}
 .svc .card.lift-p p{color:rgba(255,255,255,.86)}
 .svc .card.lift-p .lp-btn{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;margin-top:18px;padding:10px 16px;border-radius:999px;background:#fff;color:var(--lp-deep);font-size:14px;font-weight:600;text-decoration:none;transition:gap .3s,background .3s,color .3s}
 .svc .card.lift-p .lp-btn svg{width:14px;height:14px}
-.svc .card.lift-p:hover{background:linear-gradient(150deg,var(--lp-hi) 0%,var(--lp) 55%,var(--lp-deep) 100%);box-shadow:0 18px 40px -16px rgba(51,98,26,.55)}
+.svc .card.lift-p:hover{background:linear-gradient(150deg,var(--lp-hi) 0%,var(--lp) 55%,var(--lp-deep) 100%);box-shadow:0 18px 40px -16px rgba(15,101,38,.55)}
 .svc .card.lift-p:hover h3{color:#fff}.svc .card.lift-p:hover p{color:rgba(255,255,255,.86)}.svc .card.lift-p:hover .who{background:rgba(255,255,255,.18);color:#fff}
 .svc .card.lift-p:hover .lp-btn{gap:12px;background:var(--lp-deep);color:#fff}
 @media (max-width:760px){ .svc .card.lift-p{display:flex;flex-direction:column;padding:24px} .svc .card.lift-p .who{position:absolute;top:24px;right:24px;margin:0} .svc .card.lift-p h3{margin-top:22px} }
@@ -1182,7 +1183,7 @@ const SITE = {
   const card=([k,i,t,d,url,partner],n)=>{
     const own=k==='own';
     const tag=url?'a':own?'button':'article', attrs=url?` href="${url}" target="_blank" rel="noopener" aria-label="${t}: ${partner} (abre su sitio web)"`:own?` type="button" data-svc="${i}" aria-haspopup="dialog"`:'';
-    if(url==='lift') return `<article class="card tilt ${k} lift-p" data-k="${k}" data-reveal style="--d:${(n%4)*.06}s"><span class="who">Proveedores</span><div class="lp-ico"><svg aria-hidden="true"><use href="#i-lift"/></svg></div><h3>${t}</h3><p>${d}</p>${SITE.whatsapp?`<a class="lp-btn" href="${waURL('Hola Bramar, quisiera información sobre el mantenimiento de ascensores (Orona y otros) para mi edificio.')}" target="_blank" rel="noopener">Orona y otros <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>`:`<span class="lp-btn">Orona y otros</span>`}</article>`;
+    if(url==='lift') return `<article class="card tilt ${k} lift-p" data-k="${k}" data-reveal style="--d:${(n%4)*.06}s"><span class="who">Proveedores</span><img class="lp-mark" src="img/orona-anillo.png" alt="" aria-hidden="true" loading="lazy"><img class="lp-logo" src="img/orona-blanco.png" alt="Orona" width="483" height="176" loading="lazy"><h3>${t}</h3><p>${d}</p>${SITE.whatsapp?`<a class="lp-btn" href="${waURL('Hola Bramar, quisiera información sobre el mantenimiento de ascensores (Orona y otros) para mi edificio.')}" target="_blank" rel="noopener">Orona y otros <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>`:`<span class="lp-btn">Orona y otros</span>`}</article>`;
     if(url) return `<a class="card tilt ${k} osiris" data-k="${k}"${attrs} data-reveal style="--d:${(n%4)*.06}s"><img class="os-mark" src="img/osiris-ojo.png" alt="" aria-hidden="true" width="540" height="160" loading="lazy"><span class="who">Aliado</span><img class="os-logo" src="img/osiris-logo.png" alt="Osiris Security" width="360" height="169" loading="lazy"><h3>${t}</h3><p>${d}</p><span class="os-btn">Visitar Osiris Security <svg aria-hidden="true"><use href="#i-ext"/></svg></span></a>`;
     return `<${tag} class="card ${own||url?'tilt ':''}${k}${url?' osiris':''}" data-k="${k}"${attrs} data-reveal style="--d:${(n%4)*.06}s">${own?'<img class="bm-mark" src="img/isotipo-azul.png" alt="" aria-hidden="true" loading="lazy">':''}<span class="who">${partner||(k==='own'?'Bramar':'Aliado')}</span><div class="ico"><svg aria-hidden="true"><use href="#i-${i}"/></svg></div><h3>${t}</h3><p>${d}</p>${url?`<span class="partner">Conocer Osiris Security <svg aria-hidden="true"><use href="#i-ext"/></svg></span>`:own?`<span class="partner bm-btn">Ver qué incluye <svg aria-hidden="true"><use href="#i-arrow"/></svg></span>`:''}</${tag}>`;
   };
