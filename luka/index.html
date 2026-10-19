@@ -15,8 +15,28 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
-<style>html.lk-pre{background:#F2F5F9}html.lk-pre body{visibility:hidden}</style>
+<style>html.lk-pre{background:#071a30}html.lk-pre body>*:not(#lk-splash){visibility:hidden}
+#lk-splash{position:fixed;inset:0;z-index:2147483000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:radial-gradient(120% 90% at 50% 38%,#16406e 0%,#0B2440 48%,#061529 100%);color:#fff;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;transition:opacity .45s ease,visibility .45s;overflow:hidden}
+#lk-splash.fuera{opacity:0;visibility:hidden}
+#lk-splash::before,#lk-splash::after{content:"";position:absolute;border-radius:50%;pointer-events:none}
+#lk-splash::before{width:120vmax;height:120vmax;background:conic-gradient(from 0deg,transparent 0 70%,rgba(201,164,106,.10) 82%,transparent 94%);animation:lkGiro 9s linear infinite}
+#lk-splash::after{width:70vmin;height:70vmin;border:1px solid rgba(255,255,255,.06);box-shadow:0 0 0 12vmin rgba(255,255,255,.02),0 0 0 26vmin rgba(255,255,255,.015)}
+.lks-logo{position:relative;z-index:1;width:132px;height:132px;border-radius:30px;background:#fff;display:grid;place-items:center;box-shadow:0 30px 80px -20px rgba(0,0,0,.6),0 0 0 8px rgba(255,255,255,.06);animation:lkLatir 2.4s ease-in-out infinite;overflow:hidden}
+.lks-logo img{width:84%;height:84%;object-fit:contain}
+.lks-logo b{font-size:44px;font-weight:800;color:#0B2440;letter-spacing:-.02em}
+.lks-tx{position:relative;z-index:1;text-align:center}
+.lks-tx h1:empty{display:none}
+.lks-tx h1{margin:0;font-size:clamp(22px,4vw,34px);font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.lks-tx p{margin:8px 0 0;font-size:12px;font-weight:700;letter-spacing:.32em;text-transform:uppercase;color:#C9A46A}
+.lks-bar{position:relative;z-index:1;width:min(220px,50vw);height:3px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:8px}
+.lks-bar i{position:absolute;inset:0;width:40%;border-radius:3px;background:linear-gradient(90deg,transparent,#C9A46A,transparent);animation:lkBarra 1.3s ease-in-out infinite}
+@keyframes lkGiro{to{transform:rotate(360deg)}}
+@keyframes lkLatir{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+@keyframes lkBarra{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
+@media (prefers-reduced-motion:reduce){#lk-splash::before,.lks-logo,.lks-bar i{animation:none}}</style>
 <script>document.documentElement.classList.add('lk-pre');setTimeout(function(){document.documentElement.classList.remove('lk-pre')},2500);</script>
+<div id="lk-splash"><div class="lks-logo" id="lks-logo"><b>LK</b></div><div class="lks-tx"><h1 id="lks-n"></h1><p>Gestión LUKA</p></div><div class="lks-bar"><i></i></div></div>
+<script>(function(){try{var s=JSON.parse(localStorage.getItem('luka.splash')||'null');if(s){if(s.n){document.getElementById('lks-n').textContent=s.n;}if(s.l){var b=document.getElementById('lks-logo');b.innerHTML='';var i=new Image();i.alt='';i.src=s.l;b.appendChild(i);}}}catch(e){}setTimeout(function(){var e=document.getElementById('lk-splash');if(e)e.classList.add('fuera');},12000);})();</script>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13538,13 +13558,12 @@ window.lukaCloud = (function(){
       // se entra de inmediato con la sesión guardada; se confirma con el servidor en segundo plano
       api({action:'lk_me'}).then(function(r){ ses.usuario=r.usuario; persistSes(); }).catch(function(e){ if(e.sesion===false) logout(true); });
     }
-    setTimeout(function(){ migrate().catch(function(){}); },4000);
     if(window.lukaShowSelector&&!window.__lkSelWrap){ window.__lkSelWrap=1; var rs=window.lukaShowSelector;
       window.lukaShowSelector=function(){ resetCrear(); return rs.apply(this,arguments); }; }
     next();
     decorate();
     setTimeout(hookNotas,2500);
-    setInterval(checkRemote,45000);
+    setInterval(pulso,12000);
     setInterval(function(){ try{ var uq=(user()||{}).usuario, id=curId(); if(uq&&id) localStorage.setItem('luka.active.'+uq,id); }catch(e){} },4000);
     document.addEventListener('visibilitychange',function(){ if(!document.hidden) checkRemote(); });
     window.addEventListener('online',function(){ status('Conexión recuperada'); if(dirtyBase(curId())!=null) scheduleSave(200); });
@@ -13621,7 +13640,7 @@ window.lukaCloud = (function(){
   }
 
   /* Traer los datos de un edificio (si hay cambios locales sin subir, se suben primero) */
-  async function pull(id){
+  async function pull(id,forzar){
     if(recien[id]){ delete recien[id]; return null; }
     var base=dirtyBase(id);
     if(base!=null){
@@ -13629,7 +13648,7 @@ window.lukaCloud = (function(){
       if(local){ var ok=await pushData(id,local,base,true); if(ok) return local; }
     }
     try{
-      if(versions[id]){
+      if(versions[id]&&!forzar){
         var local0=null; try{ local0=await idbGet('luka-b-'+id); }catch(e){}
         if(local0&&local0.deptos){
           synced[id]=snap(local0);
@@ -13668,7 +13687,7 @@ window.lukaCloud = (function(){
     if(dirtyBase(id)==null&&synced[id]!=null&&typeof DATA!=='undefined'&&snap(DATA)===synced[id]) return;
     if(dirtyBase(id)==null) setDirty(id,versions[id]||0);
     status('Cambios sin subir…');
-    scheduleSave(2500);
+    scheduleSave(1200);
   }
   function scheduleSave(ms){ clearTimeout(saveTimer); saveTimer=setTimeout(pushCurrent,ms); }
   function pushCurrent(){
@@ -13723,7 +13742,7 @@ window.lukaCloud = (function(){
     });
   }
   async function reload(id){
-    var d=await pull(id); if(!d) return;
+    var d=await pull(id,true); if(!d) return;
     if(curId()!==id) return;
     DATA=d;
     try{ initData(); if(typeof applyTheme==='function') applyTheme(); if(typeof accrueExpensas==='function') accrueExpensas(); }catch(e){}
@@ -13731,7 +13750,27 @@ window.lukaCloud = (function(){
     var v=(document.querySelector('.nav-item.active')||{}).dataset; try{ switchView((v&&v.view)||'lista'); }catch(e){}
     try{ if(window.__luka&&window.__luka.applyBranding) window.__luka.applyBranding(); }catch(e){}
   }
-  async function checkRemote(){
+  /* Pulso cada 12 s (con la ventana a la vista): una sola consulta liviana trae la versión
+     del edificio abierto y la lista de edificios. Si otra persona guardó, se actualiza solo. */
+  var firmaLista='', pulsando=false;
+  async function pulso(){
+    if(!active()||document.hidden||pulsando) return; pulsando=true;
+    try{
+      var id=curId(), r=await api({action:'lk_pulso',id:id||''});
+      if(r.lista&&firmaLista&&r.lista!==firmaLista){ olvidarLista(); window.__lkListaFresca=false;
+        var sel=document.getElementById('luka-selector'); if(sel&&getComputedStyle(sel).display!=='none'&&window.lukaShowSelector) window.lukaShowSelector(); }
+      if(r.lista) firmaLista=r.lista;
+      if(id&&r.borrado){ await olvidarLocal(id); listaLocal(function(L){ return L.filter(function(x){ return x.id!==id; }); }); alert('Este edificio fue eliminado por un coordinador.'); if(window.lukaShowSelector) window.lukaShowSelector(); return; }
+      if(id&&r.v&&versions[id]&&r.v>versions[id]&&!saving&&dirtyBase(id)==null){
+        var ocupado=document.querySelector('.modal-backdrop.open, .open.modal-backdrop')||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
+        if(ocupado) banner('Hay cambios nuevos de '+(r.por||'otro usuario')+'.');
+        else { await reload(id); status('Actualizado con cambios de '+(r.por||'otro usuario')); }
+      }
+    }catch(e){ if(e.sesion===false) logout(true); }
+    finally{ pulsando=false; }
+  }
+  async function checkRemote(){ return pulso(); }
+  async function checkRemoteViejo(){
     var id=curId(); if(!active()||!id||document.hidden||saving||dirtyBase(id)!=null) return;
     try{
       var r=await api({action:'lk_version',id:id});
@@ -22982,6 +23021,23 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',todo); else todo();
   /* sin parpadeo al recargar: la página se muestra cuando ya tiene su diseño final */
   function mostrar(){ todo(); requestAnimationFrame(function(){ requestAnimationFrame(function(){ document.documentElement.classList.remove('lk-pre'); }); }); }
+  /* pantalla de carga: se va cuando ya hay algo que mostrar (login, selector o el edificio con sus datos) */
+  (function(){
+    var t0=Date.now();
+    function vis(e){ return e&&getComputedStyle(e).display!=='none'&&e.offsetParent!==null||(e&&getComputedStyle(e).position==='fixed'&&getComputedStyle(e).display!=='none'); }
+    function listo(){
+      if(document.documentElement.classList.contains('lk-pre')) return false;
+      var lg=document.getElementById('lk-login'); if(lg&&getComputedStyle(lg).display!=='none') return true;
+      var sel=document.getElementById('luka-selector'); if(sel&&getComputedStyle(sel).display!=='none') return true;
+      return !!(typeof DATA!=='undefined'&&DATA&&Array.isArray(DATA.deptos)&&(document.querySelector('#view-lista .row')||!DATA.deptos.length)&&/^luka-b-/.test(typeof LOCAL_DATA_KEY!=='undefined'?LOCAL_DATA_KEY:''));
+    }
+    (function mirar(){ var sp=document.getElementById('lk-splash'); if(!sp) return;
+      if(listo()||Date.now()-t0>10000){ sp.classList.add('fuera'); setTimeout(function(){ sp.remove(); },600); return; }
+      setTimeout(mirar,80); })();
+    // recordar logo y nombre del edificio abierto para la próxima carga
+    setInterval(function(){ try{ if(typeof DATA==='undefined'||!DATA||!DATA.config) return; var c=DATA.config, n=c.nombreEdificio||((typeof buildingName==='function')?buildingName():''), l=c.logo||'';
+      var v=JSON.stringify({n:n,l:l}); if(n&&localStorage.getItem('luka.splash')!==v) localStorage.setItem('luka.splash',v); }catch(e){} },4000);
+  })();
   if(document.readyState==='complete') setTimeout(mostrar,150); else window.addEventListener('load',function(){ setTimeout(mostrar,150); });
 })();
 </script>
@@ -23007,6 +23063,8 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 #lk-secciones-block>div[style*="font-size"],.plan-field .hint,.plan-wrap>p,.lkr-head .sub,.diario-form-hint,.plan-empty,#luka-footer,
 .lkrp-prev:has(#lkc-prev),.save-info,.cfg2-tab-n,.plan-card:has(>.plan-empty),.last-pay-col:empty{display:none!important}
 .debt-sub:empty{display:none}
+/* la lista ocupa toda la pantalla (sin caja con scroll propio) */
+.list-scroll{max-height:none!important;overflow:visible!important;padding-right:0!important}
 </style>
 <script>
 /* ============================================================================

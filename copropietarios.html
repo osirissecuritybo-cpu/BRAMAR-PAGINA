@@ -1371,7 +1371,7 @@ const PORTAL = {
     finally{ btn.disabled=false; btn.classList.remove('loading'); $('#pw-btn-t').textContent='Guardar'; }
   });
 
-  /* ---------- Datos al día: se vuelven a pedir al volver a la página y cada 2 minutos ---------- */
+  /* ---------- Datos al día: se vuelven a pedir al volver a la página y cada minuto ---------- */
   let refrescando=false;
   async function refrescar(){
     if(!session||refrescando||document.hidden||document.querySelector('.dialog.open')) return;
@@ -1381,7 +1381,7 @@ const PORTAL = {
   }
   document.addEventListener('visibilitychange',()=>{ if(!document.hidden) refrescar(); });
   window.addEventListener('pageshow',e=>{ if(e.persisted) refrescar(); });
-  setInterval(refrescar,120000);
+  setInterval(refrescar,60000);
 
   /* ---------- Sesión guardada en este dispositivo ---------- */
   (async()=>{

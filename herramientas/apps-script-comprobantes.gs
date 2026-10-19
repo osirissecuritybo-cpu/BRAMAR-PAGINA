@@ -401,6 +401,13 @@ function luka_(d) {
     return json({ ok: true, borrados: lkLeer_('LUKA_BORRADOS', []), edificios: Object.keys(E).filter(function (id) { return puedeVer_(u, id); })
       .map(function (id) { return { id: id, nombre: E[id].name, v: E[id].v, actualizado: E[id].upd, por: E[id].by, creado: E[id].created, resumen: E[id].res || null }; }) });
   }
+  if (a === 'lk_pulso') {
+    // consulta liviana cada pocos segundos: versión del edificio abierto y firma de la lista de edificios
+    const E = lkEdificios_(), ids = Object.keys(E).filter(function (id) { return puedeVer_(u, id); }).sort();
+    const firma = Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, ids.map(function (id) { return id + '|' + E[id].name; }).join(','), Utilities.Charset.UTF_8)).slice(0, 16);
+    const e = d.id ? E[d.id] : null;
+    return json({ ok: true, lista: firma, v: e && puedeVer_(u, d.id) ? e.v : 0, por: e ? e.by : '', borrado: !!(d.id && !e && lkLeer_('LUKA_BORRADOS', []).indexOf(d.id) >= 0) });
+  }
   if (a === 'lk_version') {
     const e = lkEdificios_()[d.id];
     if (!e || !puedeVer_(u, d.id)) return json({ ok: false, error: 'Edificio no encontrado.' });
