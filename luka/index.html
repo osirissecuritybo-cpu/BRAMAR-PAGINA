@@ -13568,7 +13568,9 @@ window.lukaCloud = (function(){
     setTimeout(hookNotas,2500);
     setInterval(pulso,12000);
     setInterval(function(){ try{ var uq=(user()||{}).usuario, id=curId(); if(uq&&id) localStorage.setItem('luka.active.'+uq,id); }catch(e){} },4000);
-    document.addEventListener('visibilitychange',function(){ if(!document.hidden) checkRemote(); });
+    document.addEventListener('visibilitychange',function(){ if(!document.hidden){ checkRemote(); if(dirtyBase(curId())!=null&&!saving) scheduleSave(300); } });
+    // red de seguridad: si algo quedó pendiente, se sube solo
+    setInterval(function(){ var id=curId(); if(id&&dirtyBase(id)!=null&&!saving&&navigator.onLine!==false) pushCurrent(); },30000);
     window.addEventListener('online',function(){ status('Conexión recuperada'); if(dirtyBase(curId())!=null) scheduleSave(200); });
   }
 
@@ -13750,7 +13752,7 @@ window.lukaCloud = (function(){
       if(e.data&&e.data.conflicto){ await conflict(id,data,e.data,silent); return false; }
       if(e.data&&e.data.vacio){ setDirty(id,null); status('Se recuperaron los datos de la nube'); try{ await reload(id); }catch(_){} return false; }
       if(e.data&&e.data.borrado){ await olvidarLocal(id); olvidarLista(); listaLocal(function(L){ return L.filter(function(x){ return x.id!==id; }); }); alert('Este edificio fue eliminado por un coordinador.'); if(window.lukaShowSelector) window.lukaShowSelector(); return false; }
-      status('No se pudo guardar: '+e.message); return false;
+      status('No se pudo guardar: '+e.message); clearTimeout(retryTimer); retryTimer=setTimeout(function(){ if(dirtyBase(id)!=null) pushCurrent(); },15000); return false;
     }finally{ saving=false; }
   }
   /* Dos equipos guardaron a la vez: se unen los cambios solos, sin preguntar.
@@ -13866,13 +13868,35 @@ window.lukaCloud = (function(){
   async function logout(expired){
     var id=curId();
     try{ var uq=(user()||{}).usuario; if(uq&&id) localStorage.setItem('luka.active.'+uq,id); }catch(e){}
-    if(!expired&&id&&dirtyBase(id)!=null){ try{ clearTimeout(saveTimer); await pushData(id,buildFullExportData(),dirtyBase(id),true); }catch(e){} }
+    if(!expired&&id&&dirtyBase(id)!=null){ try{ clearTimeout(saveTimer); await conTiempo(pushData(id,buildFullExportData(),dirtyBase(id),true),12000); }catch(e){} }
     try{ if(!expired) await api({action:'lk_logout'}); }catch(e){}
     // borrar la copia local de los edificios de este usuario (celulares compartidos)
     try{ var l=JSON.parse(localStorage.getItem(LS_LIST)||'[]'); for(var i=0;i<l.length;i++){ if(dirtyBase(l[i].id)==null) await idbSet('luka-b-'+l[i].id,undefined); } }catch(e){}
     try{ localStorage.removeItem(LS_LIST); }catch(e){}
     ses=null; persistSes(); location.reload();
   }
+  function conTiempo(pr,ms){ return Promise.race([pr,new Promise(function(r){ setTimeout(function(){ r(false); },ms); })]); }
+  /* Cerrar sesión: sube lo pendiente (con aviso en pantalla) y sale; un solo toque basta */
+  var cerrando=false;
+  async function cerrarSesion(){
+    if(cerrando) return; cerrando=true;
+    var ov=document.createElement('div'); ov.id='lk-saliendo';
+    ov.style.cssText='position:fixed;inset:0;z-index:100000;background:rgba(6,24,43,.72);display:flex;align-items:center;justify-content:center;color:#fff;font:600 16px/1.4 inherit;backdrop-filter:blur(2px)';
+    ov.innerHTML='<div style="background:#0B2440;padding:22px 28px;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.35)">Cerrando sesión…</div>';
+    document.body.appendChild(ov);
+    try{
+      var id=curId();
+      if(id&&dirtyBase(id)!=null){
+        ov.firstChild.textContent='Guardando los últimos cambios…';
+        clearTimeout(saveTimer);
+        var ok=await conTiempo(pushData(id,buildFullExportData(),dirtyBase(id),true),12000);
+        if(!ok&&dirtyBase(id)!=null&&!confirm('No se pudieron subir los últimos cambios (revise su internet). Si cierra sesión ahora podría perderlos. ¿Cerrar igual?')){ ov.remove(); cerrando=false; return; }
+        ov.firstChild.textContent='Cerrando sesión…';
+      }
+      await logout(false);
+    }catch(e){ ov.remove(); cerrando=false; }
+  }
+  window.lukaCerrarSesion=cerrarSesion;
   function rolTxt(r){ return r==='admin'?'Coordinador general':'Administrador de edificio'; }
   function iniciales(n){ return String(n||'?').trim().split(/\s+/).slice(0,2).map(function(x){return x[0];}).join('').toUpperCase(); }
   var ICO={
@@ -13907,7 +13931,7 @@ window.lukaCloud = (function(){
           '<p class="lk-warn" id="lk-av-m"></p><div class="lk-av-b"><button type="button" class="btn" id="lk-av-p">Enviar correo de prueba</button><button type="button" class="btn primary" id="lk-av-g">Guardar</button></div></div>':'');
       cont.insertBefore(sec,cont.firstChild);
       sec.querySelector('#lk-mi-clave').onclick=function(){ cerrarCfg(); openMiClave(); };
-      sec.querySelector('#lk-out').onclick=function(){ if(dirtyBase(curId())!=null&&!confirm('Hay cambios que todavía no se subieron a la nube. Si cierra sesión ahora podría perderlos. ¿Cerrar igual?')) return; logout(false); };
+      sec.querySelector('#lk-out').onclick=function(){ cerrarSesion(); };
       var ub=sec.querySelector('#lk-users'); if(ub) ub.onclick=function(){ cerrarCfg(); closeSidebar(); openUsers(); };
       var ab=sec.querySelector('#lk-act'); if(ab) ab.onclick=function(){ cerrarCfg(); closeSidebar(); openActividad(); };
       if(sec.querySelector('#lk-avisos')) avisos(sec);
@@ -23635,7 +23659,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
       setTimeout(function(){
         if(a==='cfg'){ var t=document.getElementById('luka-cfg-trigger'); if(t) t.click(); }
         else if(a==='ed'){ if(window.lukaShowSelector) window.lukaShowSelector(); }
-        else if(a==='out'){ if(confirm('¿Cerrar sesión?')&&window.lukaCloud&&lukaCloud.logout) lukaCloud.logout(); }
+        else if(a==='out'){ if(confirm('¿Cerrar sesión?')){ if(window.lukaCerrarSesion) window.lukaCerrarSesion(); else if(window.lukaCloud&&lukaCloud.logout) lukaCloud.logout(); } }
       },220); });
     nav.appendChild(g);
   }
@@ -23691,7 +23715,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261019152908';
+(function(){ var B='20261019165041';
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
