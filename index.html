@@ -356,15 +356,23 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 /* 5 servicios propios en dos filas simétricas (3 + 2) */
 @media (min-width:1001px){ .svc-own{grid-template-columns:repeat(6,minmax(0,1fr))!important} .svc-own>.card{grid-column:span 2} .svc-own>.card:nth-child(4),.svc-own>.card:nth-child(5){grid-column:span 3} }
 @media (min-width:641px) and (max-width:1000px){ .svc-own>.card:nth-child(5):last-child{grid-column:1/-1} }
-/* botones con identidad Bramar */
-.svc .card.own{isolation:isolate}
-.svc .card.own .bm-mark{position:absolute;z-index:-1;width:120px;right:-22px;bottom:-22px;opacity:.05;pointer-events:none;transition:opacity .5s,transform .9s var(--soft)}
-.svc .card.own:hover .bm-mark{opacity:.12;filter:brightness(0) invert(1);transform:rotate(-6deg) scale(1.05)}
-.svc .card.own .partner.bm-btn{align-self:flex-start;margin-top:18px;padding:10px 16px 10px 18px;border-radius:999px;background:var(--navy);color:#fff;font-weight:500;box-shadow:inset 0 0 0 1px rgba(201,164,106,.0);transition:background .35s,color .35s,gap .3s,box-shadow .35s}
-.svc .card.own .partner.bm-btn svg{color:var(--brass-soft)}
-.svc .card.own:hover .partner.bm-btn{background:var(--brass-soft);color:var(--navy-deep);gap:12px}
-.svc .card.own:hover .partner.bm-btn svg{color:var(--navy-deep)}
-.svc .card.own:hover .who{background:var(--brass-soft);color:var(--navy-deep)}
+/* tarjetas Bramar: identidad propia (azul Bramar, latón y el isotipo) */
+.svc .card.own{--bm:#0A335D;--bm-hi:#15508a;--bm-deep:#051a38;background:linear-gradient(150deg,var(--bm-hi) 0%,var(--bm) 52%,var(--bm-deep) 100%);color:#fff;isolation:isolate;transition:transform .5s var(--soft),box-shadow .5s var(--soft)}
+.svc .card.own::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(110% 80% at 100% 0%,rgba(201,164,106,.22),transparent 55%)}
+.svc .card.own::after{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:linear-gradient(90deg,var(--brass-soft),rgba(201,164,106,0))}
+.svc .card.own .bm-mark{position:absolute;z-index:-1;width:190px;right:-40px;bottom:-34px;opacity:.09;pointer-events:none;transition:transform .9s var(--soft),opacity .5s}
+.svc .card.own .ico{color:var(--brass-soft)}
+.svc .card.own .who{background:rgba(201,164,106,.18);color:var(--brass-soft);box-shadow:inset 0 0 0 1px rgba(201,164,106,.35)}
+.svc .card.own h3{color:#fff}
+.svc .card.own p{color:rgba(255,255,255,.78)}
+.svc .card.own .partner.bm-btn{align-self:flex-start;margin-top:18px;padding:10px 16px 10px 18px;border-radius:999px;background:var(--brass-soft);color:var(--bm-deep);font-weight:600;transition:background .3s,color .3s,gap .3s}
+.svc .card.own .partner.bm-btn svg{color:var(--bm-deep)}
+.svc .card.own:hover{background:linear-gradient(150deg,var(--bm-hi) 0%,var(--bm) 52%,var(--bm-deep) 100%);box-shadow:0 18px 40px -16px rgba(5,26,56,.6)}
+.svc .card.own:hover h3{color:#fff}.svc .card.own:hover p{color:rgba(255,255,255,.78)}.svc .card.own:hover .ico{color:var(--brass-soft)}
+.svc .card.own:hover .who{background:rgba(201,164,106,.18);color:var(--brass-soft)}
+.svc .card.own:hover .bm-mark{transform:rotate(-8deg) scale(1.06);opacity:.15}
+.svc .card.own:hover .partner.bm-btn{background:#fff;color:var(--bm-deep);gap:12px}
+.svc .card.own:focus-visible{outline:3px solid var(--brass-soft);outline-offset:3px}
 /* ascensores: tarjeta verde de proveedores */
 .svc .card.lift-p{--lp:#1f9e3a;--lp-hi:#36b84f;--lp-deep:#0f6526;background:linear-gradient(150deg,var(--lp-hi) 0%,var(--lp) 55%,var(--lp-deep) 100%);color:#fff;isolation:isolate}
 .svc .card.lift-p::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(120% 80% at 100% 0%,rgba(255,255,255,.2),transparent 55%)}
@@ -373,6 +381,7 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .svc .card.lift-p:hover .lp-mark{transform:rotate(12deg) scale(1.05);opacity:.18}
 .svc .card.lift-p .lp-logo{display:block;width:124px;height:auto;filter:drop-shadow(0 2px 6px rgba(0,0,0,.15))}
 .svc-ally{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.svc-ally:has(.lp-open){align-items:start}
 @media (max-width:640px){ .svc-ally{grid-template-columns:1fr!important} }
 .svc .card.lift-p h3{color:#fff}
 .svc .card.lift-p p{color:rgba(255,255,255,.86)}
@@ -382,9 +391,19 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .svc .card.lift-p .lp-btn span{color:var(--lp-deep)}
 .svc .card.lift-p.lp-open .lp-btn svg{transform:rotate(90deg)}
 .svc .card.lift-p .lp-prov{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;max-height:0;overflow:hidden;opacity:0;margin-top:0;transition:max-height .45s var(--soft),opacity .35s,margin .35s}
-.svc .card.lift-p.lp-open .lp-prov{max-height:240px;opacity:1;margin-top:14px}
+.svc .card.lift-p.lp-open .lp-prov{max-height:420px;opacity:1;margin-top:14px}
 .svc .card.lift-p .lp-prov a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:11px 14px;border-radius:14px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);color:#fff;font-size:15px;font-weight:600;letter-spacing:.01em;text-decoration:none;transition:background .25s,color .25s,transform .25s}
 .svc .card.lift-p .lp-prov a svg{width:13px;height:13px;opacity:.8}
+.svc .card.lift-p .lp-otro{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-radius:14px;background:transparent;border:1px dashed rgba(255,255,255,.55);color:#fff;font:inherit;font-size:15px;font-weight:600;cursor:pointer;transition:background .25s,color .25s}
+.svc .card.lift-p .lp-otro span{font-size:18px;line-height:1;transition:transform .3s}
+.svc .card.lift-p .lp-otro[aria-expanded="true"] span{transform:rotate(45deg)}
+.svc .card.lift-p .lp-otro:hover{background:rgba(255,255,255,.14)}
+.svc .card.lift-p .lp-form{grid-column:1/-1;display:flex;gap:8px}
+.svc .card.lift-p .lp-form[hidden]{display:none}
+.svc .card.lift-p .lp-form .lp-in{flex:1 1 auto!important;min-width:0!important;width:auto!important;height:46px!important;margin:0!important;padding:0 14px!important;border-radius:14px!important;border:0!important;background:#fff!important;color:var(--ink)!important;font:inherit!important;font-size:15px!important;text-align:left!important;box-shadow:none!important}
+.svc .card.lift-p .lp-form .lp-in:focus{outline:3px solid rgba(255,255,255,.5)}
+.svc .card.lift-p .lp-form .lp-go{flex:none;margin:0;height:46px;padding:0 16px;border-radius:14px;border:0;background:var(--lp-deep);color:#fff;font:inherit;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.svc .card.lift-p .lp-form .lp-go:hover{background:#0a4a1b}
 .svc .card.lift-p .lp-prov a:hover,.svc .card.lift-p .lp-prov a:focus-visible{background:#fff;color:var(--lp-deep);transform:translateY(-2px)}
 .svc .card.lift-p:hover{background:linear-gradient(150deg,var(--lp-hi) 0%,var(--lp) 55%,var(--lp-deep) 100%);box-shadow:0 18px 40px -16px rgba(15,101,38,.55)}
 .svc .card.lift-p:hover h3{color:#fff}.svc .card.lift-p:hover p{color:rgba(255,255,255,.86)}.svc .card.lift-p:hover .who{background:rgba(255,255,255,.18);color:#fff}
@@ -1192,13 +1211,22 @@ const SITE = {
   const card=([k,i,t,d,url,partner],n)=>{
     const own=k==='own';
     const tag=url?'a':own?'button':'article', attrs=url?` href="${url}" target="_blank" rel="noopener" aria-label="${t}: ${partner} (abre su sitio web)"`:own?` type="button" data-svc="${i}" aria-haspopup="dialog"`:'';
-    if(url==='lift') return `<article class="card tilt ${k} lift-p" data-k="${k}" data-reveal style="--d:${(n%4)*.06}s"><img class="lp-mark" src="img/orona-anillo.png" alt="" aria-hidden="true" loading="lazy"><span class="who">Proveedores</span><img class="lp-logo" src="img/orona-blanco.png" alt="Orona" width="483" height="176" loading="lazy"><h3>${t}</h3><p>${d}</p><button type="button" class="lp-btn" aria-expanded="false" aria-controls="lp-prov"><img src="img/orona-verde.png" alt="Orona" width="483" height="176"><span>y otros</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button><div class="lp-prov" id="lp-prov">${LIFT.map(([nm,u])=>`<a href="${u}" target="_blank" rel="noopener">${nm}<svg aria-hidden="true"><use href="#i-ext"/></svg></a>`).join('')}</div></article>`;
+    if(url==='lift') return `<article class="card tilt ${k} lift-p" data-k="${k}" data-reveal style="--d:${(n%4)*.06}s"><img class="lp-mark" src="img/orona-anillo.png" alt="" aria-hidden="true" loading="lazy"><span class="who">Proveedores</span><img class="lp-logo" src="img/orona-blanco.png" alt="Orona" width="483" height="176" loading="lazy"><h3>${t}</h3><p>${d}</p><button type="button" class="lp-btn" aria-expanded="false" aria-controls="lp-prov"><img src="img/orona-verde.png" alt="Orona" width="483" height="176"><span>y otros</span><svg aria-hidden="true"><use href="#i-arrow"/></svg></button><div class="lp-prov" id="lp-prov">${LIFT.map(([nm,u])=>`<a href="${u}" target="_blank" rel="noopener">${nm}<svg aria-hidden="true"><use href="#i-ext"/></svg></a>`).join('')}<button type="button" class="lp-otro" aria-expanded="false">Otro <span aria-hidden="true">+</span></button><div class="lp-form" hidden><input class="lp-in" placeholder="Nombre del proveedor" aria-label="Nombre del proveedor" autocomplete="off" enterkeyhint="send"><button type="button" class="lp-go">Pedir cotización</button></div></div></article>`;
     if(url) return `<a class="card tilt ${k} osiris" data-k="${k}"${attrs} data-reveal style="--d:${(n%4)*.06}s"><img class="os-mark" src="img/osiris-ojo.png" alt="" aria-hidden="true" width="540" height="160" loading="lazy"><span class="who">Aliado</span><img class="os-logo" src="img/osiris-logo.png" alt="Osiris Security" width="360" height="169" loading="lazy"><h3>${t}</h3><p>${d}</p><span class="os-btn">Visitar Osiris Security <svg aria-hidden="true"><use href="#i-ext"/></svg></span></a>`;
-    return `<${tag} class="card ${own||url?'tilt ':''}${k}${url?' osiris':''}" data-k="${k}"${attrs} data-reveal style="--d:${(n%4)*.06}s">${own?'<img class="bm-mark" src="img/isotipo-azul.png" alt="" aria-hidden="true" loading="lazy">':''}<span class="who">${partner||(k==='own'?'Bramar':'Aliado')}</span><div class="ico"><svg aria-hidden="true"><use href="#i-${i}"/></svg></div><h3>${t}</h3><p>${d}</p>${url?`<span class="partner">Conocer Osiris Security <svg aria-hidden="true"><use href="#i-ext"/></svg></span>`:own?`<span class="partner bm-btn">Ver qué incluye <svg aria-hidden="true"><use href="#i-arrow"/></svg></span>`:''}</${tag}>`;
+    return `<${tag} class="card ${own||url?'tilt ':''}${k}${url?' osiris':''}" data-k="${k}"${attrs} data-reveal style="--d:${(n%4)*.06}s">${own?'<img class="bm-mark" src="img/isotipo-blanco.png" alt="" aria-hidden="true" loading="lazy">':''}<span class="who">${partner||(k==='own'?'Bramar':'Aliado')}</span><div class="ico"><svg aria-hidden="true"><use href="#i-${i}"/></svg></div><h3>${t}</h3><p>${d}</p>${url?`<span class="partner">Conocer Osiris Security <svg aria-hidden="true"><use href="#i-ext"/></svg></span>`:own?`<span class="partner bm-btn">Ver qué incluye <svg aria-hidden="true"><use href="#i-arrow"/></svg></span>`:''}</${tag}>`;
   };
   $('#svc-own').innerHTML=S.filter(x=>x[0]==='own').map(card).join('');
   $('#svc-ally').innerHTML=S.filter(x=>x[0]==='ally').map(card).join('');
-  $('#svc-ally').addEventListener('click',e=>{ const b=e.target.closest('.lp-btn'); if(!b) return; const c=b.closest('.lift-p'); const o=c.classList.toggle('lp-open'); b.setAttribute('aria-expanded',o); });
+  $('#svc-ally').addEventListener('click',e=>{
+    const ot=e.target.closest('.lp-otro');
+    if(ot){ const f=ot.nextElementSibling, o=f.hidden; f.hidden=!o; ot.setAttribute('aria-expanded',o); if(o) setTimeout(()=>f.querySelector('.lp-in').focus(),50); return; }
+    const b=e.target.closest('.lp-btn'); if(!b) return; const c=b.closest('.lift-p'); const o=c.classList.toggle('lp-open'); b.setAttribute('aria-expanded',o); });
+  const pedirLift=f=>{ const inp=f.querySelector('.lp-in'), nm=inp.value.trim(); if(!nm){ inp.focus(); return; }
+    const msg=`Hola Bramar, quisiera una cotización de mantenimiento de ascensores con el proveedor: ${nm}.`;
+    if(SITE.whatsapp) window.open(waURL(msg),'_blank','noopener');
+    else { const m=$('#f-msg'); if(m) m.value=msg; go('contacto'); } };
+  $('#svc-ally').addEventListener('click',e=>{ const g=e.target.closest('.lp-go'); if(g) pedirLift(g.closest('.lp-form')); });
+  $('#svc-ally').addEventListener('keydown',e=>{ if(e.key==='Enter'&&e.target.closest('.lp-in')){ e.preventDefault(); pedirLift(e.target.closest('.lp-form')); } });
 
   /* ---------- Detalle de servicios propios ---------- */
   const sd=$('#sd'); let sdLast=null;
