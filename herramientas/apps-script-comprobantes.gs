@@ -435,6 +435,11 @@ function luka_(d) {
         // mismo navegador (otra pestaña o dos guardados seguidos): no es conflicto
         const mismoDisp = d.dev && e.dev === String(d.dev);
         if (Number(d.v) !== Number(e.v) && !mismoDisp) return json({ ok: false, conflicto: true, v: e.v, por: e.by, actualizado: e.upd, error: 'Otro dispositivo guardó cambios antes.' });
+        // protección: un guardado sin departamentos nunca reemplaza un edificio que sí los tiene
+        if (!d.forzarVacio && ((e.res || {}).deptos || 0) > 0 && d.resumen && !(+d.resumen.deptos > 0)) {
+          let nuevos = 0; try { nuevos = (JSON.parse(d.data).deptos || []).length; } catch (x) {}
+          if (!nuevos) return json({ ok: false, vacio: true, error: 'Se evitó guardar el edificio vacío.' });
+        }
         DriveApp.getFileById(e.file).setContent(d.data);
         e.v = e.v + 1; e.upd = now; e.by = u.n; e.dev = String(d.dev || '').slice(0, 40); if (d.nombre) e.name = String(d.nombre).slice(0, 80);
         if (d.portal) e.portal = slug_(d.portal);
@@ -775,8 +780,9 @@ function ptTxt_(v) { const t = String(v == null ? '' : v); return t.charAt(0) ==
 /* Servicios extra que el edificio alquila (sillas, mesas, freezer…), como en LUKA */
 function ptServicios_(cfg) {
   const s = cfg.servicios || { silla: { nombre: 'Sillas', precio: 2, unidad: 'c/u' }, mesa: { nombre: 'Mesas pequeñas', precio: 3, unidad: 'c/u' }, mesaNueva: { nombre: 'Mesas nuevas 6-8p', precio: 10, unidad: 'c/u' } };
-  return Object.keys(s).filter(function (k) { return s[k] && s[k].enabled !== false && isFinite(+s[k].precio); })
-    .map(function (k) { return { id: k, nombre: String(s[k].nombre || k), precio: +s[k].precio || 0, unidad: String(s[k].unidad || 'c/u') }; });
+  // «oculto» = quitado en LUKA; «enabled:false» = se presta sin costo
+  return Object.keys(s).filter(function (k) { return s[k] && s[k].nombre && s[k].oculto !== true; })
+    .map(function (k) { return { id: k, nombre: String(s[k].nombre || k), precio: s[k].enabled === false ? 0 : (+s[k].precio || 0), unidad: String(s[k].unidad || 'c/u') }; });
 }
 /* Reservas que ya hay ese día (de LUKA y solicitudes pendientes del portal) */
 function ptOcupadas_(pid, data, fecha) {
