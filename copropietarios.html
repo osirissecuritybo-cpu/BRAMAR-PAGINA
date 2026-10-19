@@ -533,6 +533,7 @@ html,body{overflow-x:clip;max-width:100%}
 .inq-code small{display:block;font-size:12px;color:var(--muted)}
 .inq-code b{font-size:26px;letter-spacing:.14em;color:var(--navy);font-weight:500}
 #inq-msg .alert{margin-top:12px}
+.inq-txt{margin:14px 0 0;padding:14px 16px;border-radius:14px;background:var(--sand);font:inherit;font-size:14.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word}
 </style>
 </head>
 <body>
@@ -1268,10 +1269,10 @@ const PORTAL = {
     const j=await ptCall({action:'pt_inquilino',op:'crear',nombre}); if(!j.ok) throw new Error(j.error||'error');
     data.inquilino={nombre:j.nombre,desde:new Date().toISOString().slice(0,10)}; pintarInquilino();
     const E=data.edificio||{}, U=data.unidad||{}, url=location.origin+location.pathname.replace(/[^/]*$/,'')+'inquilinos.html';
-    const txt=`Hola ${j.nombre}, este es su acceso al portal del edificio ${E.nombre||''}:\n${url}\nEdificio: ${E.nombre||''}\nDepartamento: ${U.depto||''}\nCódigo: ${j.codigo}`;
-    $('#inq-msg').innerHTML=`<div class="inq-code"><small>Código del inquilino</small><b>${esc(j.codigo)}</b></div>
-      <div class="inq-acts"><a class="btn navy" href="${wa(txt).replace(/wa\.me\/\d*/,'wa.me/')}" target="_blank" rel="noopener">WhatsApp</a><button type="button" class="btn light" id="inq-copy">Copiar</button></div>`;
-    $('#inq-copy').onclick=()=>{ navigator.clipboard&&navigator.clipboard.writeText(txt); $('#inq-copy').textContent='Copiado'; };
+    const txt=`Portal de inquilinos · ${E.nombre||''}\n\nIngrese aquí: ${url}\n\nEdificio: ${E.nombre||''}\nUsuario (departamento): ${U.depto||''}\nContraseña: ${j.codigo}`;
+    $('#inq-msg').innerHTML=`<pre class="inq-txt">${esc(txt)}</pre>
+      <div class="inq-acts"><button type="button" class="btn navy" id="inq-copy">Copiar mensaje</button><a class="btn light" href="${wa(txt).replace(/wa\.me\/\d*/,'wa.me/')}" target="_blank" rel="noopener">WhatsApp</a></div>`;
+    $('#inq-copy').onclick=async()=>{ try{ await navigator.clipboard.writeText(txt); }catch(e){ const r=document.createRange(); r.selectNodeContents($('#inq-msg .inq-txt')); const sl=getSelection(); sl.removeAllRanges(); sl.addRange(r); document.execCommand('copy'); } $('#inq-copy').textContent='Copiado ✓'; };
   }
   $('#inq-body').addEventListener('submit',async e=>{ e.preventDefault(); const n=$('#inq-n').value.trim(), b=$('#inq-btn');
     if(!n) return alertBox($('#inq-msg'),'bad','Escriba el nombre.');
