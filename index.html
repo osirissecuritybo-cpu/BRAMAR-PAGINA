@@ -236,7 +236,37 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .crumb a:hover{color:#fff}
 .crumb b{color:#fff;font-weight:500}
 
-/* nosotros */
+/* nosotros: la esencia de Bramar */
+.ns-intro{max-width:1080px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.ns-big{font-size:clamp(24px,3vw,40px);font-weight:300;line-height:1.35;color:var(--navy);margin-top:22px;max-width:980px}
+.ns-big b{font-weight:500}
+.ns-pilares{list-style:none;margin:0;padding:0;border-radius:var(--radius);overflow:hidden;background:var(--paper);border:1px solid var(--line)}
+.ns-pilares li{display:grid;grid-template-columns:72px 64px minmax(0,1fr);align-items:center;gap:clamp(16px,2.4vw,32px);padding:clamp(22px,3vw,34px) clamp(22px,3.4vw,44px);border-top:1px solid var(--line);transition:background .35s}
+.ns-pilares li:first-child{border-top:0}
+.ns-pilares li:hover{background:#FBFAF7}
+.ns-n{font-size:clamp(28px,3vw,40px);font-weight:300;color:var(--brass);letter-spacing:.02em;line-height:1}
+.ns-ico{width:64px;height:64px;border-radius:18px;background:var(--navy);color:var(--brass-soft);display:grid;place-items:center}
+.ns-ico svg{width:28px;height:28px}
+.ns-tx{display:grid;grid-template-columns:minmax(200px,.8fr) minmax(0,1.6fr);gap:clamp(12px,3vw,48px);align-items:center}
+.ns-tx h3{font-size:clamp(21px,2vw,26px);font-weight:400;color:var(--navy)}
+.ns-tx p{color:var(--muted);font-size:16px}
+.ns-cierre{position:relative;overflow:hidden;isolation:isolate;border-radius:var(--radius-l);padding:clamp(32px,5vw,72px);background:linear-gradient(150deg,#15508a 0%,var(--navy) 52%,#051a38 100%);color:#fff;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:32px;align-items:center}
+.ns-cierre::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(90% 90% at 100% 0%,rgba(201,164,106,.25),transparent 60%)}
+.ns-cierre .ns-mark{position:absolute;z-index:-1;width:300px;right:-40px;bottom:-60px;opacity:.07;pointer-events:none}
+.ns-cierre .tag{color:var(--brass-soft)}
+.ns-cierre h2{font-size:clamp(28px,3.4vw,46px);font-weight:300;line-height:1.2;margin-top:16px;max-width:720px}
+.ns-cierre h2 b{font-weight:500;color:var(--brass-soft)}
+.ns-acc{display:flex;flex-direction:column;gap:12px;min-width:250px}
+@media (max-width:1000px){ .ns-tx{grid-template-columns:1fr;gap:6px} .ns-cierre{grid-template-columns:1fr} .ns-acc{flex-direction:row;flex-wrap:wrap;min-width:0} }
+@media (max-width:640px){
+  .ns-pilares li{grid-template-columns:48px minmax(0,1fr);grid-template-areas:"ico tx";gap:14px;padding:20px;align-items:start}
+  .ns-pilares .ns-n{display:none}
+  .ns-ico{grid-area:ico;width:48px;height:48px;border-radius:14px}
+  .ns-ico svg{width:22px;height:22px}
+  .ns-tx{grid-area:tx}
+  .ns-acc .btn{width:100%}
+}
+/* nosotros (anterior) */
 .about{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,6vw,96px);align-items:start}
 .about > *{min-width:0}
 .about .big{font-size:clamp(23px,2.6vw,34px);font-weight:300;color:var(--navy);line-height:1.35;margin-top:20px}
@@ -779,39 +809,32 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
 <!-- ============================ 02 · NOSOTROS ============================ -->
 <div class="page" id="nosotros" data-page data-title="Nosotros" hidden>
   <div class="p-head"><div class="box reveal-img"><img src="img/oficina.jpg" alt="Oficinas de Bramar Group" width="1536" height="1024" loading="lazy" decoding="async">
-    <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Nosotros</b></div><h1 class="rise d1" tabindex="-1">Innovación y <b>experiencia.</b></h1><p class="rise d2">Más de 6 años administrando edificios y condominios en Santa Cruz.</p></div></div></div>
+    <div class="in"><div class="crumb rise"><a href="#inicio" data-go="inicio">Inicio</a><span aria-hidden="true">/</span><b>Nosotros</b></div><h1 class="rise d1" tabindex="-1">Protegemos <b>su inversión.</b></h1><p class="rise d2">Administramos edificios para que conserven su valor y su brillo con el paso de los años.</p></div></div></div>
   <section>
-    <div class="wrap about">
-      <div data-reveal><span class="tag">Quiénes somos</span><p class="big">Una empresa dedicada a la administración integral de edificios y condominios, con una estructura sólida para el mercado inmobiliario moderno.</p></div>
-      <div class="txt" data-reveal style="--d:.1s"><p>Cuidamos cada proceso del edificio: las finanzas, el personal, los proveedores y el estado de las áreas comunes.</p><p>Nuestro compromiso es que la directiva y los copropietarios sepan siempre en qué se usa su dinero.</p></div>
+    <div class="wrap ns-intro" data-reveal>
+      <span class="tag">Bramar Group</span>
+      <p class="ns-big">Lo más importante de una administración es que su edificio <b>se mantenga en el tiempo</b>: que siempre luzca bien y que siempre sea un lugar al que quiera llegar.</p>
     </div>
   </section>
   <section class="tight">
     <div class="wrap">
-      <div class="cards3">
-        <article class="card tilt" data-reveal><div class="ico"><svg aria-hidden="true"><use href="#i-admin"/></svg></div><h3>Gestión estratégica</h3><p>Finanzas y operación en orden, con el presupuesto bajo control.</p></article>
-        <article class="card tilt" data-reveal style="--d:.08s"><div class="ico"><svg aria-hidden="true"><use href="#i-check"/></svg></div><h3>Proveedores supervisados</h3><p>Seleccionamos y evaluamos a cada empresa aliada.</p></article>
-        <article class="card tilt" data-reveal style="--d:.16s"><div class="ico"><svg aria-hidden="true"><use href="#i-eye"/></svg></div><h3>Transparencia total</h3><p>Reportes y recibos digitales cada mes.</p></article>
-      </div>
+      <div class="head" data-reveal><div><span class="tag">Lo que nos define</span><h2 class="h2">Bramar <b>es…</b></h2></div></div>
+      <ol class="ns-pilares">
+        <li data-reveal><span class="ns-n">01</span><div class="ns-ico"><svg aria-hidden="true"><use href="#i-home"/></svg></div><div class="ns-tx"><h3>Mantenimiento real</h3><p>Soluciones reales, no parches. Cuidamos cada área del edificio para que conserve su valor y su estética, año tras año.</p></div></li>
+        <li data-reveal style="--d:.06s"><span class="ns-n">02</span><div class="ns-ico"><svg aria-hidden="true"><use href="#i-chart"/></svg></div><div class="ns-tx"><h3>Finanzas claras</h3><p>Cada movimiento queda registrado en nuestro sistema digital. Reportes mensuales detallados y, a la vez, fáciles de entender.</p></div></li>
+        <li data-reveal style="--d:.12s"><span class="ns-n">03</span><div class="ns-ico"><svg aria-hidden="true"><use href="#i-check"/></svg></div><div class="ns-tx"><h3>Proveedores bajo control</h3><p>Seleccionamos, supervisamos y evaluamos a cada proveedor, y trabajamos con ellos para que el servicio mejore cada vez.</p></div></li>
+        <li data-reveal style="--d:.18s"><span class="ns-n">04</span><div class="ns-ico"><svg aria-hidden="true"><use href="#i-admin"/></svg></div><div class="ns-tx"><h3>Aliados del desarrollador</h3><p>Lo asesoramos desde el inicio de su proyecto, con profesionalismo y condiciones preferenciales, para que la gestión administrativa no sea una carga.</p></div></li>
+        <li data-reveal style="--d:.24s"><span class="ns-n">05</span><div class="ns-ico"><svg aria-hidden="true"><use href="#i-eye"/></svg></div><div class="ns-tx"><h3>Innovación</h3><p>Un portal propio para cada copropietario: estado de cuenta, pago de expensas y reservas, desde el celular.</p></div></li>
+      </ol>
     </div>
   </section>
   <section class="tight">
     <div class="wrap">
-      <div class="head" data-reveal><div><span class="tag">Beneficios para copropietarios</span><h2 class="h2">Lo que cambia con <b>Bramar.</b></h2></div></div>
-      <div class="benefits" data-reveal>
-        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-wallet"/></svg></span><p><b>Fondo de contingencia</b><span>Reservas para imprevistos, sin cuotas sorpresa.</span></p></div>
-        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-cash"/></svg></span><p><b>Cobranza efectiva</b><span>Seguimiento integral de expensas.</span></p></div>
-        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-home"/></svg></span><p><b>Áreas comunes recuperadas</b><span>Espacios rehabilitados y bien cuidados.</span></p></div>
-        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-chart"/></svg></span><p><b>Más plusvalía</b><span>Su inversión mantiene y gana valor.</span></p></div>
-        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-doc"/></svg></span><p><b>Reportes mensuales</b><span>Transparencia total en cada gasto.</span></p></div>
-        <div class="benefit"><span class="ico"><svg aria-hidden="true"><use href="#i-clock"/></svg></span><p><b>Asistencia 24 horas</b><span>Control de la operatividad del edificio.</span></p></div>
+      <div class="ns-cierre" data-reveal>
+        <img class="ns-mark" src="img/isotipo-blanco.png" alt="" aria-hidden="true" loading="lazy">
+        <div><span class="tag">Nuestra misión</span><h2>Que cada edificio se mantenga <b>como nuevo, siempre.</b></h2></div>
+        <div class="ns-acc"><a class="btn gold" href="#servicios" data-go="servicios">Ver servicios <svg aria-hidden="true"><use href="#i-arrow"/></svg></a><a class="btn white" href="copropietarios.html">Portal de copropietarios</a></div>
       </div>
-    </div>
-  </section>
-  <section class="tight">
-    <div class="wrap mv">
-      <article class="on-dark" data-reveal><span class="tag">Misión</span><h3>Que cada edificio se mantenga como nuevo, siempre.</h3><p>En estética y en operatividad.</p></article>
-      <article data-reveal style="--d:.1s"><span class="tag">Filosofía</span><h3>Inversión protegida.</h3><p>Una gestión rigurosa y un control estricto de proveedores para que la plusvalía de su propiedad siga creciendo.</p></article>
     </div>
   </section>
 </div>
