@@ -240,16 +240,17 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .ns-intro{max-width:1080px;text-align:center;display:flex;flex-direction:column;align-items:center}
 .ns-big{font-size:clamp(24px,3vw,40px);font-weight:300;line-height:1.35;color:var(--navy);margin-top:22px;max-width:980px}
 .ns-big b{font-weight:500}
-.ns-pilares{list-style:none;margin:0;padding:0;border-radius:var(--radius);overflow:hidden;background:var(--paper);border:1px solid var(--line)}
-.ns-pilares li{display:grid;grid-template-columns:72px 64px minmax(0,1fr);align-items:center;gap:clamp(16px,2.4vw,32px);padding:clamp(22px,3vw,34px) clamp(22px,3.4vw,44px);border-top:1px solid var(--line);transition:background .35s}
-.ns-pilares li:first-child{border-top:0}
-.ns-pilares li:hover{background:#FBFAF7}
-.ns-n{font-size:clamp(28px,3vw,40px);font-weight:300;color:var(--brass);letter-spacing:.02em;line-height:1}
-.ns-ico{width:64px;height:64px;border-radius:18px;background:var(--navy);color:var(--brass-soft);display:grid;place-items:center}
-.ns-ico svg{width:28px;height:28px}
-.ns-tx{display:grid;grid-template-columns:minmax(200px,.8fr) minmax(0,1.6fr);gap:clamp(12px,3vw,48px);align-items:center}
-.ns-tx h3{font-size:clamp(21px,2vw,26px);font-weight:400;color:var(--navy)}
-.ns-tx p{color:var(--muted);font-size:16px}
+.ns-def{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(32px,6vw,96px);align-items:start}
+.ns-side{position:sticky;top:calc(var(--nav-space) + 24px)}
+.ns-pilares{list-style:none;margin:0;padding:0;counter-reset:p}
+.ns-pilares li{position:relative;display:grid;grid-template-columns:56px minmax(0,1fr);column-gap:24px;padding:34px 0;border-top:1px solid var(--line)}
+.ns-pilares li:last-child{border-bottom:1px solid var(--line)}
+.ns-pilares li::before{content:"";position:absolute;left:0;top:-1px;height:1px;width:0;background:var(--brass);transition:width .7s var(--soft)}
+.ns-pilares li:hover::before{width:100%}
+.ns-n{grid-row:1/3;font-size:13px;font-weight:500;letter-spacing:.14em;color:var(--brass);padding-top:12px}
+.ns-pilares h3{font-size:clamp(26px,2.6vw,36px);font-weight:300;letter-spacing:-.01em;color:var(--navy);line-height:1.15;transition:transform .5s var(--soft)}
+.ns-pilares li:hover h3{transform:translateX(6px)}
+.ns-pilares p{margin-top:10px;color:var(--muted);font-size:16px;max-width:560px}
 .ns-cierre{position:relative;overflow:hidden;isolation:isolate;border-radius:var(--radius-l);padding:clamp(32px,5vw,72px);background:linear-gradient(150deg,#15508a 0%,var(--navy) 52%,#051a38 100%);color:#fff;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:32px;align-items:center}
 .ns-cierre::before{content:"";position:absolute;inset:0;z-index:-1;background:radial-gradient(90% 90% at 100% 0%,rgba(201,164,106,.25),transparent 60%)}
 .ns-cierre .ns-mark{position:absolute;z-index:-1;width:300px;right:-40px;bottom:-60px;opacity:.07;pointer-events:none}
@@ -257,15 +258,9 @@ main.leaving{opacity:0;transform:translateY(-10px);filter:blur(6px)}
 .ns-cierre h2{font-size:clamp(28px,3.4vw,46px);font-weight:300;line-height:1.2;margin-top:16px;max-width:720px}
 .ns-cierre h2 b{font-weight:500;color:var(--brass-soft)}
 .ns-acc{display:flex;flex-direction:column;gap:12px;min-width:250px}
-@media (max-width:1000px){ .ns-tx{grid-template-columns:1fr;gap:6px} .ns-cierre{grid-template-columns:1fr} .ns-acc{flex-direction:row;flex-wrap:wrap;min-width:0} }
-@media (max-width:640px){
-  .ns-pilares li{grid-template-columns:48px minmax(0,1fr);grid-template-areas:"ico tx";gap:14px;padding:20px;align-items:start}
-  .ns-pilares .ns-n{display:none}
-  .ns-ico{grid-area:ico;width:48px;height:48px;border-radius:14px}
-  .ns-ico svg{width:22px;height:22px}
-  .ns-tx{grid-area:tx}
-  .ns-acc .btn{width:100%}
-}
+@media (max-width:1000px){ .ns-def{grid-template-columns:1fr;gap:24px} .ns-side{position:static} .ns-cierre{grid-template-columns:1fr} .ns-acc{flex-direction:row;flex-wrap:wrap;min-width:0} }
+@media (max-width:640px){ .ns-pilares li{grid-template-columns:40px minmax(0,1fr);column-gap:12px;padding:26px 0} .ns-acc .btn{width:100%} }
+
 /* nosotros (anterior) */
 .about{display:grid;grid-template-columns:1fr 1fr;gap:clamp(32px,6vw,96px);align-items:start}
 .about > *{min-width:0}
@@ -828,14 +823,10 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   </section>
   <section class="tight">
     <div class="wrap">
-      <div class="head" data-reveal><div><span class="tag">Lo que nos define</span><h2 class="h2">Bramar <b>es…</b></h2></div></div>
-      <ol class="ns-pilares">
-        <li data-reveal><span class="ns-n">01</span><div class="ns-ico"><svg aria-hidden="true"><use href="#i-home"/></svg></div><div class="ns-tx"><h3>Mantenimiento real</h3><p>Soluciones reales, no parches. Cuidamos cada área del edificio para que conserve su valor y su estética, año tras año.</p></div></li>
-        <li data-reveal style="--d:.06s"><span class="ns-n">02</span><div class="ns-ico"><svg aria-hidden="true"><use href="#i-chart"/></svg></div><div class="ns-tx"><h3>Finanzas claras</h3><p>Cada movimiento queda registrado en nuestro sistema digital. Reportes mensuales detallados y, a la vez, fáciles de entender.</p></div></li>
-        <li data-reveal style="--d:.12s"><span class="ns-n">03</span><div class="ns-ico"><svg aria-hidden="true"><use href="#i-check"/></svg></div><div class="ns-tx"><h3>Proveedores bajo control</h3><p>Seleccionamos, supervisamos y evaluamos a cada proveedor, y trabajamos con ellos para que el servicio mejore cada vez.</p></div></li>
-        <li data-reveal style="--d:.18s"><span class="ns-n">04</span><div class="ns-ico"><svg aria-hidden="true"><use href="#i-admin"/></svg></div><div class="ns-tx"><h3>Aliados del desarrollador</h3><p>Lo asesoramos desde el inicio de su proyecto, con profesionalismo y condiciones preferenciales, para que la gestión administrativa no sea una carga.</p></div></li>
-        <li data-reveal style="--d:.24s"><span class="ns-n">05</span><div class="ns-ico"><svg aria-hidden="true"><use href="#i-eye"/></svg></div><div class="ns-tx"><h3>Innovación</h3><p>Un portal propio para cada copropietario: estado de cuenta, pago de expensas y reservas, desde el celular.</p></div></li>
-      </ol>
+      <div class="ns-def">
+        <div class="ns-side" data-reveal><span class="tag">Lo que nos define</span><h2 class="h2">Bramar <b>es…</b></h2></div>
+        <ol class="ns-pilares"><li data-reveal style="--d:0.00s"><span class="ns-n">01</span><h3>Mantenimiento real</h3><p>Soluciones reales, no parches. Cuidamos cada área para que el edificio conserve su valor y su estética, año tras año.</p></li><li data-reveal style="--d:0.06s"><span class="ns-n">02</span><h3>Finanzas claras</h3><p>Todo queda registrado en nuestro sistema digital. Reportes mensuales detallados y, a la vez, sencillos.</p></li><li data-reveal style="--d:0.12s"><span class="ns-n">03</span><h3>Proveedores bajo control</h3><p>Seleccionamos, supervisamos y evaluamos a cada proveedor para que el servicio mejore cada vez.</p></li><li data-reveal style="--d:0.18s"><span class="ns-n">04</span><h3>Aliados del desarrollador</h3><p>Asesoría desde el inicio de su proyecto, con condiciones preferenciales, para que la administración no sea una carga.</p></li><li data-reveal style="--d:0.24s"><span class="ns-n">05</span><h3>Innovación</h3><p>Portal propio para cada copropietario: estado de cuenta, pagos y reservas desde el celular.</p></li></ol>
+      </div>
     </div>
   </section>
   <section class="tight">
