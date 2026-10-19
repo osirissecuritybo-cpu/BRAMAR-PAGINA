@@ -14275,8 +14275,9 @@ window.lukaCloud = (function(){
   }
 
   async function renderSelector(){
-    const el = ensureSelectorEl();
+    const el = ensureSelectorEl(); const gen = (window.__lkSelGen = (window.__lkSelGen||0) + 1);
     const reg = await getRegistry();
+    if (gen !== window.__lkSelGen) return;   // mientras tanto se abrió un edificio: no volver a mostrar la lista
     const list = el.querySelector('#luka-sel-list');
     if (!reg.list.length){
       list.innerHTML = `<div class="luka-sel-empty">Todavía no hay edificios. Creá el primero abajo 👇</div>`;
@@ -14290,9 +14291,10 @@ window.lukaCloud = (function(){
         </div>`).join('');
       list.querySelectorAll('.luka-sel-open').forEach(btn=>btn.addEventListener('click',()=>openBuilding(btn.dataset.id)));
     }
+    if (gen !== window.__lkSelGen) return;
     el.style.display = 'flex';
   }
-  function hideSelector(){ const el=document.getElementById('luka-selector'); if(el) el.style.display='none'; }
+  function hideSelector(){ window.__lkSelGen = (window.__lkSelGen||0) + 1; const el=document.getElementById('luka-selector'); if(el) el.style.display='none'; }
   window.lukaShowSelector = renderSelector;
 
   function escapeHtmlLK(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -19538,7 +19540,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   function resIni(r){ return r.inicio || (r.fecha? (r.fecha+'T00:00'):''); }
   function resFin(r){ return r.fin || (r.fecha? (r.fecha+'T23:59'):''); }
   function estadoTemp(r){ var f=resFin(r), i=resIni(r), n=nowLocal(); if(f && f<n) return 'finalizada'; if(i && i>n) return 'proxima'; return 'activa'; }
-  function fmtDT(s){ if(!s) return '—'; var d=s.split('T'); var dp=(d[0]||'').split('-'); var out=dp.length===3?(dp[2]+'/'+dp[1]+'/'+dp[0]):d[0]; if(d[1]) out+=' '+d[1]; return out; }
+  function fmtDT(s){ if(!s) return '—'; s=String(s); var d=s.split('T'); var dp=(d[0]||'').split('-'); var out=dp.length===3?(dp[2]+'/'+dp[1]+'/'+dp[0]):d[0]; var h=(d[1]||'').match(/^(\d{1,2}):(\d{2})/); if(h&&!/1899|GMT/.test(d[1])) out+=' '+(h[1].length<2?'0':'')+h[1]+':'+h[2]; return out; }
   function fdateLong(s){ try{ if(s && typeof fmtDateLong==='function') return fmtDateLong(s.slice(0,10)); }catch(e){} return s; }
 
   function garState(r){ if(!r.garDev||typeof r.garDev!=='object') r.garDev={estado:'pendiente',historial:[]}; if(!Array.isArray(r.garDev.historial)) r.garDev.historial=[]; if(r.garDev.estado!=='devuelta') r.garDev.estado='pendiente'; return r.garDev; }
@@ -19824,7 +19826,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
         (u?rowk('Devuelto', money(u.monto)+' el '+fdateLong(u.fecha)):'')+
         (u&&u.comprobante?rowk('Comprobante', esc(u.comprobante)):'')+
         (u&&u.obs?rowk('Observación', esc(u.obs)):'')+
-        (g.estado!=='devuelta'?'<button type="button" class="btn primary" id="lkr-det-dev" style="margin-top:8px;">'+ico('checkCircle',14)+' Registrar devolución</button>':'')+
+        (g.estado!=='devuelta'?'<button type="button" class="btn primary" id="lkr-det-dev" style="margin-top:8px;">'+ico('checkCircle',14)+' Registrar devolución</button>':'<div style="display:flex;gap:8px;margin-top:10px;"><button type="button" class="btn" id="lkr-det-dev">Editar devolución</button><button type="button" class="btn" id="lkr-det-devdoc">Comprobante</button></div>')+
       '</div>'; }
     _('lkr-det-modal').innerHTML=
       '<button class="close-btn" id="lkr-det-close">&times;</button>'+
@@ -19851,6 +19853,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     _('lkr-det-comp').onclick=function(){ if(window.__lukaOpenReservaDetalle) window.__lukaOpenReservaDetalle(r); };
     _('lkr-det-edit').onclick=function(){ close(); editing=r; go('nueva'); };
     var dv=_('lkr-det-dev'); if(dv) dv.onclick=function(){ close(); openDevolucion(r); };
+    var dd=_('lkr-det-devdoc'); if(dd) dd.onclick=function(){ close(); if(window.lukaVerDevolucion) window.lukaVerDevolucion(r); };
   }
 
   // ================= GARANTÍAS PENDIENTES =================
@@ -19886,23 +19889,25 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   }
   function openDevolucion(r){
     ensureDevModal(); var g=garState(r); var m=_('lkr-dev-modal');
+    var ed=(g.estado==='devuelta'&&g.historial.length)?g.historial[g.historial.length-1]:null, ev=function(k,d){ return ed&&ed[k]!=null?ed[k]:d; };
     m.innerHTML='<button class="close-btn" id="lkr-dev-close">&times;</button>'+
-      '<h2 style="margin-bottom:4px;">Registrar devolución de garantía</h2>'+
+      '<h2 style="margin-bottom:4px;">'+(ed?'Editar devolución':'Devolver garantía')+'</h2>'+
       '<div class="modal-sub" style="margin-bottom:14px;">'+esc(r.areaNombre||'')+' · '+esc(responsable(r))+'<br>Garantía recibida: <strong>'+money(r.garantia)+'</strong></div>'+
-      '<div class="luka-form-field"><label>Fecha de devolución</label><input type="date" id="lkr-dev-fecha" value="'+esc(iso())+'"></div>'+
-      '<div class="luka-form-field"><label>Monto efectivamente devuelto (Bs.)</label><input type="number" id="lkr-dev-monto" min="0" step="0.01" value="'+(+r.garantia||0)+'"></div>'+
-      '<div class="luka-form-field"><label>N.º de comprobante de la devolución</label><input type="text" id="lkr-dev-comp"></div>'+
-      '<div class="luka-form-field"><label>Recibió (opcional)</label><input type="text" id="lkr-dev-recibio"></div>'+
-      '<div class="luka-form-field"><label>Observación (opcional)</label><input type="text" id="lkr-dev-obs" placeholder="Ej. se descontó Bs. 50 por daño"></div>'+
-      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;"><button type="button" class="btn" id="lkr-dev-cancel">Cancelar</button><button type="button" class="btn primary" id="lkr-dev-save">'+ico('checkCircle',15)+' Registrar</button></div>';
+      '<div class="luka-form-field"><label>Fecha de devolución</label><input type="date" id="lkr-dev-fecha" value="'+esc(ev('fecha',iso()))+'"></div>'+
+      '<div class="luka-form-field"><label>Monto efectivamente devuelto (Bs.)</label><input type="number" id="lkr-dev-monto" min="0" step="0.01" value="'+esc(ev('monto',+r.garantia||0))+'"></div><div class="luka-form-field"><label>Medio</label><select id="lkr-dev-met">'+['Transferencia','QR','Efectivo'].map(function(o){ return '<option'+(ev('metodo','Transferencia')===o?' selected':'')+'>'+o+'</option>'; }).join('')+'</select></div>'+
+      '<div class="luka-form-field"><label>N.º de comprobante de la devolución</label><input type="text" id="lkr-dev-comp" value="'+esc(ev('comprobante',''))+'"></div>'+
+      '<div class="luka-form-field"><label>Recibió (opcional)</label><input type="text" id="lkr-dev-recibio" value="'+esc(ev('recibio',''))+'"></div>'+
+      '<div class="luka-form-field"><label>Observación (opcional)</label><input type="text" id="lkr-dev-obs" placeholder="Ej. se descontó Bs. 50 por daño" value="'+esc(ev('obs',''))+'"></div>'+
+      '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;"><button type="button" class="btn" id="lkr-dev-cancel">Cancelar</button><button type="button" class="btn primary" id="lkr-dev-save">'+ico('checkCircle',15)+(ed?' Guardar cambios':' Registrar')+'</button></div>';
     _('lkr-dev-bd').classList.add('open');
     var close=function(){ _('lkr-dev-bd').classList.remove('open'); };
     _('lkr-dev-close').onclick=close; _('lkr-dev-cancel').onclick=close;
     _('lkr-dev-save').onclick=function(){
       var en={ fecha:_('lkr-dev-fecha').value||iso(), monto:Math.round((parseFloat(_('lkr-dev-monto').value)||0)*100)/100, comprobante:(_('lkr-dev-comp').value||'').trim(), recibio:(_('lkr-dev-recibio').value||'').trim(), obs:(_('lkr-dev-obs').value||'').trim(), at:new Date().toISOString() };
-      g.historial.push(en); g.estado='devuelta'; persist(); close(); render();
-      if(typeof showSaveToast==='function') showSaveToast(ico('checkCircle',15)+' Devolución registrada');
-      garPDF(r, en);
+      en.metodo=_('lkr-dev-met').value;
+      if(ed){ delete en.at; Object.assign(ed,en); ed.editado=new Date().toISOString(); } else { DATA.garDevCounter=(DATA.garDevCounter||0)+1; en.no='DG-'+String(DATA.garDevCounter).padStart(5,'0'); en.garantia=+r.garantia||0; en.area=r.areaNombre||''; en.fechaEvento=r.fecha||''; g.historial.push(en); }
+      g.estado='devuelta'; persist(); close(); render();
+      if(typeof showSaveToast==='function') showSaveToast(ico('checkCircle',15)+(ed?' Devolución corregida':' Devolución registrada'));
     };
   }
 
@@ -19929,7 +19934,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     pdf.text(edif()+'  ·  Documento generado el '+fdateLong(iso()),M,PH-24,{size:8,color:MUT});
     pdf.save(((typeof bslug==='function')?bslug():'edificio')+'_devolucion_garantia_'+(en.fecha||iso())+'.pdf');
   }
-  window.__lukaGarPDF=garPDF;
+  window.__lukaGarPDF=garPDF; window.lukaEditarDevolucion=function(r){ openDevolucion(r); };
 
   (function(){ var _sv=window.switchView; if(typeof _sv==='function' && !window.__lkrSvWrap){ window.__lkrSvWrap=true;
     window.switchView=function(v){ if(v==='areas-sociales'){ section='activas'; editing=null; } return _sv.apply(this,arguments); }; } })();
@@ -22498,7 +22503,9 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
   function unidadDe(r){ var d=(DATA.deptos||[]).filter(function(x){ return String(x.depto).toUpperCase()===String(r.depto||'').toUpperCase(); })[0]; return { depto:r.depto||'', bloque:(d&&d.bloque)||'' }; }
   window.lukaCtxE=ctxE; window.lukaUnidadDe=unidadDe;
   window.lukaVerReciboReserva=function(r){ if(r&&r.pago) mostrarDoc(lukaDocReserva(ctxE(),unidadDe(r),r.pago),'Recibo '+r.pago.no+' - Alquiler - Depto '+(r.depto||'')); };
-  window.lukaVerDevolucion=function(r){ var h=(r.garDev&&r.garDev.historial)||[], u=h[h.length-1]; if(u) mostrarDoc(lukaDocDevolucion(ctxE(),unidadDe(r),u),'Devolucion '+(u.no||'')+' - Depto '+(r.depto||'')); };
+  window.lukaVerDevolucion=function(r){ var h=(r.garDev&&r.garDev.historial)||[], u=h[h.length-1]; if(!u) return; mostrarDoc(lukaDocDevolucion(ctxE(),unidadDe(r),u),'Devolucion '+(u.no||'')+' - Depto '+(r.depto||''));
+    var fa=document.querySelector('#receipt-modal-content .form-actions'); if(fa&&window.lukaEditarDevolucion){ var b=document.createElement('button'); b.type='button'; b.className='btn'; b.textContent='Editar'; b.style.marginRight='auto';
+      b.onclick=function(){ try{ closeReceipt(); }catch(e){ $('receipt-modal-backdrop').classList.remove('open'); } window.lukaEditarDevolucion(r); }; fa.insertBefore(b,fa.firstChild); } };
 
   /* ---------------- Cobro de una reserva ---------------- */
   function lineasDe(r){
@@ -22580,7 +22587,7 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
       r.garDev.historial.push(en); r.garDev.estado='devuelta'; guardar(); bd.classList.remove('open');
       if(onDone) try{ onDone(en); }catch(e){}
       try{ if(typeof renderAreasSociales==='function') renderAreasSociales(); }catch(e){}
-      window.lukaVerDevolucion(r);
+      try{ showSaveToast('Devolución '+en.no+' registrada'); }catch(e){}
     };
   };
 
@@ -22590,10 +22597,10 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
       if(row.querySelector('.lkrp-acc')) return;
       var r=(DATA.reservasSociales||[]).filter(function(x){ return String(x.id)===row.dataset.id; })[0]; if(!r||r.estado==='Cancelada') return;
       var box=document.createElement('div'); box.className='lkrp-acc';
-      box.innerHTML=r.pago?'<span class="lkrp-chip">Pagada</span><button type="button" class="btn" data-a="rec">Recibo</button>':'<button type="button" class="btn primary" data-a="cob">Cobrar</button>';
-      if(r.pago&&r.pago.comprobante&&r.pago.comprobante.archivo) box.innerHTML+='<button type="button" class="btn" data-a="comp">Comprobante</button>';
-      var h=(r.garDev&&r.garDev.historial)||[];
-      if(r.garDev&&r.garDev.estado==='devuelta'&&h.length) box.innerHTML+='<button type="button" class="btn" data-a="dev">Devolución</button>';
+      var h=(r.garDev&&r.garDev.historial)||[], u=h[h.length-1];
+      box.innerHTML=(r.pago?'<button type="button" class="lkrp-b ok" data-a="rec" title="Ver recibo"><small>Recibo</small>'+esc(r.pago.no||'')+'</button>':'<button type="button" class="lkrp-b cob" data-a="cob" title="Registrar el pago con un recibo del talonario"><small>Sin recibo</small>Registrar pago</button>')+
+        ((+r.garantia||0)>0?(r.garDev&&r.garDev.estado==='devuelta'&&u?'<button type="button" class="lkrp-b ok" data-a="dev" title="Ver o corregir la devolución"><small>Garantía</small>'+esc(u.no||'Devuelta')+'</button>':(r.pago?'<span class="lkrp-b pend"><small>Garantía</small>Por devolver</span>':'<span class="lkrp-b nada"></span>')):'<span class="lkrp-b nada"></span>');
+      if(r.pago&&r.pago.comprobante&&r.pago.comprobante.archivo) box.innerHTML+='<button type="button" class="lkrp-b ok" data-a="comp"><small>Pago</small>Comprobante</button>';
       box.addEventListener('click',function(e){ var b=e.target.closest('[data-a]'); if(!b) return; e.stopPropagation();
         if(b.dataset.a==='comp'){ if(window.lukaVerComprobante) lukaVerComprobante(r.pago.comprobante.archivo,'Reserva · Depto '+(r.depto||'')); return; }
         if(b.dataset.a==='cob') window.lukaPagoReserva(r); else if(b.dataset.a==='rec') window.lukaVerReciboReserva(r); else window.lukaVerDevolucion(r); });
@@ -23519,9 +23526,59 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
   .modal-backdrop .modal{max-width:100vw!important;box-sizing:border-box!important}
   .modal-backdrop .modal div:has(>.btn.primary){flex-wrap:wrap!important}
   .modal-backdrop .modal div:has(>.btn.primary)>.btn.primary{flex:1 1 auto!important;justify-content:center!important;white-space:normal!important}
+  /* ventanas en celular: ocupan la pantalla, la X arriba a la derecha sin tapar nada */
+  .modal-backdrop.open{padding:0!important;align-items:stretch!important}
+  .modal-backdrop .modal{width:100%!important;max-width:100%!important;min-height:100%!important;margin:0!important;border-radius:0!important;padding:20px 16px calc(24px + env(safe-area-inset-bottom))!important;position:relative!important}
+  .modal-backdrop .modal>h2{padding-right:48px!important;font-size:21px!important;line-height:1.2!important;margin:0 0 14px!important}
+  .modal-backdrop .modal>.close-btn{position:absolute!important;top:14px!important;right:12px!important;width:40px!important;height:40px!important;margin:0!important;display:grid!important;place-items:center!important;font-size:24px!important;border-radius:12px!important;z-index:2}
+  #pb-body>*,#pb-otros>*,#pb-body>*>*{width:100%!important;max-width:none!important;box-sizing:border-box!important;margin-left:0!important;margin-right:0!important}
+  .lk-modal-foot{display:flex!important;gap:10px!important;flex-wrap:wrap!important}
+  .lk-modal-foot>.btn{flex:1 1 0!important;justify-content:center!important}
+
+  /* reporte diario en celular: cada movimiento es una fila de app (detalle y monto), sin columnas cortadas */
+  .diario-table-wrap{overflow:visible!important;height:auto!important;max-height:none!important;border-radius:16px!important}
+  #diario-table{display:block!important;width:100%!important;min-width:0!important;height:auto!important;border:0!important}
+  #diario-table thead,#diario-table .lk-relleno{display:none!important}
+  #diario-table tbody{display:block!important}
+  #diario-table tbody tr{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;column-gap:12px!important;row-gap:4px!important;align-items:center!important;padding:12px 14px!important;border-bottom:1px solid #EEF2F7!important;height:auto!important}
+  #diario-table tbody tr>td{display:block!important;padding:0!important;border:0!important;width:auto!important;height:auto!important;background:none!important}
+  #diario-table tbody tr>td:empty{display:none!important}
+  #diario-table tbody tr:not(.day-row)>td:nth-child(2){grid-column:1!important;grid-row:1!important;font-size:14.5px!important;line-height:1.35!important;color:#0B2440!important}
+  #diario-table tbody tr:not(.day-row)>td:nth-child(1){grid-column:1!important;grid-row:2!important;font-size:12px!important}
+  #diario-table tbody tr:not(.day-row)>td:nth-child(3),#diario-table tbody tr:not(.day-row)>td:nth-child(4),#diario-table tbody tr:not(.day-row)>td:nth-child(5),#diario-table tbody tr:not(.day-row)>td:nth-child(6){grid-column:2!important;grid-row:1!important;text-align:right!important;font-weight:800!important;font-size:15px!important;white-space:nowrap!important}
+  #diario-table tbody tr:not(.day-row)>td:nth-child(7){grid-column:2!important;grid-row:2!important;justify-self:end!important;display:flex!important;gap:6px!important;width:auto!important}
+  #diario-table tbody tr:not(.day-row)>td:nth-child(7) button{width:34px!important;height:34px!important;border-radius:10px!important;border:1px solid #E3EAF2!important;background:#fff!important;display:grid!important;place-items:center!important;padding:0!important;margin:0!important;color:#5B6B7F!important;font-size:14px!important}
+  #diario-table tbody tr:not(.day-row)>td:nth-child(7) .btn-anula-pago{color:#8E2A20!important}
+  /* vistas sin buscador: el filtro va en la misma línea del título */
+  .topbar .lk-tools:not(:has(.lk-hsearch)){order:3!important;flex:0 0 auto!important;width:auto!important}
+  .topbar .lk-tools:not(:has(.lk-hsearch))>.lk-ti,.topbar .lk-tools:not(:has(.lk-hsearch))>.lk-pop>.lk-ti{width:36px!important;min-width:36px!important;height:40px!important;border:0!important;background:transparent!important}
+  .topbar .topbar-title[data-c]{font-size:0!important}
+  .topbar .topbar-title[data-c]::after{content:attr(data-c);font-size:17px}
+  #diario-table .mov-tag{font-size:10px!important;padding:2px 7px!important;margin:0 4px 3px 0!important;vertical-align:1px}
+  #diario-table tbody tr.day-row{display:flex!important;justify-content:space-between!important;padding:9px 14px!important;background:#EEF3F9!important;position:static!important}
+  #diario-table tbody tr.day-row>td{font-size:13px!important;font-weight:800!important;color:#0B2440!important}
+  #diario-table tbody tr.day-row>td:nth-child(3),#diario-table tbody tr.day-row>td:nth-child(4),#diario-table tbody tr.day-row>td:nth-child(5){display:none!important}
+  #diario-table tfoot{display:block!important;position:sticky!important;bottom:0!important;z-index:3}
+  #diario-table tfoot tr{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px 8px!important;padding:12px 14px calc(12px + env(safe-area-inset-bottom))!important;background:#0B2440!important;color:#fff!important;border-radius:0 0 16px 16px!important}
+  #diario-table tfoot td{display:flex!important;flex-direction:column!important;padding:0!important;border:0!important;background:none!important;color:#fff!important;font-size:13px!important;font-weight:800!important;text-align:left!important;white-space:nowrap!important;min-width:0!important}
+  #diario-table tfoot td:nth-child(1){grid-column:1/-1!important;font-size:11px!important;letter-spacing:.08em!important;opacity:.75}
+  #diario-table tfoot td:empty{display:none!important}
+  #diario-table tfoot td:nth-child(2)::before{content:"Ingreso"}
+  #diario-table tfoot td:nth-child(3)::before{content:"Ascensor"}
+  #diario-table tfoot td:nth-child(4)::before{content:"Egreso"}
+  #diario-table tfoot td:nth-child(5)::before{content:"Saldo"}
+  #diario-table tfoot td::before{font-size:10px;font-weight:600;opacity:.7;letter-spacing:.04em;margin-bottom:2px}
 }
 </style>
 <script>
+/* títulos cortos en celular */
+(function(){
+  var C={'Reporte diario':'Diario','Tarjetas de acceso':'Tarjetas','Reservar área':'Reservas','Plan de pagos':'Planes de pago','Panel financiero':'Panel'};
+  function corto(){ var t=document.getElementById('topbar-title'); if(!t) return; var k=t.textContent.trim(), c=null;
+    Object.keys(C).forEach(function(x){ if(k.indexOf(x)===0) c=C[x]; }); if(c){ if(t.dataset.c!==c) t.dataset.c=c; } else if(t.dataset.c) delete t.dataset.c; }
+  function iniciar(){ var t=document.getElementById('topbar-title'); if(!t) return setTimeout(iniciar,300); corto(); new MutationObserver(corto).observe(t,{childList:true,subtree:true,characterData:true}); }
+  iniciar();
+})();
 /* panel financiero (vive en su propia caja): que sus filas de botones bajen de línea en celular */
 (function(){
   var CSS='@media (max-width:760px){.flex.items-center.gap-2{flex-wrap:wrap!important}}';
@@ -23530,9 +23587,43 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
   window.addEventListener('load',function(){ setTimeout(fijar,1500); });
 })();
 </script>
+<style>
+/* ============ Módulo 45 · Lista de reservas: filas alineadas y ligadas al talonario ============ */
+.lkr-res[data-id]{display:grid!important;grid-template-columns:minmax(0,1fr) auto 110px!important;gap:16px!important;align-items:center!important;
+  padding:14px 18px!important;margin:0 0 10px!important;border-radius:14px!important;border:1px solid #E3EAF2!important;border-left:4px solid #1E4E86!important;
+  background:#fff!important;opacity:1!important;cursor:pointer}
+.lkr-res[data-id]:hover{border-color:#C9D4E0!important}
+.lkr-res.past[data-id]{border-left-color:#C9D4E0!important}
+.lkr-res.past[data-id] .lkr-res-t{color:#5B6B7F!important}
+.lkr-res[data-id]>div:first-child{min-width:0}
+.lkr-res[data-id] .lkr-res-t{font-size:15px!important;font-weight:700!important;display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.lkr-res[data-id] .lkr-res-sub{font-size:12.5px!important;margin-top:4px!important;color:#5B6B7F!important}
+.lkr-res[data-id] .lkr-chip{margin:0!important}
+.lkr-res[data-id] .lkr-chip.gpend,.lkr-res[data-id] .lkr-chip.gdev{display:none!important}
+.lkr-res[data-id]>div:last-child{text-align:right!important;font-size:15.5px!important;font-weight:800!important;color:#0B2440!important}
+.lkr-res[data-id]>.lkrp-acc{display:grid!important;grid-auto-flow:column!important;grid-auto-columns:140px!important;gap:8px!important;margin:0!important;align-items:stretch!important}
+.lkrp-acc>.lkrp-chip{display:none!important}
+.lkrp-b{box-sizing:border-box;height:46px;margin:0;border-radius:11px;border:1px solid #E3EAF2;background:#fff;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;gap:1px;
+  padding:0 12px;font:inherit;font-size:13.5px;font-weight:700;color:#0B2440;text-align:left;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.lkrp-b small{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:#7d93ab;font-weight:700}
+button.lkrp-b:hover{border-color:#1E4E86}
+.lkrp-b.cob{background:#0B2440;border-color:#0B2440;color:#fff}
+.lkrp-b.cob small{color:rgba(255,255,255,.6)}
+.lkrp-b.pend{background:#FDF6E3;border-color:#F1E2B8;color:#7a5b00;cursor:default}
+.lkrp-b.pend small{color:#B08A2E}
+.lkrp-b.nada{visibility:hidden}
+@media (max-width:760px){
+  .lkr-res[data-id]{grid-template-columns:minmax(0,1fr) auto!important;gap:10px 12px!important;padding:12px 14px!important;margin:0 12px 10px!important}
+  .lkr-res[data-id]>div:first-child{grid-column:1!important;grid-row:1!important}
+  .lkr-res[data-id]>div:last-child{grid-column:2!important;grid-row:1!important;align-self:start}
+  .lkr-res[data-id]>.lkrp-acc{grid-column:1/-1!important;grid-row:2!important;grid-auto-flow:row!important;grid-template-columns:1fr 1fr!important;grid-auto-columns:auto!important}
+  .lkr-res[data-id] .lkr-res-sub{white-space:normal}
+}
+</style>
+
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261019120401';
+(function(){ var B='20261019143553';
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
