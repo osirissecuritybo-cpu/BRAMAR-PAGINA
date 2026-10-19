@@ -13525,7 +13525,7 @@ window.lukaCloud = (function(){
         o.querySelector('#lk-lf').onsubmit=function(e){
           e.preventDefault(); var b=o.querySelector('#lk-lb'); b.disabled=true; b.textContent='Ingresando…';
           api({action:'lk_login',usuario:o.querySelector('#lk-u').value.trim(),clave:o.querySelector('#lk-p').value})
-            .then(function(r){ ses={token:r.token,usuario:r.usuario}; persistSes(); hideOverlay(); resolve(); })
+            .then(function(r){ ses={token:r.token,usuario:r.usuario}; persistSes(); if(window.lukaSplash) window.lukaSplash(); hideOverlay(); resolve(); })
             .catch(function(err){ formLogin(err.offline?'No hay conexión a internet. Conéctese e intente de nuevo.':err.message); });
         };
         api({action:'lk_estado'}).then(function(r){ if(!r.hayUsuarios){ var f=o.querySelector('#lk-first'); if(f) f.hidden=false; } }).catch(function(){});
@@ -13546,7 +13546,7 @@ window.lukaCloud = (function(){
           e.preventDefault(); var b=o.querySelector('#lk-bb'); b.disabled=true; b.textContent='Creando…';
           var cor=o.querySelector('#lk-u').value.trim().toLowerCase();
           api({action:'lk_bootstrap',k:o.querySelector('#lk-k').value.trim(),nombre:o.querySelector('#lk-n').value.trim(),usuario:cor,correo:cor,clave:o.querySelector('#lk-p').value})
-            .then(function(r){ ses={token:r.token,usuario:r.usuario}; persistSes(); hideOverlay(); resolve(); })
+            .then(function(r){ ses={token:r.token,usuario:r.usuario}; persistSes(); if(window.lukaSplash) window.lukaSplash(); hideOverlay(); resolve(); })
             .catch(function(err){ formBoot(err.message); });
         };
       }
@@ -23147,9 +23147,19 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
       if(DATA.deptos.length) return !!document.querySelector('#grid .row');
       return !!window.__lkDatosListos;
     }
-    (function mirar(){ var sp=document.getElementById('lk-splash'); if(!sp) return;
+    var sp0=document.getElementById('lk-splash'); var molde=sp0?sp0.outerHTML:'';
+    function mirar(){ var sp=document.getElementById('lk-splash'); if(!sp) return;
       if(listo()||Date.now()-t0>45000){ sp.classList.add('fuera'); setTimeout(function(){ sp.remove(); },600); return; }
-      setTimeout(mirar,80); })();
+      setTimeout(mirar,80); }
+    mirar();
+    /* después de ingresar con usuario y clave también se muestra la pantalla de carga hasta tener los datos */
+    window.lukaSplash=function(){
+      if(!molde) return; var sp=document.getElementById('lk-splash');
+      if(!sp){ var d=document.createElement('div'); d.innerHTML=molde; sp=d.firstElementChild; document.body.appendChild(sp); }
+      sp.classList.remove('fuera'); window.__lkDatosListos=false; t0=Date.now();
+      try{ var c=JSON.parse(localStorage.getItem('luka.splash')||'null'); var nn=sp.querySelector('#lks-n'); if(nn) nn.textContent=(c&&c.n)||''; }catch(e){}
+      setTimeout(mirar,400);
+    };
     // recordar logo y nombre del edificio abierto para la próxima carga
     setInterval(function(){ try{ if(typeof DATA==='undefined'||!DATA||!DATA.config) return; var c=DATA.config, n=c.nombreEdificio||((typeof buildingName==='function')?buildingName():''), l=c.logo||'';
       var v=JSON.stringify({n:n,l:l}); if(n&&localStorage.getItem('luka.splash')!==v) localStorage.setItem('luka.splash',v); }catch(e){} },4000);
@@ -23715,7 +23725,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261019165041';
+(function(){ var B='20261019165955';
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
