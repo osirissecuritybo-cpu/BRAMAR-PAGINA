@@ -9677,6 +9677,8 @@ function imprimirDoc(titulo, opts) {
   const multipage = opts.multipage === true;
 
   let zoom = 1;
+  const _movil = (window.matchMedia && matchMedia('(pointer:coarse)').matches) || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const _seg = _movil ? 0.82 : 0.985;
   try {
     if (multipage) throw 'skip';
     const meas = document.createElement('div');
@@ -9689,9 +9691,9 @@ function imprimirDoc(titulo, opts) {
     const h = box ? box.getBoundingClientRect().height : meas.scrollHeight;
     document.body.removeChild(meas);
     if (fill) {
-      zoom = Math.max(0.4, Math.min(wPx / natW, hPx / h) * 0.985);
-    } else if (h > hPx) {
-      zoom = Math.max(0.4, (hPx / h) * 0.98);
+      zoom = Math.max(0.35, Math.min(wPx / natW, hPx / h) * _seg);
+    } else if (h > hPx * _seg) {
+      zoom = Math.max(0.35, (hPx / h) * _seg);
     }
   } catch (e) {}
 
@@ -9702,7 +9704,8 @@ function imprimirDoc(titulo, opts) {
     '@media print {' +
     ' @page { size: ' + pageKey + '; margin: ' + marginMm + 'mm; }' +
     (fill
-      ? ' #receipt-print-root { display:flex !important; flex-direction:column; justify-content:center; min-height:' + (dims[1] - 2 * marginMm).toFixed(1) + 'mm; }' +
+      ? (_movil ? ' #receipt-print-root { display:block !important; }' : ' #receipt-print-root { display:flex !important; flex-direction:column; justify-content:center; min-height:' + (dims[1] - 2 * marginMm - 2).toFixed(1) + 'mm; }') +
+        ' html, body { height:auto !important; } #receipt-print-root, #receipt-print-root > * { break-inside: avoid; page-break-inside: avoid; page-break-after: avoid; }' +
         ' #receipt-print-root > * { width: ' + natW + 'px; margin: 0 auto; zoom: ' + zoom.toFixed(4) + '; }'
       : (zoom < 1 ? ' #receipt-print-root > * { zoom: ' + zoom.toFixed(4) + '; }' : '')) +
     '}';
@@ -18265,80 +18268,60 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   function descargarDeudoresExpensas(){
     const deudores=(DATA.deptos||[]).filter(d=>(d.expensa_debt||0)>0.005);
     if(!deudores.length){ if(typeof showSaveToast==='function') showSaveToast(ico('checkCircle',15)+' No hay departamentos con deuda de expensas.'); return; }
+    let bd=_('lk-deu-bd');
+    if(!bd){ bd=document.createElement('div'); bd.className='modal-backdrop no-print'; bd.id='lk-deu-bd'; document.body.appendChild(bd); bd.addEventListener('click',e=>{ if(e.target===bd) bd.classList.remove('open'); }); }
+    let pref='carta'; try{ pref=localStorage.getItem('luka.deudores.hoja')||'carta'; }catch(e){}
+    bd.innerHTML='<div class="modal lk-modal" style="max-width:380px"><button class="close-btn" title="Cerrar">&times;</button><h2>Deudores de expensas</h2>'+
+      '<div class="lk-deu-op"><button type="button" class="btn'+(pref==='carta'?' primary':'')+'" data-h="carta">Carta</button><button type="button" class="btn'+(pref==='oficio'?' primary':'')+'" data-h="oficio">Oficio</button></div></div>';
+    bd.querySelector('.close-btn').onclick=()=>bd.classList.remove('open');
+    bd.querySelectorAll('[data-h]').forEach(b=>b.onclick=()=>{ try{ localStorage.setItem('luka.deudores.hoja',b.dataset.h); }catch(e){} bd.classList.remove('open'); generarDeudoresExpensas(deudores,b.dataset.h); });
+    bd.classList.add('open');
+  }
+  function generarDeudoresExpensas(deudores,hoja){
     const enRegla=d=> planAlDia(d)||pagoEsteMes(d);
     const top=deudores.filter(d=>!enRegla(d)).sort((a,b)=>(b.expensa_debt||0)-(a.expensa_debt||0));
     const bottom=deudores.filter(enRegla).sort((a,b)=>(b.expensa_debt||0)-(a.expensa_debt||0));
-    const pdf=new MiniPDF(); // hoja según Ajustes (carta por defecto)
-    const PW=pdf.W, PH=pdf.H, M=42, CW=PW-2*M;
-    const NAVY=[14,44,77], GOLD=[192,138,46], RED=[183,40,40], MUT=[120,120,120], LINE=[220,224,232], SOFT=[247,249,252];
+    const pdf=new MiniPDF();
+    if(hoja==='oficio'){ pdf.W=612; pdf.H=936; } else { pdf.W=612; pdf.H=792; }
+    const PW=pdf.W, PH=pdf.H, M=36, CW=PW-2*M;
+    const NAVY=[14,44,77], GOLD=[192,138,46], RED=[183,40,40], MUT=[120,120,120], LINE=[220,224,232], SOFT=[244,246,250];
     const ORANGE=[196,98,16], ORANGEBG=[253,240,225];
     const hoy=(typeof fmtDateLong==='function')?fmtDateLong(today()):today();
-
-    // ---- Construir la secuencia de filas (con separador del grupo "en regla") ----
-    const flat=[];
-    top.forEach(d=>flat.push({t:'d',d,ok:false}));
+    const flat=[]; top.forEach(d=>flat.push({t:'d',d,ok:false}));
     if(bottom.length){ flat.push({t:'sep'}); bottom.forEach(d=>flat.push({t:'d',d,ok:true})); }
     const N=flat.length;
-
-    // ---- Layout cómodo: filas altas fijas; 1 columna si caben, si no 2 columnas; más páginas si sobran ----
-    const contentTop=118, footH=30;
-    const rowsTop=contentTop+22;
-    const contentBottom=PH-footH;
-    const rowH=26;                                   // alto cómodo fijo (no apretado)
-    const rowsPerCol=Math.max(1, Math.floor((contentBottom-rowsTop)/rowH));
-    // Preferimos UNA sola columna (más legible en el ascensor) y agregamos páginas.
-    // Solo pasamos a DOS columnas cuando son MUCHOS: más de lo que entra en dos
-    // páginas a una columna (p.ej. > ~46 deptos). Así con pocos/medianos queda 1 columna.
-    const cols=(N<=2*rowsPerCol)?1:2;
-    const rowsPerPage=rowsPerCol*cols;
-    const totalPages=Math.max(1, Math.ceil(N/rowsPerPage));
-    const gap=26, colW=(CW-(cols-1)*gap)/cols;
-    const fDep=14, fAmt=15.5, fTag=7.8;
-
-    function drawChrome(pageIdx){
-      // Encabezado
-      pdf.rect(0,0,PW,92,NAVY); pdf.rect(0,92,PW,4,GOLD);
-      try{ const lg=(window.__pizLogoDark?window.__pizLogoDark():document.getElementById('__pizLogo')); const c=document.createElement('canvas'); c.width=lg.naturalWidth; c.height=lg.naturalHeight; c.getContext('2d').drawImage(lg,0,0); window.__pizFit(pdf,c, PW-M-100, 14, 100, 64); }catch(e){}
-      pdf.text(buildingName().toUpperCase(), M, 20, {size:18,bold:true,color:[255,255,255]});
-      pdf.text('DEPARTAMENTOS CON DEUDA DE EXPENSAS', M, 47, {size:13.5,bold:true,color:[233,215,170]});
-      pdf.text('Al '+hoy, M, 72, {size:9.5,color:[200,210,226]});
-      // Encabezados de columna
-      for(let c=0;c<cols;c++){
-        const x=M + c*(colW+gap);
-        pdf.text('DEPARTAMENTO', x+6, contentTop, {size:9,bold:true,color:MUT});
-        pdf.text('DEUDA', x+colW-6, contentTop, {size:9,bold:true,color:MUT,align:'right'});
-        pdf.line(x, contentTop+14, x+colW, contentTop+14, LINE, 1);
-      }
-      // Pie
-      const pg=(totalPages>1)?('  ·  Página '+(pageIdx+1)+' de '+totalPages):'';
-      pdf.text(buildingName()+'  ·  '+deudores.length+' departamento(s) con deuda de expensas'+pg, M, PH-16, {size:8,color:MUT});
-    }
-
-    for(let p=0;p<totalPages;p++){
-      if(p>0) pdf.addPage();
-      drawChrome(p);
-      const pageItems=flat.slice(p*rowsPerPage, (p+1)*rowsPerPage);
-      pageItems.forEach((it,j)=>{
-        const c=Math.floor(j/rowsPerCol), r=j-c*rowsPerCol;
-        const x=M + c*(colW+gap);
-        const yy=rowsTop + r*rowH;
-        if(it.t==='sep'){
-          pdf.rect(x, yy+(rowH-15)/2, colW, 15, [237,241,247]);
-          pdf.text('AL DÍA CON PLAN O CON PAGO ESTE MES', x+6, yy+(rowH-15)/2+2, {size:fTag, bold:true, color:MUT});
-          return;
-        }
-        const d=it.d;
-        if(it.ok) pdf.rect(x, yy, colW, rowH-3, ORANGEBG);
-        else if(r%2===1) pdf.rect(x, yy, colW, rowH-3, SOFT);
-        const cy=yy+(rowH-fAmt)/2-1;
-        pdf.text(String(d.depto), x+8, cy, {size:fDep,bold:true,color:NAVY});
-        pdf.text(fmtMoney(d.expensa_debt), x+colW-8, cy, {size:fAmt,bold:true,color: it.ok?ORANGE:RED, align:'right'});
-        if(it.ok){ pdf.text(planAlDia(d)?'· al día (plan)':'· pagó este mes', x+8, yy+rowH-fTag-3, {size:fTag,color:ORANGE}); }
-      });
-    }
-
+    // todo en UNA hoja: se elige el número de columnas (1 a 5) que deja filas de alto cómodo
+    const headH=96, contentTop=headH+26, rowsTop=contentTop+18, footH=26, avail=PH-footH-rowsTop;
+    let cols=1, rowH=0;
+    for(cols=1;cols<=5;cols++){ rowH=avail/Math.ceil(N/cols); if(rowH>=24&&(Math.ceil(N/cols)<=18||cols>=3)) break; }
+    if(cols>5){ cols=5; rowH=avail/Math.ceil(N/5); }
+    rowH=Math.min(rowH,34);
+    const rowsPerCol=Math.ceil(N/cols);
+    const gap=cols>1?18:0, colW=(CW-(cols-1)*gap)/cols;
+    const k=Math.min(1,rowH/26)*(cols>=4?0.86:cols===3?0.94:1);
+    const fDep=Math.max(6.5,13.5*k), fAmt=Math.max(6.5,14*k), fTag=Math.max(5.5,7.2*k), fHd=Math.max(6.5,8.5*Math.min(1,k+0.1));
+    // encabezado
+    pdf.rect(0,0,PW,headH-4,NAVY); pdf.rect(0,headH-4,PW,4,GOLD);
+    try{ const lg=(window.__pizLogoDark?window.__pizLogoDark():document.getElementById('__pizLogo')); const c=document.createElement('canvas'); c.width=lg.naturalWidth; c.height=lg.naturalHeight; c.getContext('2d').drawImage(lg,0,0); window.__pizFit(pdf,c, PW-M-96, 12, 96, 66); }catch(e){}
+    pdf.text(buildingName().toUpperCase(), M, 20, {size:18,bold:true,color:[255,255,255]});
+    pdf.text('DEPARTAMENTOS CON DEUDA DE EXPENSAS', M, 46, {size:13,bold:true,color:[233,215,170]});
+    pdf.text('Al '+hoy+'  ·  '+top.length+' con deuda'+(bottom.length?'  ·  '+bottom.length+' en regla':''), M, 68, {size:9.5,color:[200,210,226]});
+    for(let c=0;c<cols;c++){ const x=M+c*(colW+gap);
+      pdf.text('DEPTO.', x+6, contentTop, {size:fHd,bold:true,color:MUT});
+      pdf.text('DEUDA', x+colW-6, contentTop, {size:fHd,bold:true,color:MUT,align:'right'});
+      pdf.line(x, contentTop+fHd+5, x+colW, contentTop+fHd+5, LINE, 1); }
+    flat.forEach((it,j)=>{
+      const c=Math.floor(j/rowsPerCol), r=j-c*rowsPerCol, x=M+c*(colW+gap), yy=rowsTop+r*rowH;
+      if(it.t==='sep'){ const h=Math.min(rowH-3,15); pdf.rect(x, yy+(rowH-h)/2, colW, h, [237,241,247]); pdf.text(cols>2?'EN REGLA':'AL DÍA CON PLAN O PAGO ESTE MES', x+6, yy+(rowH-h)/2+Math.max(1,(h-fTag)/2-1), {size:fTag,bold:true,color:MUT}); return; }
+      const d=it.d;
+      if(it.ok) pdf.rect(x, yy, colW, rowH-2, ORANGEBG); else if(r%2===1) pdf.rect(x, yy, colW, rowH-2, SOFT);
+      const cy=yy+(rowH-2-fAmt)/2-1;
+      pdf.text(String(d.depto), x+6, cy, {size:fDep,bold:true,color:NAVY});
+      pdf.text(fmtMoney(d.expensa_debt), x+colW-6, cy, {size:fAmt,bold:true,color: it.ok?ORANGE:RED, align:'right'});
+    });
+    pdf.text(buildingName()+'  ·  '+deudores.length+' departamento(s) con deuda de expensas', M, PH-14, {size:8,color:MUT});
     pdf.save(((typeof bslug==='function')?bslug():'edificio')+'_deudores_expensas_'+today()+'.pdf');
-    if(typeof showSaveToast==='function') showSaveToast(ico('checkCircle',15)+' Lista de deudores de expensas (carta) generada');
+    if(typeof showSaveToast==='function') showSaveToast(ico('checkCircle',15)+' Deudores de expensas ('+hoja+', 1 hoja)');
   }
   window.__lukaDeudoresExpensas = descargarDeudoresExpensas;
 
@@ -21634,6 +21617,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
         var k=nd(d.depto), a=p.deptos[k]||{};
         return '<div class="lkp-fila" data-k="'+esc(k)+'"><span class="lkp-dep">'+esc(d.depto)+'</span>'+
           '<input class="lkp-in" data-f="propietario" value="'+esc(a.propietario||'')+'" placeholder="Nombre del propietario">'+
+          '<input class="lkp-in" data-f="inquilino" value="'+esc(a.inquilino||'')+'" placeholder="Nombre del inquilino">'+
           '<input class="lkp-in" data-f="telefono" inputmode="tel" value="'+esc(a.telefono||'')+'" placeholder="7xxxxxxx">'+
           '<span class="lkp-cod">'+(a.codigo?esc(fmt(a.codigo)):'<i>sin código</i>')+'</span>'+
           '<span class="lkp-acc">'+(a.codigo?'<a class="btn" target="_blank" rel="noopener" href="'+esc(wa(a.telefono,mensaje(d.depto,a)))+'">WhatsApp</a>':'')+'<button type="button" class="btn" data-nuevo="'+esc(k)+'" title="Crear un código nuevo (el anterior deja de servir)">'+(a.codigo?'Nuevo código':'Crear código')+'</button></span></div>';
@@ -21806,7 +21790,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 #sidebar-open.lk-dot::after{content:"";position:absolute;top:6px;right:6px;width:9px;height:9px;border-radius:50%;background:#C0392B;box-shadow:0 0 0 2px #fff}
 .lkp-choque{margin-top:6px;font-size:12.5px;font-weight:600;color:#8E2A20;background:#FBEFEF;border-radius:8px;padding:6px 10px;display:inline-block}
 .lkp-tabla{display:grid;gap:6px;max-height:56vh;overflow:auto;padding-right:4px}
-.lkp-fila{display:grid;grid-template-columns:70px 1.4fr 1fr 120px auto;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--lk-line,#DDE5EE);border-radius:10px;background:#fff}
+.lkp-fila{display:grid;grid-template-columns:70px 1.25fr 1.25fr 1fr 120px auto;gap:8px;align-items:center;padding:6px 8px;border:1px solid var(--lk-line,#DDE5EE);border-radius:10px;background:#fff}
 .lkp-head{background:transparent;border:0;font-size:11px;font-weight:650;letter-spacing:.06em;text-transform:uppercase;color:var(--lk-muted,#7d93ab);position:sticky;top:0;background:var(--surface-1,#fff);z-index:1}
 .lkp-dep{font-weight:700;color:var(--lk-text,#0B2440)}
 .lkp-cod{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:var(--lk-text,#0B2440)}
@@ -21819,8 +21803,8 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 .lkp-sol-h span{font-size:13px;color:var(--lk-gold,#C08A2E);font-weight:600}
 .lkp-sol .lk-item{margin-top:6px}
 @media (max-width:760px){
-  .lkp-fila{grid-template-columns:60px 1fr;grid-template-areas:"d p" "d t" "c c" "a a"}
-  .lkp-fila > :nth-child(1){grid-area:d}.lkp-fila > :nth-child(2){grid-area:p}.lkp-fila > :nth-child(3){grid-area:t}.lkp-fila > :nth-child(4){grid-area:c}.lkp-fila > :nth-child(5){grid-area:a;justify-content:flex-start}
+  .lkp-fila{grid-template-columns:60px 1fr;grid-template-areas:"d p" "d i" "d t" "c c" "a a"}
+  .lkp-fila > :nth-child(1){grid-area:d}.lkp-fila > :nth-child(2){grid-area:p}.lkp-fila > :nth-child(3){grid-area:i}.lkp-fila > :nth-child(4){grid-area:t}.lkp-fila > :nth-child(5){grid-area:c}.lkp-fila > :nth-child(6){grid-area:a;justify-content:flex-start}
   .lkp-head{display:none}
 }
 </style>
@@ -23688,6 +23672,63 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
   .lk-mc-i.out{color:#F2A99F}
 }
 </style>
+<style>
+.lk-deu-op{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+.lk-deu-op .btn{height:54px!important;justify-content:center!important;font-size:15px!important}
+</style>
+<style>
+/* recibo a nombre de (propietario / inquilino / otro) */
+.lk-anom-op{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.lk-anom-op button{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;min-height:52px;padding:8px 12px;border:1px solid #D5DEE8;border-radius:12px;background:#fff;color:#0B2440;font:inherit;font-size:13.5px;font-weight:700;text-align:left;cursor:pointer;min-width:0}
+.lk-anom-op button small{font-size:11.5px;font-weight:500;color:#5B6B7F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.lk-anom-op button.on{border-color:#0B2440;background:#0B2440;color:#fff}
+.lk-anom-op button.on small{color:rgba(255,255,255,.75)}
+.lk-anom-op button:disabled{opacity:.45;cursor:not-allowed}
+#pf-anom-otro{margin-top:8px}
+.receipt-box .r-anom{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;padding:8px 12px;border-radius:10px;background:var(--r-soft,#F4F6FA)}
+.receipt-box .r-anom .r-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--r-muted,#6B7785);white-space:nowrap}
+.receipt-box .r-anom .r-value{font-size:15px;font-weight:700}
+</style>
+<script>
+/* Recibo a nombre de: el propietario o el inquilino que se cargaron en «Portal de propietarios», u otro nombre escrito a mano */
+(function(){
+  function nd(s){ return String(s==null?'':s).toUpperCase().replace(/\s+/g,'').replace(/^DEPTO\.?|^DPTO\.?/,''); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+  function info(dep){ try{ return ((DATA.config.portal||{}).deptos||{})[nd(dep)]||{}; }catch(e){ return {}; } }
+  var actual=null, pendiente=null;
+  function poner(d){
+    var rec=document.getElementById('pf-recibido'); if(!rec||document.getElementById('pf-anom')) return;
+    var a=info(d.depto), pr=(a.propietario||'').trim(), iq=(a.inquilino||'').trim();
+    var f=document.createElement('div'); f.className='form-field'; f.id='pf-anom';
+    f.innerHTML='<label>Recibo a nombre de</label><div class="lk-anom-op">'+
+      '<button type="button" data-t="propietario"'+(pr?'':' disabled')+'>Propietario<small>'+esc(pr||'Sin nombre')+'</small></button>'+
+      '<button type="button" data-t="inquilino"'+(iq?'':' disabled')+'>Inquilino<small>'+esc(iq||'Sin inquilino')+'</small></button>'+
+      '<button type="button" data-t="otro">Otro<small>Escribir nombre</small></button></div>'+
+      '<input type="text" id="pf-anom-otro" placeholder="Nombre para el recibo" hidden>';
+    var campo=rec.closest('.form-field'); campo.parentNode.insertBefore(f,campo);
+    var elegir=function(t){ f.dataset.t=t; f.querySelectorAll('[data-t]').forEach(function(b){ b.classList.toggle('on',b.dataset.t===t); });
+      var o=f.querySelector('#pf-anom-otro'); o.hidden=t!=='otro'; if(t==='otro') setTimeout(function(){ o.focus(); },30); };
+    f.querySelectorAll('[data-t]').forEach(function(b){ b.onclick=function(){ elegir(b.dataset.t); }; });
+    elegir(pr?'propietario':'otro');
+    actual={dep:d.depto,pr:pr,iq:iq};
+  }
+  function nombreElegido(){ var f=document.getElementById('pf-anom'); if(!f||!actual) return null; var t=f.dataset.t;
+    var n=t==='propietario'?actual.pr:t==='inquilino'?actual.iq:(f.querySelector('#pf-anom-otro').value||'').trim();
+    return n?{n:n,t:t}:null; }
+  function envolver(){
+    if(typeof window.openPayModal!=='function'||typeof window.registrarPago!=='function'||typeof window.buildReceiptBoxHTML!=='function') return false;
+    var op=window.openPayModal; window.openPayModal=function(code){ var r=op.apply(this,arguments); try{ var d=(typeof findDepto==='function')?findDepto(code):null; if(d) poner(d); }catch(e){} return r; };
+    var rp=window.registrarPago; window.registrarPago=function(d){ try{ var x=nombreElegido(); pendiente=x?{dep:d.depto,n:x.n,t:x.t}:null; }catch(e){ pendiente=null; } return rp.apply(this,arguments); };
+    var br=window.buildReceiptBoxHTML; window.buildReceiptBoxHTML=function(d,pago){
+      try{ if(pago&&pago.a_nombre==null&&pendiente&&d&&pendiente.dep===d.depto){ pago.a_nombre=pendiente.n; pago.a_nombre_tipo=pendiente.t; pendiente=null; setTimeout(function(){ try{ saveDataLocal(); }catch(e){} },50); } }catch(e){}
+      var h=br.apply(this,arguments);
+      if(pago&&pago.a_nombre) h=h.replace('<div class="r-info-grid">','<div class="r-anom"><span class="r-label">Recibí de</span><span class="r-value">'+esc(pago.a_nombre)+'</span></div><div class="r-info-grid">');
+      return h; };
+    return true;
+  }
+  if(!envolver()){ var n=0; (function t(){ if(!envolver()&&n++<40) setTimeout(t,250); })(); }
+})();
+</script>
 
 <style>
 /* ============ Módulo 45 · Lista de reservas: filas alineadas y ligadas al talonario ============ */
@@ -23725,7 +23766,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261019165955';
+(function(){ var B='20261020093409';
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }

@@ -718,7 +718,7 @@ function ptEstado_(portalId, lk, data, depto) {
     mov.push({ fecha: ptFecha_(p.fecha), concepto: String(p.concepto || 'Pago'), cargo: 0, abono: +p.monto || 0,
       // datos crudos del pago: el portal arma el MISMO recibo que LUKA (diseño y QR con su código)
       recibo: { no: String(p.recibo_no || ''), fecha: String(p.fecha || ''), monto: +p.monto || 0, metodo: String(p.metodo || ''), concepto: String(p.concepto || ''),
-        obs: String(p.obs || ''), recibido: String(p.recibido || ''), saldo: +p.saldo_restante || 0,
+        obs: String(p.obs || ''), recibido: String(p.recibido || ''), a_nombre: String(p.a_nombre || ''), saldo: +p.saldo_restante || 0,
         meses_pagados: p.meses_pagados || [], meses_cubiertos: p.meses_cubiertos || [], prepagados: (p._anula && p._anula.prepagados) || [] } });
   });
   const deuda = Math.round(((+d.total_debt) || mov.reduce(function (a, m) { return a + m.cargo; }, 0)) * 100) / 100;

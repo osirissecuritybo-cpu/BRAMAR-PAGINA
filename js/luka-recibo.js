@@ -340,6 +340,7 @@ var QR = (function () {
       '<div class="r-header">'+(logo?'<img class="r-logo-img" src="'+esc(logo)+'" alt="Logo del edificio">':'')+'<div class="r-title">'+esc(nombre.toUpperCase())+'</div><div class="r-sub">Recibo oficial de pago · Expensas y cuotas</div></div>'+
       '<div class="r-no-wrap"><span class="r-no-badge">Recibo N.º '+esc(p.no)+'</span></div>'+
       (p.saldo<=0?'<div class="r-stamp"><div class="r-stamp-check">'+CHECK+'</div><div class="r-stamp-text">CANCELADO</div><div class="r-stamp-sub">'+esc(nombre.toUpperCase())+'</div></div>':'')+
+      (p.a_nombre?'<div class="r-anom"><span class="r-label">Recibí de</span><span class="r-value">'+esc(p.a_nombre)+'</span></div>':'')+
       '<div class="r-info-grid"><div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">'+esc(d.depto)+(d.bloque?' · '+esc(d.bloque):'')+'</div></div>'+
       '<div class="r-info-item"><div class="r-label">Fecha de pago</div><div class="r-value">'+esc(fmtDateLong(p.fecha))+'</div></div>'+
       '<div class="r-info-item"><div class="r-label">Método de pago</div><div class="r-value">'+esc(p.metodo)+'</div></div>'+
@@ -353,3 +354,4 @@ var QR = (function () {
   };
   window.lukaReciboCodigo=function(E,U,p){ return qrText(E.nombreRecibo||E.nombre||'Gestión LUKA',{depto:U.depto,bloque:U.bloque||''},p).split('Cod. verificacion: ')[1]; };
 })();
+(function(){ try{ var st=document.createElement('style'); st.textContent='.receipt-box .r-anom{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;padding:8px 12px;border-radius:10px;background:#F4F6FA}.receipt-box .r-anom .r-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6B7785;white-space:nowrap}.receipt-box .r-anom .r-value{font-size:15px;font-weight:700}'; document.head.appendChild(st); }catch(e){} })();

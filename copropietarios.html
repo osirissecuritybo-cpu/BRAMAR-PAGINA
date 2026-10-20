@@ -1065,9 +1065,10 @@ const PORTAL = {
     const m=document.createElement('div'); m.style.cssText='position:fixed;left:-99999px;top:0;width:'+natW+'px;visibility:hidden';
     m.innerHTML=root.innerHTML; document.body.appendChild(m);
     const h=(m.firstElementChild||m).getBoundingClientRect().height||1100; m.remove();
-    const z=Math.max(0.4,Math.min(wPx/natW,hPx/h)*0.985);
+    const movil=(window.matchMedia&&matchMedia('(pointer:coarse)').matches)||/iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const z=Math.max(0.35,Math.min(wPx/natW,hPx/h)*(movil?0.82:0.985));
     let st=$('#rec-page'); if(!st){ st=document.createElement('style'); st.id='rec-page'; document.head.appendChild(st); }
-    st.textContent='@media print{@page{size:letter portrait;margin:15mm}#rec-print-root .receipt-box{zoom:'+z.toFixed(4)+'}}';
+    st.textContent='@media print{@page{size:letter portrait;margin:15mm}html,body{height:auto!important}#rec-print-root,#rec-print-root .receipt-box{break-inside:avoid;page-break-inside:avoid;page-break-after:avoid}#rec-print-root .receipt-box{zoom:'+z.toFixed(4)+'}}';
     const t=document.title; document.title=recNombre||t;
     const fin=()=>{ document.title=t; window.removeEventListener('afterprint',fin); };
     window.addEventListener('afterprint',fin); setTimeout(fin,60000);
