@@ -133,6 +133,59 @@ function getRecibos_(rk) {
   return json({ ok: true, recibos: recibos });
 }
 
+
+/* Ejecutar UNA vez desde el editor (Ejecutar → limpiarPruebas).
+   Saca de la vista las pruebas hechas antes de que se cargaran los datos reales:
+   · comprobantes y solicitudes de reserva del portal recibidos antes de CORTE (y todo lo del edificio "prueba")
+     → se MUEVEN a hojas "Archivo pruebas …" (no se pierden, se pueden revisar)
+   · en LUKA, las reservas creadas antes de CORTE y los movimientos del diario que generaron. */
+function limpiarPruebas() {
+  const CORTE = '2026-10-20';
+  const ss = registro_().getParent();
+  function archivar(sh, colFecha, colEd, colEdNombre, nombreArch) {
+    const n = sh.getLastRow(); if (n < 2) return 0;
+    const cols = sh.getLastColumn(), vals = sh.getRange(2, 1, n - 1, cols).getValues();
+    const borrar = [];
+    vals.forEach(function (r, i) {
+      const f = fecha_(r[colFecha]).slice(0, 10), ed = slug_(r[colEd] || r[colEdNombre]);
+      if ((f && f < CORTE) || ed === 'prueba') borrar.push(i + 2);
+    });
+    if (!borrar.length) return 0;
+    let arch = ss.getSheetByName(nombreArch);
+    if (!arch) { arch = ss.insertSheet(nombreArch); arch.getRange(1, 1, 1, cols).setValues(sh.getRange(1, 1, 1, cols).getValues()); }
+    const filas = borrar.map(function (f) { return vals[f - 2]; });
+    arch.getRange(arch.getLastRow() + 1, 1, filas.length, cols).setValues(filas);
+    borrar.slice().reverse().forEach(function (f) { sh.deleteRow(f); });
+    return borrar.length;
+  }
+  const nComp = archivar(registro_(), 0, 10, 1, 'Archivo pruebas · comprobantes');
+  const nRes = archivar(ptHojaRes_(), 1, 2, 3, 'Archivo pruebas · reservas');
+  // LUKA: reservas de prueba (creadas antes del corte) y sus movimientos en el diario
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  let nLuka = 0, nMov = 0;
+  try {
+    const E = lkEdificios_(), now = new Date().toISOString();
+    Object.keys(E).forEach(function (id) {
+      const e = E[id]; if (!e || !e.file) return;
+      let data; try { data = JSON.parse(DriveApp.getFileById(e.file).getBlob().getDataAsString()); } catch (x) { return; }
+      const R = data.reservasSociales || [];
+      const fuera = R.filter(function (x) { return x && x.creado && String(x.creado).slice(0, 10) < CORTE; });
+      if (!fuera.length) return;
+      const ids = {}; fuera.forEach(function (x) { ids[x.id] = 1; });
+      data.reservasSociales = R.filter(function (x) { return !(x && ids[x.id]); });
+      const antes = (data.diario || []).length;
+      data.diario = (data.diario || []).filter(function (m) { return !(m && m.reservaId && ids[m.reservaId]); });
+      nMov += antes - data.diario.length; nLuka += fuera.length;
+      const txt = JSON.stringify(data);
+      DriveApp.getFileById(e.file).setContent(txt);
+      e.v = e.v + 1; e.upd = now; e.by = 'Limpieza de pruebas'; e.dev = 'limpieza';
+      lkCachePut_(e, txt);
+      Logger.log(e.name + ': ' + fuera.length + ' reserva(s) de prueba quitadas');
+    });
+    lkEscribir_('LUKA_EDIFICIOS', E);
+  } finally { lock.releaseLock(); }
+  Logger.log('Comprobantes archivados: ' + nComp + ' · Solicitudes de reserva archivadas: ' + nRes + ' · Reservas LUKA quitadas: ' + nLuka + ' · Movimientos del diario quitados: ' + nMov);
+}
 /* ---------- Administración desde Gestión LUKA ---------- */
 /** Ejecute una vez: crea la clave de administración y la muestra en el registro. */
 function crearClaveAdmin() {
