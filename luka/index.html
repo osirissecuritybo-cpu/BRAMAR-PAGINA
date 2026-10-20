@@ -18099,6 +18099,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     (DATA.diario||[]).forEach(e=>{
       if(e.recibo && !e.pagoId){ reciboNums(e.recibo).forEach(n=> add(n,{depto:e.depto||'', fecha:e.fecha, raw:String(e.recibo)})); }
     });
+    (DATA.recibosAnulados||[]).forEach(a=>{ const n=parseInt(String(a.no).replace(/\D/g,''),10); if(n>0) add(n,{depto:'', fecha:a.fecha, raw:String(a.no), anulado:true}); });
     return map;
   }
   function getReciboDesde(){
@@ -18152,7 +18153,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
         if(!missing.length){ html+=`<p class="lk-rec-ok">${ico('checkCircle',15)} No falta ningún recibo en la secuencia.</p>`; }
         else {
           html+=`<p style="font-size:13.5px;margin:0 0 6px;"><strong>${missing.length}</strong> recibo(s) faltante(s):</p>`;
-          html+=`<div class="lk-rec-missing">`+missing.map(n=>`<div class="lk-rec-item">${pad(n)}</div>`).join('')+`</div>`;
+          html+=`<div class="lk-rec-missing">`+missing.map(n=>`<div class="lk-rec-item" data-n="${n}"><span>${pad(n)}</span><button type="button" class="lk-rec-an" data-an="${n}">Anular</button></div>`).join('')+`</div>`;
         }
       }
       if(dups.length){
@@ -18160,8 +18161,22 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
         html+=dups.map(n=>`<span class="lk-rec-dup" title="${esc(map[n].map(x=>x.depto+' · '+(x.fecha||'')).join(' | '))}">${pad(n)} (×${map[n].length})</span>`).join('')+`</div>`;
       }
     }
+    const AN=(DATA.recibosAnulados||[]).slice().sort((a,b)=>String(b.no).localeCompare(String(a.no)));
+    html+=`<div class="lk-an-box"><p class="lk-an-t">Anular un recibo</p><div class="lk-an-f"><input id="lk-an-no" inputmode="numeric" placeholder="N.º"><input id="lk-an-mot" placeholder="Motivo (ej. se dañó, mal llenado)"><button type="button" class="btn primary" id="lk-an-ok">Anular</button></div>`+
+      (AN.length?`<p class="lk-an-t" style="margin-top:14px">Recibos anulados</p><div class="lk-an-list">`+AN.map((a,i)=>`<div class="lk-an-row"><b>${esc(pad(a.no))}</b><span>${esc(a.motivo||'Sin motivo')}<small>${esc(a.fecha||'')}${a.por?' · '+esc(a.por):''}</small></span><button type="button" class="lk-an-x" data-unan="${esc(String(a.no))}" title="Quitar anulación">Quitar</button></div>`).join('')+`</div>`:'')+`</div>`;
     html+='</div>';
     _('lk-dlg-body').innerHTML=html;
+    const quien=()=>{ try{ return (window.lukaCloud&&lukaCloud.user&&lukaCloud.user()&&(lukaCloud.user().n||lukaCloud.user().nombre))||''; }catch(e){ return ''; } };
+    const anular=(no,motivo)=>{ no=String(no).replace(/\D/g,''); if(!no) return; if(!motivo){ alert('Escriba el motivo de la anulación.'); return; }
+      DATA.recibosAnulados=(DATA.recibosAnulados||[]).filter(a=>String(a.no).replace(/\D/g,'')!==no);
+      DATA.recibosAnulados.push({no:pad(no), motivo:motivo, fecha:todayISO(), por:quien()}); persist(); renderReciboScan(); };
+    _('lk-dlg-body').querySelectorAll('[data-an]').forEach(b=>b.onclick=()=>{ const it=b.closest('.lk-rec-item'); const n=b.dataset.an;
+      it.innerHTML=`<span>${pad(n)}</span><input class="lk-an-in" placeholder="Motivo"><button type="button" class="lk-rec-an ok">Anular</button>`;
+      const ip=it.querySelector('input'); ip.focus(); const go=()=>anular(n,ip.value.trim());
+      it.querySelector('.ok').onclick=go; ip.onkeydown=e=>{ if(e.key==='Enter') go(); }; });
+    { const ok=_('lk-an-ok'); if(ok) ok.onclick=()=>anular(_('lk-an-no').value,_('lk-an-mot').value.trim()); }
+    _('lk-dlg-body').querySelectorAll('[data-unan]').forEach(b=>b.onclick=()=>{ if(!confirm('¿Quitar la anulación del recibo '+b.dataset.unan+'?')) return;
+      DATA.recibosAnulados=(DATA.recibosAnulados||[]).filter(a=>String(a.no)!==b.dataset.unan); persist(); renderReciboScan(); });
     const inp=_('lk-rec-desde');
     if(inp){
       const apply=()=>{ const n=parseInt(inp.value.replace(/\D/g,''),10); if(!isNaN(n)&&n>=0){ setReciboDesde(n); } renderReciboScan(); };
@@ -23762,6 +23777,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
     P.rect=function(x,y,w,h,c){
       if(!this.__z) this.__z=[];
       if(c&&lum(c)<0.6){
+        if(w<=12&&h<=12) return rect.apply(this,arguments);      // cuadritos (QR, viñetas): tal cual
         if(h<=6&&w>h) return line.call(this,x,y+h/2,x+w,y+h/2,c,Math.min(h,0.9));
         if(w<=6&&h>w) return line.call(this,x+w/2,y,x+w/2,y+h,c,Math.min(w,0.9));
         this.__z.push([x,y,w,h]);
@@ -23824,6 +23840,47 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
   .cc-a{grid-column:1/-1;justify-content:flex-start}
   .cc-tot>div:last-child{display:none}
 }
+</style>
+<style>
+/* recibo en pantalla: si hay sello, solo el sello (más grande); si no, el sello digital */
+.receipt-box.con-sello .r-stamp{display:none!important}
+.receipt-box.con-sello .r-seal img{width:auto!important;height:auto!important;max-height:130px!important;max-width:220px!important;opacity:1!important}
+.receipt-box.con-sello .r-seal .r-seal-text{display:none!important}
+.receipt-box.sin-sello .r-seal img{display:none!important}
+</style>
+<script>
+(function(){
+  function poner(){ if(typeof window.buildReceiptBoxHTML!=='function') return false; if(window.buildReceiptBoxHTML.__sello) return true;
+    var br=window.buildReceiptBoxHTML; var f=function(){ var h=br.apply(this,arguments); var s=(typeof selloAdmin==='function')?selloAdmin():'';
+      return h.replace('<div class="receipt-box">','<div class="receipt-box '+(s?'con-sello':'sin-sello')+'">'); };
+    f.__sello=1; window.buildReceiptBoxHTML=f; return true; }
+  var n=0; (function t(){ if(!poner()&&n++<40) setTimeout(t,300); })();
+  setTimeout(poner,4000);
+})();
+</script>
+<style>
+/* Firebase ya no se usa: las reservas del portal llegan por el servidor de LUKA */
+.luka-form-field:has(#luka-set-firebase){display:none!important}
+</style>
+<style>
+/* recibos faltantes / anulados */
+.lk-rec-missing{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow:auto}
+.lk-rec-missing .lk-rec-item{display:flex!important;align-items:center;gap:10px;padding:8px 10px!important;border:1px solid #E3EAF2;border-radius:10px;background:#fff}
+.lk-rec-item>span{font-weight:700;font-variant-numeric:tabular-nums;min-width:64px;color:#0B2440}
+.lk-rec-an{margin-left:auto;height:32px;padding:0 12px;border:1px solid #D5DEE8;border-radius:9px;background:#fff;color:#8E2A20;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer}
+.lk-rec-an.ok{background:#8E2A20;border-color:#8E2A20;color:#fff}
+.lk-an-in{flex:1;min-width:0;height:32px;padding:0 10px;border:1px solid #D5DEE8;border-radius:9px;font:inherit;font-size:13px}
+.lk-an-box{margin-top:16px;padding-top:14px;border-top:1px solid #E3EAF2}
+.lk-an-t{margin:0 0 8px;font-size:11.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7d93ab}
+.lk-an-f{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:8px}
+.lk-an-f input{height:40px;padding:0 12px;border:1px solid #D5DEE8;border-radius:10px;font:inherit;font-size:14px;min-width:0}
+.lk-an-list{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto}
+.lk-an-row{display:grid;grid-template-columns:70px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid #EEF2F7;border-radius:10px;background:#FAFBFD}
+.lk-an-row b{color:#8E2A20;font-variant-numeric:tabular-nums;text-decoration:line-through}
+.lk-an-row span{font-size:13px;color:#0B2440;min-width:0}
+.lk-an-row small{display:block;font-size:11px;color:#7d93ab}
+.lk-an-x{height:30px;padding:0 10px;border:1px solid #D5DEE8;border-radius:8px;background:#fff;font:inherit;font-size:12px;cursor:pointer;color:#5B6B7F}
+@media (max-width:600px){ .lk-an-f{grid-template-columns:90px minmax(0,1fr)} .lk-an-f .btn{grid-column:1/-1} }
 </style>
 
 <style>
@@ -23943,8 +24000,109 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </script>
 
 <script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 47: recibo en PDF de UNA hoja (carta), dibujado directo
+   (no depende del cuadro de impresión del navegador ni del tamaño de papel que
+   tenga elegido: siempre una sola hoja, nítido y con poca tinta).
+   ============================================================================ */
+(function(){
+  var NAVY=[14,44,77], INK=[25,30,38], MUT=[110,120,132], LINE=[205,212,222], GREEN=[24,120,72], SOFT=[246,248,251];
+  function cargar(src){ return new Promise(function(ok){ if(!src){ ok(null); return; } var i=new Image(); i.onload=function(){ try{ var c=document.createElement('canvas'); c.width=i.naturalWidth; c.height=i.naturalHeight; var x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(i,0,0); ok(c); }catch(e){ ok(null); } }; i.onerror=function(){ ok(null); }; i.src=src; }); }
+  function encajar(pdf,c,x,y,w,h,der){ if(!c) return 0; var a=c.width/c.height, ww=w, hh=w/a; if(hh>h){ hh=h; ww=h*a; } pdf.image(c, der?x+w-ww:x, y+(h-hh)/2, ww, hh); return ww; }
+  function mesesDe(pago){
+    var m=pago.meses_cubiertos;
+    if(!Array.isArray(m)||!m.length){ m=[]; (pago.meses_pagados||[]).forEach(function(l){ var p=String(l).trim().split(/\s+/); m.push({mes:p.slice(0,-1).join(' '),anio:p[p.length-1],monto:null,tipo:'mes'}); });
+      ((pago._anula&&pago._anula.prepagados)||[]).forEach(function(p){ m.push({mes:p.mes,anio:p.anio,monto:p.monto,tipo:'adelanto'}); }); }
+    return m;
+  }
+  window.lukaReciboPDF=async function(d,pago){
+    var pdf=new MiniPDF(); pdf.W=612; pdf.H=792;
+    var W=612, M=56, CW=W-2*M, y=M;
+    var ed=(typeof buildingName==='function')?buildingName():'', emp=(typeof empresaAdmin==='function')?empresaAdmin():'Gestión LUKA';
+    var logo=await cargar((typeof brandLogo==='function')?brandLogo():'');
+    var sello=await cargar(((typeof selloAdmin==='function')?selloAdmin():'')||'');
+    // ---- encabezado ----
+    var lw=encajar(pdf,logo,M,y,70,58,false);
+    var tx=M+(lw?lw+16:0);
+    pdf.text(ed.toUpperCase(), tx, y+8, {size:17,bold:true,color:NAVY});
+    pdf.text('Recibo oficial de pago · Expensas y cuotas', tx, y+32, {size:9.5,color:MUT});
+    pdf.text('RECIBO N.º', W-M, y+4, {size:8.5,bold:true,color:MUT,align:'right'});
+    pdf.text(String(pago.recibo_no||''), W-M, y+16, {size:22,bold:true,color:NAVY,align:'right'});
+    y+=70; pdf.line(M,y,W-M,y,NAVY,0.9); y+=22;
+    // ---- recibí de ----
+    if(pago.a_nombre){ pdf.text('RECIBÍ DE', M, y, {size:8.5,bold:true,color:MUT}); pdf.text(String(pago.a_nombre), M, y+13, {size:16,bold:true,color:INK}); y+=44; }
+    // ---- datos ----
+    var col=CW/2, filas=[['DEPARTAMENTO', d.depto+(d.bloque?' · '+d.bloque:'')],['FECHA DE PAGO', (typeof fmtDateLong==='function')?fmtDateLong(pago.fecha):pago.fecha],['MÉTODO DE PAGO', pago.metodo||'—'],['RECIBIDO POR', pago.recibido||'—']];
+    for(var i=0;i<filas.length;i+=2){
+      var alto=0;
+      [0,1].forEach(function(k){ var f=filas[i+k]; if(!f) return; var x=M+k*col; pdf.text(f[0], x, y, {size:8.5,bold:true,color:MUT});
+        var L=pdf.wrap(String(f[1]), col-16, 11.5, true); L.slice(0,2).forEach(function(t,j){ pdf.text(t, x, y+13+j*14, {size:11.5,bold:true,color:INK}); }); alto=Math.max(alto,13+Math.min(2,L.length)*14); });
+      y+=alto+12;
+    }
+    pdf.line(M,y,W-M,y,LINE,0.6); y+=18;
+    // ---- concepto ----
+    pdf.text('CONCEPTO', M, y, {size:8.5,bold:true,color:MUT}); y+=14;
+    pdf.wrap(String(pago.concepto||'—'), CW, 11, false).slice(0,3).forEach(function(t){ pdf.text(t, M, y, {size:11,color:INK}); y+=14; });
+    if(pago.obs){ pdf.wrap('Obs: '+pago.obs, CW, 9.5, false).slice(0,2).forEach(function(t){ pdf.text(t, M, y, {size:9.5,color:MUT}); y+=12; }); }
+    y+=8;
+    // ---- meses cubiertos ----
+    var MS=mesesDe(pago);
+    if(MS.length){
+      pdf.text('MESES CUBIERTOS POR ESTE PAGO', M, y, {size:8.5,bold:true,color:MUT}); y+=14;
+      var cols=MS.length>6?3:(MS.length>3?2:1), cw=CW/cols, rows=Math.ceil(MS.length/cols);
+      MS.forEach(function(m,j){ var c=Math.floor(j/rows), r=j-c*rows, x=M+c*cw, yy=y+r*17;
+        var tag=m.tipo==='adelanto'?'Adelanto':(m.parcial?'Parcial':'Pagado');
+        pdf.text(m.mes+' '+m.anio, x, yy, {size:10.5,bold:true,color:INK});
+        pdf.text((m.monto!=null?fmtMoney(m.monto)+'  ·  ':'')+tag, x+cw-14, yy+1, {size:9.5,color:m.tipo==='adelanto'?NAVY:GREEN,align:'right'});
+        pdf.line(x, yy+14, x+cw-14, yy+14, LINE, 0.4); });
+      y+=rows*17+12;
+    }
+    // ---- monto ----
+    var bh=64; pdf.rectS(M, y, CW, bh, NAVY, 0.9);
+    pdf.text('MONTO PAGADO', M+18, y+14, {size:9,bold:true,color:MUT});
+    pdf.text(fmtMoney(pago.monto), M+18, y+28, {size:24,bold:true,color:GREEN});
+    pdf.text('Saldo pendiente tras este pago', W-M-18, y+16, {size:9,color:MUT,align:'right'});
+    pdf.text(fmtMoney(pago.saldo_restante||0), W-M-18, y+30, {size:15,bold:true,color:(pago.saldo_restante>0.004?[160,40,30]:GREEN),align:'right'});
+    y+=bh+24;
+    // ---- pie: QR + firma ----
+    var yb=792-M-150;
+    try{ var mtx=QR.encode((typeof receiptQRText==='function')?receiptQRText(d,pago):String(pago.recibo_no)); var n=mtx.length, s=104/(n+2);
+      for(var r=0;r<n;r++) for(var c=0;c<n;c++) if(mtx[r][c]) pdf.rect(M+s+c*s, yb+s+r*s, s+0.05, s+0.05, [11,11,11]);
+      pdf.text('Verifique este recibo', M+112, yb+40, {size:9,bold:true,color:INK});
+      pdf.text('escaneando el código QR.', M+112, yb+53, {size:9,color:MUT}); }catch(e){}
+    var fx=W-M-200;
+    // sello: si el edificio tiene sello, va SOLO el sello (grande); si no, el sello digital
+    if(sello){ var sa=sello.width/sello.height, sh=Math.min(130, 200/sa), sw2=sh*sa; pdf.image(sello, fx+100-sw2/2, yb+76-sh, sw2, sh); }
+    else { var dw=170; pdf.rectS(fx+100-dw/2, yb+16, dw, 52, GREEN, 1.3);
+      pdf.text((+pago.saldo_restante||0)<=0.004?'CANCELADO':'PAGO RECIBIDO', fx+100, yb+25, {size:14,bold:true,color:GREEN,align:'center'});
+      pdf.text(emp.toUpperCase(), fx+100, yb+46, {size:8,bold:true,color:GREEN,align:'center'}); }
+    pdf.line(fx, yb+80, W-M, yb+80, INK, 0.7);
+    pdf.text('Firma / sello administración', fx+100, yb+86, {size:9,color:MUT,align:'center'});
+    pdf.text(emp.toUpperCase(), fx+100, yb+99, {size:9,bold:true,color:INK,align:'center'});
+    pdf.line(M, 792-M-18, W-M, 792-M-18, LINE, 0.5);
+    var pie='Documento generado digitalmente el '+((typeof fmtDateLong==='function')?fmtDateLong(todayISO()):'')+' · Administrado por '+emp+' · '+ed+' · Recibo válido como comprobante de pago', fs=7.5;
+    while(fs>5.5&&pdf.textWidth(pie,fs,false)>CW) fs-=0.25;
+    pdf.text(pie, W/2, 792-M-10, {size:fs,color:MUT,align:'center'});
+    var nom='Recibo '+(pago.recibo_no||'')+' - Depto '+d.depto+' - '+ed;
+    pdf.save(nom.replace(/[\\/:*?"<>|]+/g,' ').trim()+'.pdf');
+  };
+  /* el botón del recibo descarga este PDF (una hoja) en vez de abrir el cuadro de impresión */
+  function envolver(){
+    if(typeof window.openReceipt!=='function') return false;
+    var op=window.openReceipt;
+    window.openReceipt=function(d,pago){ var r=op.apply(this,arguments);
+      try{ var b=document.getElementById('receipt-print-btn'); if(b){ var nb=b.cloneNode(true); nb.innerHTML=(typeof icon==='function'?icon('download',15):'')+' Descargar PDF';
+        nb.onclick=function(){ window.lukaReciboPDF(d,pago); }; b.parentNode.replaceChild(nb,b); } }catch(e){}
+      return r; };
+    return true;
+  }
+  if(!envolver()){ var n=0; (function t(){ if(!envolver()&&n++<40) setTimeout(t,250); })(); }
+})();
+</script>
+
+<script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261020102040';
+(function(){ var B='20261020104548';
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
