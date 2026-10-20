@@ -23732,6 +23732,55 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
   if(!envolver()){ var n=0; (function t(){ if(!envolver()&&n++<40) setTimeout(t,250); })(); }
 })();
 </script>
+<script>
+/* ============================================================================
+   Ahorro de tinta en TODOS los PDF de LUKA: nada de bloques de color llenos.
+   · Encabezados y bandas oscuras → fondo apenas tintado + una línea fina
+   · Barras y líneas gruesas → línea fina
+   · Textos claros que iban sobre el azul → se oscurecen para leerse sobre blanco
+   · Logo: la versión normal (no la blanca para fondo azul)
+   ============================================================================ */
+(function(){
+  function lum(c){ return (0.299*c[0]+0.587*c[1]+0.114*c[2])/255; }
+  function tinte(c,k){ return c.map(function(v){ return Math.round(255-(255-v)*k); }); }
+  function oscuro(c){ if(lum(c)>0.86) return [14,44,77]; if(c[0]>200&&c[2]<190) return [150,104,30]; return [70,84,104]; }
+  function parchar(){
+    if(typeof MiniPDF!=='function') return false;
+    var P=MiniPDF.prototype; if(P.__tinta) return true; P.__tinta=1;
+    var rect=P.rect, text=P.text, line=P.line, addPage=P.addPage;
+    P.addPage=function(){ this.__z=[]; return addPage.apply(this,arguments); };
+    P.rect=function(x,y,w,h,c){
+      if(!this.__z) this.__z=[];
+      if(c&&lum(c)<0.6){
+        if(h<=6&&w>h) return line.call(this,x,y+h/2,x+w,y+h/2,c,Math.min(h,0.9));
+        if(w<=6&&h>w) return line.call(this,x+w/2,y,x+w/2,y+h,c,Math.min(w,0.9));
+        this.__z.push([x,y,w,h]);
+        rect.call(this,x,y,w,h,tinte(c,0.06));
+        return line.call(this,x,y+h,x+w,y+h,c,0.8);
+      }
+      return rect.apply(this,arguments);
+    };
+    P.line=function(x1,y1,x2,y2,c,lw){ return line.call(this,x1,y1,x2,y2,c,Math.min(lw||0.5,1)); };
+    P.text=function(str,x,yTop,o){
+      o=o||{}; var col=o.color, z=this.__z||[];
+      if(col&&lum(col)>0.6){ for(var i=0;i<z.length;i++){ var q=z[i]; if(x>=q[0]-2&&x<=q[0]+q[2]+2&&yTop>=q[1]-4&&yTop<=q[1]+q[3]){ o=Object.assign({},o,{color:oscuro(col)}); break; } } }
+      return text.call(this,str,x,yTop,o);
+    };
+    // el logo para fondo azul era blanco: sobre papel blanco se usa el normal
+    if(typeof window.__pizLogoDark==='function'){ window.__pizLogoDark=function(){ return document.getElementById('__pizLogo'); }; }
+    return true;
+  }
+  if(!parchar()){ var n=0; (function t(){ if(!parchar()&&n++<40) setTimeout(t,250); })(); }
+  setTimeout(function(){ if(typeof window.__pizLogoDark==='function') window.__pizLogoDark=function(){ return document.getElementById('__pizLogo'); }; },3000);
+})();
+</script>
+<style>
+/* recibos impresos: bandas de color livianas */
+@media print{
+  .receipt-box .r-band{height:2px!important}
+  .receipt-box .r-total-band{background:#fff!important;border:1.2px solid currentColor!important}
+}
+</style>
 
 <style>
 /* ============ Módulo 45 · Lista de reservas: filas alineadas y ligadas al talonario ============ */
@@ -23769,7 +23818,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261020100022';
+(function(){ var B='20261020100701';
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
