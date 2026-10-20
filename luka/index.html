@@ -18258,12 +18258,15 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       || (d.historial_pagos||[]).some(f=>String(f).slice(0,7)===ym)
       || String(d.ultimo_pago||'').slice(0,7)===ym;
   }
+  function pagadoEsteMes(d){
+    const ym=today().slice(0,7);
+    return (d.pagos_registrados||[]).filter(p=>p&&!p.anulado&&!p._anulado&&String(p.fecha||'').slice(0,7)===ym).reduce((a,p)=>a+(+p.monto||0),0);
+  }
+  function cuotaPlan(d){ const p=d.planPago||{}; return (+p.cuota||0)+(p.sumarExpensa?(+p.expensa||0):0) || (+d.expensaMensual||0); }
   function planAlDia(d){
     const p=d.planPago; if(!p) return false;
-    const t=today();
-    if(p.vigencia && String(p.vigencia).slice(0,10)<t) return false;
-    if(p.diaPago){ const dd=parseInt(t.slice(8,10),10); if(dd>Number(p.diaPago)) return false; }
-    return true;
+    if(p.vigencia && String(p.vigencia).slice(0,10)<today()) return false;
+    return pagadoEsteMes(d) >= cuotaPlan(d)-0.5;     // pagó la cuota completa del plan en el mes en curso
   }
   function descargarDeudoresExpensas(){
     const deudores=(DATA.deptos||[]).filter(d=>(d.expensa_debt||0)>0.005);
@@ -18278,7 +18281,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     bd.classList.add('open');
   }
   function generarDeudoresExpensas(deudores,hoja){
-    const enRegla=d=> planAlDia(d)||pagoEsteMes(d);
+    const enRegla=d=> d.planPago ? planAlDia(d) : pagoEsteMes(d);
     const top=deudores.filter(d=>!enRegla(d)).sort((a,b)=>(b.expensa_debt||0)-(a.expensa_debt||0));
     const bottom=deudores.filter(enRegla).sort((a,b)=>(b.expensa_debt||0)-(a.expensa_debt||0));
     const pdf=new MiniPDF();
@@ -23766,7 +23769,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261020095556';
+(function(){ var B='20261020100022';
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
