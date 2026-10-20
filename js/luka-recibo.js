@@ -352,6 +352,7 @@ var QR = (function () {
       '<div class="r-sign"><div class="r-seal">'+((E.sello||logo)?'<img src="'+esc(E.sello||logo)+'" alt="">':'')+'<div class="r-seal-text">'+esc(empresa.toUpperCase())+'</div></div><div class="line"></div>Firma / sello administración</div>'+
       '<div class="r-footer">Documento generado digitalmente el '+fmtDateLong(todayISO())+' · Administrado por '+esc(empresa)+' · '+esc(nombre)+' · Recibo válido como comprobante de pago</div></div>';
   };
+  window.lukaReciboQRText=function(E,U,p){ return qrText(E.nombreRecibo||E.nombre||'Gestión LUKA',{depto:U.depto,bloque:U.bloque||''},p); };
   window.lukaReciboCodigo=function(E,U,p){ return qrText(E.nombreRecibo||E.nombre||'Gestión LUKA',{depto:U.depto,bloque:U.bloque||''},p).split('Cod. verificacion: ')[1]; };
 })();
 (function(){ try{ var st=document.createElement('style'); st.textContent='.receipt-box .r-anom{display:flex;align-items:baseline;gap:10px;margin:0 0 10px;padding:8px 12px;border-radius:10px;background:#F4F6FA}.receipt-box .r-anom .r-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:#6B7785;white-space:nowrap}.receipt-box .r-anom .r-value{font-size:15px;font-weight:700}'; document.head.appendChild(st); }catch(e){} })();

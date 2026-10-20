@@ -793,7 +793,7 @@ html,body{overflow-x:clip;max-width:100%}
   <div class="dialog-card rec-card">
     <h2 id="rec-title" class="sr-only">Recibo</h2>
     <div id="rec-body"></div>
-    <div class="row"><button class="btn light" type="button" id="rec-close">Cerrar</button><button class="btn navy" type="button" id="rec-print-btn">Guardar PDF</button></div>
+    <div class="row"><button class="btn light" type="button" id="rec-close">Cerrar</button><button class="btn navy" type="button" id="rec-print-btn">Descargar PDF</button></div>
   </div>
 </div>
 <div class="dialog" id="pw-dialog" role="dialog" aria-modal="true" aria-labelledby="pw-title" aria-hidden="true">
@@ -814,6 +814,8 @@ html,body{overflow-x:clip;max-width:100%}
 
 <script src="js/portal-crypto.js"></script>
 <script src="js/luka-recibo.js"></script>
+<script src="js/minipdf.js"></script>
+<script src="js/luka-recibo-pdf.js"></script>
 <script src="js/luka-docs.js"></script>
 <script>
 /* ================================================================
@@ -1047,7 +1049,34 @@ const PORTAL = {
   $('#p-more').addEventListener('click',()=>{showAll=true;renderTable();});
   /* ---------- Recibo (pagos registrados en Gestión LUKA) ---------- */
   $('#p-table').addEventListener('click',e=>{ const b=e.target.closest('[data-rec]'); if(!b) return; const c=shown[+b.dataset.rec]; if(c&&c.recibo) openRecibo(c.recibo); });
-  function openRecibo(r){ openDoc(window.lukaRecibo?window.lukaRecibo(data.edificio||{},data.unidad||{},r):'','Recibo '+(r.no||'')+' - Depto '+((data.unidad||{}).depto||'')); }
+  /* PDF de una hoja, el MISMO diseño que en LUKA */
+  let recPDF=null;
+  const fl=f=>{ if(!f) return '—'; const d=new Date(String(f).slice(0,10)+'T00:00:00'); return isNaN(d)?String(f):d.toLocaleDateString('es-BO',{day:'numeric',month:'long',year:'numeric'}); };
+  function basePDF(){ const E=data.edificio||{}; return { edificio:E.nombre||'', empresa:E.empresa||'Gestión LUKA', logo:E.logo||'', sello:E.sello||'' }; }
+  function pieT(t){ const E=data.edificio||{}; return 'Documento generado digitalmente · Administrado por '+(E.empresa||'Gestión LUKA')+' · '+(E.nombre||'')+' · '+t; }
+  function pdfExpensas(r){ const E=data.edificio||{}, U=data.unidad||{}; const cancel=(+r.saldo||0)<=0.004;
+    let M=r.meses_cubiertos; if(!Array.isArray(M)||!M.length){ M=(r.meses_pagados||[]).map(l=>{ const p=String(l).trim().split(/\s+/); return {mes:p.slice(0,-1).join(' '),anio:p[p.length-1],monto:null,tipo:'mes'}; }); (r.prepagados||[]).forEach(p=>M.push({mes:p.mes,anio:p.anio,monto:p.monto,tipo:'adelanto'})); }
+    return lukaDocPDF(Object.assign(basePDF(),{ subtitulo:'Recibo oficial de pago · Expensas y cuotas', noLabel:'RECIBO N.º', no:r.no, persona:{label:'RECIBÍ DE',nombre:r.a_nombre||''},
+      campos:[['Departamento',(U.depto||'')+(U.bloque?' · '+U.bloque:'')],['Fecha de pago',fl(r.fecha)],['Método de pago',r.metodo||'—'],['Recibido por',r.recibido||'—']],
+      concepto:r.concepto||'—', obs:r.obs||'', lista:{titulo:'Meses cubiertos por este pago',filas:M.map(m=>({t:m.mes+' '+m.anio,v:m.monto,nota:m.tipo==='adelanto'?'Adelanto':(m.parcial?'Parcial':'Pagado'),tipo:m.tipo==='adelanto'?'info':'ok'}))},
+      monto:{label:'Monto pagado',valor:+r.monto||0}, lado:{label:'Saldo pendiente tras este pago',valor:+r.saldo||0,alerta:!cancel}, selloDigital:cancel?'CANCELADO':'PAGO RECIBIDO',
+      qr:window.lukaReciboQRText?lukaReciboQRText(E,U,r):String(r.no), pie:pieT('Recibo válido como comprobante de pago'), archivo:'Recibo '+(r.no||'')+' - Depto '+(U.depto||'') })); }
+  function pdfReserva(p){ const E=data.edificio||{}, U=data.unidad||{}; const L=p.lineas||[], ing=L.reduce((a,l)=>a+(+l.monto||0),0), gar=+p.garantia||0;
+    const filas=L.map(l=>({t:l.concepto,v:+l.monto||0,tipo:'ok'})); if(gar>0) filas.push({t:'Garantía (depósito reembolsable, no es ingreso)',v:gar,tipo:'info'});
+    return lukaDocPDF(Object.assign(basePDF(),{ subtitulo:'Recibo de alquiler · Área social', noLabel:'RECIBO N.º', no:p.no, persona:{label:'RECIBÍ DE',nombre:p.a_nombre||p.responsable||''},
+      campos:[['Departamento',U.depto||'—'],['Fecha de pago',fl(p.fecha)],['Método de pago',p.metodo||'—'],['Recibido por',p.recibido||'—']],
+      conceptoLabel:'RESERVA', concepto:(p.area||'')+' · '+fl(p.fechaEvento)+(p.horario?' · '+p.horario:''), obs:p.obs||'', lista:{titulo:'Detalle',filas},
+      monto:{label:'Total recibido',valor:+p.total||ing+gar}, lado:{label:'Ingreso por alquiler',valor:ing,neutro:true},
+      nota:gar>0?'La garantía se devuelve después del evento, previa revisión del área.':'', selloDigital:'PAGADO',
+      qr:window.lukaDocQRReserva?lukaDocQRReserva(E,U,p):String(p.no), pie:pieT('Recibo válido como comprobante de pago'), archivo:'Recibo '+p.no+' - Alquiler - Depto '+(U.depto||'') })); }
+  function pdfDevolucion(d){ const E=data.edificio||{}, U=data.unidad||{}; const g=+d.garantia||0, desc=Math.max(0,g-(+d.monto||0));
+    const filas=[{t:'Garantía recibida',v:g,tipo:'info'}]; if(desc>0.004) filas.push({t:'Descuento'+(d.obs?' ('+d.obs+')':''),v:'- '+(window.lukaDinero?lukaDinero(desc):desc),tipo:'menos'});
+    return lukaDocPDF(Object.assign(basePDF(),{ egreso:true, subtitulo:'Comprobante de egreso · Devolución de garantía', noLabel:'DEVOLUCIÓN N.º', no:d.no||'', persona:{label:'ENTREGADO A',nombre:d.recibio||''},
+      campos:[['Departamento',U.depto||'—'],['Fecha de devolución',fl(d.fecha)],['Medio',d.metodo||'—'],['N.º de transacción',d.comprobante||'—']],
+      conceptoLabel:'RESERVA', concepto:(d.area||'')+(d.fechaEvento?' · '+fl(d.fechaEvento):'')+(d.destino?' · Destino: '+d.destino:''), lista:{titulo:'Detalle',filas},
+      monto:{label:'Monto devuelto',valor:+d.monto||0}, lado:{label:'Garantía recibida',valor:g,neutro:true}, selloDigital:'ENTREGADO',
+      qr:window.lukaDocQRDev?lukaDocQRDev(E,U,d):String(d.no), pie:pieT('Comprobante de devolución de garantía'), archivo:'Devolucion '+(d.no||'')+' - Depto '+(U.depto||'') })); }
+  function openRecibo(r){ recPDF=()=>pdfExpensas(r); openDoc(window.lukaRecibo?window.lukaRecibo(data.edificio||{},data.unidad||{},r):'','Recibo '+(r.no||'')+' - Depto '+((data.unidad||{}).depto||'')); }
   function openDoc(html,nombre){
     const dlgR=$('#rec-dialog');
     $('#rec-body').innerHTML=html;
@@ -1076,7 +1105,7 @@ const PORTAL = {
   }
   $('#rec-close').addEventListener('click',closeRecibo);
   $('#rec-dialog').addEventListener('click',e=>{ if(e.target.id==='rec-dialog') closeRecibo(); });
-  $('#rec-print-btn').addEventListener('click',imprimirRecibo);
+  $('#rec-print-btn').addEventListener('click',()=>{ if(recPDF&&window.lukaDocPDF) recPDF(); else imprimirRecibo(); });
 
   /* ---------- Celular: menú minimalista; cada opción se abre en su propia pantalla ---------- */
   const esCel=()=>window.matchMedia('(max-width:600px)').matches;
@@ -1205,8 +1234,8 @@ const PORTAL = {
     b.onclick=()=>{ const i=misReservas.indexOf(x); const el=document.querySelector('[data-pay="'+i+'"]'); if(el) el.click(); };
   }
   $('#rv-list').addEventListener('click',e=>{ const b=e.target.closest('[data-rrec],[data-rdev]'); if(!b) return; const E=data.edificio||{}, U=data.unidad||{};
-    if(b.dataset.rrec!=null){ const x=misReservas[+b.dataset.rrec]; if(x&&x.recibo&&window.lukaDocReserva) openDoc(lukaDocReserva(E,U,x.recibo),'Recibo '+x.recibo.no+' - Alquiler - Depto '+(U.depto||'')); }
-    else { const x=misReservas[+b.dataset.rdev]; if(x&&x.devolucion&&window.lukaDocDevolucion) openDoc(lukaDocDevolucion(E,U,x.devolucion),'Devolucion '+x.devolucion.no+' - Depto '+(U.depto||'')); } });
+    if(b.dataset.rrec!=null){ const x=misReservas[+b.dataset.rrec]; if(x&&x.recibo){ recPDF=()=>pdfReserva(x.recibo); } if(x&&x.recibo&&window.lukaDocReserva) openDoc(lukaDocReserva(E,U,x.recibo),'Recibo '+x.recibo.no+' - Alquiler - Depto '+(U.depto||'')); }
+    else { const x=misReservas[+b.dataset.rdev]; if(x&&x.devolucion){ recPDF=()=>pdfDevolucion(x.devolucion); } if(x&&x.devolucion&&window.lukaDocDevolucion) openDoc(lukaDocDevolucion(E,U,x.devolucion),'Devolucion '+x.devolucion.no+' - Depto '+(U.depto||'')); } });
   /* solicitar la garantía después del evento */
   const grDlg=$('#gr-dialog'); let grSel=null, grFile=null;
   function grShow(on){ grDlg.classList.toggle('open',on); grDlg.setAttribute('aria-hidden',on?'false':'true'); if(on) $('#gr-msg').innerHTML=''; }

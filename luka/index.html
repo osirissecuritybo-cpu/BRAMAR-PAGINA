@@ -18970,7 +18970,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
           pago=(d.pagos_registrados||[]).find(function(p){ return (pagoId&&p.id===pagoId)||(mov&&mov.recibo&&p.recibo_no===mov.recibo); });
         }
         if(d && pago && typeof openReceipt==='function'){ openReceipt(d,pago); return; }
-        if(mov){ openComprobante(mov); return; }
+        if(mov){ (window.__lukaComprobante||openComprobante)(mov); return; }
       });
     });
   }
@@ -22378,6 +22378,8 @@ body{overscroll-behavior-y:none}
       '<div class="r-total-band"><div class="r-total-label">Devuelto al propietario</div><div class="r-total-value">' + money(d.monto) + '</div></div>' +
       pie(E, qrSVG(textoDev(E, U, d))) + '</div>';
   };
+  window.lukaDocQRReserva = function (E, U, p) { return textoPago(E, U, p); };
+  window.lukaDocQRDev = function (E, U, d) { return textoDev(E, U, d); };
   window.lukaDocCodigoReserva = function (E, U, p) { return textoPago(E, U, p).split('Cod. verificacion: ')[1]; };
   window.lukaDocCodigoDevolucion = function (E, U, d) { return textoDev(E, U, d).split('Cod. verificacion: ')[1]; };
   window.lukaDocCSS = '.receipt-box .r-lines{width:100%;border-collapse:collapse;margin:4px 0 6px;font-size:13px}' +
@@ -24001,108 +24003,263 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 47: recibo en PDF de UNA hoja (carta), dibujado directo
-   (no depende del cuadro de impresión del navegador ni del tamaño de papel que
-   tenga elegido: siempre una sola hoja, nítido y con poca tinta).
+   Recibos y comprobantes de Bramar / Gestión LUKA en PDF — UN solo diseño para
+   todos (expensas, alquiler de áreas, devolución de garantía, ingresos y egresos).
+   Hoja carta, siempre UNA página, poca tinta. Lo usan LUKA y el portal.
+   Necesita MiniPDF y QR (en LUKA ya existen; en el portal vienen de js/minipdf.js).
+   ============================================================================ */
+(function () {
+  var NAVY = [14, 44, 77], INK = [25, 30, 38], MUT = [110, 120, 132], LINE = [205, 212, 222];
+  var VERDE = [24, 120, 72], ROJO = [150, 40, 30];
+  function PDFc() { return window.LkMiniPDF || (typeof MiniPDF !== 'undefined' ? MiniPDF : null); }
+  function QRc() { return window.LkQR || (typeof QR !== 'undefined' ? QR : null); }
+  function dinero(n) {
+    n = Math.round((+n || 0) * 100) / 100; var neg = n < 0; n = Math.abs(n);
+    var ent = Math.floor(n), dec = Math.round((n - ent) * 100);
+    var s = String(ent).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return (neg ? '-' : '') + 'Bs. ' + s + (dec ? ',' + String(dec).padStart(2, '0') : '');
+  }
+  function cargar(src) {
+    return new Promise(function (ok) {
+      if (!src) { ok(null); return; }
+      var i = new Image(); i.crossOrigin = 'anonymous';
+      i.onload = function () { try { var c = document.createElement('canvas'); c.width = i.naturalWidth; c.height = i.naturalHeight; var x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(i, 0, 0); ok(c); } catch (e) { ok(null); } };
+      i.onerror = function () { ok(null); }; i.src = src;
+    });
+  }
+  function encajar(pdf, c, x, y, w, h, der) { if (!c) return 0; var a = c.width / c.height, ww = w, hh = w / a; if (hh > h) { hh = h; ww = h * a; } pdf.image(c, der ? x + w - ww : x, y + (h - hh) / 2, ww, hh); return ww; }
+
+  /* spec = {
+       egreso:bool, edificio, subtitulo, noLabel, no, logo, sello, empresa,
+       persona:{label,nombre}, campos:[[label,valor],...], concepto, obs,
+       lista:{titulo, filas:[{t, v, nota, tipo:'ok'|'info'|'menos'}]},
+       monto:{label, valor}, lado:{label, valor, alerta},
+       selloDigital:'CANCELADO' | 'PAGADO' | 'ENTREGADO'..., qr:'texto', qrNota, pie, archivo }  */
+  window.lukaDocPDF = async function (s) {
+    var P = PDFc(); if (!P) { alert('No se pudo generar el PDF.'); return; }
+    var fmt = s.dinero || dinero;
+    var pdf = new P(); pdf.W = 612; pdf.H = 792;
+    var LIM = { '×': 'x', '−': '-', '–': '-', '—': '-', '→': '->', '·': '·', '“': '"', '”': '"', '‘': "'", '’': "'", '…': '...' };
+    var limpia = function (t) { return String(t == null ? '' : t).replace(/[×−–—→“”‘’…]/g, function (c) { return LIM[c] || ''; }); };
+    var _t = pdf.text.bind(pdf), _w = pdf.wrap.bind(pdf), _tw = pdf.textWidth.bind(pdf);
+    pdf.text = function (t, x, y, o) { return _t(limpia(t), x, y, o); };
+    pdf.wrap = function (t, w, sz, b) { return _w(limpia(t), w, sz, b); };
+    pdf.textWidth = function (t, sz, b) { return _tw(limpia(t), sz, b); };
+    var W = 612, H = 792, M = 56, CW = W - 2 * M, y = M;
+    var COLOR = s.egreso ? ROJO : VERDE;
+    var logo = await cargar(s.logo), sello = await cargar(s.sello);
+    // encabezado
+    var lw = encajar(pdf, logo, M, y, 70, 58, false), tx = M + (lw ? lw + 16 : 0);
+    var nomEd = String(s.edificio || '').toUpperCase(), fsEd = 17;
+    while (fsEd > 11 && pdf.textWidth(nomEd, fsEd, true) > (W - M - 150) - tx) fsEd -= 0.5;
+    pdf.text(nomEd, tx, y + 8, { size: fsEd, bold: true, color: NAVY });
+    pdf.text(String(s.subtitulo || ''), tx, y + 32, { size: 9.5, color: MUT });
+    pdf.text(String(s.noLabel || 'RECIBO N.º'), W - M, y + 4, { size: 8.5, bold: true, color: MUT, align: 'right' });
+    pdf.text(String(s.no || ''), W - M, y + 16, { size: 22, bold: true, color: NAVY, align: 'right' });
+    y += 70; pdf.line(M, y, W - M, y, NAVY, 0.9); y += 22;
+    // persona
+    if (s.persona && s.persona.nombre) {
+      pdf.text(s.persona.label || 'RECIBÍ DE', M, y, { size: 8.5, bold: true, color: MUT });
+      pdf.text(String(s.persona.nombre), M, y + 13, { size: 16, bold: true, color: INK }); y += 44;
+    }
+    // datos (2 columnas)
+    var col = CW / 2, C = (s.campos || []).filter(function (f) { return f && f[1] != null && f[1] !== ''; });
+    for (var i = 0; i < C.length; i += 2) {
+      var alto = 0;
+      [0, 1].forEach(function (k) {
+        var f = C[i + k]; if (!f) return; var x = M + k * col;
+        pdf.text(String(f[0]).toUpperCase(), x, y, { size: 8.5, bold: true, color: MUT });
+        var L = pdf.wrap(String(f[1]), col - 16, 11.5, true);
+        L.slice(0, 2).forEach(function (t, j) { pdf.text(t, x, y + 13 + j * 14, { size: 11.5, bold: true, color: INK }); });
+        alto = Math.max(alto, 13 + Math.min(2, L.length) * 14);
+      });
+      y += alto + 12;
+    }
+    pdf.line(M, y, W - M, y, LINE, 0.6); y += 18;
+    // concepto
+    if (s.concepto) {
+      pdf.text(s.conceptoLabel || 'CONCEPTO', M, y, { size: 8.5, bold: true, color: MUT }); y += 14;
+      pdf.wrap(String(s.concepto), CW, 11, false).slice(0, 3).forEach(function (t) { pdf.text(t, M, y, { size: 11, color: INK }); y += 14; });
+      if (s.obs) pdf.wrap('Obs: ' + s.obs, CW, 9.5, false).slice(0, 2).forEach(function (t) { pdf.text(t, M, y, { size: 9.5, color: MUT }); y += 12; });
+      y += 8;
+    }
+    // lista (meses cubiertos, detalle, ítems…)
+    var F = (s.lista && s.lista.filas) || [];
+    if (F.length) {
+      var maxFilas = Math.floor((H - M - 190 - 90 - y) / 17);   // lo que entra antes del monto y el pie
+      var cols = F.length > maxFilas * 2 ? 3 : (F.length > maxFilas ? 2 : 1);
+      if (F.length > maxFilas * 3) F = F.slice(0, maxFilas * 3);
+      pdf.text(String(s.lista.titulo || 'DETALLE').toUpperCase(), M, y, { size: 8.5, bold: true, color: MUT }); y += 14;
+      var cw = CW / cols, rows = Math.ceil(F.length / cols);
+      F.forEach(function (f, j) {
+        var c = Math.floor(j / rows), r = j - c * rows, x = M + c * cw, yy = y + r * 17;
+        var fuerte = f.tipo === 'total';
+        var colr = f.tipo === 'info' ? NAVY : (f.tipo === 'menos' ? ROJO : (f.tipo === 'gris' ? MUT : COLOR));
+        var izq = String(f.t || ''); while (izq.length > 4 && pdf.textWidth(izq, 10.5, true) > cw - 120) izq = izq.slice(0, -2);
+        pdf.text(izq, x, yy, { size: 10.5, bold: true, color: INK });
+        pdf.text((f.v != null ? (typeof f.v === 'number' ? fmt(f.v) : f.v) : '') + (f.nota ? '  ·  ' + f.nota : ''), x + cw - 14, yy + 1, { size: fuerte ? 10.5 : 9.5, bold: fuerte, color: fuerte ? INK : colr, align: 'right' });
+        pdf.line(x, yy + 14, x + cw - 14, yy + 14, LINE, 0.4);
+      });
+      y += rows * 17 + 12;
+    }
+    // monto
+    var bh = 64; pdf.rectS(M, y, CW, bh, NAVY, 0.9);
+    pdf.text(String((s.monto && s.monto.label) || 'MONTO').toUpperCase(), M + 18, y + 14, { size: 9, bold: true, color: MUT });
+    pdf.text(fmt(s.monto ? s.monto.valor : 0), M + 18, y + 28, { size: 24, bold: true, color: COLOR });
+    if (s.lado) {
+      pdf.text(String(s.lado.label || ''), W - M - 18, y + 16, { size: 9, color: MUT, align: 'right' });
+      pdf.text(typeof s.lado.valor === 'number' ? fmt(s.lado.valor) : String(s.lado.valor || ''), W - M - 18, y + 30, { size: 15, bold: true, color: s.lado.alerta ? ROJO : (s.lado.neutro ? NAVY : VERDE), align: 'right' });
+    }
+    y += bh + 24;
+    if (s.nota) pdf.wrap(String(s.nota), CW, 9, false).slice(0, 2).forEach(function (t) { pdf.text(t, M, y, { size: 9, color: MUT }); y += 12; });
+    // pie: QR + firma/sello
+    var yb = H - M - 150;
+    try {
+      var Q = QRc(); if (Q && s.qr) {
+        var mtx = Q.encode(String(s.qr)), n = mtx.length, q = 104 / (n + 2);
+        for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (mtx[r][c]) pdf.rect(M + q + c * q, yb + q + r * q, q + 0.05, q + 0.05, [11, 11, 11]);
+        pdf.text('Verifique este documento', M + 112, yb + 40, { size: 9, bold: true, color: INK });
+        pdf.text(s.qrNota || 'escaneando el código QR.', M + 112, yb + 53, { size: 9, color: MUT });
+      }
+    } catch (e) {}
+    var fx = W - M - 200, emp = String(s.empresa || 'Gestión LUKA');
+    // si hay sello, va SOLO el sello (grande); si no, el sello digital
+    if (sello) { var sa = sello.width / sello.height, sh = Math.min(130, 200 / sa), sw = sh * sa; pdf.image(sello, fx + 100 - sw / 2, yb + 76 - sh, sw, sh); }
+    else {
+      var dw = 170; pdf.rectS(fx + 100 - dw / 2, yb + 16, dw, 52, COLOR, 1.3);
+      pdf.text(String(s.selloDigital || (s.egreso ? 'ENTREGADO' : 'PAGO RECIBIDO')), fx + 100, yb + 25, { size: 14, bold: true, color: COLOR, align: 'center' });
+      pdf.text(emp.toUpperCase(), fx + 100, yb + 46, { size: 8, bold: true, color: COLOR, align: 'center' });
+    }
+    pdf.line(fx, yb + 80, W - M, yb + 80, INK, 0.7);
+    pdf.text(s.firma || 'Firma / sello administración', fx + 100, yb + 86, { size: 9, color: MUT, align: 'center' });
+    pdf.text(emp.toUpperCase(), fx + 100, yb + 99, { size: 9, bold: true, color: INK, align: 'center' });
+    pdf.line(M, H - M - 18, W - M, H - M - 18, LINE, 0.5);
+    var pie = String(s.pie || ''), fs = 7.5;
+    while (fs > 5.5 && pdf.textWidth(pie, fs, false) > CW) fs -= 0.25;
+    pdf.text(pie, W / 2, H - M - 10, { size: fs, color: MUT, align: 'center' });
+    pdf.save(String(s.archivo || 'Recibo').replace(/[\\/:*?"<>|]+/g, ' ').trim() + '.pdf');
+  };
+  window.lukaDinero = dinero;
+})();
+
+</script>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 47: TODOS los recibos y comprobantes salen con el mismo
+   diseño en PDF de una hoja (js/luka-recibo-pdf.js): expensas, alquiler de áreas,
+   devolución de garantía e ingresos / egresos del reporte diario.
    ============================================================================ */
 (function(){
-  var NAVY=[14,44,77], INK=[25,30,38], MUT=[110,120,132], LINE=[205,212,222], GREEN=[24,120,72], SOFT=[246,248,251];
-  function cargar(src){ return new Promise(function(ok){ if(!src){ ok(null); return; } var i=new Image(); i.onload=function(){ try{ var c=document.createElement('canvas'); c.width=i.naturalWidth; c.height=i.naturalHeight; var x=c.getContext('2d'); x.fillStyle='#fff'; x.fillRect(0,0,c.width,c.height); x.drawImage(i,0,0); ok(c); }catch(e){ ok(null); } }; i.onerror=function(){ ok(null); }; i.src=src; }); }
-  function encajar(pdf,c,x,y,w,h,der){ if(!c) return 0; var a=c.width/c.height, ww=w, hh=w/a; if(hh>h){ hh=h; ww=h*a; } pdf.image(c, der?x+w-ww:x, y+(h-hh)/2, ww, hh); return ww; }
+  function ed(){ return (typeof buildingName==='function')?buildingName():''; }
+  function emp(){ return (typeof empresaAdmin==='function')?empresaAdmin():'Gestión LUKA'; }
+  function logo(){ return (typeof brandLogo==='function')?brandLogo():''; }
+  function sello(){ return (typeof selloAdmin==='function')?selloAdmin():''; }
+  function fl(f){ return (typeof fmtDateLong==='function')?fmtDateLong(f):(f||''); }
+  function pieTxt(tipo){ return 'Documento generado digitalmente el '+fl(todayISO())+' · Administrado por '+emp()+' · '+ed()+' · '+tipo; }
+  function base(){ return { edificio:ed(), empresa:emp(), logo:logo(), sello:sello(), dinero:(typeof fmtMoney==='function')?fmtMoney:null }; }
   function mesesDe(pago){
     var m=pago.meses_cubiertos;
     if(!Array.isArray(m)||!m.length){ m=[]; (pago.meses_pagados||[]).forEach(function(l){ var p=String(l).trim().split(/\s+/); m.push({mes:p.slice(0,-1).join(' '),anio:p[p.length-1],monto:null,tipo:'mes'}); });
       ((pago._anula&&pago._anula.prepagados)||[]).forEach(function(p){ m.push({mes:p.mes,anio:p.anio,monto:p.monto,tipo:'adelanto'}); }); }
     return m;
   }
-  window.lukaReciboPDF=async function(d,pago){
-    var pdf=new MiniPDF(); pdf.W=612; pdf.H=792;
-    var W=612, M=56, CW=W-2*M, y=M;
-    var ed=(typeof buildingName==='function')?buildingName():'', emp=(typeof empresaAdmin==='function')?empresaAdmin():'Gestión LUKA';
-    var logo=await cargar((typeof brandLogo==='function')?brandLogo():'');
-    var sello=await cargar(((typeof selloAdmin==='function')?selloAdmin():'')||'');
-    // ---- encabezado ----
-    var lw=encajar(pdf,logo,M,y,70,58,false);
-    var tx=M+(lw?lw+16:0);
-    pdf.text(ed.toUpperCase(), tx, y+8, {size:17,bold:true,color:NAVY});
-    pdf.text('Recibo oficial de pago · Expensas y cuotas', tx, y+32, {size:9.5,color:MUT});
-    pdf.text('RECIBO N.º', W-M, y+4, {size:8.5,bold:true,color:MUT,align:'right'});
-    pdf.text(String(pago.recibo_no||''), W-M, y+16, {size:22,bold:true,color:NAVY,align:'right'});
-    y+=70; pdf.line(M,y,W-M,y,NAVY,0.9); y+=22;
-    // ---- recibí de ----
-    if(pago.a_nombre){ pdf.text('RECIBÍ DE', M, y, {size:8.5,bold:true,color:MUT}); pdf.text(String(pago.a_nombre), M, y+13, {size:16,bold:true,color:INK}); y+=44; }
-    // ---- datos ----
-    var col=CW/2, filas=[['DEPARTAMENTO', d.depto+(d.bloque?' · '+d.bloque:'')],['FECHA DE PAGO', (typeof fmtDateLong==='function')?fmtDateLong(pago.fecha):pago.fecha],['MÉTODO DE PAGO', pago.metodo||'—'],['RECIBIDO POR', pago.recibido||'—']];
-    for(var i=0;i<filas.length;i+=2){
-      var alto=0;
-      [0,1].forEach(function(k){ var f=filas[i+k]; if(!f) return; var x=M+k*col; pdf.text(f[0], x, y, {size:8.5,bold:true,color:MUT});
-        var L=pdf.wrap(String(f[1]), col-16, 11.5, true); L.slice(0,2).forEach(function(t,j){ pdf.text(t, x, y+13+j*14, {size:11.5,bold:true,color:INK}); }); alto=Math.max(alto,13+Math.min(2,L.length)*14); });
-      y+=alto+12;
-    }
-    pdf.line(M,y,W-M,y,LINE,0.6); y+=18;
-    // ---- concepto ----
-    pdf.text('CONCEPTO', M, y, {size:8.5,bold:true,color:MUT}); y+=14;
-    pdf.wrap(String(pago.concepto||'—'), CW, 11, false).slice(0,3).forEach(function(t){ pdf.text(t, M, y, {size:11,color:INK}); y+=14; });
-    if(pago.obs){ pdf.wrap('Obs: '+pago.obs, CW, 9.5, false).slice(0,2).forEach(function(t){ pdf.text(t, M, y, {size:9.5,color:MUT}); y+=12; }); }
-    y+=8;
-    // ---- meses cubiertos ----
-    var MS=mesesDe(pago);
-    if(MS.length){
-      pdf.text('MESES CUBIERTOS POR ESTE PAGO', M, y, {size:8.5,bold:true,color:MUT}); y+=14;
-      var cols=MS.length>6?3:(MS.length>3?2:1), cw=CW/cols, rows=Math.ceil(MS.length/cols);
-      MS.forEach(function(m,j){ var c=Math.floor(j/rows), r=j-c*rows, x=M+c*cw, yy=y+r*17;
-        var tag=m.tipo==='adelanto'?'Adelanto':(m.parcial?'Parcial':'Pagado');
-        pdf.text(m.mes+' '+m.anio, x, yy, {size:10.5,bold:true,color:INK});
-        pdf.text((m.monto!=null?fmtMoney(m.monto)+'  ·  ':'')+tag, x+cw-14, yy+1, {size:9.5,color:m.tipo==='adelanto'?NAVY:GREEN,align:'right'});
-        pdf.line(x, yy+14, x+cw-14, yy+14, LINE, 0.4); });
-      y+=rows*17+12;
-    }
-    // ---- monto ----
-    var bh=64; pdf.rectS(M, y, CW, bh, NAVY, 0.9);
-    pdf.text('MONTO PAGADO', M+18, y+14, {size:9,bold:true,color:MUT});
-    pdf.text(fmtMoney(pago.monto), M+18, y+28, {size:24,bold:true,color:GREEN});
-    pdf.text('Saldo pendiente tras este pago', W-M-18, y+16, {size:9,color:MUT,align:'right'});
-    pdf.text(fmtMoney(pago.saldo_restante||0), W-M-18, y+30, {size:15,bold:true,color:(pago.saldo_restante>0.004?[160,40,30]:GREEN),align:'right'});
-    y+=bh+24;
-    // ---- pie: QR + firma ----
-    var yb=792-M-150;
-    try{ var mtx=QR.encode((typeof receiptQRText==='function')?receiptQRText(d,pago):String(pago.recibo_no)); var n=mtx.length, s=104/(n+2);
-      for(var r=0;r<n;r++) for(var c=0;c<n;c++) if(mtx[r][c]) pdf.rect(M+s+c*s, yb+s+r*s, s+0.05, s+0.05, [11,11,11]);
-      pdf.text('Verifique este recibo', M+112, yb+40, {size:9,bold:true,color:INK});
-      pdf.text('escaneando el código QR.', M+112, yb+53, {size:9,color:MUT}); }catch(e){}
-    var fx=W-M-200;
-    // sello: si el edificio tiene sello, va SOLO el sello (grande); si no, el sello digital
-    if(sello){ var sa=sello.width/sello.height, sh=Math.min(130, 200/sa), sw2=sh*sa; pdf.image(sello, fx+100-sw2/2, yb+76-sh, sw2, sh); }
-    else { var dw=170; pdf.rectS(fx+100-dw/2, yb+16, dw, 52, GREEN, 1.3);
-      pdf.text((+pago.saldo_restante||0)<=0.004?'CANCELADO':'PAGO RECIBIDO', fx+100, yb+25, {size:14,bold:true,color:GREEN,align:'center'});
-      pdf.text(emp.toUpperCase(), fx+100, yb+46, {size:8,bold:true,color:GREEN,align:'center'}); }
-    pdf.line(fx, yb+80, W-M, yb+80, INK, 0.7);
-    pdf.text('Firma / sello administración', fx+100, yb+86, {size:9,color:MUT,align:'center'});
-    pdf.text(emp.toUpperCase(), fx+100, yb+99, {size:9,bold:true,color:INK,align:'center'});
-    pdf.line(M, 792-M-18, W-M, 792-M-18, LINE, 0.5);
-    var pie='Documento generado digitalmente el '+((typeof fmtDateLong==='function')?fmtDateLong(todayISO()):'')+' · Administrado por '+emp+' · '+ed+' · Recibo válido como comprobante de pago', fs=7.5;
-    while(fs>5.5&&pdf.textWidth(pie,fs,false)>CW) fs-=0.25;
-    pdf.text(pie, W/2, 792-M-10, {size:fs,color:MUT,align:'center'});
-    var nom='Recibo '+(pago.recibo_no||'')+' - Depto '+d.depto+' - '+ed;
-    pdf.save(nom.replace(/[\\/:*?"<>|]+/g,' ').trim()+'.pdf');
+  /* ---- expensas ---- */
+  window.lukaReciboPDF=function(d,pago){
+    var cancel=(+pago.saldo_restante||0)<=0.004;
+    return lukaDocPDF(Object.assign(base(),{
+      subtitulo:'Recibo oficial de pago · Expensas y cuotas', noLabel:'RECIBO N.º', no:pago.recibo_no,
+      persona:{label:'RECIBÍ DE', nombre:pago.a_nombre||''},
+      campos:[['Departamento',d.depto+(d.bloque?' · '+d.bloque:'')],['Fecha de pago',fl(pago.fecha)],['Método de pago',pago.metodo||'—'],['Recibido por',pago.recibido||'—']],
+      concepto:pago.concepto||'—', obs:pago.obs||'',
+      lista:{titulo:'Meses cubiertos por este pago', filas:mesesDe(pago).map(function(m){ return {t:m.mes+' '+m.anio, v:m.monto, nota:m.tipo==='adelanto'?'Adelanto':(m.parcial?'Parcial':'Pagado'), tipo:m.tipo==='adelanto'?'info':'ok'}; })},
+      monto:{label:'Monto pagado', valor:+pago.monto||0},
+      lado:{label:'Saldo pendiente tras este pago', valor:+pago.saldo_restante||0, alerta:!cancel},
+      selloDigital:cancel?'CANCELADO':'PAGO RECIBIDO',
+      qr:(typeof receiptQRText==='function')?receiptQRText(d,pago):String(pago.recibo_no),
+      pie:pieTxt('Recibo válido como comprobante de pago'),
+      archivo:'Recibo '+(pago.recibo_no||'')+' - Depto '+d.depto+' - '+ed()
+    }));
   };
-  /* el botón del recibo descarga este PDF (una hoja) en vez de abrir el cuadro de impresión */
-  function envolver(){
-    if(typeof window.openReceipt!=='function') return false;
-    var op=window.openReceipt;
-    window.openReceipt=function(d,pago){ var r=op.apply(this,arguments);
-      try{ var b=document.getElementById('receipt-print-btn'); if(b){ var nb=b.cloneNode(true); nb.innerHTML=(typeof icon==='function'?icon('download',15):'')+' Descargar PDF';
-        nb.onclick=function(){ window.lukaReciboPDF(d,pago); }; b.parentNode.replaceChild(nb,b); } }catch(e){}
-      return r; };
-    return true;
-  }
-  if(!envolver()){ var n=0; (function t(){ if(!envolver()&&n++<40) setTimeout(t,250); })(); }
+  /* ---- alquiler de área social ---- */
+  window.lukaReservaPDF=function(r){
+    var p=r.pago; if(!p) return;
+    var L=p.lineas||[], ing=L.reduce(function(a,l){ return a+(+l.monto||0); },0), gar=+p.garantia||0;
+    var filas=L.map(function(l){ return {t:l.concepto, v:+l.monto||0, tipo:'ok'}; });
+    if(gar>0) filas.push({t:'Garantía (depósito reembolsable, no es ingreso)', v:gar, tipo:'info'});
+    var cod=''; try{ cod=window.lukaDocCodigoReserva(window.lukaCtxE(),window.lukaUnidadDe(r),p); }catch(e){}
+    return lukaDocPDF(Object.assign(base(),{
+      subtitulo:'Recibo de alquiler · Área social', noLabel:'RECIBO N.º', no:p.no,
+      persona:{label:'RECIBÍ DE', nombre:p.a_nombre||p.responsable||r.responsable||''},
+      campos:[['Departamento',(r.depto||'—')],['Fecha de pago',fl(p.fecha)],['Método de pago',p.metodo||'—'],['Recibido por',p.recibido||'—']],
+      conceptoLabel:'RESERVA', concepto:(p.area||r.areaNombre||'')+' · '+fl(p.fechaEvento||r.fecha)+(p.horario?' · '+p.horario:''), obs:p.obs||'',
+      lista:{titulo:'Detalle', filas:filas},
+      monto:{label:'Total recibido', valor:+p.total||ing+gar},
+      lado:{label:'Ingreso por alquiler', valor:ing, neutro:true},
+      nota:gar>0?('La garantía de '+((typeof fmtMoney==='function')?fmtMoney(gar):gar)+' se devuelve después del evento, previa revisión del área.'):'',
+      selloDigital:'PAGADO',
+      qr:(function(){ try{ return window.lukaDocQRReserva(window.lukaCtxE(),window.lukaUnidadDe(r),p); }catch(e){ return 'Recibo '+p.no+' · '+ed(); } })(),
+      pie:pieTxt('Recibo válido como comprobante de pago'),
+      archivo:'Recibo '+p.no+' - Alquiler - Depto '+(r.depto||'')
+    }));
+  };
+  /* ---- devolución de garantía (egreso) ---- */
+  window.lukaDevolucionPDF=function(r){
+    var h=(r.garDev&&r.garDev.historial)||[], u=h[h.length-1]; if(!u) return;
+    var g=+u.garantia||+r.garantia||0, desc=Math.max(0,g-(+u.monto||0));
+    var filas=[{t:'Garantía recibida', v:g, tipo:'info'}];
+    if(desc>0.004) filas.push({t:'Descuento'+(u.obs?' ('+u.obs+')':''), v:'− '+((typeof fmtMoney==='function')?fmtMoney(desc):desc), tipo:'menos'});
+    var cod=''; try{ cod=window.lukaDocCodigoDevolucion(window.lukaCtxE(),window.lukaUnidadDe(r),u); }catch(e){}
+    return lukaDocPDF(Object.assign(base(),{
+      egreso:true, subtitulo:'Comprobante de egreso · Devolución de garantía', noLabel:'DEVOLUCIÓN N.º', no:u.no||'',
+      persona:{label:'ENTREGADO A', nombre:u.recibio||r.responsable||''},
+      campos:[['Departamento',r.depto||'—'],['Fecha de devolución',fl(u.fecha)],['Medio',u.metodo||'—'],['N.º de transacción',u.comprobante||'—']],
+      conceptoLabel:'RESERVA', concepto:(u.area||r.areaNombre||'')+(u.fechaEvento||r.fecha?' · '+fl(u.fechaEvento||r.fecha):'')+(u.destino?' · Destino: '+u.destino:''),
+      lista:{titulo:'Detalle', filas:filas},
+      monto:{label:'Monto devuelto', valor:+u.monto||0},
+      lado:{label:'Garantía recibida', valor:g, neutro:true},
+      selloDigital:'ENTREGADO',
+      qr:(function(){ try{ return window.lukaDocQRDev(window.lukaCtxE(),window.lukaUnidadDe(r),u); }catch(e){ return 'Devolucion '+(u.no||'')+' · '+ed(); } })(),
+      pie:pieTxt('Comprobante de devolución de garantía'),
+      archivo:'Devolucion '+(u.no||'')+' - Depto '+(r.depto||'')
+    }));
+  };
+  /* ---- ingreso / egreso del reporte diario ---- */
+  window.lukaMovPDF=function(mov){
+    var eg=mov.tipo==='egreso', items=(Array.isArray(mov.items)&&mov.items.length)?mov.items:null;
+    var total=items?items.reduce(function(a,it){ return a+(+it.monto||0); },0):(+mov.monto||0);
+    var no=mov.recibo?String(mov.recibo):('INT-'+String(mov.id||'').replace(/^m/,''));
+    return lukaDocPDF(Object.assign(base(),{
+      egreso:eg, subtitulo:(eg?'Comprobante de egreso':'Comprobante de ingreso')+' · Reporte diario', noLabel:'COMPROBANTE N.º', no:no,
+      persona:mov.beneficiario?{label:eg?'PAGADO A':'RECIBÍ DE', nombre:mov.beneficiario}:null,
+      campos:[['Fecha',fl(mov.fecha)],['Tipo',eg?'Egreso / Gasto':'Ingreso'],['Departamento',mov.depto||''],['Categoría',mov.categoria&&mov.categoria!=='otro'?mov.categoria:'']],
+      conceptoLabel:items?'MOTIVO':'CONCEPTO', concepto:mov.motivo||'—',
+      lista:items?{titulo:'Detalle por ítems', filas:items.map(function(it,i){ return {t:(i+1)+'. '+(it.concepto||'—'), v:+it.monto||0, tipo:eg?'menos':'ok'}; })}:null,
+      monto:{label:eg?'Total egreso':'Total ingreso', valor:total},
+      selloDigital:eg?'EGRESO':'INGRESO',
+      qr:(eg?'Egreso ':'Ingreso ')+no+' · '+ed()+' · '+(mov.fecha||'')+' · Bs '+total,
+      pie:pieTxt('Comprobante interno del reporte diario'),
+      archivo:(eg?'Comprobante egreso ':'Comprobante ingreso ')+no+' - '+ed()
+    }));
+  };
+  /* el botón de cada visor descarga el PDF (una hoja) en vez de abrir el cuadro de impresión */
+  function boton(fn){ var b=document.getElementById('receipt-print-btn')||document.getElementById('lkrp-dprint'); if(!b) return;
+    var nb=b.cloneNode(true); nb.innerHTML=(typeof icon==='function'?icon('download',15):'')+' Descargar PDF'; nb.onclick=fn; b.parentNode.replaceChild(nb,b); }
+  function envolver(nombre,fn){ var o=window[nombre]; if(typeof o!=='function'||o.__pdf) return typeof o==='function';
+    var w=function(){ var a=arguments, r=o.apply(this,a); try{ boton(function(){ fn.apply(null,a); }); }catch(e){} return r; }; w.__pdf=1; window[nombre]=w; return true; }
+  function todo(){ var ok=true;
+    ok=envolver('openReceipt',function(d,pago){ window.lukaReciboPDF(d,pago); })&&ok;
+    ok=envolver('lukaVerReciboReserva',function(r){ window.lukaReservaPDF(r); })&&ok;
+    ok=envolver('lukaVerDevolucion',function(r){ window.lukaDevolucionPDF(r); })&&ok;
+    ok=envolver('__lukaComprobante',function(m){ window.lukaMovPDF(m); })&&ok;
+    return ok; }
+  var n=0; (function t(){ if(!todo()&&n++<40) setTimeout(t,250); })();
+  setTimeout(todo,4000);
 })();
 </script>
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261020104548';
+(function(){ var B='20261020105745';
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }

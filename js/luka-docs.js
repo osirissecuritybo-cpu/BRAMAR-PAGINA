@@ -70,6 +70,8 @@
       '<div class="r-total-band"><div class="r-total-label">Devuelto al propietario</div><div class="r-total-value">' + money(d.monto) + '</div></div>' +
       pie(E, qrSVG(textoDev(E, U, d))) + '</div>';
   };
+  window.lukaDocQRReserva = function (E, U, p) { return textoPago(E, U, p); };
+  window.lukaDocQRDev = function (E, U, d) { return textoDev(E, U, d); };
   window.lukaDocCodigoReserva = function (E, U, p) { return textoPago(E, U, p).split('Cod. verificacion: ')[1]; };
   window.lukaDocCodigoDevolucion = function (E, U, d) { return textoDev(E, U, d).split('Cod. verificacion: ')[1]; };
   window.lukaDocCSS = '.receipt-box .r-lines{width:100%;border-collapse:collapse;margin:4px 0 6px;font-size:13px}' +
