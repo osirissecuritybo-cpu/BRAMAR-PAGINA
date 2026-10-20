@@ -485,9 +485,9 @@ function luka_(d) {
         lkLog_(u, E[d.id].name, 'Creó el edificio', '');
       } else {
         if (!puedeVer_(u, d.id)) return json({ ok: false, error: 'Sin acceso a este edificio.' });
-        // mismo navegador (otra pestaña o dos guardados seguidos): no es conflicto
-        const mismoDisp = d.dev && e.dev === String(d.dev);
-        if (Number(d.v) !== Number(e.v) && !mismoDisp) return json({ ok: false, conflicto: true, v: e.v, por: e.by, actualizado: e.upd, error: 'Otro dispositivo guardó cambios antes.' });
+        // si la versión no coincide, alguien (otro equipo u OTRA PESTAÑA del mismo) guardó antes:
+        // el cliente une los cambios. Nunca se pisa una versión más nueva con una copia vieja.
+        if (Number(d.v) !== Number(e.v)) return json({ ok: false, conflicto: true, v: e.v, por: e.by, actualizado: e.upd, error: 'Otro dispositivo guardó cambios antes.' });
         // protección: un guardado sin departamentos nunca reemplaza un edificio que sí los tiene
         if (!d.forzarVacio && ((e.res || {}).deptos || 0) > 0 && d.resumen && !(+d.resumen.deptos > 0)) {
           let nuevos = 0; try { nuevos = (JSON.parse(d.data).deptos || []).length; } catch (x) {}
