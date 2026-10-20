@@ -18262,7 +18262,16 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     const ym=today().slice(0,7);
     return (d.pagos_registrados||[]).filter(p=>p&&!p.anulado&&!p._anulado&&String(p.fecha||'').slice(0,7)===ym).reduce((a,p)=>a+(+p.monto||0),0);
   }
-  function cuotaPlan(d){ const p=d.planPago||{}; return (+p.cuota||0)+(p.sumarExpensa?(+p.expensa||0):0) || (+d.expensaMensual||0); }
+  // cuota que el plan pide para ESTE mes (la cuota del plan ya incluye la expensa; respeta cuotas iniciales y la última parcial)
+  function cuotaPlan(d){
+    const p=d.planPago||{};
+    try{ if(typeof simularPlanPago==='function'&&p.mesInicioIdx!=null){
+      const t=today(), idx=(+t.slice(0,4))*12+(+t.slice(5,7)-1);
+      const sim=simularPlanPago(Object.assign({},p,{sumarExpensa:p.sumarExpensa!==false}));
+      const f=(sim.filas||[]).find(x=>x.idx===idx); if(f) return +f.cuota||0;
+    } }catch(e){}
+    return (+p.cuota||0)||(+d.expensaMensual||0);
+  }
   function planAlDia(d){
     const p=d.planPago; if(!p) return false;
     if(p.vigencia && String(p.vigencia).slice(0,10)<today()) return false;
@@ -18310,17 +18319,17 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     pdf.text('DEPARTAMENTOS CON DEUDA DE EXPENSAS', M, 46, {size:13,bold:true,color:[233,215,170]});
     pdf.text('Al '+hoy+'  ·  '+top.length+' con deuda'+(bottom.length?'  ·  '+bottom.length+' en regla':''), M, 68, {size:9.5,color:[200,210,226]});
     for(let c=0;c<cols;c++){ const x=M+c*(colW+gap);
-      pdf.text('DEPTO.', x+6, contentTop, {size:fHd,bold:true,color:MUT});
-      pdf.text('DEUDA', x+colW-6, contentTop, {size:fHd,bold:true,color:MUT,align:'right'});
-      pdf.line(x, contentTop+fHd+5, x+colW, contentTop+fHd+5, LINE, 1); }
+      pdf.text('DEPTO.', x+4, contentTop, {size:fHd,bold:true,color:MUT});
+      pdf.text('DEUDA', x+colW-4, contentTop, {size:fHd,bold:true,color:MUT,align:'right'});
+      pdf.line(x, contentTop+fHd+5, x+colW, contentTop+fHd+5, [20,20,20], 0.8); }
     flat.forEach((it,j)=>{
       const c=Math.floor(j/rowsPerCol), r=j-c*rowsPerCol, x=M+c*(colW+gap), yy=rowsTop+r*rowH;
-      if(it.t==='sep'){ const h=Math.min(rowH-3,15); pdf.rect(x, yy+(rowH-h)/2, colW, h, [237,241,247]); pdf.text(cols>2?'EN REGLA':'AL DÍA CON PLAN O PAGO ESTE MES', x+6, yy+(rowH-h)/2+Math.max(1,(h-fTag)/2-1), {size:fTag,bold:true,color:MUT}); return; }
+      if(it.t==='sep'){ const fs=Math.max(6.5,fHd+0.5); pdf.text(cols>2?'AL DÍA':'AL DÍA · PLAN DE PAGOS O PAGO DEL MES', x+2, yy+rowH-fs-7, {size:fs,bold:true,color:[20,20,20]}); pdf.line(x, yy+rowH-3, x+colW, yy+rowH-3, [20,20,20], 0.8); return; }
       const d=it.d;
-      if(it.ok) pdf.rect(x, yy, colW, rowH-2, ORANGEBG); else if(r%2===1) pdf.rect(x, yy, colW, rowH-2, SOFT);
-      const cy=yy+(rowH-2-fAmt)/2-1;
-      pdf.text(String(d.depto), x+6, cy, {size:fDep,bold:true,color:NAVY});
-      pdf.text(fmtMoney(d.expensa_debt), x+colW-6, cy, {size:fAmt,bold:true,color: it.ok?ORANGE:RED, align:'right'});
+      const cy=yy+(rowH-fAmt)/2-1;
+      pdf.text(String(d.depto), x+4, cy, {size:fDep,bold:true,color:NAVY});
+      pdf.text(fmtMoney(d.expensa_debt), x+colW-4, cy, {size:fAmt,bold:true,color: it.ok?ORANGE:RED, align:'right'});
+      pdf.line(x, yy+rowH-0.5, x+colW, yy+rowH-0.5, LINE, 0.4);
     });
     pdf.text(buildingName()+'  ·  '+deudores.length+' departamento(s) con deuda de expensas', M, PH-14, {size:8,color:MUT});
     pdf.save(((typeof bslug==='function')?bslug():'edificio')+'_deudores_expensas_'+today()+'.pdf');
@@ -19260,27 +19269,26 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 
     // Historial
     var list=cajas();
-    html+='<h3 style="margin:6px 0 10px;font-size:15px;">Historial de cajas chicas</h3>';
-    if(!list.length){ html+='<p style="font-size:13px;color:var(--text-secondary);">Sin cajas chicas</p>'; }
+    html+='<h3 class="cc-tit">Historial</h3>';
+    if(!list.length){ html+='<p class="cc-vacio">Sin cajas chicas</p>'; }
     else {
-      html+='<div style="display:flex;flex-direction:column;gap:8px;">';
+      var tE=0,tG=0;
+      html+='<div class="cc-lista"><div class="cc-h"><span>Caja chica</span><span>Entregado</span><span>Gastado</span><span>Saldo</span><span></span></div>';
       list.forEach(function(c){
-        var g=totalGastado(c), e=(parseFloat(c.monto)||0), s=e-g;
-        html+='<div class="diario-form-card" style="padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;'+(c.id===state.editId?'border-color:var(--series-blue,#2563eb);':'')+'">'+
-          '<div style="min-width:180px;"><div style="font-weight:700;">'+esc(c.nombre||'Sin nombre')+'</div>'+
-            '<div style="font-size:11.5px;color:var(--text-muted);">'+esc(fdate(c.fecha||c.creada))+' · '+((c.items||[]).length)+' gasto(s)</div></div>'+
-          '<div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;font-size:12.5px;">'+
-            '<span>Entregado: <strong>'+money(e)+'</strong></span>'+
-            '<span>Gastado: <strong style="color:var(--critical,#b7281a);">'+money(g)+'</strong></span>'+
-            '<span>Saldo: <strong style="color:'+(s>=0?'var(--good,#178a4c)':'var(--critical,#b7281a)')+';">'+money(s)+'</strong></span>'+
-          '</div>'+
-          '<div class="no-print" style="display:flex;gap:6px;">'+
-            '<button type="button" class="btn small" data-cc-open="'+c.id+'">'+ico('edit',13)+' Abrir</button>'+
-            '<button type="button" class="btn small" data-cc-pdf="'+c.id+'">'+ico('printer',13)+' PDF</button>'+
-            '<button type="button" class="btn small" data-cc-del="'+c.id+'" title="Eliminar">'+ico('trash',13)+'</button>'+
-          '</div>'+
-        '</div>';
+        var g=totalGastado(c), e=(parseFloat(c.monto)||0), s=e-g; tE+=e; tG+=g;
+        html+='<div class="cc-row'+(c.id===state.editId?' on':'')+'">'+
+          '<div class="cc-n"><b>'+esc(c.nombre||'Sin nombre')+'</b><small>'+esc(fdate(c.fecha||c.creada))+' · '+((c.items||[]).length)+' gasto(s)</small></div>'+
+          '<div class="cc-m" data-l="Entregado">'+money(e)+'</div>'+
+          '<div class="cc-m g" data-l="Gastado">'+money(g)+'</div>'+
+          '<div class="cc-m '+(s<-0.004?'neg':'pos')+'" data-l="Saldo">'+money(s)+'</div>'+
+          '<div class="cc-a no-print">'+
+            '<button type="button" class="cc-b" data-cc-open="'+c.id+'">Abrir</button>'+
+            '<button type="button" class="cc-b ic" data-cc-pdf="'+c.id+'" title="PDF">'+ico('printer',15)+'</button>'+
+            '<button type="button" class="cc-b ic del" data-cc-del="'+c.id+'" title="Eliminar">'+ico('trash',15)+'</button>'+
+          '</div></div>';
       });
+      var tS=tE-tG;
+      html+='<div class="cc-row cc-tot"><div class="cc-n"><b>Total</b><small>'+list.length+' caja(s) chica(s)</small></div><div class="cc-m" data-l="Entregado">'+money(tE)+'</div><div class="cc-m g" data-l="Gastado">'+money(tG)+'</div><div class="cc-m '+(tS<-0.004?'neg':'pos')+'" data-l="Saldo">'+money(tS)+'</div><div></div></div>';
       html+='</div>';
     }
     cont.innerHTML=html;
@@ -19679,7 +19687,8 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     {k:'activas', label:'Activas / próximas', ic:'calendar'},
     {k:'historial', label:'Historial', ic:'list'},
     {k:'garpend', label:'Garantías pendientes', ic:'shield'},
-    {k:'devol', label:'Devoluciones de garantía', ic:'checkCircle'}
+    {k:'devol', label:'Devoluciones de garantía', ic:'checkCircle'},
+    {k:'conta', label:'Contabilidad', ic:'spreadsheet'}
   ];
   function go(s){ if(s!=='nueva') editing=null; section=s; render(); var c=_('areas-sociales-container'); if(c) c.scrollIntoView({behavior:'smooth',block:'start'}); }
   window.__lukaResGo=go;
@@ -19720,6 +19729,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     else if(section==='historial') renderList(c,'historial');
     else if(section==='garpend') renderGarPend(c);
     else if(section==='devol') renderDevol(c);
+    else if(section==='conta'){ if(window.lukaContaAreas) window.lukaContaAreas(c); }
     else renderList(c,'activas');
   }
   window.renderAreasSociales = render;
@@ -23755,7 +23765,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
         if(h<=6&&w>h) return line.call(this,x,y+h/2,x+w,y+h/2,c,Math.min(h,0.9));
         if(w<=6&&h>w) return line.call(this,x+w/2,y,x+w/2,y+h,c,Math.min(w,0.9));
         this.__z.push([x,y,w,h]);
-        rect.call(this,x,y,w,h,tinte(c,0.06));
+        rect.call(this,x,y,w,h,[255,255,255]);   // blanco, como el fondo del logo
         return line.call(this,x,y+h,x+w,y+h,c,0.8);
       }
       return rect.apply(this,arguments);
@@ -23779,6 +23789,40 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 @media print{
   .receipt-box .r-band{height:2px!important}
   .receipt-box .r-total-band{background:#fff!important;border:1.2px solid currentColor!important}
+}
+</style>
+<style>
+/* caja chica: historial alineado */
+.cc-tit{margin:18px 0 10px!important;font-size:13px!important;font-weight:700!important;letter-spacing:.08em;text-transform:uppercase;color:#7d93ab!important}
+.cc-vacio{font-size:13.5px;color:#7d93ab}
+.cc-lista{background:#fff;border:1px solid #E3EAF2;border-radius:14px;overflow:hidden}
+.cc-h,.cc-row{display:grid;grid-template-columns:minmax(0,1fr) 130px 130px 130px 150px;gap:16px;align-items:center;padding:0 18px}
+.cc-h{height:40px;background:#F6F8FB;border-bottom:1px solid #E3EAF2;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7d93ab}
+.cc-h span:nth-child(n+2):nth-child(-n+4){text-align:right}
+.cc-row{min-height:64px;border-bottom:1px solid #EEF2F7}
+.cc-row:last-child{border-bottom:0}
+.cc-row.on{background:#F4F8FD}
+.cc-row:hover{background:#FAFBFD}
+.cc-n{min-width:0}
+.cc-n b{display:block;font-size:14px;color:#0B2440;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cc-n small{display:block;margin-top:2px;font-size:12px;color:#7d93ab}
+.cc-m{text-align:right;font-size:14.5px;font-weight:700;color:#0B2440;font-variant-numeric:tabular-nums;white-space:nowrap}
+.cc-m.g{color:#8E2A20}.cc-m.pos{color:#1E6B45}.cc-m.neg{color:#B42318}
+.cc-a{display:flex;justify-content:flex-end;gap:6px}
+.cc-b{height:36px;padding:0 14px;border:1px solid #D5DEE8;border-radius:10px;background:#fff;color:#0B2440;font:inherit;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
+.cc-b.ic{width:36px;padding:0}
+.cc-b.del{color:#8E2A20}
+.cc-b:hover{border-color:#0B2440}
+.cc-tot{background:#F6F8FB;border-top:1px solid #E3EAF2}
+.cc-tot .cc-n b{text-transform:uppercase;letter-spacing:.06em;font-size:12.5px}
+@media (max-width:760px){
+  .cc-h{display:none}
+  .cc-row{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 10px;padding:14px}
+  .cc-n{grid-column:1/-1}
+  .cc-m{text-align:left;font-size:14px}
+  .cc-m::before{content:attr(data-l);display:block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d93ab;margin-bottom:2px}
+  .cc-a{grid-column:1/-1;justify-content:flex-start}
+  .cc-tot>div:last-child{display:none}
 }
 </style>
 
@@ -23816,9 +23860,91 @@ button.lkrp-b:hover{border-color:#1E4E86}
 }
 </style>
 
+<style>
+/* ============ Módulo 46 · Contabilidad de áreas sociales ============ */
+.lkc-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:4px 0 16px}
+.lkc-k{background:#fff;border:1px solid #E3EAF2;border-radius:14px;padding:14px 16px;min-width:0}
+.lkc-k span{display:block;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#7d93ab}
+.lkc-k b{display:block;margin-top:6px;font-size:20px;font-weight:800;color:#0B2440;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lkc-k.ing b{color:#1E6B45}.lkc-k.out b{color:#8E2A20}
+.lkc-anios{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+.lkc-anios button{height:34px;padding:0 14px;border:1px solid #D5DEE8;border-radius:999px;background:#fff;color:#0B2440;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.lkc-anios button.on{background:#0B2440;border-color:#0B2440;color:#fff}
+.lkc-tabla{background:#fff;border:1px solid #E3EAF2;border-radius:14px;overflow:auto}
+.lkc-tabla table{width:100%;border-collapse:collapse;min-width:720px;font-size:13px}
+.lkc-tabla th{position:sticky;top:0;background:#F6F8FB;text-align:right;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7d93ab;padding:10px 10px;border-bottom:1px solid #E3EAF2;white-space:nowrap}
+.lkc-tabla th:first-child,.lkc-tabla td:first-child{text-align:left}
+.lkc-tabla td{padding:10px 10px;border-bottom:1px solid #EEF2F7;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;color:#0B2440}
+.lkc-tabla td.ing{color:#1E6B45;font-weight:700}.lkc-tabla td.out{color:#8E2A20}.lkc-tabla td.mut{color:#9AA8B8}
+.lkc-tabla tr.tot td{background:#F6F8FB;font-weight:800;border-bottom:0;border-top:1px solid #E3EAF2}
+.lkc-tabla td small{display:block;font-size:11px;color:#7d93ab;font-weight:500}
+.lkc-nota{font-size:12.5px;color:#7d93ab;margin:10px 2px 0}
+@media (max-width:900px){ .lkc-kpis{grid-template-columns:repeat(2,minmax(0,1fr))} .lkc-k b{font-size:17px} }
+</style>
+<script>
+/* Contabilidad de áreas sociales: ingresos por alquiler y movimiento de garantías, mes a mes */
+(function(){
+  var MES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  var anio=null;
+  function money(v){ return (typeof fmtMoney==='function')?fmtMoney(v):('Bs. '+(+v||0).toFixed(2)); }
+  function ym(s){ s=String(s||''); return /^\d{4}-\d{2}/.test(s)?s.slice(0,7):''; }
+  function calcular(){
+    var M={}, hoy=new Date().toISOString().slice(0,10);
+    function m(k){ return M[k]||(M[k]={k:k,n:0,alq:0,sin:0,nSin:0,gIn:0,gOut:0,gRet:0}); }
+    (DATA.reservasSociales||[]).forEach(function(r){
+      if(!r||r.estado==='Cancelada') return;
+      var ev=ym(r.fecha||r.inicio), gar=+r.garantia||0, h=(r.garDev&&r.garDev.historial)||[];
+      if(r.pago){
+        var k=ym(r.pago.fecha)||ev; if(!k) return;
+        var ing=(r.pago.lineas||[]).reduce(function(a,l){ return a+(+l.monto||0); },0);
+        if(!ing) ing=(+r.monto||0)+(+r.extras||0);
+        m(k).alq+=ing; m(k).n++;
+        if(+r.pago.garantia>0) m(k).gIn+=(+r.pago.garantia);
+      } else if(ev && String(r.fecha||r.inicio||'').slice(0,10)<=hoy){
+        // reserva ya realizada sin recibo registrado en LUKA: se cuenta en el mes del evento
+        var v=(+r.monto||0)+(+r.extras||0);
+        m(ev).alq+=v; m(ev).n++; m(ev).sin+=v; m(ev).nSin++;   // realizada: se cuenta en su mes (sin recibo en LUKA)
+        if(gar>0) m(ev).gIn+=gar;
+      }
+      h.forEach(function(x){ var k=ym(x.fecha); if(!k) return; var g=+x.garantia||gar, d=+x.monto||0;
+        m(k).gOut+=d; m(k).gRet+=Math.max(0,g-d); });
+    });
+    var L=Object.keys(M).sort().map(function(k){ return M[k]; }), cust=0;
+    L.forEach(function(x){ cust+=x.gIn-x.gOut-x.gRet; x.cust=Math.max(0,Math.round(cust*100)/100); });
+    return L;
+  }
+  window.lukaContaAreas=function(cont){
+    var L=calcular();
+    var anios=[]; L.forEach(function(x){ var a=x.k.slice(0,4); if(anios.indexOf(a)<0) anios.push(a); }); anios.sort().reverse();
+    if(anio===null) anio=anios[0]||'todo';
+    var V=L.filter(function(x){ return anio==='todo'||x.k.slice(0,4)===anio; }).slice().reverse();
+    var T=V.reduce(function(a,x){ a.n+=x.n; a.alq+=x.alq; a.sin+=x.sin; a.nSin+=x.nSin; a.gIn+=x.gIn; a.gOut+=x.gOut; a.gRet+=x.gRet; return a; },{n:0,alq:0,sin:0,nSin:0,gIn:0,gOut:0,gRet:0});
+    var custodia=L.length?L[L.length-1].cust:0;
+    if(!L.length){ cont.innerHTML='<div class="lkr-empty">Todavía no hay movimientos de áreas sociales.</div>'; return; }
+    cont.innerHTML=
+      '<div class="lkc-anios">'+anios.map(function(a){ return '<button type="button" data-a="'+a+'"'+(a===anio?' class="on"':'')+'>'+a+'</button>'; }).join('')+'<button type="button" data-a="todo"'+(anio==='todo'?' class="on"':'')+'>Todo</button></div>'+
+      '<div class="lkc-kpis">'+
+        '<div class="lkc-k ing"><span>Ingresos por alquiler</span><b>'+money(T.alq)+'</b></div>'+
+        '<div class="lkc-k"><span>Garantías recibidas</span><b>'+money(T.gIn)+'</b></div>'+
+        '<div class="lkc-k out"><span>Garantías devueltas</span><b>'+money(T.gOut)+'</b></div>'+
+        '<div class="lkc-k ing"><span>Retenido de garantías</span><b>'+money(T.gRet)+'</b></div>'+
+        '<div class="lkc-k"><span>En custodia hoy</span><b>'+money(custodia)+'</b></div>'+
+      '</div>'+
+      '<div class="lkc-tabla"><table><thead><tr><th>Mes</th><th>Reservas</th><th>Ingresos por alquiler</th><th>De eso, sin recibo</th><th>Garantías recibidas</th><th>Devueltas</th><th>Retenido</th><th>En custodia</th></tr></thead><tbody>'+
+      V.map(function(x){ var mi=+x.k.slice(5,7)-1; return '<tr><td><b>'+MES[mi]+'</b> '+x.k.slice(0,4)+'</td><td>'+(x.n||'<span class="mut">0</span>')+'</td>'+
+        '<td class="'+(x.alq?'ing':'mut')+'">'+money(x.alq)+'</td>'+
+        '<td class="mut">'+(x.sin?money(x.sin)+'<small>'+x.nSin+' reserva(s)</small>':'—')+'</td>'+
+        '<td>'+money(x.gIn)+'</td><td class="'+(x.gOut?'out':'mut')+'">'+money(x.gOut)+'</td><td class="'+(x.gRet?'ing':'mut')+'">'+money(x.gRet)+'</td><td>'+money(x.cust)+'</td></tr>'; }).join('')+
+      '<tr class="tot"><td>Total '+(anio==='todo'?'':anio)+'</td><td>'+T.n+'</td><td>'+money(T.alq)+'</td><td>'+(T.sin?money(T.sin):'—')+'</td><td>'+money(T.gIn)+'</td><td>'+money(T.gOut)+'</td><td>'+money(T.gRet)+'</td><td>'+money(custodia)+'</td></tr>'+
+      '</tbody></table></div>';
+    cont.querySelectorAll('[data-a]').forEach(function(b){ b.onclick=function(){ anio=b.dataset.a; window.lukaContaAreas(cont); }; });
+  };
+})();
+</script>
+
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261020100701';
+(function(){ var B='20261020102040';
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
