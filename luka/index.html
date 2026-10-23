@@ -13476,6 +13476,8 @@ window.lukaCloud = (function(){
   var edInfo={}, notas=[], recien={}, synced={}, listaCache=null, listaT=0;
   var DEV=(function(){ try{ var x=localStorage.getItem('luka.cloud.dev'); if(!x){ x='d'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); localStorage.setItem('luka.cloud.dev',x); } return x; }catch(e){ return ''; } })();
   function snap(data){ try{ return JSON.stringify(data); }catch(e){ return null; } }
+  function setSynced(id,txt,v){ synced[id]=txt; try{ Promise.resolve(idbSet('luka-base-'+id,{v:Number(v==null?(versions[id]||0):v),s:txt})).catch(function(){}); }catch(e){} }
+  async function baseGuardada(id,v){ try{ var b=await idbGet('luka-base-'+id); if(b&&b.s&&(v==null||Number(b.v)===Number(v))) return b.s; }catch(e){} return null; }
   /* lista de edificios: una sola consulta cada 30 s (antes se pedía 3 o 4 veces seguidas) */
   function listaNube(forzar){
     if(listaCache&&Date.now()-listaT<(forzar?2500:30000)) return listaCache;
@@ -13500,8 +13502,10 @@ window.lukaCloud = (function(){
 
   function api(body){
     if(ses&&ses.token&&!body.t) body.t=ses.token;
-    return fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)})
-      .then(function(r){ return r.json(); }, function(){ var e=new Error('Sin conexión a internet'); e.offline=true; throw e; })
+    var ms=body.action==='lk_pulso'?15000:(body.action==='lk_guardar'?90000:45000), ctl=null, tm=null;
+    try{ ctl=new AbortController(); tm=setTimeout(function(){ try{ ctl.abort(); }catch(e){} },ms); }catch(e){}
+    return fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),signal:ctl?ctl.signal:undefined})
+      .then(function(r){ clearTimeout(tm); return r.json(); }, function(){ clearTimeout(tm); var e=new Error('Sin conexión a internet'); e.offline=true; throw e; })
       .then(function(j){
         if(j&&j.sesion===false){ var e=new Error(j.error||'La sesión venció'); e.sesion=false; throw e; }
         if(!j||j.ok===false){ var e2=new Error((j&&j.error)||'Error del servidor'); e2.data=j; throw e2; }
@@ -13681,6 +13685,7 @@ window.lukaCloud = (function(){
       var enNube=((edInfo[id]||{}).resumen||{}).deptos||0;
       if(local&&!(local.deptos||[]).length&&enNube>0){ setDirty(id,null); local=null; }
       // se abre al instante con lo de este dispositivo; los cambios pendientes se suben por detrás
+      if(local&&synced[id]==null){ var bs=await baseGuardada(id,base); if(bs) synced[id]=bs; }
       if(local&&!forzar){ copiaLocalOk=true; setTimeout(function(){ if(curId()===id&&dirtyBase(id)!=null) scheduleSave(200); },1200); return local; }
       if(local){ var ok=await pushData(id,local,base,true); if(ok) return local; }
     }
@@ -13688,14 +13693,14 @@ window.lukaCloud = (function(){
       if(!forzar){
         var local0=null; try{ local0=await idbGet('luka-b-'+id); }catch(e){}
         if(local0&&Array.isArray(local0.deptos)&&local0.deptos.length){
-          synced[id]=snap(local0); copiaLocalOk=true;
+          setSynced(id,snap(local0),versions[id]); copiaLocalOk=true;
           // se abre al instante; si otro dispositivo guardó algo nuevo, se actualiza solo
           setTimeout(checkRemote,600);
           return null;
         }
       }
       var r=await api({action:'lk_cargar',id:id});
-      var data=JSON.parse(r.data); versions[id]=r.v; persistVer(); synced[id]=snap(data);
+      var data=JSON.parse(r.data); versions[id]=r.v; persistVer(); setSynced(id,snap(data),r.v);
       try{ await idbSet('luka-b-'+id,data); }catch(e){}
       status('Sincronizado');
       return data;
@@ -13710,7 +13715,7 @@ window.lukaCloud = (function(){
     recien[id]=1;
     listaLocal(function(L){ if(!L.some(function(e){ return e.id===id; })) L.push({id:id,nombre:name,creado:new Date().toISOString()}); return L; });
     creando[id]=(async function(){
-      try{ var data=await idbGet('luka-b-'+id); var r=await api({action:'lk_guardar',id:id,nombre:name,data:JSON.stringify(data),v:0,resumen:resumen(data),dev:DEV}); versions[id]=r.v; persistVer(); synced[id]=snap(data); olvidarLista(); status('Guardado en la nube'); }
+      try{ var data=await idbGet('luka-b-'+id); var r=await api({action:'lk_guardar',id:id,nombre:name,data:JSON.stringify(data),v:0,resumen:resumen(data),dev:DEV}); versions[id]=r.v; persistVer(); setSynced(id,snap(data),r.v); olvidarLista(); status('Guardado en la nube'); }
       catch(e){ status('Sin conexión: se subirá al reconectar'); setDirty(id,0); }
       finally{ delete creando[id]; }
     })();
@@ -13745,7 +13750,7 @@ window.lukaCloud = (function(){
       var txt=JSON.stringify(data);
       var r=await api({action:'lk_guardar',id:id,nombre:(data.config&&data.config.nombreEdificio)||'',data:txt,v:base==null?(versions[id]||0):base,portal:portal,resumen:resumen(data),notas:enviadas,dev:DEV});
       notas=notas.slice(enviadas.length);
-      versions[id]=r.v; persistVer(); synced[id]=txt;
+      versions[id]=r.v; persistVer(); setSynced(id,txt,r.v);
       // si hubo más cambios mientras se subía, se sube de nuevo; si no, queda limpio
       if(curId()===id&&typeof DATA!=='undefined'&&snap(DATA)!==txt){ setDirty(id,r.v); scheduleSave(1500); } else setDirty(id,null); lastSaved=new Date(); status('Guardado en la nube');
       return true;
@@ -13778,7 +13783,7 @@ window.lukaCloud = (function(){
       Object.keys(t).concat(Object.keys(m)).forEach(function(k){ ks[k]=1; });
       Object.keys(ks).forEach(function(k){
         var enM=k in m, enT=k in t, enB=k in bb;
-        if(enM&&enT) r[k]=unir(bb[k],m[k],t[k]);
+        if(enM&&enT) r[k]=(/Counter$/.test(k)&&typeof m[k]==='number'&&typeof t[k]==='number')?Math.max(m[k],t[k]):unir(bb[k],m[k],t[k]);
         else if(enM){ if(!(enB&&igual(bb[k],m[k]))) r[k]=m[k]; }   // allá lo quitaron sin que aquí cambie → queda quitado
         else if(enT){ if(!(enB&&igual(bb[k],t[k]))) r[k]=t[k]; }
       });
@@ -13799,15 +13804,84 @@ window.lukaCloud = (function(){
     }
     return b===undefined?m:t;   // dato cambiado en los dos lados: manda la nube
   }
+  /* --- lo creado a la vez en dos equipos no puede compartir id ni N.º de recibo --- */
+  function numsRec(raw){ return String(raw==null?'':raw).split(/[\s,;/&]+|\s*-\s*|\s+y\s+/i).map(function(x){ return parseInt(x.replace(/\D/g,''),10); }).filter(function(n){ return n>0&&n<=999999; }); }
+  function colecciones(doc){
+    var P=[],C=[]; (doc.deptos||[]).forEach(function(d){ (d.pagos_registrados||[]).forEach(function(p){ P.push({x:p,d:d}); }); (d.cargos_extra||[]).forEach(function(c){ C.push({x:c,d:d}); }); });
+    return { pagos:P, cargos:C, diario:(doc.diario||[]).map(function(x){ return {x:x}; }), reservas:(doc.reservasSociales||[]).map(function(x){ return {x:x}; }) };
+  }
+  function recibosDe(doc){ var u={};
+    (doc.deptos||[]).forEach(function(d){ (d.pagos_registrados||[]).forEach(function(p){ numsRec(p.recibo_no).forEach(function(n){ u[n]=1; }); }); });
+    (doc.diario||[]).forEach(function(e){ if(e.recibo&&(e.tipo==='ingreso'||e.tipo==null)) numsRec(e.recibo).forEach(function(n){ u[n]=1; }); });
+    (doc.reservasSociales||[]).forEach(function(r){ if(r.pago&&r.pago.no) numsRec(r.pago.no).forEach(function(n){ u[n]=1; }); });
+    (doc.recibosAnulados||[]).forEach(function(a){ numsRec(a.no).forEach(function(n){ u[n]=1; }); });
+    return u; }
+  function sinChoques(b,m0,t){
+    var m=JSON.parse(JSON.stringify(m0)), avisos=[], CB=colecciones(b), CM=colecciones(m), CT=colecciones(t), remap={pagos:{},diario:{},reservas:{},cargos:{}};
+    Object.keys(remap).forEach(function(k){
+      var ids=function(L){ var o={}; L.forEach(function(e){ o[String(e.x.id)]=e.x; }); return o; }, IB=ids(CB[k]), IT=ids(CT[k]);
+      var tope={}; CB[k].concat(CM[k],CT[k]).forEach(function(e){ var s=String(e.x.id), mm=s.match(/^(.*?)(\d+)$/); if(mm) tope[mm[1]]=Math.max(tope[mm[1]]||0,+mm[2]); });
+      CM[k].forEach(function(e){ var s=String(e.x.id); if(e.x.id==null||IB[s]||!IT[s]||igual(IT[s],e.x)) return;
+        var mm=s.match(/^(.*?)(\d+)$/); if(!mm) return; var nn=(tope[mm[1]]||0)+1; tope[mm[1]]=nn;
+        var nuevo=typeof e.x.id==='number'?nn:mm[1]+nn; remap[k][s]=nuevo; e.x.id=nuevo; });
+    });
+    var nuevoDiario=function(e){ return !colecciones(b).diario.some(function(z){ return String(z.x.id)===String(e.id); }); };
+    (m.diario||[]).forEach(function(e){ if(e.pagoId!=null&&remap.pagos[String(e.pagoId)]!=null&&nuevoDiario(e)) e.pagoId=remap.pagos[String(e.pagoId)];
+      if(e.reservaId!=null&&remap.reservas[String(e.reservaId)]!=null&&nuevoDiario(e)) e.reservaId=remap.reservas[String(e.reservaId)]; });
+    // N.º de recibo: lo nuevo de este equipo que ya se usó en la nube pasa al siguiente libre
+    var UT=recibosDe(t), UB=recibosDe(b), UM=recibosDe(m), max=0; [UT,UM].forEach(function(u){ Object.keys(u).forEach(function(n){ if(+n>max) max=+n; }); });
+    var pad=function(n){ return String(n).padStart(6,'0'); };
+    var cambiar=function(raw,viejo,nuevo){ return String(raw).replace(new RegExp('0*'+viejo+'(?!\\d)'),pad(nuevo)); };
+    var choca=function(n){ return UT[n]&&!UB[n]; };
+    (m.deptos||[]).forEach(function(d){ (d.pagos_registrados||[]).forEach(function(p){
+      var enBase=colecciones(b).pagos.some(function(z){ return String(z.x.id)===String(p.id); }); if(enBase) return;
+      numsRec(p.recibo_no).forEach(function(n){ if(!choca(n)) return; var nv=++max, viejo=p.recibo_no;
+        p.recibo_no=cambiar(p.recibo_no,n,nv); (m.diario||[]).forEach(function(e){ if(String(e.pagoId)===String(p.id)&&e.recibo) e.recibo=cambiar(e.recibo,n,nv); });
+        avisos.push('Recibo '+pad(n)+' (Depto '+d.depto+') pasó a '+pad(nv)+': ese número ya se había usado en otro equipo.'); });
+    }); });
+    (m.reservasSociales||[]).forEach(function(r){ if(!r.pago||!r.pago.no) return;
+      var bR=colecciones(b).reservas.filter(function(z){ return String(z.x.id)===String(r.id); })[0]; if(bR&&bR.x.pago&&bR.x.pago.no===r.pago.no) return;
+      numsRec(r.pago.no).forEach(function(n){ if(!choca(n)) return; var nv=++max, viejo=r.pago.no; r.pago.no=cambiar(r.pago.no,n,nv);
+        (m.diario||[]).forEach(function(e){ if(String(e.reservaId)===String(r.id)&&e.recibo===viejo) e.recibo=r.pago.no; });
+        avisos.push('Recibo '+pad(n)+' (reserva '+(r.depto||'')+') pasó a '+pad(nv)+': ese número ya se había usado en otro equipo.'); }); });
+    (m.diario||[]).forEach(function(e){ if(!e.recibo||e.pagoId||e.reservaId||!nuevoDiario(e)) return;
+      numsRec(e.recibo).forEach(function(n){ if(!choca(n)) return; var nv=++max; e.recibo=cambiar(e.recibo,n,nv); avisos.push('Recibo '+pad(n)+' del reporte diario pasó a '+pad(nv)+'.'); }); });
+    if(max) m.receiptCounter=Math.max(+m.receiptCounter||0,+t.receiptCounter||0,max+1);
+    var topes={}; ['pagos','diario','reservas','cargos'].forEach(function(k){ [colecciones(m)[k],colecciones(t)[k]].forEach(function(L){ L.forEach(function(e){ var mm=String(e.x.id).match(/^(.*?)(\d+)$/); if(mm) topes[k]=Math.max(topes[k]||0,+mm[2]); }); }); });
+    [['pagoCounter','pagos'],['diarioCounter','diario'],['reservaCounter','reservas'],['cargoCounter','cargos']].forEach(function(c){ if(topes[c[1]]) m[c[0]]=Math.max(+m[c[0]]||0,+t[c[0]]||0,topes[c[1]]); });
+    return {m:m,avisos:avisos};
+  }
+  /* sin base común conocida (equipo con versión anterior): por depto gana la copia que tiene pagos que la otra no;
+     lo demás, la nube. Las listas con id se suman. Nada se pierde: la copia del equipo queda respaldada. */
+  function unirSinBase(m,t){
+    var r=JSON.parse(JSON.stringify(t)), ids=function(L){ var o={}; (L||[]).forEach(function(x){ if(x&&x.id!=null) o[String(x.id)]=x; }); return o; };
+    var TD=ids(t.deptos);
+    r.deptos=(t.deptos||[]).map(function(dt){ var dm=(m.deptos||[]).filter(function(x){ return String(x.id)===String(dt.id); })[0]; if(!dm) return dt;
+      var PT=ids(dt.pagos_registrados), PM=ids(dm.pagos_registrados);
+      var masM=Object.keys(PM).some(function(k){ return !PT[k]; }), masT=Object.keys(PT).some(function(k){ return !PM[k]; });
+      return (masM&&!masT)?dm:dt; });
+    (m.deptos||[]).forEach(function(dm){ if(!TD[String(dm.id)]) r.deptos.push(dm); });
+    ['diario','reservasSociales','recibosAnulados'].forEach(function(k){ var T=ids(t[k]);
+      (m[k]||[]).forEach(function(x){ var key=x&&(x.id!=null?String(x.id):(k==='recibosAnulados'?'no:'+x.no:null)); if(key==null) return;
+        if(k==='recibosAnulados'){ if(!(t[k]||[]).some(function(y){ return String(y.no)===String(x.no); })) (r[k]=r[k]||[]).push(x); return; }
+        if(!T[key]) (r[k]=r[k]||[]).push(x);
+        else if(k==='reservasSociales'&&x.pago&&!T[key].pago){ r[k]=r[k].map(function(y){ return String(y.id)===key?x:y; }); } }); });
+    Object.keys(m).forEach(function(k){ if(/Counter$/.test(k)&&typeof m[k]==='number') r[k]=Math.max(m[k],+t[k]||0); });
+    return r;
+  }
   var uniendo={};
   async function conflict(id,data,info,silent){
     if((uniendo[id]=(uniendo[id]||0)+1)>4){ uniendo[id]=0; setDirty(id,null); await reload(id); return; }
     try{
       var r=await api({action:'lk_cargar',id:id}), nube=JSON.parse(r.data);
       var base; try{ base=synced[id]!=null?JSON.parse(synced[id]):undefined; }catch(e){ base=undefined; }
-      var unido=unir(base,data,nube);
+      if(base===undefined){ try{ var bs=await baseGuardada(id,dirtyBase(id)); if(bs) base=JSON.parse(bs); }catch(e){} }
+      var unido, avisos=[];
+      if(base!==undefined){ var pc=sinChoques(base,data,nube); avisos=pc.avisos; unido=unir(base,pc.m,nube); }
+      else { try{ await idbSet('luka-respaldo-'+id,{at:new Date().toISOString(),data:data}); }catch(e){} unido=unirSinBase(data,nube); }
+      if(avisos.length) setTimeout(function(){ try{ banner(avisos.join(' ')); }catch(e){} },300);
       if(!(unido.deptos||[]).length&&(nube.deptos||[]).length) unido=nube;   // nunca queda vacío
-      versions[id]=r.v; persistVer(); synced[id]=snap(nube);
+      versions[id]=r.v; persistVer(); setSynced(id,snap(nube),r.v); setDirty(id,r.v);
       try{ await idbSet('luka-b-'+id,unido); }catch(e){}
       if(curId()===id&&typeof DATA!=='undefined'){
         DATA=unido;
@@ -13831,6 +13905,15 @@ window.lukaCloud = (function(){
   /* Pulso cada 12 s (con la ventana a la vista): una sola consulta liviana trae la versión
      del edificio abierto y la lista de edificios. Si otra persona guardó, se actualiza solo. */
   var firmaLista='', pulsando=false;
+  /* si hay una ventana abierta o se está escribiendo, se actualiza apenas se cierre (sin tocar nada) */
+  var pendiente={}, esperaT=null;
+  function ocupadoAhora(){ return !!(document.querySelector('.modal-backdrop.open, .open.modal-backdrop')||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))); }
+  function esperarLibre(){ if(esperaT) return; esperaT=setInterval(async function(){
+    var id=curId(); if(!id||!pendiente[id]){ clearInterval(esperaT); esperaT=null; return; }
+    if(ocupadoAhora()||saving||document.hidden) return;
+    var por=pendiente[id]; delete pendiente[id]; clearInterval(esperaT); esperaT=null;
+    if(dirtyBase(id)!=null){ scheduleSave(100); return; }
+    try{ await reload(id); status('Actualizado con cambios de '+por); }catch(e){} },1000); }
   async function pulso(){
     if(!active()||document.hidden||pulsando) return; pulsando=true;
     try{
@@ -13841,7 +13924,7 @@ window.lukaCloud = (function(){
       if(id&&r.borrado){ await olvidarLocal(id); listaLocal(function(L){ return L.filter(function(x){ return x.id!==id; }); }); alert('Este edificio fue eliminado por un coordinador.'); if(window.lukaShowSelector) window.lukaShowSelector(); return; }
       if(id&&r.v&&(!versions[id]||r.v>versions[id])&&!saving&&dirtyBase(id)==null){
         var ocupado=document.querySelector('.modal-backdrop.open, .open.modal-backdrop')||(document.activeElement&&/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName));
-        if(ocupado) banner('Hay cambios nuevos de '+(r.por||'otro usuario')+'.');
+        if(ocupado){ pendiente[id]=r.por||'otro usuario'; esperarLibre(); }
         else { await reload(id); status('Actualizado con cambios de '+(r.por||'otro usuario')); }
       }
     }catch(e){ if(e.sesion===false) logout(true); }
@@ -19706,7 +19789,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     {k:'conta', label:'Contabilidad', ic:'spreadsheet'}
   ];
   function go(s){ if(s!=='nueva') editing=null; section=s; render(); var c=_('areas-sociales-container'); if(c) c.scrollIntoView({behavior:'smooth',block:'start'}); }
-  window.__lukaResGo=go;
+  window.__lukaResGo=go; window.__lukaResRefresh=function(){ render(); };
 
   function kpis(){
     var mes=iso().slice(0,7);
@@ -19876,8 +19959,9 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     document.body.appendChild(bd);
     bd.addEventListener('click',function(e){ if(e.target.id==='lkr-det-bd') bd.classList.remove('open'); });
   }
+  window.lukaAbrirDetalleReserva=function(r){ openDetalle(r); };
   function openDetalle(r){
-    ensureDetalle(); var g=garState(r); var e=estadoTemp(r);
+    window.__lkDetR=r; ensureDetalle(); var g=garState(r); var e=estadoTemp(r);
     var estLabel=r.estado==='Cancelada'?'Cancelada':(e==='finalizada'?'Finalizada':(e==='proxima'?'Próxima':'En curso'));
     var rowk=function(k,v){ return '<div style="display:flex;justify-content:space-between;gap:12px;padding:5px 0;border-bottom:1px solid var(--gridline);"><span style="color:var(--text-secondary);font-size:12.5px;">'+k+'</span><span style="font-weight:700;text-align:right;">'+v+'</span></div>'; };
     var garBlock='';
@@ -20365,7 +20449,8 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     { k:'servicios', label:'Mobiliario' },
     { k:'areas',     label:'Áreas sociales' },
     { k:'tema',      label:'Personalización visual' },
-    { k:'campos',    label:'Campos personalizados' }
+    { k:'campos',    label:'Campos personalizados' },
+    { k:'carga',     label:'Agua y expensas' }
   ];
   var current='edificio';
 
@@ -20430,6 +20515,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     if(current==='areas') return renderLink(b,'Áreas sociales','Nombres, garantías y precios de las áreas reservables.','Abrir editor de áreas', window.__lukaOpenAreasEditor);
     if(current==='tema') return renderLink(b,'Personalización visual','Colores del edificio (cabecera, acento y fondos).','Abrir colores', window.__bramarOpenTema);
     if(current==='campos') return renderCampos(b);
+    if(current==='carga'&&window.lukaCargaRapida) return window.lukaCargaRapida(b);
   }
 
   function renderLink(b,title,hint,btnLabel,fn){
@@ -21480,6 +21566,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   }
   function pintarOtros(){
     var o=document.getElementById('pb-otros'); if(!o) return;
+    otros=otros.filter(function(x){ return !/^\s*prueba/i.test(String(nombrePortal(x.edificio_id)||x.edificio||'')+' '+String(x.edificio_id||'')); });
     if(!otros.length){ o.innerHTML=''; return; }
     o.innerHTML='<div class="lk-otros"><div class="lk-k">Otros edificios</div><ul>'+
       otros.map(function(x){ return '<li><b>'+esc(nombrePortal(x.edificio_id)||x.edificio)+'</b><span>'+x.n+' pendiente'+(x.n>1?'s':'')+'</span></li>'; }).join('')+
@@ -23276,7 +23363,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
     try{ if(typeof DATA!=='undefined'&&DATA&&DATA.deptos&&DATA.deptos.length&&!document.querySelector('#grid .row')&&typeof state!=='undefined'&&!state.search&&state.status==='TODOS'&&state.bloque==='TODOS'&&typeof renderGrid==='function') renderGrid(); }catch(e){}
     var sx=document.getElementById('search'); if(sx&&sx.getAttribute('autocomplete')!=='off'){ sx.setAttribute('autocomplete','off'); sx.setAttribute('name','lk-buscar-'+Date.now()); }
     // textos vacíos más cortos
-    document.querySelectorAll('.lkr-empty').forEach(function(e){ if(e.textContent.length>40) e.textContent=/garant/i.test(e.textContent)?'Sin garantías':'Sin reservas'; });
+    document.querySelectorAll('.lkr-empty').forEach(function(e){ if(e.textContent.length>40&&!e.querySelector('button')) e.textContent=/garant/i.test(e.textContent)?'Sin garantías':'Sin reservas'; });
   }
   var pend=false;
   new MutationObserver(function(){ if(pend) return; pend=true; setTimeout(function(){ pend=false; try{ todo(); }catch(e){ try{ console.error('mod42',e); }catch(_){} } },40); }).observe(document.body,{childList:true,subtree:true});
@@ -24047,6 +24134,592 @@ button.lkrp-b:hover{border-color:#1E4E86}
 })();
 </script>
 
+<style>
+/* ============ Módulo 49 · N.º de recibo único ============ */
+#pf-recibo-warn.lk-dup,#lkrp-err.lk-dup{display:block!important;background:#FDECEA!important;color:#9B1C1C!important;border:1px solid #F3B4AD!important;border-radius:8px;padding:7px 10px;font-size:12.5px;font-weight:700}
+.lk-fix{margin:12px 0 0;padding:14px;border:1px solid #E3EAF2;border-radius:12px;background:#fff}
+.lk-fix p{margin:0 0 10px;font-size:13px;color:#0B2440}
+.lk-fix .btn{height:40px}
+.lk-fix-l{display:flex;flex-direction:column;gap:6px;margin:10px 0 0}
+.lk-fix-l div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;font-size:13px;padding:8px 10px;border-radius:9px;background:#F6F8FB;color:#0B2440}
+.lk-fix-l b{font-variant-numeric:tabular-nums}
+</style>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 49: un número de recibo se usa UNA sola vez.
+   Cuenta cobros de expensas, alquileres de áreas, ingresos manuales del reporte
+   diario y recibos anulados. No deja registrar ni editar con un número usado, y
+   «Corregir repetidos» pasa los repetidos al siguiente número libre.
+   ============================================================================ */
+(function(){
+  var pad=function(n){ return String(n).padStart(6,'0'); };
+  function nums(raw){ return String(raw==null?'':raw).split(/[\s,;/&]+|\s*-\s*|\s+y\s+/i).map(function(x){ return parseInt(x.replace(/\D/g,''),10); }).filter(function(n){ return n>0&&n<=999999; }); }
+  /* todos los usos: n -> [{tipo, obj, depto, fecha}] */
+  function usos(ex){
+    ex=ex||{}; var m={}, add=function(n,u){ (m[n]=m[n]||[]).push(u); };
+    (DATA.deptos||[]).forEach(function(d){ (d.pagos_registrados||[]).forEach(function(p){ if(ex.pagoId!=null&&p.id===ex.pagoId) return;
+      nums(p.recibo_no).forEach(function(n){ add(n,{tipo:'pago',obj:p,depto:d.depto,fecha:p.fecha||''}); }); }); });
+    (DATA.reservasSociales||[]).forEach(function(r){ if(!r.pago||!r.pago.no) return; if(ex.reservaId!=null&&r.id===ex.reservaId) return;
+      nums(r.pago.no).forEach(function(n){ add(n,{tipo:'reserva',obj:r,depto:r.depto||'',fecha:r.pago.fecha||''}); }); });
+    (DATA.diario||[]).forEach(function(e){ if(!e.recibo||e.pagoId||e.reservaId||(e.tipo&&e.tipo!=='ingreso')) return; if(ex.movId!=null&&e.id===ex.movId) return;
+      nums(e.recibo).forEach(function(n){ add(n,{tipo:'diario',obj:e,depto:e.depto||'',fecha:e.fecha||''}); }); });
+    (DATA.recibosAnulados||[]).forEach(function(a){ nums(a.no).forEach(function(n){ add(n,{tipo:'anulado',obj:a,depto:'',fecha:a.fecha||''}); }); });
+    return m;
+  }
+  function quien(u){ return u.tipo==='anulado'?'anulado':(u.tipo==='reserva'?'alquiler'+(u.depto?' · Depto '+u.depto:''):(u.depto?'Depto '+u.depto:'reporte diario')); }
+  /* ¿algún número de este texto ya está usado? */
+  window.lukaReciboUsado=function(raw,ex){ var m=usos(ex), L=nums(raw); for(var i=0;i<L.length;i++){ if(m[L[i]]) return {n:L[i],u:m[L[i]][0]}; } return null; };
+  window.lukaReciboTxt=function(c){ return 'El recibo '+pad(c.n)+' ya fue usado ('+quien(c.u)+'). Los recibos no se repiten: use el '+pad(maxUsado()+1)+'.'; };
+  function maxUsado(){ var mx=0; Object.keys(usos()).forEach(function(n){ if(+n>mx) mx=+n; }); return mx; }
+  function siguiente(){ var mx=maxUsado(); if(mx) return mx+1; var b=parseInt(DATA.receiptCounter,10)||0, rd=parseInt((DATA.config||{}).reciboDesde,10)||0; return Math.max(b,rd,1); }
+  window.__lukaMaxRecibo=maxUsado; window.__lukaNextRecibo=siguiente; window.lukaReciboSiguiente=siguiente;
+
+  /* cobro de expensas: no se registra con un número usado */
+  function envolverPago(){
+    if(typeof window.registrarPago!=='function'||window.registrarPago.__unico) return typeof window.registrarPago==='function';
+    var o=window.registrarPago;
+    var w=function(d,monto,metodo,fecha,recibido,obs,reciboNo){
+      var no=String(reciboNo==null?'':reciboNo).trim()||pad(siguiente());
+      var c=window.lukaReciboUsado(no);
+      if(c){ var t=window.lukaReciboTxt(c), wv=document.getElementById('pf-recibo-warn'); if(wv){ wv.textContent=t; wv.classList.add('lk-dup'); }
+        alert(t); var i=document.getElementById('pf-recibo-no'); if(i){ i.focus(); i.select&&i.select(); } return; }
+      if(!String(reciboNo==null?'':reciboNo).trim()) arguments[6]=no;
+      return o.apply(this,arguments);
+    };
+    w.__unico=1; window.registrarPago=w; try{ registrarPago=w; }catch(e){} return true;
+  }
+  /* el aviso del formulario también cuenta anulados y alquileres */
+  function revisarCampo(){
+    var i=document.getElementById('pf-recibo-no'); if(!i||i.__unico) return; i.__unico=1;
+    try{ i.value=pad(siguiente()); }catch(e){}
+    var chk=function(){ var wv=document.getElementById('pf-recibo-warn'); if(!wv) return; var c=window.lukaReciboUsado(i.value);
+      if(c){ wv.textContent=window.lukaReciboTxt(c); wv.style.display='block'; wv.classList.add('lk-dup'); } else wv.classList.remove('lk-dup'); };
+    i.addEventListener('input',function(){ setTimeout(chk,0); }); setTimeout(chk,0);
+  }
+  /* editar recibo de un pago: tampoco con un número usado */
+  var _conf=window.confirm;
+  window.confirm=function(msg){
+    var s=String(msg||'');
+    if(/ya fue usado/.test(s)&&/repetirse/.test(s)){ alert(s.split(/\n\n/)[0].replace(/^⚠\s*/,'')+'\n\nLos recibos no se pueden repetir. Use otro número.'); return false; }
+    return _conf.apply(window,arguments);
+  };
+  window.__lukaReciboCheck=function(str,excludeId){ var m=usos({pagoId:excludeId}), res={entered:nums(str),dups:[],skipped:[]};
+    res.entered.forEach(function(n){ if(m[n]) res.dups.push({n:n,info:{depto:m[n][0].tipo==='anulado'?'anulado':m[n][0].depto,fecha:m[n][0].fecha}}); }); return res; };
+  /* alquiler de áreas: el número se valida igual (captura antes del botón original) */
+  document.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('#lkrp-ok'); if(!b) return;
+    var i=document.getElementById('lkrp-no'); if(!i) return; var c=window.lukaReciboUsado(i.value);
+    if(c){ e.stopImmediatePropagation(); e.preventDefault(); var er=document.getElementById('lkrp-err'); if(er){ er.textContent=window.lukaReciboTxt(c); er.classList.add('lk-dup'); } i.focus(); }
+  },true);
+
+  /* «Corregir repetidos»: en cada número repetido se queda el primero (o el anulado) y los demás pasan al siguiente libre */
+  function corregir(){
+    var desde=parseInt((DATA.config||{}).reciboDesde,10)||0, m=usos(), mx=maxUsado(), cambios=[];
+    Object.keys(m).map(Number).sort(function(a,b){ return a-b; }).forEach(function(n){
+      var L=m[n]; if(L.length<2||n<desde) return;
+      var an=L.filter(function(u){ return u.tipo==='anulado'; }), reales=L.filter(function(u){ return u.tipo!=='anulado'; });
+      reales.sort(function(a,b){ return String(a.fecha).localeCompare(String(b.fecha)); });
+      var mover=an.length?reales:reales.slice(1);
+      mover.forEach(function(u){
+        var nv=++mx, re=new RegExp('0*'+n+'(?!\\d)'), cam=function(t){ return String(t).replace(re,pad(nv)); };
+        if(u.tipo==='pago'){ var viejo=u.obj.recibo_no; u.obj.recibo_no=cam(viejo); (DATA.diario||[]).forEach(function(e){ if(e.pagoId===u.obj.id&&e.recibo) e.recibo=cam(e.recibo); }); }
+        else if(u.tipo==='reserva'){ var v2=u.obj.pago.no; u.obj.pago.no=cam(v2); (DATA.diario||[]).forEach(function(e){ if(e.reservaId===u.obj.id&&e.recibo===v2) e.recibo=u.obj.pago.no; }); }
+        else if(u.tipo==='diario'){ u.obj.recibo=cam(u.obj.recibo); }
+        cambios.push({de:n,a:nv,txt:quien(u)+(u.fecha?' · '+u.fecha:'')+(an.length?' (el '+pad(n)+' está anulado)':'')});
+      });
+    });
+    if(cambios.length){ DATA.receiptCounter=Math.max(+DATA.receiptCounter||0,mx+1); try{ saveDataLocal(); }catch(e){} try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); }catch(e){} try{ renderGrid(); }catch(e){} }
+    return cambios;
+  }
+  window.lukaCorregirRecibosRepetidos=corregir;
+  function hayRepetidos(){ var desde=parseInt((DATA.config||{}).reciboDesde,10)||0, m=usos(); return Object.keys(m).some(function(n){ return +n>=desde&&m[n].length>1; }); }
+  function botonCorregir(){
+    var t=document.getElementById('lk-dlg-title'), body=document.getElementById('lk-dlg-body');
+    if(!t||!body||t.textContent!=='Revisión de recibos'||body.querySelector('.lk-fix')) return;
+    if(!hayRepetidos()) return;
+    var box=document.createElement('div'); box.className='lk-fix';
+    box.innerHTML='<p>Hay números de recibo repetidos. Se deja el primero (o el anulado) y los demás pasan al siguiente número libre.</p><button type="button" class="btn primary" id="lk-fix-go">Corregir repetidos</button>';
+    var dups=[].slice.call(body.querySelectorAll('.lk-rec-dup')).pop(); var ref=dups&&dups.parentNode;
+    if(ref&&ref.parentNode) ref.parentNode.insertBefore(box,ref.nextSibling); else body.insertBefore(box,body.firstChild);
+    box.querySelector('#lk-fix-go').onclick=function(){
+      var c=corregir();
+      box.innerHTML='<p><b>'+c.length+'</b> recibo(s) cambiados. Corrija estos números también en el talonario o recibo impreso:</p><div class="lk-fix-l">'+
+        c.map(function(x){ return '<div><span>'+x.txt.replace(/[<>&]/g,'')+'</span><b>'+pad(x.de)+' → '+pad(x.a)+'</b></div>'; }).join('')+'</div>';
+      [].slice.call(body.querySelectorAll('.lk-rec-dup')).forEach(function(s){ if(/\(×\d+\)/.test(s.textContent)) s.style.display='none'; });
+    };
+  }
+  /* la revisión de recibos cuenta también los alquileres de áreas */
+  new MutationObserver(function(){ botonCorregir(); revisarCampo(); }).observe(document.body,{childList:true,subtree:true});
+  var n=0; (function t(){ if(!envolverPago()&&n++<40) setTimeout(t,250); })(); setTimeout(envolverPago,4000);
+})();
+</script>
+
+<style>
+/* ============ Módulo 50 · Reservas: editar pago y garantía, contabilidad por mes ============ */
+.lkr-tabs{flex-wrap:nowrap!important;overflow-x:auto!important;scrollbar-width:none}
+.lkr-tabs::-webkit-scrollbar{display:none}
+.lkr-tab{flex:0 0 auto!important;white-space:nowrap!important}
+.lke-pago{margin:14px 0 0;padding:14px 16px;border:1px solid #E3EAF2;border-radius:14px;background:#fff}
+.lke-pago h4{margin:0 0 8px;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7d93ab}
+.lke-pago .lke-r{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:#0B2440;padding:3px 0}
+.lke-pago .lke-r b{font-variant-numeric:tabular-nums}
+.lke-acc{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 0}
+.lke-acc .btn,.lkc-det .btn{height:36px;padding:0 14px;font-size:13px}
+#lke-bd .modal{max-width:560px}
+.lke-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lke-grid label,.lke-lin label{display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7d93ab}
+.lke-grid .full{grid-column:1/-1}
+.lke-grid input,.lke-grid select,.lke-lin input{height:42px;padding:0 12px;border:1px solid #D5DEE8;border-radius:10px;background:#F6F8FB;font:inherit;font-size:14px;color:#0B2440;text-transform:none;letter-spacing:0;font-weight:500;box-sizing:border-box;width:100%}
+.lke-lin{display:flex;flex-direction:column;gap:8px;margin:16px 0 0;padding:14px;border:1px solid #E3EAF2;border-radius:12px}
+.lke-l{display:grid;grid-template-columns:minmax(0,1fr) 130px;gap:10px;align-items:center;font-size:13.5px;color:#0B2440}
+.lke-l input{text-align:right;font-variant-numeric:tabular-nums}
+.lke-l.tot{border-top:1px solid #E3EAF2;padding-top:10px;font-weight:800}
+.lke-l.tot b{text-align:right;font-variant-numeric:tabular-nums}
+.lke-foot{display:flex;justify-content:flex-end;gap:8px;margin:16px 0 0}
+.lke-err{color:#9B1C1C;font-size:13px;font-weight:600;margin:10px 0 0;min-height:1px}
+.lkc-tabla tbody tr.lkc-m{cursor:pointer}
+.lkc-tabla tbody tr.lkc-m:hover td{background:#F8FAFD}
+.lkc-tabla tbody tr.lkc-m td:first-child::before{content:'›';display:inline-block;width:14px;color:#9AA8B8;transition:transform .15s}
+.lkc-tabla tbody tr.lkc-m.on td:first-child::before{transform:rotate(90deg)}
+.lkc-det td{background:#FAFBFD!important;padding:8px 10px 14px!important;text-align:left!important;white-space:normal!important}
+.lkc-it{display:grid;grid-template-columns:96px minmax(0,1fr) 110px 110px auto;gap:12px;align-items:center;padding:10px 12px;border:1px solid #E3EAF2;border-radius:12px;background:#fff;margin:6px 0 0;font-size:13px;color:#0B2440}
+.lkc-it small{display:block;color:#7d93ab;font-size:11.5px}
+.lkc-it .n{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.lkc-it .acc{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+@media (max-width:760px){
+  .lke-grid{grid-template-columns:1fr}
+  .lkc-it{grid-template-columns:1fr 1fr}
+  .lkc-it>div:nth-child(2){grid-column:1/-1}
+  .lkc-it .acc{grid-column:1/-1;justify-content:flex-start}
+  .lkc-it .n{text-align:left}
+}
+</style>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 50: el pago de una reserva (recibo, fecha, montos y
+   garantía) se puede corregir después de registrado; la devolución también.
+   En Contabilidad, al tocar un mes se despliegan sus reservas para editarlas.
+   ============================================================================ */
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function money(v){ return (typeof fmtMoney==='function')?fmtMoney(v):('Bs. '+(+v||0).toFixed(2)); }
+  function fl(f){ try{ return (typeof fmtDateLong==='function')?fmtDateLong(f):f; }catch(e){ return f; } }
+  function hoy(){ return new Date().toISOString().slice(0,10); }
+  function guardar(){ try{ saveDataLocal(); }catch(e){} try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); }catch(e){} }
+  function refrescar(){ try{ if(window.__lukaResRefresh) window.__lukaResRefresh(); }catch(e){} }
+  function ingDe(p){ return (p.lineas||[]).reduce(function(a,l){ return a+(+l.monto||0); },0); }
+  function devuelta(r){ return !!(r.garDev&&r.garDev.estado==='devuelta'&&(r.garDev.historial||[]).length); }
+
+  /* ---------- editar el pago de una reserva ---------- */
+  window.lukaEditarPagoReserva=function(r,despues){
+    if(!r||!r.pago){ if(window.lukaPagoReserva) window.lukaPagoReserva(r); return; }
+    var p=r.pago, L=(p.lineas||[]).map(function(l){ return {concepto:l.concepto,monto:+l.monto||0}; });
+    var bd=$('lke-bd'); if(!bd){ bd=document.createElement('div'); bd.id='lke-bd'; bd.className='modal-backdrop no-print'; document.body.appendChild(bd); bd.addEventListener('click',function(e){ if(e.target===bd) bd.classList.remove('open'); }); }
+    var met=['Transferencia','QR','Efectivo','Depósito']; if(p.metodo&&met.indexOf(p.metodo)<0) met.push(p.metodo);
+    bd.innerHTML='<div class="modal lk-modal"><button class="close-btn" title="Cerrar">&times;</button><h2>Editar pago</h2>'+
+      '<p class="modal-sub">'+esc(r.areaNombre||'')+' · '+esc(fl(r.fecha||String(r.inicio||'').slice(0,10)))+(r.depto?' · Depto '+esc(r.depto):'')+'</p>'+
+      '<div class="lke-grid"><label>N.º de recibo<input id="lke-no" value="'+esc(p.no||'')+'"></label>'+
+      '<label>Fecha de pago<input type="date" id="lke-f" value="'+esc(p.fecha||hoy())+'"></label>'+
+      '<label>Método<select id="lke-m">'+met.map(function(m){ return '<option'+(m===p.metodo?' selected':'')+'>'+esc(m)+'</option>'; }).join('')+'</select></label>'+
+      '<label>Recibido por<input id="lke-rec" value="'+esc(p.recibido||'')+'"></label>'+
+      '<label class="full">Recibí de<input id="lke-an" value="'+esc(p.a_nombre||p.responsable||r.responsable||'')+'"></label>'+
+      '<label class="full">Observación<input id="lke-obs" value="'+esc(p.obs||'')+'"></label></div>'+
+      '<div class="lke-lin">'+L.map(function(l,i){ return '<div class="lke-l"><span>'+esc(l.concepto)+'</span><input type="number" min="0" step="0.5" data-i="'+i+'" value="'+l.monto+'"></div>'; }).join('')+
+      '<div class="lke-l"><span>Garantía (en custodia)</span><input type="number" min="0" step="0.5" id="lke-g" value="'+(+p.garantia||0)+'"'+(devuelta(r)?' disabled title="Ya fue devuelta: edite la devolución"':'')+'></div>'+
+      '<div class="lke-l tot"><span>Total recibido</span><b id="lke-t"></b></div></div>'+
+      '<p class="lke-err" id="lke-err"></p><div class="lke-foot"><button type="button" class="btn" id="lke-x">Cancelar</button><button type="button" class="btn primary" id="lke-ok">Guardar cambios</button></div></div>';
+    bd.classList.add('open');
+    var tot=function(){ var s=0; bd.querySelectorAll('.lke-l input[data-i]').forEach(function(i){ s+=(+i.value||0); }); s+=(+$('lke-g').value||0); $('lke-t').textContent=money(s); };
+    bd.querySelectorAll('.lke-l input').forEach(function(i){ i.addEventListener('input',tot); }); tot();
+    bd.querySelector('.close-btn').onclick=$('lke-x').onclick=function(){ bd.classList.remove('open'); };
+    $('lke-ok').onclick=function(){
+      var no=String($('lke-no').value||'').trim().toUpperCase(); if(!no){ $('lke-err').textContent='Ponga el número de recibo.'; return; }
+      if(window.lukaReciboUsado){ var c=window.lukaReciboUsado(no,{reservaId:r.id}); if(c){ $('lke-err').textContent=window.lukaReciboTxt(c); return; } }
+      var viejoNo=p.no;
+      bd.querySelectorAll('.lke-l input[data-i]').forEach(function(i){ var l=p.lineas[+i.dataset.i]; if(l) l.monto=Math.round((+i.value||0)*100)/100; });
+      p.no=no; p.fecha=$('lke-f').value||p.fecha; p.metodo=$('lke-m').value; p.recibido=$('lke-rec').value.trim(); p.a_nombre=$('lke-an').value.trim(); p.obs=$('lke-obs').value.trim();
+      if(!devuelta(r)){ var g=Math.round((+$('lke-g').value||0)*100)/100; p.garantia=g; r.garantia=g; }
+      var ing=ingDe(p); p.total=Math.round((ing+(+p.garantia||0))*100)/100; if(r.total!=null) r.total=p.total; if((p.lineas||[]).length){ if(r.monto!=null) r.monto=+p.lineas[0].monto||0; if(r.extras!=null) r.extras=p.lineas.slice(1).reduce(function(x,l){ return x+(+l.monto||0); },0); }
+      // el ingreso del reporte diario acompaña al pago
+      var D=DATA.diario||(DATA.diario=[]), mov=D.filter(function(e){ return e.reservaId===r.id&&(e.tipo==='ingreso'||e.tipo==null); })[0];
+      if(mov){ if(ing>0){ mov.fecha=p.fecha; mov.monto=ing; if(!mov.recibo||mov.recibo===viejoNo) mov.recibo=no; } else DATA.diario=D.filter(function(e){ return e!==mov; }); }
+      else if(ing>0&&typeof agregarMovimientoDiario==='function') agregarMovimientoDiario(p.fecha,'ingreso','otro','Alquiler '+(r.areaNombre||'área social')+(r.depto?' · Depto '+r.depto:''),ing,{recibo:no,depto:r.depto||'',reservaId:r.id});
+      guardar(); bd.classList.remove('open'); refrescar();
+      if(typeof showSaveToast==='function') showSaveToast('Pago actualizado');
+      if(typeof despues==='function') despues(r);
+    };
+  };
+  function garantia(r){ if(window.lukaEditarDevolucion) window.lukaEditarDevolucion(r); }
+
+  /* ---------- detalle de la reserva: bloque del pago con sus acciones ---------- */
+  function bloquePago(){
+    var bd=$('lkr-det-bd'), r=window.__lkDetR; if(!bd||!bd.classList.contains('open')||!r) return;
+    var md=bd.querySelector('.modal'); if(!md||md.querySelector('.lke-pago')) return;
+    var p=r.pago, box=document.createElement('div'); box.className='lke-pago';
+    box.innerHTML='<h4>Pago</h4>'+(p?('<div class="lke-r"><span>Recibo N.º</span><b>'+esc(p.no||'—')+'</b></div><div class="lke-r"><span>Fecha de pago</span><b>'+esc(fl(p.fecha))+'</b></div><div class="lke-r"><span>Método</span><b>'+esc(p.metodo||'—')+'</b></div><div class="lke-r"><span>Ingreso por alquiler</span><b>'+money(ingDe(p))+'</b></div>'+((+p.garantia||0)>0?'<div class="lke-r"><span>Garantía</span><b>'+money(p.garantia)+'</b></div>':'')):'<div class="lke-r"><span>Sin pago registrado</span></div>')+
+      '<div class="lke-acc">'+(p?'<button type="button" class="btn" id="lke-dp">Editar pago</button><button type="button" class="btn" id="lke-dr">Recibo</button>':'<button type="button" class="btn primary" id="lke-dp">Registrar pago</button>')+'</div>';
+    var pie=md.querySelector('#lkr-det-edit'); pie=pie&&pie.parentNode;
+    var gbox=[].slice.call(md.children).filter(function(x){ return /Garant/i.test(x.textContent)&&x.querySelector('button'); })[0];
+    md.insertBefore(box,gbox||pie||null);
+    var cerrar=function(){ bd.classList.remove('open'); };
+    $('lke-dp').onclick=function(){ cerrar(); if(p) window.lukaEditarPagoReserva(r,function(x){ if(window.lukaAbrirDetalleReserva) window.lukaAbrirDetalleReserva(x); }); else if(window.lukaPagoReserva) window.lukaPagoReserva(r); };
+    var rb=$('lke-dr'); if(rb) rb.onclick=function(){ cerrar(); if(window.lukaVerReciboReserva) window.lukaVerReciboReserva(r); };
+  }
+
+  /* ---------- devoluciones: cada una se puede editar ---------- */
+  function editarDevoluciones(){
+    var c=$('lkr-content'); if(!c) return;
+    c.querySelectorAll('[data-pdf]').forEach(function(b){ if(b.parentNode.querySelector('.lke-ed')) return;
+      var e=document.createElement('button'); e.type='button'; e.className=b.className+' lke-ed'; e.textContent='Editar';
+      e.onclick=function(){ var r=(DATA.reservasSociales||[]).filter(function(x){ return x.id===b.getAttribute('data-pdf'); })[0]; if(r) garantia(r); };
+      b.parentNode.insertBefore(e,b); });
+  }
+
+  /* ---------- contabilidad: al tocar un mes se ven sus reservas ---------- */
+  var MES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'], abiertos={};
+  function ym(s){ s=String(s||''); return /^\d{4}-\d{2}/.test(s)?s.slice(0,7):''; }
+  function delMes(k){
+    var hoyS=hoy(), out=[];
+    (DATA.reservasSociales||[]).forEach(function(r){ if(!r||r.estado==='Cancelada') return;
+      var ev=ym(r.fecha||r.inicio), en=false;
+      if(r.pago) en=(ym(r.pago.fecha)||ev)===k; else en=ev===k&&String(r.fecha||r.inicio||'').slice(0,10)<=hoyS;
+      var dv=((r.garDev&&r.garDev.historial)||[]).some(function(x){ return ym(x.fecha)===k; });
+      if(en||dv||ev===k) out.push(r); });
+    return out.sort(function(a,b){ return String(a.fecha||a.inicio).localeCompare(String(b.fecha||b.inicio)); });
+  }
+  function filaMes(r){
+    var p=r.pago, gar=+r.garantia||+(p&&p.garantia)||0, dev=devuelta(r);
+    var gTxt=gar?(dev?'Devuelta':'En custodia'):'Sin garantía';
+    return '<div class="lkc-it" data-r="'+esc(r.id)+'"><div><b>'+esc(fl(r.fecha||String(r.inicio||'').slice(0,10)))+'</b></div>'+
+      '<div><b>'+esc(r.areaNombre||'')+'</b><small>'+(r.depto?'Depto '+esc(r.depto)+' · ':'')+esc(r.responsable||'')+(p?' · Recibo '+esc(p.no):' · Sin recibo')+'</small></div>'+
+      '<div class="n">'+money(p?ingDe(p):((+r.monto||0)+(+r.extras||0)))+'<small>alquiler</small></div>'+
+      '<div class="n">'+(gar?money(gar):'—')+'<small>'+gTxt+'</small></div>'+
+      '<div class="acc">'+(p?'<button type="button" class="btn" data-k="pago">Editar pago</button>':'<button type="button" class="btn" data-k="pago">Registrar pago</button>')+
+      (gar?'<button type="button" class="btn" data-k="gar">'+(dev?'Editar devolución':'Devolver garantía')+'</button>':'')+
+      '<button type="button" class="btn" data-k="ver">Ver</button></div></div>';
+  }
+  function decorarConta(cont){
+    var trs=[].slice.call(cont.querySelectorAll('.lkc-tabla tbody tr')).filter(function(t){ return !t.classList.contains('tot'); });
+    trs.forEach(function(tr){
+      var t=(tr.cells[0]||{}).textContent||'', m=t.trim().match(/^(\S+)\s+(\d{4})$/); if(!m) return; var mi=MES.indexOf(m[1]); if(mi<0) return;
+      var k=m[2]+'-'+String(mi+1).padStart(2,'0'); tr.classList.add('lkc-m'); tr.dataset.k=k;
+      var abrir=function(){ var L=delMes(k), det=document.createElement('tr'); det.className='lkc-det'; det.innerHTML='<td colspan="'+tr.cells.length+'">'+(L.length?L.map(filaMes).join(''):'<div class="lkc-it"><div></div><div>Sin reservas en este mes</div></div>')+'</td>';
+        tr.parentNode.insertBefore(det,tr.nextSibling); tr.classList.add('on');
+        det.querySelectorAll('.lkc-it[data-r] button').forEach(function(b){ b.onclick=function(ev){ ev.stopPropagation();
+          var r=(DATA.reservasSociales||[]).filter(function(x){ return String(x.id)===b.closest('[data-r]').dataset.r; })[0]; if(!r) return;
+          if(b.dataset.k==='pago'){ if(r.pago) window.lukaEditarPagoReserva(r); else if(window.lukaPagoReserva) window.lukaPagoReserva(r,{onDone:refrescar}); }
+          else if(b.dataset.k==='gar') garantia(r);
+          else if(window.lukaAbrirDetalleReserva) window.lukaAbrirDetalleReserva(r); }; }); };
+      tr.onclick=function(){ var nx=tr.nextSibling; if(nx&&nx.classList&&nx.classList.contains('lkc-det')){ nx.remove(); tr.classList.remove('on'); delete abiertos[k]; } else { abiertos[k]=1; abrir(); } };
+      if(abiertos[k]) abrir();
+    });
+  }
+  function envolverConta(){ var o=window.lukaContaAreas; if(typeof o!=='function'||o.__det) return typeof o==='function';
+    var w=function(cont){ var r=o.apply(this,arguments); try{ decorarConta(cont); }catch(e){} return r; }; w.__det=1; window.lukaContaAreas=w; return true; }
+  var n=0; (function t(){ if(!envolverConta()&&n++<40) setTimeout(t,250); })();
+  var pend=false;
+  new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; bloquePago(); editarDevoluciones(); }); })
+    .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+<style>
+/* ============ Módulo 51 · Reporte diario: buscador a la vista + imagen con o sin detalle ============ */
+.lkd-bar{display:grid;grid-template-columns:minmax(0,1fr) 220px auto;gap:10px;align-items:center;margin:0 0 12px}
+.lkd-q{position:relative}
+.lkd-q svg{z-index:1;position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#7d93ab;pointer-events:none}
+.lkd-q input{width:100%!important;height:46px!important;box-sizing:border-box;padding:0 40px 0 42px!important;border:1px solid #D5DEE8;border-radius:12px;background:#fff;font:inherit;font-size:14.5px;color:#0B2440}
+.lkd-q input:focus{outline:none;border-color:#1E4E86;box-shadow:0 0 0 3px rgba(30,78,134,.12)}
+.lkd-q button{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:0;border-radius:8px;background:#EEF2F7;color:#5B6B7F;cursor:pointer;font-size:15px;line-height:1}
+.lkd-q button[hidden]{display:none}
+.lkd-bar select{height:46px;padding:0 12px;border:1px solid #D5DEE8;border-radius:12px;background:#fff;font:inherit;font-size:14px;color:#0B2440}
+.lkd-n{font-size:12.5px;color:#7d93ab;white-space:nowrap}
+#lk-dl-diario{display:none;flex-direction:column;gap:2px;border-top:1px solid #EEF2F7;margin-top:4px;padding-top:4px}
+#lk-dl-diario.on{display:flex}
+@media (max-width:760px){ .lkd-bar{grid-template-columns:1fr 1fr} .lkd-q{grid-column:1/-1} .lkd-n{text-align:right} }
+</style>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 51: Reporte diario con buscador a la vista (recibo, depto
+   o motivo, junto al mes) y descarga en imagen: con detalle (cada movimiento y sus
+   ítems) o sin detalle (un renglón por día). Respeta el mes y la búsqueda.
+   ============================================================================ */
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function vistaDiario(){ var a=document.querySelector('.nav-item.active'); return !!(a&&a.dataset&&a.dataset.view==='diario'); }
+  var LUPA='<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>';
+
+  /* ---------- buscador a la vista ---------- */
+  function barra(){
+    var v=$('view-diario'); if(!v) return;
+    var q0=$('diario-buscar'), m0=$('diario-mes'); if(!q0||!m0) return;
+    var bar=$('lkd-bar');
+    if(!bar){
+      bar=document.createElement('div'); bar.id='lkd-bar'; bar.className='lkd-bar';
+      bar.innerHTML='<div class="lkd-q">'+LUPA+'<input id="lkd-q" type="text" placeholder="Buscar por recibo, depto o motivo" autocomplete="off"><button type="button" id="lkd-x" title="Borrar" hidden>×</button></div><select id="lkd-mes" aria-label="Mes"></select><span class="lkd-n" id="lkd-n"></span>';
+      v.insertBefore(bar,v.firstChild);
+      var q=$('lkd-q'), x=$('lkd-x'), ms=$('lkd-mes');
+      q.addEventListener('input',function(){ q0.value=q.value; q0.dispatchEvent(new Event('input',{bubbles:true})); x.hidden=!q.value; contar(); });
+      x.onclick=function(){ q.value=''; q.dispatchEvent(new Event('input')); q.focus(); };
+      ms.addEventListener('change',function(){ m0.value=ms.value; m0.dispatchEvent(new Event('change',{bubbles:true})); contar(); });
+    }
+    var ms2=$('lkd-mes'); if(ms2&&ms2.innerHTML!==m0.innerHTML){ ms2.innerHTML=m0.innerHTML; ms2.value=m0.value; }
+    else if(ms2&&ms2.value!==m0.value) ms2.value=m0.value;
+    var q2=$('lkd-q'); if(q2&&document.activeElement!==q2&&q2.value!==q0.value){ q2.value=q0.value; $('lkd-x').hidden=!q0.value; }
+    contar();
+  }
+  function contar(){ var n=$('lkd-n'); if(!n) return; try{ var L=diarioFiltrado(); var t=L.length+' movimiento'+(L.length===1?'':'s'); if(n.textContent!==t) n.textContent=t; }catch(e){} }
+
+  /* ---------- imagen del reporte ---------- */
+  function money(v){ v=Math.round((+v||0)*100)/100; var s=Math.abs(v).toFixed(2).replace(/\.00$/,'').replace('.',','), p=s.split(','); p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.'); return (v<0?'- ':'')+'Bs. '+p.join(','); }
+  var MESES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  function fecha(f){ var p=String(f||'').split('-'); return p.length===3?(+p[2])+' '+MESES[+p[1]-1].slice(0,3)+' '+p[0]:f; }
+  function imagen(conDetalle){
+    var L; try{ L=diarioFiltrado(); }catch(e){ L=(DATA.diario||[]).slice(); }
+    var mes=''; try{ var m=resolveDiarioMes(); mes=m==='TODOS'?'Todos los meses':mesLabelDe(m+'-01'); }catch(e){}
+    var q=''; try{ q=String(diarioBuscarTexto||'').trim(); }catch(e){}
+    var ed=(typeof buildingName==='function'?buildingName():'')||'';
+    var dias={}, orden=[]; L.forEach(function(e){ var k=String(e.fecha||'').slice(0,10); if(!dias[k]){ dias[k]={ing:0,egr:0,L:[]}; orden.push(k); } dias[k].L.push(e); if(e.tipo==='egreso') dias[k].egr+=+e.monto||0; else dias[k].ing+=+e.monto||0; });
+    var TI=0,TE=0; orden.forEach(function(k){ TI+=dias[k].ing; TE+=dias[k].egr; });
+    var W=1100, S=2, PAD=48, filas=[];
+    if(conDetalle){
+      orden.forEach(function(k){ var d=dias[k]; filas.push({t:'dia',k:k,d:d});
+        d.L.forEach(function(e){ filas.push({t:'mov',e:e}); if(Array.isArray(e.items)&&e.items.length>1) e.items.forEach(function(it){ filas.push({t:'item',it:it,eg:e.tipo==='egreso'}); }); }); });
+    } else orden.forEach(function(k){ filas.push({t:'res',k:k,d:dias[k]}); });
+    var alto=function(f){ return f.t==='dia'?34:(f.t==='item'?24:(f.t==='res'?36:34)); };
+    var H=PAD+96+40+filas.reduce(function(a,f){ return a+alto(f); },0)+90+PAD;
+    var c=document.createElement('canvas'); c.width=W*S; c.height=H*S; var x=c.getContext('2d'); x.scale(S,S);
+    var NAVY='#0B2440', MUT='#7d93ab', LINE='#E3EAF2', VERDE='#1E6B45', ROJO='#9B1C1C', F='Inter, "Segoe UI", Roboto, Arial, sans-serif';
+    x.fillStyle='#fff'; x.fillRect(0,0,W,H); x.textBaseline='middle';
+    var txt=function(t,X,Y,o){ o=o||{}; x.font=(o.b?'700 ':'500 ')+(o.s||14)+'px '+F; x.fillStyle=o.c||NAVY; x.textAlign=o.a||'left'; var s=String(t==null?'':t);
+      if(o.w){ while(s.length>3&&x.measureText(s).width>o.w) s=s.slice(0,-2); if(s!==String(t)) s=s.replace(/.$/,'…'); } x.fillText(s,X,Y); };
+    var linea=function(Y,col,w){ x.strokeStyle=col||LINE; x.lineWidth=w||1; x.beginPath(); x.moveTo(PAD,Y+.5); x.lineTo(W-PAD,Y+.5); x.stroke(); };
+    var y=PAD;
+    txt(ed.toUpperCase(),PAD,y+12,{b:1,s:22});
+    txt('Reporte diario · '+mes+(conDetalle?'':' · resumen por día'),PAD,y+42,{s:14,c:'#5B6B7F'});
+    if(q) txt('Búsqueda: «'+q+'»',PAD,y+64,{s:13,c:MUT});
+    txt('Generado el '+fecha(new Date().toISOString().slice(0,10)),W-PAD,y+12,{s:12,c:MUT,a:'right'});
+    y+=96; linea(y,NAVY,1.5);
+    // encabezado de columnas
+    var cR=PAD, cD=PAD+(conDetalle?110:0), cI=W-PAD-250, cE=W-PAD-125, cF=W-PAD;
+    y+=20;
+    if(conDetalle){ txt('RECIBO',cR,y,{b:1,s:11,c:MUT}); txt('DETALLE',cD,y,{b:1,s:11,c:MUT}); }
+    else { txt('DÍA',PAD,y,{b:1,s:11,c:MUT}); txt('MOVIMIENTOS',PAD+220,y,{b:1,s:11,c:MUT}); }
+    txt('INGRESO',cI,y,{b:1,s:11,c:MUT,a:'right'}); txt('EGRESO',cE,y,{b:1,s:11,c:MUT,a:'right'}); txt('DIFERENCIA',cF,y,{b:1,s:11,c:MUT,a:'right'});
+    y+=20; linea(y);
+    filas.forEach(function(f){
+      var h=alto(f), m=y+h/2;
+      if(f.t==='dia'){ x.fillStyle='#F6F8FB'; x.fillRect(PAD,y,W-2*PAD,h); txt(fecha(f.k),PAD+10,m,{b:1,s:13.5});
+        if(f.d.ing) txt(money(f.d.ing),cI,m,{b:1,s:13,a:'right'}); if(f.d.egr) txt(money(f.d.egr),cE,m,{b:1,s:13,a:'right'});
+        var df=f.d.ing-f.d.egr; txt((df>=0?'+ ':'')+money(df),cF,m,{b:1,s:13,a:'right',c:df<0?ROJO:VERDE}); }
+      else if(f.t==='mov'){ var e=f.e, eg=e.tipo==='egreso';
+        txt(e.recibo?String(e.recibo):'',cR,m,{s:12.5,c:'#5B6B7F',w:100});
+        txt((e.depto&&String(e.motivo||'').indexOf(e.depto)<0?'Depto '+e.depto+' · ':'')+(e.motivo||''),cD,m,{s:13.5,w:cI-cD-130});
+        txt(money(e.monto),eg?cE:cI,m,{b:1,s:13.5,a:'right',c:eg?ROJO:VERDE}); }
+      else if(f.t==='item'){ txt('· '+(f.it.concepto||''),cD+16,m,{s:12,c:'#5B6B7F',w:cI-cD-150}); txt(money(f.it.monto),(f.eg?cE:cI)-0,m,{s:12,c:'#5B6B7F',a:'right'}); }
+      else { var d=f.d, df2=d.ing-d.egr; txt(fecha(f.k),PAD,m,{b:1,s:14}); txt(d.L.length+' movimiento'+(d.L.length===1?'':'s'),PAD+220,m,{s:13,c:'#5B6B7F'});
+        txt(d.ing?money(d.ing):'—',cI,m,{b:1,s:13.5,a:'right',c:d.ing?VERDE:MUT}); txt(d.egr?money(d.egr):'—',cE,m,{b:1,s:13.5,a:'right',c:d.egr?ROJO:MUT}); txt((df2>=0?'+ ':'')+money(df2),cF,m,{b:1,s:13.5,a:'right',c:df2<0?ROJO:NAVY}); }
+      y+=h; if(f.t!=='item') linea(y);
+    });
+    if(!filas.length){ txt('Sin movimientos para este filtro.',PAD,y+24,{s:14,c:MUT}); y+=48; }
+    y+=14; linea(y,NAVY,1.5); y+=30;
+    txt('TOTAL DEL PERÍODO',PAD,y,{b:1,s:14}); txt(money(TI),cI,y,{b:1,s:15,a:'right',c:VERDE}); txt(money(TE),cE,y,{b:1,s:15,a:'right',c:ROJO});
+    var sal=TI-TE; txt((sal>=0?'+ ':'')+money(sal),cF,y,{b:1,s:15,a:'right',c:sal<0?ROJO:NAVY});
+    y+=26; txt('Ingresos '+money(TI)+' · Egresos '+money(TE)+' · Saldo '+money(sal),PAD,y,{s:12,c:MUT});
+    // recorta lo que sobró
+    var fin=Math.ceil(y+PAD), out=document.createElement('canvas'); out.width=W*S; out.height=fin*S; var ox=out.getContext('2d'); ox.fillStyle='#fff'; ox.fillRect(0,0,out.width,out.height); ox.drawImage(c,0,0);
+    var nombre=('Reporte diario '+(conDetalle?'con detalle':'resumen')+' - '+mes+' - '+ed).replace(/[\\/:*?"<>|]+/g,' ').trim()+'.png';
+    out.toBlob(function(b){ if(!b) return; var a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=nombre; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },1500); },'image/png');
+  }
+  window.lukaDiarioImagen=imagen;
+
+  /* ---------- opciones en el menú de descargas (solo en el Reporte diario) ---------- */
+  var ICO='<svg class="dl-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 17-5-5-9 8"/></svg>';
+  function menu(){
+    var m=$('lk-dl-menu'); if(!m) return;
+    var box=$('lk-dl-diario');
+    if(!box){ box=document.createElement('div'); box.id='lk-dl-diario';
+      box.innerHTML='<button type="button" data-d="1">'+ICO+'<span class="dl-text">Imagen con detalle</span></button><button type="button" data-d="0">'+ICO+'<span class="dl-text">Imagen sin detalle</span><span class="dl-hint">un renglón por día</span></button>';
+      box.querySelectorAll('button').forEach(function(b){ b.onclick=function(){ imagen(b.dataset.d==='1'); }; });
+      m.appendChild(box); }
+    var on=vistaDiario(); if(box.classList.contains('on')!==on) box.classList.toggle('on',on);
+    if(box.parentNode!==m||box!==m.lastElementChild) m.appendChild(box);
+  }
+  /* un menú abierto cierra al otro (antes quedaban encimados) */
+  document.addEventListener('click',function(e){
+    var dl=e.target.closest&&e.target.closest('#lk-dl-btn'), pop=e.target.closest&&e.target.closest('.lk-pop>.lk-ti');
+    if(dl) document.querySelectorAll('.lk-pop.open').forEach(function(p){ p.classList.remove('open'); });
+    if(pop){ var w=$('lk-dl'); if(w) w.classList.remove('open'); }
+  },true);
+  var pend=false;
+  new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; barra(); menu(); }); })
+    .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+<style>
+/* ============ Módulo 52 · Configuración del edificio: Agua y expensas (Excel + carga rápida) ============ */
+.lkg-seg{display:inline-flex;gap:4px;padding:4px;border-radius:12px;background:#F2F5F9;margin:0 0 16px}
+.lkg-seg button{height:36px;padding:0 16px;border:0;border-radius:9px;background:none;font:inherit;font-size:13.5px;font-weight:700;color:#5B6B7F;cursor:pointer}
+.lkg-seg button.on{background:#fff;color:#0B2440;box-shadow:0 1px 3px rgba(11,36,64,.12)}
+.lkg-card{border:1px solid #E3EAF2;border-radius:14px;padding:16px;margin:0 0 14px;background:#fff}
+.lkg-card h4{margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#7d93ab}
+.lkg-top{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:end}
+.lkg-top label,.lkg-f label{display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7d93ab}
+#bramar-cc .lkg-card input,#bramar-cc .lkg-card select{height:44px!important;box-sizing:border-box;padding:0 12px!important;border:1px solid #D5DEE8!important;border-radius:10px!important;background:#F6F8FB!important;font:inherit;font-size:14.5px!important;color:#0B2440!important;width:100%;min-width:0}
+#bramar-cc .lkg-card input:focus{outline:none;border-color:#1E4E86!important;background:#fff!important;box-shadow:0 0 0 3px rgba(30,78,134,.12)}
+#bramar-cc .lkg-card .btn{height:44px!important;padding:0 16px!important;white-space:nowrap}
+.lkg-paso{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;margin:0 0 14px}
+.lkg-dep{font-size:26px;font-weight:800;color:#0B2440;line-height:1}
+.lkg-dep small{display:block;font-size:12px;font-weight:600;color:#7d93ab;margin-top:4px}
+.lkg-prog{height:6px;border-radius:99px;background:#EEF2F7;overflow:hidden}
+.lkg-prog i{display:block;height:100%;background:#0B2440;border-radius:99px;transition:width .2s}
+.lkg-n{font-size:12.5px;color:#7d93ab;white-space:nowrap;font-variant-numeric:tabular-nums}
+.lkg-meses{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.lkg-meses label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7d93ab}
+.lkg-meses input{text-align:right;font-variant-numeric:tabular-nums}
+.lkg-acc{display:flex;gap:8px;justify-content:space-between;margin:14px 0 0;flex-wrap:wrap}
+.lkg-acc>div{display:flex;gap:8px}
+.lkg-ok{font-size:13px;color:#1E6B45;font-weight:600;min-height:18px;margin:10px 0 0}
+.lkg-ok.err{color:#9B1C1C}
+.lkg-ok:empty{display:none}
+@media (max-width:640px){ .lkg-top{grid-template-columns:1fr 1fr} .lkg-top label{grid-column:1/-1} .lkg-meses{grid-template-columns:repeat(3,minmax(0,1fr))} .lkg-paso{grid-template-columns:1fr auto} .lkg-paso .lkg-prog{grid-column:1/-1;order:3} }
+</style>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 52: en «Configuración del edificio» → «Agua y expensas»:
+   · Agua del mes: plantilla Excel con todos los deptos, carga del Excel, o carga
+     rápida depto por depto (Enter o «Siguiente» pasa al próximo).
+   · Expensas por año: plantilla con los 12 meses de cada depto (monto adeudado),
+     carga del Excel, o carga rápida mes por mes con Enter.
+   ============================================================================ */
+(function(){
+  var MES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function money(v){ return (typeof fmtMoney==='function')?fmtMoney(v):('Bs. '+(+v||0)); }
+  function num(v){ if(typeof v==='number') return v; var s=String(v==null?'':v).trim(); if(!s) return NaN; s=s.replace(/[^0-9,.-]/g,''); if(/,\d{1,2}$/.test(s)) s=s.replace(/\./g,'').replace(',','.'); else s=s.replace(/,/g,''); return parseFloat(s); }
+  function key(s){ return String(s==null?'':s).toUpperCase().replace(/[\s.\-]+/g,''); }
+  function deptos(){ return (DATA.deptos||[]).slice().sort(function(a,b){ return String(a.bloque||'').localeCompare(String(b.bloque||''))||String(a.depto).localeCompare(String(b.depto),'es',{numeric:true}); }); }
+  function guardar(){ try{ DATA.summary&&(DATA.summary.fecha_actualizacion=(typeof todayISO==='function'?todayISO():'')); }catch(e){} try{ saveDataLocal(); }catch(e){} try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); }catch(e){} try{ renderSummary(); renderGrid(); }catch(e){} }
+  function hoyYM(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+  function blq(d){ var b=String(d.bloque||''); return !b?'':(/^(bloque|torre)/i.test(b)?b:'Bloque '+b); }
+  function rec(d){ if(typeof recalcDepto==='function') recalcDepto(d); }
+  async function xlsx(){ await window.loadLib(window.LIB.xlsx); return window.XLSX; }
+  function bajar(X,aoa,hoja,nombre,cols){ var ws=X.utils.aoa_to_sheet(aoa); if(cols) ws['!cols']=cols; var wb=X.utils.book_new(); X.utils.book_append_sheet(wb,ws,hoja);
+    var out=X.write(wb,{type:'array',bookType:'xlsx'}), a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([out],{type:'application/octet-stream'})); a.download=nombre; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },2000); }
+  function leer(file){ return new Promise(function(ok,mal){ var r=new FileReader(); r.onerror=function(){ mal(new Error('No se pudo leer el archivo.')); };
+    r.onload=async function(ev){ try{ var X=await xlsx(), wb=X.read(new Uint8Array(ev.target.result),{type:'array'}); ok(X.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:null})); }catch(e){ mal(e); } }; r.readAsArrayBuffer(file); }); }
+  function elegirArchivo(fn){ var i=document.createElement('input'); i.type='file'; i.accept='.xlsx,.xls,.csv'; i.onchange=function(){ var f=i.files[0]; if(f) fn(f); }; i.click(); }
+  function bslug(){ try{ return (typeof window.bslug==='function'?window.bslug():(DATA.config.nombreEdificio||'edificio')).replace(/[^\w-]+/g,'_'); }catch(e){ return 'edificio'; } }
+
+  /* ---------------- AGUA ---------------- */
+  var ym=hoyYM(), iA=0, modo='agua', anio=new Date().getFullYear(), iE=0;
+  function conceptoAgua(){ var p=ym.split('-'); return 'Agua · '+MES[+p[1]-1]+' '+p[0]; }
+  function aguaDe(d){ var c=(d.cargos_extra||[]).filter(function(x){ return x.nombre===conceptoAgua(); })[0]; return c?c.monto:''; }
+  /* un depto tiene UN cargo de agua por mes: volver a cargar reemplaza, no duplica */
+  function ponerAgua(d,monto){
+    if(!Array.isArray(d.cargos_extra)) d.cargos_extra=[];
+    var nom=conceptoAgua(), c=d.cargos_extra.filter(function(x){ return x.nombre===nom; })[0];
+    monto=Math.round((+monto||0)*100)/100;
+    if(!(monto>0)){ if(c) d.cargos_extra=d.cargos_extra.filter(function(x){ return x!==c; }); rec(d); return; }
+    if(c) c.monto=monto; else { DATA.cargoCounter=(DATA.cargoCounter||0)+1; d.cargos_extra.push({id:DATA.cargoCounter,nombre:nom,monto:monto,fecha:ym+'-01'}); }
+    rec(d);
+  }
+  function pintarAgua(box){
+    var L=deptos(); if(iA>=L.length) iA=0; var d=L[iA];
+    box.innerHTML=
+      '<div class="lkg-card"><h4>Factura de agua</h4><div class="lkg-top"><label>Mes de la factura<input type="month" id="lkg-ym" value="'+esc(ym)+'"></label>'+
+        '<button type="button" class="btn" id="lkg-a-tpl">Descargar Excel</button><button type="button" class="btn primary" id="lkg-a-xls">Cargar Excel</button></div><p class="lkg-ok" id="lkg-a-msg"></p></div>'+
+      (d?'<div class="lkg-card"><h4>Carga rápida</h4>'+
+        '<div class="lkg-paso"><div class="lkg-dep">'+esc(d.depto)+'<small>'+(d.bloque?esc(blq(d)):'&nbsp;')+'</small></div><div class="lkg-prog"><i style="width:'+Math.round((iA+1)*100/L.length)+'%"></i></div><span class="lkg-n">'+(iA+1)+' / '+L.length+'</span></div>'+
+        '<div class="lkg-f"><label>Monto de agua (Bs.)<input id="lkg-a-m" inputmode="decimal" autocomplete="off" value="'+esc(aguaDe(d))+'" placeholder="0"></label></div>'+
+        '<div class="lkg-acc"><div><button type="button" class="btn" id="lkg-a-prev">Anterior</button><select id="lkg-a-go" aria-label="Ir a">'+L.map(function(x,i){ return '<option value="'+i+'"'+(i===iA?' selected':'')+'>'+esc(x.depto)+'</option>'; }).join('')+'</select></div>'+
+        '<button type="button" class="btn primary" id="lkg-a-next">Guardar y siguiente</button></div><p class="lkg-ok" id="lkg-a-ok"></p></div>':'<div class="lkg-card">No hay departamentos.</div>');
+    $('lkg-ym').onchange=function(){ ym=this.value||hoyYM(); pintarAgua(box); };
+    $('lkg-a-tpl').onclick=async function(){ try{ var X=await xlsx(); var aoa=[['Departamento','Bloque','Monto de agua (Bs.)']];
+      deptos().forEach(function(x){ aoa.push([x.depto,x.bloque||'',aguaDe(x)===''?null:aguaDe(x)]); });
+      bajar(X,aoa,'Agua '+ym,'agua_'+ym+'_'+bslug()+'.xlsx',[{wch:16},{wch:9},{wch:20}]); }catch(e){ alert('No se pudo generar el Excel: '+(e.message||e)); } };
+    $('lkg-a-xls').onclick=function(){ elegirArchivo(async function(f){ var msg=$('lkg-a-msg');
+      try{ var rows=await leer(f), h=-1, cd=-1, cm=-1;
+        for(var r=0;r<Math.min(rows.length,15)&&h<0;r++){ (rows[r]||[]).forEach(function(c,i){ var t=String(c==null?'':c).toLowerCase(); if(cd<0&&/depart|depto|dpto|unidad/.test(t)) cd=i; if(cm<0&&/agua|monto|consumo|importe/.test(t)) cm=i; }); if(cd>=0&&cm>=0) h=r; else { cd=-1; cm=-1; } }
+        if(h<0) throw new Error('No encontré las columnas «Departamento» y «Monto de agua».');
+        var M={}; (DATA.deptos||[]).forEach(function(x){ M[key(x.depto)]=x; }); var ok=0, no=[];
+        for(var r2=h+1;r2<rows.length;r2++){ var fila=rows[r2]||[], nd=String(fila[cd]==null?'':fila[cd]).trim(); if(!nd) continue; var v=num(fila[cm]); if(isNaN(v)) continue;
+          var x=M[key(nd)]; if(!x){ no.push(nd); continue; } ponerAgua(x,v); ok++; }
+        guardar(); pintarAgua(box); msg=$('lkg-a-msg'); msg.className='lkg-ok'; msg.textContent=conceptoAgua()+': cargado en '+ok+' depto(s)'+(no.length?' · no existen: '+no.slice(0,8).join(', '):'')+'.';
+      }catch(e){ msg.className='lkg-ok err'; msg.textContent=e.message||'No se pudo leer el Excel.'; } }); };
+    if(!d) return;
+    var inp=$('lkg-a-m'), ir=function(n){ iA=(n+L.length)%L.length; pintarAgua(box); setTimeout(function(){ var i=$('lkg-a-m'); if(i){ i.focus(); i.select(); } },0); };
+    var guardarUno=function(){ var v=num(inp.value); if(inp.value.trim()!==''&&isNaN(v)){ inp.focus(); return false; } ponerAgua(d,isNaN(v)?0:v); guardar(); return true; };
+    $('lkg-a-next').onclick=function(){ if(guardarUno()) ir(iA+1); };
+    $('lkg-a-prev').onclick=function(){ ir(iA-1); };
+    $('lkg-a-go').onchange=function(){ ir(+this.value); };
+    inp.addEventListener('keydown',function(e){ if(e.key==='Enter'){ e.preventDefault(); if(guardarUno()) ir(iA+1); } });
+  }
+
+  /* ---------------- EXPENSAS POR AÑO ---------------- */
+  function deudaMes(d,m){ var x=(d.meses_adeudados||[]).filter(function(z){ return z.mes===MES[m]&&String(z.anio)===String(anio); })[0]; return x?x.monto:0; }
+  function ponerMes(d,m,monto){
+    if(!Array.isArray(d.meses_adeudados)) d.meses_adeudados=[];
+    var x=d.meses_adeudados.filter(function(z){ return z.mes===MES[m]&&String(z.anio)===String(anio); })[0];
+    monto=Math.round((+monto||0)*100)/100;
+    if(!(monto>0)){ if(x) d.meses_adeudados=d.meses_adeudados.filter(function(z){ return z!==x; }); return; }
+    if(x) x.monto=monto; else d.meses_adeudados.push({mes:MES[m],anio:String(anio),monto:monto});
+    d.meses_adeudados.sort(function(a,b){ return (+b.anio*12+MES.indexOf(b.mes))-(+a.anio*12+MES.indexOf(a.mes)); });
+  }
+  function pintarExp(box){
+    var L=deptos(); if(iE>=L.length) iE=0; var d=L[iE], y0=new Date().getFullYear(), anios=[y0+1,y0,y0-1,y0-2,y0-3];
+    box.innerHTML=
+      '<div class="lkg-card"><h4>Expensas por año</h4><div class="lkg-top"><label>Año<select id="lkg-y">'+anios.map(function(a){ return '<option'+(a===anio?' selected':'')+'>'+a+'</option>'; }).join('')+'</select></label>'+
+        '<button type="button" class="btn" id="lkg-e-tpl">Descargar Excel</button><button type="button" class="btn primary" id="lkg-e-xls">Cargar Excel</button></div><p class="lkg-ok" id="lkg-e-msg"></p></div>'+
+      (d?'<div class="lkg-card"><h4>Carga rápida · monto adeudado por mes</h4>'+
+        '<div class="lkg-paso"><div class="lkg-dep">'+esc(d.depto)+'<small>'+(d.bloque?esc(blq(d))+' · ':'')+'Cuota '+money(d.expensaMensual||DATA.config.expensaMensual||0)+'</small></div><div class="lkg-prog"><i style="width:'+Math.round((iE+1)*100/L.length)+'%"></i></div><span class="lkg-n">'+(iE+1)+' / '+L.length+'</span></div>'+
+        '<div class="lkg-meses">'+MES.map(function(n,m){ var v=deudaMes(d,m); return '<label>'+n.slice(0,3)+'<input data-m="'+m+'" inputmode="decimal" autocomplete="off" placeholder="0" value="'+(v?esc(v):'')+'"></label>'; }).join('')+'</div>'+
+        '<div class="lkg-acc"><div><button type="button" class="btn" id="lkg-e-prev">Anterior</button><select id="lkg-e-go" aria-label="Ir a">'+L.map(function(x,i){ return '<option value="'+i+'"'+(i===iE?' selected':'')+'>'+esc(x.depto)+'</option>'; }).join('')+'</select></div>'+
+        '<button type="button" class="btn primary" id="lkg-e-next">Guardar y siguiente</button></div></div>':'<div class="lkg-card">No hay departamentos.</div>');
+    $('lkg-y').onchange=function(){ anio=+this.value; pintarExp(box); };
+    $('lkg-e-tpl').onclick=async function(){ try{ var X=await xlsx(); var aoa=[['Departamento','Bloque'].concat(MES)];
+      deptos().forEach(function(x){ aoa.push([x.depto,x.bloque||''].concat(MES.map(function(n,m){ var v=deudaMes(x,m); return v?v:null; }))); });
+      bajar(X,aoa,'Expensas '+anio,'expensas_'+anio+'_'+bslug()+'.xlsx',[{wch:16},{wch:9}].concat(MES.map(function(){ return {wch:11}; }))); }catch(e){ alert('No se pudo generar el Excel: '+(e.message||e)); } };
+    $('lkg-e-xls').onclick=function(){ elegirArchivo(async function(f){ var msg=$('lkg-e-msg');
+      try{ var rows=await leer(f), h=-1, cd=-1, cols={};
+        for(var r=0;r<Math.min(rows.length,15)&&h<0;r++){ var cc={}, dd=-1; (rows[r]||[]).forEach(function(c,i){ var t=String(c==null?'':c).trim().toLowerCase(); if(dd<0&&/depart|depto|dpto|unidad/.test(t)) dd=i; MES.forEach(function(n,m){ if(t===n.toLowerCase()||t===n.slice(0,3).toLowerCase()) cc[m]=i; }); });
+          if(dd>=0&&Object.keys(cc).length){ h=r; cd=dd; cols=cc; } }
+        if(h<0) throw new Error('No encontré la columna «Departamento» y las columnas de los meses (Enero, Febrero…).');
+        if(!confirm('Se reemplazará la deuda de expensas de '+anio+' de cada departamento del Excel, en los meses que tengan un valor (0 = no debe). ¿Continuar?')) return;
+        var M={}; (DATA.deptos||[]).forEach(function(x){ M[key(x.depto)]=x; }); var ok=0, no=[];
+        for(var r2=h+1;r2<rows.length;r2++){ var fila=rows[r2]||[], nd=String(fila[cd]==null?'':fila[cd]).trim(); if(!nd) continue; var x=M[key(nd)]; if(!x){ no.push(nd); continue; }
+          var toc=false; Object.keys(cols).forEach(function(m){ var raw=fila[cols[m]]; if(raw==null||String(raw).trim()==='') return; var v=num(raw); if(isNaN(v)) return; ponerMes(x,+m,v); toc=true; });
+          if(toc){ rec(x); ok++; } }
+        guardar(); pintarExp(box); msg=$('lkg-e-msg'); msg.className='lkg-ok'; msg.textContent='Expensas '+anio+': actualizado '+ok+' depto(s)'+(no.length?' · no existen: '+no.slice(0,8).join(', '):'')+'.';
+      }catch(e){ msg.className='lkg-ok err'; msg.textContent=e.message||'No se pudo leer el Excel.'; } }); };
+    if(!d) return;
+    var ins=[].slice.call(box.querySelectorAll('.lkg-meses input'));
+    var ir=function(n){ iE=(n+L.length)%L.length; pintarExp(box); setTimeout(function(){ var i=box.querySelector('.lkg-meses input'); if(i){ i.focus(); i.select(); } },0); };
+    var guardarUno=function(){ var mal=ins.filter(function(i){ return i.value.trim()!==''&&isNaN(num(i.value)); })[0]; if(mal){ mal.focus(); return false; }
+      ins.forEach(function(i){ var v=num(i.value); ponerMes(d,+i.dataset.m,isNaN(v)?0:v); }); rec(d); guardar(); return true; };
+    ins.forEach(function(i,k){ i.addEventListener('keydown',function(e){ if(e.key!=='Enter') return; e.preventDefault();
+      if(k<ins.length-1){ ins[k+1].focus(); ins[k+1].select(); } else if(guardarUno()) ir(iE+1); }); });
+    $('lkg-e-next').onclick=function(){ if(guardarUno()) ir(iE+1); };
+    $('lkg-e-prev').onclick=function(){ ir(iE-1); };
+    $('lkg-e-go').onchange=function(){ ir(+this.value); };
+  }
+
+  window.lukaCargaRapida=function(b){
+    b.innerHTML='<h3>Agua y expensas</h3><div class="lkg-seg"><button type="button" data-m="agua"'+(modo==='agua'?' class="on"':'')+'>Agua del mes</button><button type="button" data-m="exp"'+(modo==='exp'?' class="on"':'')+'>Expensas por año</button></div><div id="lkg-box"></div>';
+    b.querySelectorAll('.lkg-seg button').forEach(function(x){ x.onclick=function(){ modo=x.dataset.m; window.lukaCargaRapida(b); }; });
+    var box=$('lkg-box'); if(modo==='agua') pintarAgua(box); else pintarExp(box);
+  };
+  /* abrir directo: el antiguo «Cargar consumo de agua» lleva aquí */
+  window.lukaAbrirCargaAgua=function(){ modo='agua'; if(window.__bramarOpenCenter) window.__bramarOpenCenter(); setTimeout(function(){ var t=document.querySelector('#bramar-cc-nav [data-k="carga"]'); if(t) t.click(); },60); };
+  document.addEventListener('click',function(e){ var a=e.target.closest&&e.target.closest('#mi-agua'); if(!a) return; e.stopImmediatePropagation(); e.preventDefault();
+    try{ var c=$('cfg2-bd'); if(c){ c.classList.remove('open'); document.body.style.overflow=''; } }catch(x){} window.lukaAbrirCargaAgua(); },true);
+})();
+</script>
+
 <script>
 /* ============================================================================
    Recibos y comprobantes de Bramar / Gestión LUKA en PDF — UN solo diseño para
@@ -24305,7 +24978,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261020154456';
+(function(){ var B='20261023100609';
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
