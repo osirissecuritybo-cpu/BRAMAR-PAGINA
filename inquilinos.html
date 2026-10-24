@@ -1160,18 +1160,22 @@ const PORTAL = {
   function extrasSel(){ const o={}; document.querySelectorAll('#rv-ex-list input[data-ex]').forEach(i=>{ const q=parseInt(i.value,10); if(q>0) o[i.dataset.ex]=q; }); return o; }
   /* precio de inquilino si el área lo tiene; recargos obligatorios (ej. limpieza) y cómo se paga cada cosa */
   const pInq=(v,vi)=>(MODO==='inquilino'&&vi!=null&&vi!=='')?(+vi||0):(+v||0);
-  const FP={transferencia:'Por transferencia',efectivo:'En efectivo',cualquiera:'Transferencia o efectivo'};
+  const MED={transferencia:'Transferencia',qr:'QR',efectivo:'Efectivo',deposito:'Depósito',tarjeta:'Tarjeta'};
+  const medios=v=>Array.isArray(v)?v.filter(x=>MED[x]):(!v||v==='cualquiera'?[]:[String(v)]);
+  const claveM=v=>{ const L=medios(v).slice().sort(); return L.length?L.join('+'):'*'; };
+  const etiquetaM=v=>{ const L=medios(v); if(!L.length) return 'Cualquier medio'; if(L.length===1) return (L[0]==='efectivo'?'En efectivo':'Por '+MED[L[0]].toLowerCase().replace('qr','QR')); return 'Por '+L.map(k=>MED[k]).join(', ').replace(/, ([^,]*)$/,' o $1'); };
   function pintarSuma(){
     const a=areaSel(), t=tramoSel(), ex=extrasSel(), S=(data.servicios||[]), cur=cur0();
     const L=[], alq=pInq(t.monto,t.montoInq), fa=a.pagoAlquiler||'cualquiera';
     const igual=String(t.label||'').toUpperCase()===String(a.nombre||'').toUpperCase();
     L.push({c:'Alquiler · '+(a.nombre||'')+(t.label&&!igual?' ('+t.label+')':''),m:alq,f:fa});
     S.forEach(x=>{ if(ex[x.id]) L.push({c:x.nombre+' × '+ex[x.id],m:ex[x.id]*x.precio,f:fa}); });
-    (a.cargos||[]).forEach(c=>{ const m=pInq(c.monto,c.montoInq); if(m>0) L.push({c:c.nombre+' (obligatorio)',m:m,f:c.pago||'cualquiera'}); });
-    const g=pInq(a.garantia,a.garantiaInq); if(g>0) L.push({c:'Garantía (se devuelve después del evento)',m:g,f:a.pagoGarantia||'cualquiera'});
-    const grupos=['transferencia','efectivo','cualquiera'].map(k=>[k,L.filter(x=>x.f===k)]).filter(x=>x[1].length);
+    (a.cargos||[]).forEach(c=>{ const m=pInq(c.monto,c.montoInq); if(m>0) L.push({c:c.nombre+' (obligatorio)',m:m,f:c.pago}); });
+    const g=pInq(a.garantia,a.garantiaInq); if(g>0) L.push({c:'Garantía (se devuelve después del evento)',m:g,f:a.pagoGarantia});
+    const G={}, orden=[]; L.forEach(x=>{ const k=claveM(x.f); if(!G[k]){ G[k]=[]; orden.push(k); } G[k].push(x); });
+    const grupos=orden.sort((a,b)=>(a==='efectivo')-(b==='efectivo')).map(k=>[k,G[k]]);
     const tot=L.reduce((s,x)=>s+x.m,0);
-    $('#rv-sum').innerHTML=grupos.map(([k,G])=>(grupos.length>1?`<div class="rv-fp"><span>${FP[k]}</span><b>${money(G.reduce((s,x)=>s+x.m,0),cur)}</b></div>`:'')+G.map(x=>`<div><span>${esc(x.c)}</span><b>${money(x.m,cur)}</b></div>`).join('')).join('')+
+    $('#rv-sum').innerHTML=grupos.map(([k,G])=>(grupos.length>1?`<div class="rv-fp"><span>${etiquetaM(G[0].f)}</span><b>${money(G.reduce((s,x)=>s+x.m,0),cur)}</b></div>`:'')+G.map(x=>`<div><span>${esc(x.c)}</span><b>${money(x.m,cur)}</b></div>`).join('')).join('')+
       `<div class="tot"><span>Total a pagar si se aprueba</span><b>${money(tot,cur)}</b></div>`;
   }
   let ocupT=0;
