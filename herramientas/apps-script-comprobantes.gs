@@ -789,7 +789,7 @@ function ptEstado_(portalId, lk, data, depto) {
     resumen: { deuda: deuda, vencimiento: '', actualizado: String(lk.e.upd || '').slice(0, 10) },
     movimientos: mov,
     servicios: ptServicios_(cfg),
-    areas: ptAreas_(cfg).map(function (a) { return { id: a.id, nombre: a.nombre, garantia: +a.garantia || 0, garantiaInq: a.garantiaInq, tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: +t.monto || 0, montoInq: t.montoInq }; }) }; })
+    areas: ptAreas_(cfg).map(function (a) { return { id: a.id, nombre: a.nombre, garantia: +a.garantia || 0, garantiaInq: a.garantiaInq, pagoAlquiler: a.pagoAlquiler || 'cualquiera', pagoGarantia: a.pagoGarantia || 'cualquiera', cargos: (a.cargos || []).map(function (c) { return { nombre: String(c.nombre || ''), monto: +c.monto || 0, montoInq: c.montoInq, pago: c.pago || 'cualquiera', destino: c.destino || 'condominio' }; }), tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: +t.monto || 0, montoInq: t.montoInq }; }) }; })
   };
 }
 const PT_AREAS_DEF = {
@@ -985,8 +985,11 @@ function portal_(d) {
     // servicios extra (opcionales)
     const svc = est.servicios || [], pedidos = [];
     svc.forEach(function (x) { const q = Math.floor(+((d.extras || {})[x.id]) || 0); if (q > 0 && q <= 500) pedidos.push({ id: x.id, nombre: x.nombre, cant: q, precio: x.precio, subtotal: q * x.precio }); });
-    const alquiler = tramo ? +tramo.monto || 0 : 0, garantia = +area.garantia || 0;
-    const totExtras = pedidos.reduce(function (a, x) { return a + x.subtotal; }, 0), total = alquiler + garantia + totExtras;
+    // tarifa de inquilino cuando el área la tiene; recargos obligatorios (ej. limpieza) siempre se suman
+    const pInq = function (v, vi) { return (inq && vi != null && vi !== '') ? +vi || 0 : +v || 0; };
+    const alquiler = tramo ? pInq(tramo.monto, tramo.montoInq) : 0, garantia = pInq(area.garantia, area.garantiaInq);
+    const recargos = (area.cargos || []).map(function (c) { return { nombre: c.nombre, monto: pInq(c.monto, c.montoInq), pago: c.pago }; }).filter(function (c) { return c.monto > 0; });
+    const totExtras = pedidos.reduce(function (a, x) { return a + x.subtotal; }, 0) + recargos.reduce(function (a, x) { return a + x.monto; }, 0), total = alquiler + garantia + totExtras;
     const ocup = ptOcupadas_(pid, data, d.fecha);
     const id = Utilities.getUuid().replace(/-/g, '').slice(0, 16), T = function (v, n) { return "'" + String(v || '').slice(0, n); };
     ptHojaRes_().appendRow([id, new Date(), pid, est.edificio.nombre, T(est.unidad.depto, 20), (inq ? 'Inquilino · ' : '') + String(d.responsable).slice(0, 80),

@@ -15531,7 +15531,7 @@ window.lukaCloud = (function(){
   }
   function addAreaCard(a){
     const wrap = _('asx-editor-rows');
-    const card = document.createElement('div'); card.className='asx-area';
+    const card = document.createElement('div'); card.className='asx-area'; card.dataset.id = a.id || '';
     card.innerHTML = `
       <div class="asx-area-head">
         <input type="text" class="asx-nombre" placeholder="Nombre del área" value="${esc(a.nombre||'')}">
@@ -15548,6 +15548,7 @@ window.lukaCloud = (function(){
     (a.tramos && a.tramos.length ? a.tramos : [{label:'',monto:''}]).forEach(t=>addTramoRow(tramosBox, t));
     card.querySelector('.asx-add-tramo').onclick = ()=> addTramoRow(tramosBox, {label:'',monto:''});
     card.querySelector('.asx-area-del').onclick = ()=> card.remove();
+    try{ if(window.__asxCobro) window.__asxCobro(card, a); }catch(e){}
     wrap.appendChild(card);
   }
   function openAreasEditor(){
@@ -15570,7 +15571,7 @@ window.lukaCloud = (function(){
         label: tr.querySelector('.asx-tr-label').value.trim() || 'General',
         monto: parseFloat(tr.querySelector('.asx-tr-monto').value) || 0,
         montoInq: mi === '' ? null : (parseFloat(mi) || 0) }; }).filter(t => t.monto > 0 || t.label);
-      arr.push({ id: newAreaId(nombre), nombre, garantia, garantiaInq, tramos: tramos.length ? tramos : [{label:'General', monto:0}] });
+      arr.push(Object.assign({ id: card.dataset.id || newAreaId(nombre), nombre, garantia, garantiaInq, tramos: tramos.length ? tramos : [{label:'General', monto:0}] }, (window.__asxLeerCobro ? window.__asxLeerCobro(card) : {})));
     });
     saveAreas(arr);
     _('asx-editor-bd').classList.remove('open');
@@ -24033,9 +24034,10 @@ button.lkrp-b:hover{border-color:#1E4E86}
       if(r.pago){
         var k=ym(r.pago.fecha)||ev; if(!k) return;
         var ing=(r.pago.lineas||[]).reduce(function(a,l){ return a+(+l.monto||0); },0);
-        if(!ing) ing=(+r.monto||0)+(+r.extras||0);
+        if(!ing&&!r.pago2&&!r.pago.pendiente) ing=(+r.monto||0)+(+r.extras||0);
         m(k).alq+=ing; m(k).n++;
         if(+r.pago.garantia>0) m(k).gIn+=(+r.pago.garantia);
+        if(r.pago2){ var k2=ym(r.pago2.fecha)||k, i2=(r.pago2.lineas||[]).reduce(function(a,l){ return a+(+l.monto||0); },0); m(k2).alq+=i2; if(+r.pago2.garantia>0) m(k2).gIn+=(+r.pago2.garantia); }
       } else if(ev && String(r.fecha||r.inicio||'').slice(0,10)<=hoy){
         // reserva ya realizada sin recibo registrado en LUKA: se cuenta en el mes del evento
         var v=(+r.monto||0)+(+r.extras||0);
@@ -24759,6 +24761,227 @@ button.lkrp-b:hover{border-color:#1E4E86}
 })();
 </script>
 
+<style>
+/* ============ Módulo 53 · Áreas sociales: cómo se cobra cada concepto ============ */
+.asx-cobro{margin:14px 0 0;padding:14px 0 0;border-top:1px dashed #E3EAF2}
+.asx-cobro h4{margin:0 0 10px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d93ab}
+.asx-cobro-g{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}
+.asx-cobro-g label{display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#7d93ab}
+.asx-cobro select,.asx-cg-row select{box-sizing:border-box;width:100%;height:44px;padding:0 10px;border:1px solid #D5DEE8;border-radius:10px;background:#F6F8FB;font:inherit;font-size:14px;color:#0B2440}
+.asx-cg-th,.asx-cg-row{display:grid;grid-template-columns:minmax(0,1fr) 90px 90px 40px;gap:8px;align-items:center}
+.asx-cg-row{padding:10px;border:1px solid #E3EAF2;border-radius:12px;background:#fff}
+.asx-cg-row .cg-n{grid-column:1;grid-row:1}.asx-cg-row .cg-m{grid-column:2;grid-row:1}.asx-cg-row .cg-i{grid-column:3;grid-row:1}.asx-cg-row .asx-cg-del{grid-column:4;grid-row:1}
+.asx-cg-row .cg-p{grid-column:1;grid-row:2}.asx-cg-row .cg-d{grid-column:2/5;grid-row:2}
+.asx-cg-th span:nth-child(n+4){display:none}
+.asx-cg-th{padding:0 11px}
+.asx-cg-th{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7d93ab;margin:0 0 6px}
+.asx-cg-rows{display:flex;flex-direction:column;gap:8px}
+.asx-cg-row input{box-sizing:border-box;width:100%;height:44px;padding:0 10px;border:1px solid #D5DEE8;border-radius:10px;background:#F6F8FB;font:inherit;font-size:14px;color:#0B2440}
+.asx-cg-del{width:40px;height:44px;border:1px solid #E3EAF2;border-radius:10px;background:#fff;color:#8E2A20;cursor:pointer}
+.asx-cg-add{height:38px;margin:10px 0 0;padding:0 14px;border:1px dashed #C9D4E0;border-radius:10px;background:#fff;color:#1E4E86;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+@media (max-width:640px){ .asx-cobro-g{grid-template-columns:1fr} .asx-cg-th,.asx-cg-row{grid-template-columns:minmax(0,1fr) 70px 70px 40px} .asx-cg-row .cg-p{grid-column:1/3} .asx-cg-row .cg-d{grid-column:3/5} }
+/* cobro de la reserva */
+.lkq-g{border:1px solid #E3EAF2;border-radius:14px;padding:12px 14px;margin:0 0 10px;background:#fff}
+.lkq-g.off{background:#FAFBFD}
+.lkq-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 6px}
+.lkq-h label{display:flex;align-items:center;gap:8px;font-weight:700;color:#0B2440;font-size:14px;cursor:pointer}
+.lkq-h input{width:18px;height:18px;accent-color:#0B2440}
+.lkq-h small{font-size:12px;color:#7d93ab;font-weight:600}
+.lkq-l{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;color:#0B2440;padding:4px 0}
+.lkq-l span small{display:block;font-size:11.5px;color:#7d93ab}
+.lkq-l b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.lkq-tot{display:flex;justify-content:space-between;font-weight:800;font-size:15px;color:#0B2440;padding:10px 2px 0;border-top:1px solid #E3EAF2;margin:4px 0 12px}
+.lkq-inq{display:flex;align-items:center;gap:8px;font-size:13px;color:#0B2440;margin:0 0 12px}
+.lkq-inq input{width:18px;height:18px;accent-color:#0B2440}
+.lkq-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lkq-grid label{display:flex;flex-direction:column;gap:5px;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#7d93ab}
+.lkq-grid .full{grid-column:1/-1}
+.lkq-grid input,.lkq-grid select{box-sizing:border-box;width:100%;height:44px;padding:0 12px;border:1px solid #D5DEE8;border-radius:10px;background:#F6F8FB;font:inherit;font-size:14px;color:#0B2440;text-transform:none;letter-spacing:0;font-weight:500}
+.lkq-err{color:#9B1C1C;font-size:13px;font-weight:600;margin:10px 0 0}
+.lkq-err:empty{display:none}
+.lkq-foot{display:flex;justify-content:flex-end;gap:8px;margin:16px 0 0}
+.lkq-pend{display:inline-flex;align-items:center;gap:6px;height:26px;padding:0 10px;border-radius:999px;background:#FFF4E0;color:#8A5A00;font-size:12px;font-weight:700;white-space:nowrap}
+@media (max-width:640px){ .lkq-grid{grid-template-columns:1fr} }
+</style>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 53: condiciones de cobro de cada área social.
+   · En «Áreas y precios», cada área define cómo se paga el alquiler y la garantía
+     (cualquier medio / solo transferencia / solo efectivo) y sus cargos obligatorios
+     (ej. limpieza Bs 100 en efectivo, que se entrega a la persona de limpieza).
+   · Al cobrar una reserva se separa lo que entra por transferencia de lo que va en
+     efectivo; lo no cobrado queda «Pendiente en efectivo» y se cobra después con
+     su propio recibo.
+   ============================================================================ */
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+  function money(v){ return (typeof fmtMoney==='function')?fmtMoney(v):('Bs. '+(+v||0)); }
+  function hoy(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function guardar(){ try{ saveDataLocal(); }catch(e){} try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); }catch(e){} }
+  function refrescar(){ try{ if(window.__lukaResRefresh) window.__lukaResRefresh(); else if(typeof renderAreasSociales==='function') renderAreasSociales(); }catch(e){} }
+  function usuario(){ try{ var u=window.lukaCloud&&lukaCloud.user&&lukaCloud.user(); return (u&&(u.nombre||u.n))||''; }catch(e){ return ''; } }
+  var FORMAS=[['cualquiera','Cualquier medio'],['transferencia','Solo transferencia'],['efectivo','Solo efectivo']];
+  function opts(v){ return FORMAS.map(function(f){ return '<option value="'+f[0]+'"'+(f[0]===(v||'cualquiera')?' selected':'')+'>'+f[1]+'</option>'; }).join(''); }
+  window.lukaFormasPago=FORMAS;
+
+  /* ---------- editor de áreas: bloque «Cobro» en cada área ---------- */
+  function filaCargo(box,c){
+    var r=document.createElement('div'); r.className='asx-cg-row';
+    r.innerHTML='<input class="cg-n" placeholder="Ej. Limpieza" value="'+esc(c.nombre||'')+'"><input class="cg-m" type="number" min="0" step="1" placeholder="Bs." value="'+(c.monto==null||c.monto===''?'':esc(c.monto))+'"><input class="cg-i" type="number" min="0" step="1" placeholder="Igual" value="'+(c.montoInq==null||c.montoInq===''?'':esc(c.montoInq))+'">'+
+      '<select class="cg-p">'+opts(c.pago)+'</select><select class="cg-d"><option value="condominio"'+(c.destino!=='terceros'?' selected':'')+'>Ingreso del condominio</option><option value="terceros"'+(c.destino==='terceros'?' selected':'')+'>Se entrega a un tercero</option></select><button type="button" class="asx-cg-del" title="Quitar">✕</button>';
+    r.querySelector('.asx-cg-del').onclick=function(){ r.remove(); };
+    box.appendChild(r);
+  }
+  window.__asxCobro=function(card,a){
+    a=a||{}; if(card.querySelector('.asx-cobro')) return;
+    /* «Limpieza» (u otro recargo) cargado como si fuera un precio por personas: pasa a recargo obligatorio */
+    if(!(a.cargos||[]).length){ var mov=[].slice.call(card.querySelectorAll('.asx-tramo')).filter(function(tr){ return /limpieza|recargo/i.test(tr.querySelector('.asx-tr-label').value); });
+      if(mov.length&&card.querySelectorAll('.asx-tramo').length>mov.length){ a=Object.assign({},a,{cargos:mov.map(function(tr){ var mi=tr.querySelector('.asx-tr-inq').value.trim(); return {nombre:tr.querySelector('.asx-tr-label').value.trim().replace(/^./,function(c){ return c.toUpperCase(); }),monto:parseFloat(tr.querySelector('.asx-tr-monto').value)||0,montoInq:mi===''?null:parseFloat(mi),pago:'efectivo',destino:'terceros'}; })});
+        mov.forEach(function(tr){ tr.remove(); }); } }
+    var b=document.createElement('div'); b.className='asx-cobro';
+    b.innerHTML='<h4>Cobro</h4><div class="asx-cobro-g"><label>Alquiler se paga<select class="cb-alq">'+opts(a.pagoAlquiler)+'</select></label><label>Garantía se paga<select class="cb-gar">'+opts(a.pagoGarantia)+'</select></label></div>'+
+      '<div class="asx-cg-th"><span>Recargo obligatorio</span><span>Propietario</span><span>Inquilino</span><span></span></div><div class="asx-cg-rows"></div><button type="button" class="asx-cg-add">＋ Recargo obligatorio (ej. limpieza)</button>';
+    var rows=b.querySelector('.asx-cg-rows'); (a.cargos||[]).forEach(function(c){ filaCargo(rows,c); });
+    b.querySelector('.asx-cg-add').onclick=function(){ filaCargo(rows,{pago:'efectivo',destino:'terceros'}); rows.lastChild.querySelector('.cg-n').focus(); };
+    card.appendChild(b);
+  };
+  window.__asxLeerCobro=function(card){
+    var b=card.querySelector('.asx-cobro'); if(!b) return {};
+    var num=function(v){ v=String(v||'').trim(); return v===''?null:(parseFloat(v)||0); };
+    return { pagoAlquiler:b.querySelector('.cb-alq').value, pagoGarantia:b.querySelector('.cb-gar').value,
+      cargos:[].slice.call(b.querySelectorAll('.asx-cg-row')).map(function(r){ return { nombre:r.querySelector('.cg-n').value.trim(), monto:num(r.querySelector('.cg-m').value)||0, montoInq:num(r.querySelector('.cg-i').value), pago:r.querySelector('.cg-p').value, destino:r.querySelector('.cg-d').value }; })
+        .filter(function(c){ return c.nombre&&(c.monto>0||c.montoInq>0); }) };
+  };
+
+  /* ---------- precios según propietario / inquilino ---------- */
+  function areaDe(r){ var A=(DATA.config&&DATA.config.areasLuka)||[]; return A.filter(function(a){ return a.id===r.areaId; })[0]||A.filter(function(a){ return a.nombre===r.areaNombre; })[0]||{}; }
+  function pv(v,vi,inq){ return (inq&&vi!=null&&vi!=='')?+vi:(+v||0); }
+  /* conceptos de la reserva, cada uno con cómo se paga y si es ingreso */
+  function conceptos(r,inq){
+    var a=areaDe(r), L=[], fa=a.pagoAlquiler||'cualquiera', t=(a.tramos||[]).filter(function(x){ return x.label===r.tramoLabel; })[0];
+    var alq=(r.__montoFijo||!t)?(+r.monto||0):pv(t.monto,t.montoInq,inq);
+    L.push({k:'alq',concepto:'Alquiler · '+(r.areaNombre||a.nombre||'Área social')+(r.tramoLabel&&String(r.tramoLabel).toUpperCase()!==String(r.areaNombre||a.nombre||'').toUpperCase()?' ('+r.tramoLabel+')':''),monto:alq,forma:fa,tipo:'ingreso'});
+    (Array.isArray(r.extrasLista)?r.extrasLista:[]).forEach(function(x){ L.push({k:'ex',concepto:x.nombre+' × '+x.cant,monto:+x.subtotal||0,forma:fa,tipo:'ingreso'}); });
+    if(!(Array.isArray(r.extrasLista)&&r.extrasLista.length)&&(+r.extras||0)>0) L.push({k:'ex',concepto:'Extras',monto:+r.extras,forma:fa,tipo:'ingreso'});
+    (a.cargos||[]).forEach(function(c,i){ var m=pv(c.monto,c.montoInq,inq); if(m>0) L.push({k:'cg'+i,concepto:c.nombre,monto:m,forma:c.pago||'cualquiera',tipo:c.destino==='terceros'?'terceros':'ingreso'}); });
+    var g=pv(a.garantia!=null?a.garantia:r.garantia,a.garantiaInq,inq); if(!(g>0)) g=+r.garantia||0;
+    if(g>0) L.push({k:'gar',concepto:'Garantía (se devuelve después del evento)',monto:g,forma:a.pagoGarantia||'cualquiera',tipo:'garantia'});
+    return L;
+  }
+  window.lukaConceptosReserva=conceptos;
+  function grupos(L){ var G={transferencia:[],efectivo:[],cualquiera:[]}; L.forEach(function(x){ (G[x.forma]||G.cualquiera).push(x); }); return G; }
+  function suma(L){ return L.reduce(function(a,x){ return a+(+x.monto||0); },0); }
+  function esInq(r){ return r.inquilino===true||/^inquilino\b/i.test(String(r.responsable||'')); }
+
+  /* ---------- cobrar una reserva (reemplaza al cobro anterior) ---------- */
+  function modal(html){
+    var bd=$('lkq-bd'); if(!bd){ bd=document.createElement('div'); bd.id='lkq-bd'; bd.className='modal-backdrop no-print'; document.body.appendChild(bd); bd.addEventListener('click',function(e){ if(e.target===bd) bd.classList.remove('open'); }); }
+    bd.innerHTML='<div class="modal lk-modal" style="max-width:560px"><button class="close-btn" title="Cerrar">&times;</button>'+html+'</div>';
+    bd.querySelector('.close-btn').onclick=function(){ bd.classList.remove('open'); }; bd.classList.add('open'); return bd;
+  }
+  function numero(){ try{ return String(window.lukaReciboSiguiente?window.lukaReciboSiguiente():'').padStart(6,'0'); }catch(e){ return ''; } }
+  function asentar(r,no,fecha,L){
+    var ing=suma(L.filter(function(x){ return x.tipo==='ingreso'; }));
+    if(ing>0&&typeof agregarMovimientoDiario==='function') agregarMovimientoDiario(fecha,'ingreso','otro','Alquiler '+(r.areaNombre||'área social')+(r.depto?' · Depto '+r.depto:''),ing,{recibo:no,depto:r.depto||'',reservaId:r.id});
+    var n=parseInt(String(no).replace(/\D/g,''),10); if(n&&n>=(+DATA.receiptCounter||0)) DATA.receiptCounter=n+1;
+  }
+  function pagoDe(L,base){ return Object.assign(base,{ lineas:L.filter(function(x){ return x.tipo==='ingreso'; }).map(function(x){ return {concepto:x.concepto,monto:x.monto}; }),
+    terceros:L.filter(function(x){ return x.tipo==='terceros'; }).map(function(x){ return {concepto:x.concepto,monto:x.monto}; }),
+    garantia:suma(L.filter(function(x){ return x.tipo==='garantia'; })), total:suma(L) }); }
+  function abrirCobro(r,opts){
+    opts=opts||{}; if(!r) return;
+    if(r.pago){ if(r.pago.pendiente) return abrirPendiente(r); if(window.lukaVerReciboReserva) window.lukaVerReciboReserva(r); return; }
+    var inq=esInq(r);
+    function pintar(){
+      var L=conceptos(r,inq), G=grupos(L), partes=[['transferencia','Por transferencia'],['efectivo','En efectivo'],['cualquiera','Cualquier medio']].filter(function(p){ return G[p[0]].length; });
+      var bloque=function(p,i){ var on=p[0]!=='efectivo'||partes.length===1;
+        return '<div class="lkq-g" data-g="'+p[0]+'"><div class="lkq-h"><label><input type="checkbox" class="lkq-on"'+(on?' checked':'')+'> '+p[1]+'</label><small>'+(on?'Se cobra ahora':'Queda pendiente')+'</small></div>'+
+          G[p[0]].map(function(x){ return '<div class="lkq-l"><span>'+esc(x.concepto)+(x.tipo==='terceros'?'<small>Se entrega a un tercero · no es ingreso</small>':(x.tipo==='garantia'?'<small>En custodia · no es ingreso</small>':''))+'</span><b>'+money(x.monto)+'</b></div>'; }).join('')+'</div>'; };
+      var bd=modal('<h2>Cobrar reserva</h2><p class="modal-sub">'+esc(r.areaNombre||'')+' · '+esc(r.fecha||'')+(r.depto?' · Depto '+esc(r.depto):'')+' · '+esc(r.responsable||'')+'</p>'+
+        '<label class="lkq-inq"><input type="checkbox" id="lkq-inq"'+(inq?' checked':'')+'> Es inquilino (tarifa de inquilino)</label>'+
+        partes.map(bloque).join('')+'<div class="lkq-tot"><span>Cobrado ahora</span><b id="lkq-t"></b></div>'+
+        '<div class="lkq-grid"><label>N.º de recibo<input id="lkq-no" value="'+esc(numero())+'"></label><label>Fecha de pago<input type="date" id="lkq-f" value="'+esc(opts.fecha||hoy())+'"></label>'+
+        '<label>Recibido por<input id="lkq-rec" value="'+esc(usuario())+'"></label><label>Recibí de<input id="lkq-an" value="'+esc(String(r.responsable||'').replace(/^Inquilino ·\s*/i,''))+'"></label>'+
+        '<label class="full">Observación (ej. N.º de comprobante)<input id="lkq-obs" value="'+esc(opts.obs||'')+'"></label></div>'+
+        '<p class="lkq-err" id="lkq-err"></p><div class="lkq-foot"><button type="button" class="btn" id="lkq-x">Cancelar</button><button type="button" class="btn primary" id="lkq-ok">Registrar y ver recibo</button></div>');
+      var sel=function(){ var on=[],off=[]; bd.querySelectorAll('.lkq-g').forEach(function(g){ var c=g.querySelector('.lkq-on').checked; g.classList.toggle('off',!c); g.querySelector('small').textContent=c?'Se cobra ahora':'Queda pendiente'; (c?on:off).push.apply(c?on:off,G[g.dataset.g]); }); return {on:on,off:off}; };
+      var tot=function(){ $('lkq-t').textContent=money(suma(sel().on)); }; bd.querySelectorAll('.lkq-on').forEach(function(c){ c.onchange=tot; }); tot();
+      $('lkq-inq').onchange=function(){ inq=this.checked; pintar(); };
+      $('lkq-x').onclick=function(){ bd.classList.remove('open'); };
+      $('lkq-ok').onclick=function(){
+        var s=sel(); if(!s.on.length){ $('lkq-err').textContent='Marque lo que se cobra ahora.'; return; }
+        var no=String($('lkq-no').value||'').trim().toUpperCase(); if(!no){ $('lkq-err').textContent='Ponga el número de recibo.'; return; }
+        if(window.lukaReciboUsado){ var c=window.lukaReciboUsado(no); if(c){ $('lkq-err').textContent=window.lukaReciboTxt(c); return; } }
+        var f=$('lkq-f').value||hoy(), formas={}; s.on.forEach(function(x){ formas[x.forma]=1; });
+        var metodo=formas.transferencia&&formas.efectivo?'Transferencia y efectivo':(formas.efectivo?'Efectivo':'Transferencia');
+        r.inquilino=inq;
+        r.pago=pagoDe(s.on,{ no:no, fecha:f, metodo:metodo, recibido:$('lkq-rec').value.trim(), a_nombre:$('lkq-an').value.trim(), obs:$('lkq-obs').value.trim(), area:r.areaNombre||'', fechaEvento:r.fecha||String(r.inicio||'').slice(0,10),
+          horario:(String(r.inicio||'').slice(11,16)+(r.fin?' a '+String(r.fin).slice(11,16):'')).trim(), responsable:r.responsable||'', at:new Date().toISOString() });
+        if(s.off.length) r.pago.pendiente=pagoDe(s.off,{forma:'efectivo'});
+        var g=suma(L.filter(function(x){ return x.tipo==='garantia'; })); if(g>0) r.garantia=g;
+        r.monto=(L.filter(function(x){ return x.k==='alq'; })[0]||{}).monto||r.monto;
+        asentar(r,no,f,s.on);
+        guardar(); bd.classList.remove('open'); refrescar();
+        if(opts.onDone) try{ opts.onDone(r); }catch(e){}
+        if(window.lukaVerReciboReserva) window.lukaVerReciboReserva(r);
+      };
+    }
+    pintar();
+  }
+  /* cobrar lo que quedó pendiente (ej. limpieza y garantía en efectivo), con su propio recibo */
+  function abrirPendiente(r){
+    var P=r.pago&&r.pago.pendiente; if(!P) return;
+    var L=[].concat((P.lineas||[]).map(function(x){ return Object.assign({tipo:'ingreso'},x); }),(P.terceros||[]).map(function(x){ return Object.assign({tipo:'terceros'},x); }),(+P.garantia>0?[{tipo:'garantia',concepto:'Garantía (se devuelve después del evento)',monto:+P.garantia}]:[]));
+    var bd=modal('<h2>Cobrar pendiente</h2><p class="modal-sub">'+esc(r.areaNombre||'')+' · '+esc(r.fecha||'')+(r.depto?' · Depto '+esc(r.depto):'')+'</p>'+
+      '<div class="lkq-g"><div class="lkq-h"><label>En efectivo</label><small>Recibo '+esc(r.pago.no)+' ya cobró lo demás</small></div>'+L.map(function(x){ return '<div class="lkq-l"><span>'+esc(x.concepto)+(x.tipo==='terceros'?'<small>Se entrega a un tercero · no es ingreso</small>':(x.tipo==='garantia'?'<small>En custodia · no es ingreso</small>':''))+'</span><b>'+money(x.monto)+'</b></div>'; }).join('')+'</div>'+
+      '<div class="lkq-tot"><span>Total</span><b>'+money(suma(L))+'</b></div>'+
+      '<div class="lkq-grid"><label>N.º de recibo<input id="lkq-no" value="'+esc(numero())+'"></label><label>Fecha<input type="date" id="lkq-f" value="'+esc(hoy())+'"></label>'+
+      '<label>Método<select id="lkq-m"><option>Efectivo</option><option>Transferencia</option><option>QR</option></select></label><label>Recibido por<input id="lkq-rec" value="'+esc(usuario())+'"></label></div>'+
+      '<p class="lkq-err" id="lkq-err"></p><div class="lkq-foot"><button type="button" class="btn" id="lkq-x">Cancelar</button><button type="button" class="btn primary" id="lkq-ok">Registrar cobro</button></div>');
+    $('lkq-x').onclick=function(){ bd.classList.remove('open'); };
+    $('lkq-ok').onclick=function(){
+      var no=String($('lkq-no').value||'').trim().toUpperCase(); if(!no){ $('lkq-err').textContent='Ponga el número de recibo.'; return; }
+      if(window.lukaReciboUsado){ var c=window.lukaReciboUsado(no); if(c){ $('lkq-err').textContent=window.lukaReciboTxt(c); return; } }
+      var f=$('lkq-f').value||hoy();
+      r.pago2=pagoDe(L,{ no:no, fecha:f, metodo:$('lkq-m').value, recibido:$('lkq-rec').value.trim(), a_nombre:r.pago.a_nombre||'', area:r.pago.area, fechaEvento:r.pago.fechaEvento, horario:r.pago.horario, responsable:r.pago.responsable, at:new Date().toISOString(), complemento:r.pago.no });
+      delete r.pago.pendiente;
+      asentar(r,no,f,L);
+      guardar(); bd.classList.remove('open'); refrescar();
+      if(typeof showSaveToast==='function') showSaveToast('Cobro registrado · recibo '+no);
+      try{ if(window.lukaReservaPDF) window.lukaReservaPDF(r,'2'); }catch(e){}
+    };
+  }
+  window.lukaCobrarPendiente=abrirPendiente;
+  function fijar(){ if(window.lukaPagoReserva&&window.lukaPagoReserva.__cobro) return true; if(typeof window.lukaPagoReserva!=='function') return false; abrirCobro.__cobro=1; window.lukaPagoReserva=abrirCobro; return true; }
+  var n=0; (function t(){ if(!fijar()&&n++<40) setTimeout(t,250); })(); setTimeout(fijar,4000);
+
+  /* ---------- en la lista y el detalle: lo pendiente en efectivo, a la vista ---------- */
+  function marcar(){
+    document.querySelectorAll('.lkr-res[data-id]').forEach(function(row){
+      var r=(DATA.reservasSociales||[]).filter(function(x){ return String(x.id)===row.dataset.id; })[0]; if(!r) return;
+      var P=r.pago&&r.pago.pendiente, ya=row.querySelector('.lkq-pend');
+      if(!P){ if(ya) ya.remove(); return; } if(ya) return;
+      var b=document.createElement('button'); b.type='button'; b.className='lkq-pend'; b.textContent='Pendiente en efectivo '+money(+P.total||0);
+      b.onclick=function(e){ e.stopPropagation(); abrirPendiente(r); };
+      var donde=row.querySelector('.lkrp-acc')||row.lastElementChild||row; donde.insertBefore(b,donde.firstChild);
+    });
+    var bd=$('lkr-det-bd'), r=window.__lkDetR;
+    if(bd&&bd.classList.contains('open')&&r&&r.pago&&r.pago.pendiente&&!bd.querySelector('.lkq-pend')){
+      var box=bd.querySelector('.lke-pago .lke-acc'); if(box){ var b2=document.createElement('button'); b2.type='button'; b2.className='btn primary lkq-pend'; b2.textContent='Cobrar pendiente '+money(+r.pago.pendiente.total||0);
+        b2.onclick=function(){ bd.classList.remove('open'); abrirPendiente(r); }; box.appendChild(b2); }
+    }
+    if(bd&&bd.classList.contains('open')&&r&&r.pago2&&!bd.querySelector('.lkq-r2')){
+      var box2=bd.querySelector('.lke-pago .lke-acc'); if(box2){ var b3=document.createElement('button'); b3.type='button'; b3.className='btn lkq-r2'; b3.textContent='Recibo '+r.pago2.no;
+        b3.onclick=function(){ try{ window.lukaReservaPDF(r,'2'); }catch(e){} }; box2.appendChild(b3); }
+    }
+  }
+  var pend=false;
+  new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; marcar(); }); })
+    .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
+
 <script>
 /* ============================================================================
    Recibos y comprobantes de Bramar / Gestión LUKA en PDF — UN solo diseño para
@@ -24939,11 +25162,13 @@ button.lkrp-b:hover{border-color:#1E4E86}
     }));
   };
   /* ---- alquiler de área social ---- */
-  window.lukaReservaPDF=function(r){
-    var p=r.pago; if(!p) return;
+  window.lukaReservaPDF=function(r,cual){
+    var p=cual==='2'?r.pago2:r.pago; if(!p) return;
     var L=p.lineas||[], ing=L.reduce(function(a,l){ return a+(+l.monto||0); },0), gar=+p.garantia||0;
     var filas=L.map(function(l){ return {t:l.concepto, v:+l.monto||0, tipo:'ok'}; });
+    (p.terceros||[]).forEach(function(l){ filas.push({t:l.concepto+' (se entrega a un tercero)', v:+l.monto||0, tipo:'info'}); });
     if(gar>0) filas.push({t:'Garantía (depósito reembolsable, no es ingreso)', v:gar, tipo:'info'});
+    if(p.pendiente) filas.push({t:'Pendiente en efectivo', v:+p.pendiente.total||0, tipo:'gris'});
     var cod=''; try{ cod=window.lukaDocCodigoReserva(window.lukaCtxE(),window.lukaUnidadDe(r),p); }catch(e){}
     return lukaDocPDF(Object.assign(base(),{
       subtitulo:'Recibo de alquiler · Área social', noLabel:'RECIBO N.º', no:p.no,
@@ -24951,9 +25176,9 @@ button.lkrp-b:hover{border-color:#1E4E86}
       campos:[['Departamento',(r.depto||'—')],['Fecha de pago',fl(p.fecha)],['Método de pago',p.metodo||'—'],['Recibido por',p.recibido||'—']],
       conceptoLabel:'RESERVA', concepto:(p.area||r.areaNombre||'')+' · '+fl(p.fechaEvento||r.fecha)+(p.horario?' · '+p.horario:''), obs:p.obs||'',
       lista:{titulo:'Detalle', filas:filas},
-      monto:{label:'Total recibido', valor:+p.total||ing+gar},
+      monto:{label:'Total recibido', valor:+p.total||ing+gar+(p.terceros||[]).reduce(function(a,l){ return a+(+l.monto||0); },0)},
       lado:{label:'Ingreso por alquiler', valor:ing, neutro:true},
-      nota:gar>0?('La garantía de '+((typeof fmtMoney==='function')?fmtMoney(gar):gar)+' se devuelve después del evento, previa revisión del área.'):'',
+      nota:(p.pendiente?'Queda pendiente en efectivo: '+((typeof fmtMoney==='function')?fmtMoney(p.pendiente.total):p.pendiente.total)+'. ':'')+(p.complemento?'Complementa el recibo '+p.complemento+'. ':'')+(gar>0?('La garantía de '+((typeof fmtMoney==='function')?fmtMoney(gar):gar)+' se devuelve después del evento, previa revisión del área.'):''),
       selloDigital:'PAGADO',
       qr:(function(){ try{ return window.lukaDocQRReserva(window.lukaCtxE(),window.lukaUnidadDe(r),p); }catch(e){ return 'Recibo '+p.no+' · '+ed(); } })(),
       pie:pieTxt('Recibo válido como comprobante de pago'),
@@ -25017,7 +25242,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261024110233'; window.LUKA_BUILD=B;
+(function(){ var B='20261024112511'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }

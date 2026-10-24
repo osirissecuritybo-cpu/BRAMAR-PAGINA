@@ -534,6 +534,9 @@ html,body{overflow-x:clip;max-width:100%}
 .inq-code b{font-size:26px;letter-spacing:.14em;color:var(--navy);font-weight:500}
 #inq-msg .alert{margin-top:12px}
 .inq-txt{margin:14px 0 0;padding:14px 16px;border-radius:14px;background:var(--sand);font:inherit;font-size:14.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+#rv-sum .rv-fp{margin-top:8px;padding-top:8px;border-top:1px solid var(--line,#E3EAF2);font-weight:800}
+#rv-sum .rv-fp:first-child{margin-top:0;padding-top:0;border-top:0}
+#rv-sum .rv-fp span{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7d93ab)}
 </style>
 </head>
 <body>
@@ -1155,12 +1158,21 @@ const PORTAL = {
   const areaSel=()=>{ const A=(data&&data.areas)||[]; return A.find(x=>x.id===$('#rv-area').value)||A[0]||{}; };
   const tramoSel=()=>{ const a=areaSel(); return (a.tramos||[]).find(t=>t.label===$('#rv-tramo').value)||{label:'',monto:0}; };
   function extrasSel(){ const o={}; document.querySelectorAll('#rv-ex-list input[data-ex]').forEach(i=>{ const q=parseInt(i.value,10); if(q>0) o[i.dataset.ex]=q; }); return o; }
+  /* precio de inquilino si el área lo tiene; recargos obligatorios (ej. limpieza) y cómo se paga cada cosa */
+  const pInq=(v,vi)=>(MODO==='inquilino'&&vi!=null&&vi!=='')?(+vi||0):(+v||0);
+  const FP={transferencia:'Por transferencia',efectivo:'En efectivo',cualquiera:'Transferencia o efectivo'};
   function pintarSuma(){
     const a=areaSel(), t=tramoSel(), ex=extrasSel(), S=(data.servicios||[]), cur=cur0();
-    let tot=+t.monto||0, filas=`<div><span>Alquiler · ${esc(a.nombre||'')}${t.label?' ('+esc(t.label)+')':''}</span><b>${money(t.monto,cur)}</b></div>`;
-    S.forEach(x=>{ if(ex[x.id]){ const sub=ex[x.id]*x.precio; tot+=sub; filas+=`<div><span>${esc(x.nombre)} × ${ex[x.id]}</span><b>${money(sub,cur)}</b></div>`; } });
-    if(a.garantia){ tot+=+a.garantia; filas+=`<div><span>Garantía (se devuelve después del evento)</span><b>${money(a.garantia,cur)}</b></div>`; }
-    $('#rv-sum').innerHTML=filas+`<div class="tot"><span>Total a pagar si se aprueba</span><b>${money(tot,cur)}</b></div>`;
+    const L=[], alq=pInq(t.monto,t.montoInq), fa=a.pagoAlquiler||'cualquiera';
+    const igual=String(t.label||'').toUpperCase()===String(a.nombre||'').toUpperCase();
+    L.push({c:'Alquiler · '+(a.nombre||'')+(t.label&&!igual?' ('+t.label+')':''),m:alq,f:fa});
+    S.forEach(x=>{ if(ex[x.id]) L.push({c:x.nombre+' × '+ex[x.id],m:ex[x.id]*x.precio,f:fa}); });
+    (a.cargos||[]).forEach(c=>{ const m=pInq(c.monto,c.montoInq); if(m>0) L.push({c:c.nombre+' (obligatorio)',m:m,f:c.pago||'cualquiera'}); });
+    const g=pInq(a.garantia,a.garantiaInq); if(g>0) L.push({c:'Garantía (se devuelve después del evento)',m:g,f:a.pagoGarantia||'cualquiera'});
+    const grupos=['transferencia','efectivo','cualquiera'].map(k=>[k,L.filter(x=>x.f===k)]).filter(x=>x[1].length);
+    const tot=L.reduce((s,x)=>s+x.m,0);
+    $('#rv-sum').innerHTML=grupos.map(([k,G])=>(grupos.length>1?`<div class="rv-fp"><span>${FP[k]}</span><b>${money(G.reduce((s,x)=>s+x.m,0),cur)}</b></div>`:'')+G.map(x=>`<div><span>${esc(x.c)}</span><b>${money(x.m,cur)}</b></div>`).join('')).join('')+
+      `<div class="tot"><span>Total a pagar si se aprueba</span><b>${money(tot,cur)}</b></div>`;
   }
   let ocupT=0;
   async function revisarFecha(){
@@ -1181,7 +1193,7 @@ const PORTAL = {
     box.hidden=false; $('#m-rv').hidden=false; $('#t-rv').hidden=false; $('#m-nav-rv').hidden=false; $('#d-nav-rv').hidden=false;
     const sa=$('#rv-area'); sa.innerHTML=areas.map(a=>`<option value="${esc(a.id)}">${esc(a.nombre)}</option>`).join('');
     const pintaTramos=()=>{ const a=areaSel(), cur=cur0();
-      $('#rv-tramo').innerHTML=(a.tramos||[]).map(t=>`<option value="${esc(t.label)}">${esc(t.label)}${t.monto?' — '+money(t.monto,cur):''}</option>`).join('')||'<option value="">General</option>';
+      $('#rv-tramo').innerHTML=(a.tramos||[]).map(t=>`<option value="${esc(t.label)}">${esc(t.label)}${pInq(t.monto,t.montoInq)?' — '+money(pInq(t.monto,t.montoInq),cur):''}</option>`).join('')||'<option value="">General</option>';
       pintarSuma(); if(rvDlg.classList.contains('open')) cargarOcupadas(); };
     sa.onchange=pintaTramos; $('#rv-tramo').onchange=pintarSuma;
     const S=data.servicios||[];
