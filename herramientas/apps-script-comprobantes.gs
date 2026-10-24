@@ -382,6 +382,8 @@ function probarCorreo() {
      guardó antes, se avisa (conflicto) para no pisar cambios.
    ============================================================================ */
 const LK_CARPETA = 'LUKA Datos', LK_DIAS = 60;
+// versión mínima de LUKA que puede guardar: una pestaña vieja (sin las uniones seguras) ya no puede pisar datos
+const LK_MIN_CV = '20261024110127';
 function lkProps_() { return PropertiesService.getScriptProperties(); }
 function lkLeer_(k, def) { try { const v = lkProps_().getProperty(k); return v ? JSON.parse(v) : def; } catch (e) { return def; } }
 function lkEscribir_(k, v) { lkProps_().setProperty(k, JSON.stringify(v)); }
@@ -485,6 +487,7 @@ function luka_(d) {
         lkLog_(u, E[d.id].name, 'Creó el edificio', '');
       } else {
         if (!puedeVer_(u, d.id)) return json({ ok: false, error: 'Sin acceso a este edificio.' });
+        if (String(d.cv || '') < LK_MIN_CV) return json({ ok: false, viejo: true, error: 'Hay una versión nueva de LUKA: recargue la página para guardar.' });
         // si la versión no coincide, alguien (otro equipo u OTRA PESTAÑA del mismo) guardó antes:
         // el cliente une los cambios. Nunca se pisa una versión más nueva con una copia vieja.
         if (Number(d.v) !== Number(e.v)) return json({ ok: false, conflicto: true, v: e.v, por: e.by, actualizado: e.upd, error: 'Otro dispositivo guardó cambios antes.' });

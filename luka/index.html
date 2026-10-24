@@ -13501,7 +13501,7 @@ window.lukaCloud = (function(){
   function curId(){ try{ var k=LOCAL_DATA_KEY; return /^luka-b-/.test(k)?k.slice(7):null; }catch(e){ return null; } }
 
   function api(body){
-    if(ses&&ses.token&&!body.t) body.t=ses.token;
+    if(ses&&ses.token&&!body.t) body.t=ses.token; if(!body.cv) body.cv=window.LUKA_BUILD||'';
     var ms=body.action==='lk_pulso'?15000:(body.action==='lk_guardar'?90000:45000), ctl=null, tm=null;
     try{ ctl=new AbortController(); tm=setTimeout(function(){ try{ ctl.abort(); }catch(e){} },ms); }catch(e){}
     return fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body),signal:ctl?ctl.signal:undefined})
@@ -13757,6 +13757,7 @@ window.lukaCloud = (function(){
     }catch(e){
       if(e.sesion===false){ logout(true); return false; }
       if(e.offline){ status('Sin conexión: se subirá al volver internet'); clearTimeout(retryTimer); retryTimer=setTimeout(function(){ if(dirtyBase(id)!=null) pushCurrent(); },20000); return false; }
+      if(e.data&&e.data.viejo){ status('Actualizando LUKA…'); try{ sessionStorage.removeItem('luka.recargado.x'); }catch(_){} setTimeout(function(){ location.reload(); },800); return false; }
       if(e.data&&e.data.conflicto){ await conflict(id,data,e.data,silent); return false; }
       if(e.data&&e.data.vacio){ setDirty(id,null); status('Se recuperaron los datos de la nube'); try{ await reload(id); }catch(_){} return false; }
       if(e.data&&e.data.borrado){ await olvidarLocal(id); olvidarLista(); listaLocal(function(L){ return L.filter(function(x){ return x.id!==id; }); }); alert('Este edificio fue eliminado por un coordinador.'); if(window.lukaShowSelector) window.lukaShowSelector(); return false; }
@@ -13869,6 +13870,20 @@ window.lukaCloud = (function(){
     Object.keys(m).forEach(function(k){ if(/Counter$/.test(k)&&typeof m[k]==='number') r[k]=Math.max(m[k],+t[k]||0); });
     return r;
   }
+  /* La deuda de un depto (meses, ascensor, cargos, totales) es el resultado de SUS pagos: nunca se mezcla
+     campo por campo. Si solo un lado cobró o anuló, su estado de cuenta completo es el que vale. */
+  var FIN=['meses_adeudados','ascensor_debt','cargos_extra','mesesPrepagados','expensa_debt','cargos_debt','total_debt','num_meses_mora','al_dia','en_mora_expensas','tiene_deuda_extra','historial_pagos','ultimo_pago','pagos_registrados'];
+  function cuentasCoherentes(b,m,t,u){
+    var av=[], porId=function(doc){ var o={}; (doc&&doc.deptos||[]).forEach(function(d){ o[String(d.id)]=d; }); return o; }, B=porId(b), M=porId(m), T=porId(t);
+    var firma=function(d){ return d?JSON.stringify((d.pagos_registrados||[]).map(function(p){ return [p.id,p.monto,p.fecha]; }).sort()):''; };
+    (u.deptos||[]).forEach(function(d){ var k=String(d.id), db=B[k], dm=M[k], dt=T[k]; if(!dm||!dt) return;
+      var cm=firma(dm)!==firma(db), ct=firma(dt)!==firma(db), src=null;
+      if(cm&&!ct) src=dm; else if(ct&&!cm) src=dt; else if(cm&&ct){ src=dt; av.push('Depto '+d.depto+': hubo cobros en dos equipos a la vez; quedó el de la nube. Revise sus pagos.'); }
+      else if(!igual(dm.cargos_extra,dt.cargos_extra)||dm.ascensor_debt!==dt.ascensor_debt||!igual(dm.meses_adeudados,dt.meses_adeudados)){ src=igual(dm.meses_adeudados,db&&db.meses_adeudados)&&igual(dm.cargos_extra,db&&db.cargos_extra)&&dm.ascensor_debt===(db&&db.ascensor_debt)?dt:dm; }
+      if(src) FIN.forEach(function(f){ if(f in src) d[f]=JSON.parse(JSON.stringify(src[f])); else delete d[f]; });
+    });
+    return av;
+  }
   var uniendo={};
   async function conflict(id,data,info,silent){
     if((uniendo[id]=(uniendo[id]||0)+1)>4){ uniendo[id]=0; setDirty(id,null); await reload(id); return; }
@@ -13877,7 +13892,7 @@ window.lukaCloud = (function(){
       var base; try{ base=synced[id]!=null?JSON.parse(synced[id]):undefined; }catch(e){ base=undefined; }
       if(base===undefined){ try{ var bs=await baseGuardada(id,dirtyBase(id)); if(bs) base=JSON.parse(bs); }catch(e){} }
       var unido, avisos=[];
-      if(base!==undefined){ var pc=sinChoques(base,data,nube); avisos=pc.avisos; unido=unir(base,pc.m,nube); }
+      if(base!==undefined){ var pc=sinChoques(base,data,nube); avisos=pc.avisos; unido=unir(base,pc.m,nube); avisos=avisos.concat(cuentasCoherentes(base,pc.m,nube,unido)); }
       else { try{ await idbSet('luka-respaldo-'+id,{at:new Date().toISOString(),data:data}); }catch(e){} unido=unirSinBase(data,nube); }
       if(avisos.length) setTimeout(function(){ try{ banner(avisos.join(' ')); }catch(e){} },300);
       if(!(unido.deptos||[]).length&&(nube.deptos||[]).length) unido=nube;   // nunca queda vacío
@@ -25002,7 +25017,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261024101749';
+(function(){ var B='20261024110233'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
