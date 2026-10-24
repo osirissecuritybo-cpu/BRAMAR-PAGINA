@@ -24222,7 +24222,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
       var mover=an.length?reales:reales.slice(1);
       mover.forEach(function(u){
         var nv=++mx, re=new RegExp('0*'+n+'(?!\\d)'), cam=function(t){ return String(t).replace(re,pad(nv)); };
-        if(u.tipo==='pago'){ var viejo=u.obj.recibo_no; u.obj.recibo_no=cam(viejo); (DATA.diario||[]).forEach(function(e){ if(e.pagoId===u.obj.id&&e.recibo) e.recibo=cam(e.recibo); }); }
+        if(u.tipo==='pago'){ var viejo=u.obj.recibo_no; u.obj.recibo_no=cam(viejo); (DATA.diario||[]).forEach(function(e){ if(e.pagoId===u.obj.id&&(!e.depto||e.depto===u.depto)&&e.recibo===viejo) e.recibo=u.obj.recibo_no; }); }
         else if(u.tipo==='reserva'){ var v2=u.obj.pago.no; u.obj.pago.no=cam(v2); (DATA.diario||[]).forEach(function(e){ if(e.reservaId===u.obj.id&&e.recibo===v2) e.recibo=u.obj.pago.no; }); }
         else if(u.tipo==='diario'){ u.obj.recibo=cam(u.obj.recibo); }
         cambios.push({de:n,a:nv,txt:quien(u)+(u.fecha?' · '+u.fecha:'')+(an.length?' (el '+pad(n)+' está anulado)':'')});
@@ -24232,6 +24232,30 @@ button.lkrp-b:hover{border-color:#1E4E86}
     return cambios;
   }
   window.lukaCorregirRecibosRepetidos=corregir;
+  /* reparación al cargar: ids de pago repetidos entre deptos (venían de dos equipos que cobraron a la vez)
+     y asientos del reporte diario cuyo N.º no coincide con el de su pago. Determinista: todos los equipos
+     llegan al mismo resultado. */
+  function reparar(){
+    if(typeof DATA==='undefined'||!DATA||!Array.isArray(DATA.deptos)) return 0;
+    var cambios=0, D=DATA.diario||[], top=+DATA.pagoCounter||0;
+    DATA.deptos.forEach(function(d){ (d.pagos_registrados||[]).forEach(function(p){ var m=String(p.id||'').match(/^p(\d+)$/); if(m&&+m[1]>top) top=+m[1]; }); });
+    if(top>(+DATA.pagoCounter||0)){ DATA.pagoCounter=top; cambios++; }
+    var vistos={};
+    DATA.deptos.forEach(function(d){ (d.pagos_registrados||[]).forEach(function(p){ if(p.id==null) return; var k=String(p.id);
+      if(vistos[k]&&vistos[k]!==d){ var nuevo='p'+(++DATA.pagoCounter);
+        D.forEach(function(e){ if(String(e.pagoId)===k&&e.depto===d.depto) e.pagoId=nuevo; }); p.id=nuevo; cambios++; }
+      else vistos[k]=d; }); });
+    var idx={}; DATA.deptos.forEach(function(d){ (d.pagos_registrados||[]).forEach(function(p){ idx[String(p.id)+'|'+d.depto]=p; }); });
+    D.forEach(function(e){ if(e.pagoId==null||!e.recibo) return; var p=idx[String(e.pagoId)+'|'+(e.depto||'')]; if(p&&p.recibo_no&&e.recibo!==p.recibo_no){ e.recibo=p.recibo_no; cambios++; } });
+    ['diarioCounter','reservaCounter','cargoCounter'].forEach(function(c){ var L=c==='diarioCounter'?D:(c==='reservaCounter'?(DATA.reservasSociales||[]):[].concat.apply([],DATA.deptos.map(function(d){ return d.cargos_extra||[]; })));
+      var mx=0; L.forEach(function(x){ var m=String(x&&x.id!=null?x.id:'').match(/(\d+)$/); if(m&&+m[1]>mx) mx=+m[1]; }); if(mx>(+DATA[c]||0)){ DATA[c]=mx; cambios++; } });
+    return cambios;
+  }
+  window.lukaRepararRecibos=reparar;
+  (function enganchar(){ if(typeof window.initData!=='function'){ setTimeout(enganchar,200); return; } if(window.initData.__rep) return;
+    var o=window.initData, w=function(){ var r=o.apply(this,arguments); try{ if(reparar()) setTimeout(function(){ try{ saveDataLocal(); }catch(e){} },1500); }catch(e){} return r; };
+    w.__rep=1; window.initData=w; try{ initData=w; }catch(e){} })();
+  setTimeout(function(){ try{ if(reparar()) saveDataLocal(); }catch(e){} },3000);
   function hayRepetidos(){ var desde=parseInt((DATA.config||{}).reciboDesde,10)||0, m=usos(); return Object.keys(m).some(function(n){ return +n>=desde&&m[n].length>1; }); }
   function botonCorregir(){
     var t=document.getElementById('lk-dlg-title'), body=document.getElementById('lk-dlg-body');
@@ -24978,7 +25002,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261023100609';
+(function(){ var B='20261024101749';
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
