@@ -20459,11 +20459,13 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   function hide(id){ var el=document.getElementById(id); if(el) el.classList.remove('open'); }
 
   var TABS = [
-    { k:'edificio',  label:'Edificio actual' },
+    { k:'edificio',  label:'Datos del edificio' },
+    { k:'cobro',     label:'Datos de cobro y QR' },
+    { k:'recibos',   label:'Numeración de recibos' },
+    { k:'deptos',    label:'Departamentos' },
     { k:'cuotas',    label:'Cuotas extraordinarias' },
     { k:'pizarra',   label:'Pizarra (columnas)' },
-    { k:'servicios', label:'Mobiliario' },
-    { k:'areas',     label:'Áreas sociales' },
+    { k:'areas',     label:'Áreas sociales y mobiliario' },
     { k:'tema',      label:'Personalización visual' },
     { k:'campos',    label:'Campos personalizados' },
     { k:'carga',     label:'Agua y expensas' }
@@ -20528,9 +20530,11 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     if(current==='cuotas') return renderCuotas(b);
     if(current==='pizarra') return renderPizarraCfg(b);
     if(current==='servicios') return renderLink(b,'Mobiliario','','Abrir mobiliario', function(){ window.__bramarOpenSvc(); });
+    if(current==='areas'&&window.lukaCcAreas) return window.lukaCcAreas(b);
     if(current==='areas') return renderLink(b,'Áreas sociales','Nombres, garantías y precios de las áreas reservables.','Abrir editor de áreas', window.__lukaOpenAreasEditor);
     if(current==='tema') return renderLink(b,'Personalización visual','Colores del edificio (cabecera, acento y fondos).','Abrir colores', window.__bramarOpenTema);
     if(current==='campos') return renderCampos(b);
+    if((current==='cobro'||current==='recibos'||current==='deptos')&&window.lukaPrestarCfg) return window.lukaPrestarCfg(current,b);
     if(current==='carga'&&window.lukaCargaRapida) return window.lukaCargaRapida(b);
   }
 
@@ -21890,7 +21894,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       inicio:r.fecha+'T'+(r.hini||'00:00'), fin:r.hfin?(r.hfin<(r.hini||'')?r.fecha+'T23:59':r.fecha+'T'+r.hfin):'', fecha:r.fecha,
       monto:r.alquiler!=null?+r.alquiler:(+t.monto||0), garantia:r.garantia!=null?+r.garantia:(+a.garantia||0),
       sillas:cant('silla'), mesas:cant('mesa'), mesasNuevas:cant('mesaNueva'), extras:(r.extras||[]).reduce(function(s,x){ return s+(+x.subtotal||0); },0),
-      estado:'Confirmada', obs:'Solicitada desde el portal de propietarios'+(r.telefono?' · Tel. '+r.telefono:'')+(r.personas?' · '+r.personas+' personas':'')+(r.extrasTxt?' · Extras: '+r.extrasTxt:'') });
+      estado:'Confirmada', obs:'Solicitada desde el portal de propietarios'+(r.telefono?' · Tel. '+r.telefono:'')+(r.personas?' · '+r.personas+' personas':'')+(r.extrasTxt?' · Extras: '+r.extrasTxt:'')+(r.condiciones?' · Condiciones de uso: '+r.condiciones:''), condiciones:r.condiciones||'', inquilino:/^inquilino/i.test(String(r.responsable||'')) });
     function cant(k){ var x=(r.extras||[]).filter(function(z){ return z.id===k; })[0]; return x?+x.cant||0:0; }
     guardar();
     try{ if(typeof renderAreasSociales==='function') renderAreasSociales(); }catch(e){}
@@ -23589,7 +23593,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 /* mobiliario */
 .lkm{border:1px solid #E3EAF2;border-radius:14px;padding:16px;margin:18px 0 0;background:#fff}
 .lkm h3{margin:0 0 12px;font-size:15.5px;font-weight:700;color:#0B2440}
-.lkm-th,.lkm-row{display:grid;grid-template-columns:minmax(0,1fr) 104px 104px 44px;gap:10px;align-items:center}
+.lkm-th,.lkm-row{display:grid;grid-template-columns:minmax(0,1fr) 96px 96px 84px 44px;gap:10px;align-items:center}
 .lkm-th{font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d93ab;margin:0 0 6px}
 .lkm-rows{display:flex;flex-direction:column;gap:8px}
 .lkm-row input[type=text],.lkm-row input[type=number]{box-sizing:border-box;width:100%;height:44px;padding:0 12px;border:1px solid #D5DEE8;border-radius:10px;background:#F6F8FB;font:inherit;font-size:14.5px;color:#0B2440}
@@ -23598,7 +23602,8 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 .lkm-vacio{font-size:13.5px;color:#7d93ab;padding:6px 0}
 @media (max-width:600px){
   #asx-editor-bd .modal{padding:18px!important}
-  .asx-th,.asx-tramo,.lkm-th,.lkm-row{grid-template-columns:minmax(0,1fr) 72px 72px 40px!important;gap:6px!important}
+  .asx-th,.asx-tramo{grid-template-columns:minmax(0,1fr) 72px 72px 40px!important;gap:6px!important}
+  .lkm-th,.lkm-row{grid-template-columns:minmax(0,1fr) 64px 64px 60px 40px!important;gap:6px!important}
   .asx-area-del,.asx-tr-del,.lkm-del{width:40px!important}
   .asx-area{padding:12px!important}
   .asx-th,.lkm-th{font-size:10px!important;letter-spacing:.02em!important}
@@ -23616,17 +23621,17 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
   function cfg(){ if(!DATA.config) DATA.config={}; if(!DATA.config.servicios||typeof DATA.config.servicios!=='object') DATA.config.servicios={}; return DATA.config; }
   /* lista para las reservas: lo que está activo; con «Cobrar» apagado el precio es 0 */
   window.lukaMobiliario=function(){ try{ var S=cfg().servicios; return Object.keys(S).filter(function(k){ return S[k]&&S[k].nombre&&S[k].oculto!==true; })
-      .map(function(k){ return {id:k,nombre:String(S[k].nombre),precio:S[k].enabled===false?0:(+S[k].precio||0)}; }); }catch(e){ return []; } };
+      .map(function(k){ return {id:k,nombre:String(S[k].nombre),precio:S[k].enabled===false?0:(+S[k].precio||0),precioInq:S[k].enabled===false?0:(S[k].precioInq==null||S[k].precioInq===''?null:+S[k].precioInq)}; }); }catch(e){ return []; } };
   function pintar(){
     var bd=$('asx-editor-bd'); if(!bd) return; var md=bd.querySelector('.modal'); if(!md) return;
     var box=$('lkm'); if(!box){ box=document.createElement('div'); box.className='lkm'; box.id='lkm';
       var pie=md.querySelector('div:has(#asx-editor-save)'); md.insertBefore(box,pie||null); }
     var S=cfg().servicios, ks=Object.keys(S).filter(function(k){ return S[k]&&S[k].oculto!==true; });
-    box.innerHTML='<h3>Mobiliario</h3><div class="lkm-th"><span>Artículo</span><span>Precio c/u</span><span>Cobrar</span><span></span></div><div class="lkm-rows" id="lkm-rows"></div><button type="button" id="lkm-add">＋ Artículo</button>';
+    box.innerHTML='<h3>Mobiliario</h3><div class="lkm-th"><span>Artículo</span><span>Propietario</span><span>Inquilino</span><span>Cobrar</span><span></span></div><div class="lkm-rows" id="lkm-rows"></div><button type="button" id="lkm-add">＋ Artículo</button>';
     var rows=$('lkm-rows');
     function fila(k,it){ var r=document.createElement('div'); r.className='lkm-row'; r.dataset.k=k;
-      r.innerHTML='<input type="text" class="lkm-n" placeholder="Ej. Sillas, freezer" value="'+esc(it.nombre||'')+'"><input type="number" class="lkm-p" min="0" step="0.5" placeholder="Bs." value="'+(it.precio==null?'':esc(it.precio))+'"><label class="lkm-sw"><input type="checkbox" class="lkm-c"'+(it.enabled===false?'':' checked')+'>Sí</label><button type="button" class="lkm-del" title="Quitar">✕</button>';
-      var c=r.querySelector('.lkm-c'), t=c.parentNode; var cambia=function(){ t.lastChild.textContent=c.checked?'Sí':'No'; r.querySelector('.lkm-p').disabled=!c.checked; r.querySelector('.lkm-p').style.opacity=c.checked?'1':'.45'; }; c.onchange=cambia; cambia();
+      r.innerHTML='<input type="text" class="lkm-n" placeholder="Ej. Sillas, freezer" value="'+esc(it.nombre||'')+'"><input type="number" class="lkm-p" min="0" step="0.5" placeholder="Bs." value="'+(it.precio==null?'':esc(it.precio))+'"><input type="number" class="lkm-pi" min="0" step="0.5" placeholder="Igual" value="'+(it.precioInq==null?'':esc(it.precioInq))+'"><label class="lkm-sw"><input type="checkbox" class="lkm-c"'+(it.enabled===false?'':' checked')+'>Sí</label><button type="button" class="lkm-del" title="Quitar">✕</button>';
+      var c=r.querySelector('.lkm-c'), t=c.parentNode; var cambia=function(){ t.lastChild.textContent=c.checked?'Sí':'No'; ['.lkm-p','.lkm-pi'].forEach(function(q){ var i=r.querySelector(q); i.disabled=!c.checked; i.style.opacity=c.checked?'1':'.45'; }); }; c.onchange=cambia; cambia();
       r.querySelector('.lkm-del').onclick=function(){ r.remove(); if(!rows.children.length) rows.innerHTML='<div class="lkm-vacio">Sin mobiliario</div>'; };
       rows.appendChild(r); }
     ks.forEach(function(k){ fila(k,S[k]); });
@@ -23636,7 +23641,8 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
   function guardar(){
     var rows=$('lkm-rows'); if(!rows) return; var S=cfg().servicios, vistos={};
     rows.querySelectorAll('.lkm-row').forEach(function(r){ var n=r.querySelector('.lkm-n').value.trim(); if(!n) return; var k=r.dataset.k; vistos[k]=1;
-      S[k]=Object.assign(S[k]||{},{nombre:n,precio:parseFloat(r.querySelector('.lkm-p').value)||0,unidad:'c/u',enabled:r.querySelector('.lkm-c').checked,oculto:false}); });
+      var pi=String(r.querySelector('.lkm-pi').value||'').trim();
+      S[k]=Object.assign(S[k]||{},{nombre:n,precio:parseFloat(r.querySelector('.lkm-p').value)||0,precioInq:pi===''?null:(parseFloat(pi)||0),unidad:'c/u',enabled:r.querySelector('.lkm-c').checked,oculto:false}); });
     // lo que se quitó queda oculto (no se borra, así los recibos viejos siguen mostrando su nombre)
     Object.keys(S).forEach(function(k){ if(!vistos[k]) S[k].oculto=true; });
     try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); saveDataLocal(); }catch(e){}
@@ -24766,6 +24772,10 @@ button.lkrp-b:hover{border-color:#1E4E86}
 .asx-cobro{margin:14px 0 0;padding:14px 0 0;border-top:1px dashed #E3EAF2}
 .asx-cobro h4{margin:0 0 10px;font-size:11.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7d93ab}
 .asx-cobro-g{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 12px}
+.asx-gen,.asx-cond{margin:0 0 16px}
+.asx-cond{margin:12px 0 0}
+.asx-gen textarea,.asx-cond textarea{box-sizing:border-box;width:100%;padding:10px 12px;border:1px solid #D5DEE8;border-radius:10px;background:#F6F8FB;font:inherit;font-size:13.5px;line-height:1.5;color:#0B2440;resize:vertical}
+.asx-gen small{display:block;margin-top:6px;font-size:12px;color:#7d93ab}
 .asx-cl{display:block;margin:0 0 6px;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#7d93ab}
 .asx-dd{position:relative}
 .asx-dd-b{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;height:44px;padding:0 12px;border:1px solid #D5DEE8;border-radius:10px;background:#F6F8FB;font:inherit;font-size:14px;color:#0B2440;cursor:pointer;text-align:left}
@@ -24871,14 +24881,28 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var b=document.createElement('div'); b.className='asx-cobro';
     b.innerHTML='<h4>Cobro</h4><div class="asx-cobro-g"><div><span class="asx-cl">Alquiler · medio de pago</span>'+chips('cb-alq',a.pagoAlquiler)+'</div><div><span class="asx-cl">Garantía · medio de pago</span>'+chips('cb-gar',a.pagoGarantia)+'</div></div>'+
       '<div class="asx-cg-th"><span>Recargo obligatorio</span><span>Propietario</span><span>Inquilino</span><span></span><span>Medio de pago</span><span>Destino</span></div><div class="asx-cg-rows"></div><button type="button" class="asx-cg-add">＋ Recargo obligatorio (ej. limpieza)</button>';
+    var cd=document.createElement('div'); cd.className='asx-cond'; cd.innerHTML='<span class="asx-cl">Condiciones propias de esta área (opcional)</span><textarea class="cb-cond" rows="3" placeholder="Vacío = se usan las condiciones generales de uso">'+esc(a.condiciones||'')+'</textarea>';
+    b.appendChild(cd);
     var rows=b.querySelector('.asx-cg-rows'); (a.cargos||[]).forEach(function(c){ filaCargo(rows,c); });
     b.querySelector('.asx-cg-add').onclick=function(){ filaCargo(rows,{pago:['efectivo'],destino:'terceros'}); rows.lastChild.querySelector('.cg-n').focus(); };
     card.appendChild(b);
   };
+  function condGenerales(){
+    var bd=document.getElementById('asx-editor-bd'); if(!bd||!bd.classList.contains('open')) return; var md=bd.querySelector('.modal'); if(!md) return;
+    var g=md.querySelector('.asx-gen'); if(g){ return; }
+    g=document.createElement('div'); g.className='asx-gen';
+    var txt=''; try{ txt=(typeof window.__lukaReglamento==='function')?window.__lukaReglamento():((DATA.config||{}).reglamento||''); }catch(e){}
+    g.innerHTML='<span class="asx-cl">Condiciones generales de uso</span><textarea class="cb-gen" rows="5">'+esc(txt)+'</textarea><small>El propietario o inquilino las lee y acepta en el portal antes de reservar, y puede descargarlas en PDF.</small>';
+    var rows=document.getElementById('asx-editor-rows'); md.insertBefore(g,rows);
+  }
+  document.addEventListener('click',function(e){ if(e.target&&e.target.id==='asx-editor-save'){ var t=document.querySelector('#asx-editor-bd .cb-gen'); if(t){ DATA.config=DATA.config||{}; DATA.config.reglamento=t.value.trim(); } } },true);
+  new MutationObserver(function(){ var bd=document.getElementById('asx-editor-bd'); if(bd&&bd.classList.contains('open')) condGenerales(); else if(bd){ var g=bd.querySelector('.asx-gen'); if(g) g.remove(); } })
+    .observe(document.body,{attributes:true,subtree:true,attributeFilter:['class']});
   window.__asxLeerCobro=function(card){
     var b=card.querySelector('.asx-cobro'); if(!b) return {};
     var num=function(v){ v=String(v||'').trim(); return v===''?null:(parseFloat(v)||0); };
-    return { pagoAlquiler:leerChips(b.querySelector('.cb-alq')), pagoGarantia:leerChips(b.querySelector('.cb-gar')),
+    var tc=b.querySelector('.cb-cond');
+    return { condiciones:tc?tc.value.trim():'', pagoAlquiler:leerChips(b.querySelector('.cb-alq')), pagoGarantia:leerChips(b.querySelector('.cb-gar')),
       cargos:[].slice.call(b.querySelectorAll('.asx-cg-row')).map(function(r){ return { nombre:r.querySelector('.cg-n').value.trim(), monto:num(r.querySelector('.cg-m').value)||0, montoInq:num(r.querySelector('.cg-i').value), pago:leerChips(r.querySelector('.cg-p')), destino:r.querySelector('.cg-d').value }; })
         .filter(function(c){ return c.nombre&&(c.monto>0||c.montoInq>0); }) };
   };
@@ -25013,6 +25037,99 @@ button.lkrp-b:hover{border-color:#1E4E86}
   }
   var pend=false;
   new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; marcar(); }); })
+    .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+<style>
+/* ============ Módulo 54 · Cada configuración en un solo lugar ============ */
+/* Configuraciones (menú lateral) = su cuenta y el sistema. Lo del edificio vive en «Configuración del edificio». */
+#cfg2-nav .cfg2-tab[data-cat="cobro"],#cfg2-nav .cfg2-tab[data-cat="recibos"],#cfg2-nav .cfg2-tab[data-cat="deptos"],#cfg2-nav .cfg2-tab[data-cat="departamentos"]{display:none!important}
+#luka-mi-settings,#mi-agua{display:none!important}
+/* atajos repetidos */
+#lk-h-areas,#lkr-cfg,#btn-piz-personalizar,#lk-h-cuota{display:none!important}
+#bramar-cc-body .cfg2-sec{display:block!important;animation:none}
+#bramar-cc-body .cfg2-sec-title{font-size:16px;margin:0 0 4px}
+.lk-ir-cc{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;margin:14px 0 0;padding:14px 16px;border:1px solid #E3EAF2;border-radius:14px;background:#fff;font:inherit;text-align:left;cursor:pointer;color:#0B2440}
+.lk-ir-cc:hover{border-color:#0B2440}
+.lk-ir-cc b{display:block;font-size:14.5px}.lk-ir-cc small{display:block;font-size:12.5px;color:#7d93ab;margin-top:2px}
+.lk-ir-cc span.chev{font-size:20px;color:#9AA8B8}
+.lk-cc-sub{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;padding:12px 14px;border:1px solid #E3EAF2;border-radius:12px;background:#F8FAFD}
+.lk-cc-sub span{font-size:13px;color:#5B6B7F}
+.lk-cc-areas{display:grid;gap:10px}
+#bramar-cc-body .cfg2-sec .menu-item{display:flex!important;align-items:center;gap:12px;width:100%;margin:0 0 8px!important;padding:12px 14px!important;border:1px solid #E3EAF2!important;border-radius:12px!important;background:#fff!important;text-align:left;cursor:pointer}
+#bramar-cc-body .cfg2-sec .menu-item:hover{border-color:#0B2440!important}
+#bramar-cc-body .cfg2-sec .menu-item .mi-desc{display:block!important;font-size:12px;color:#7d93ab;margin-top:2px}
+</style>
+<script>
+/* ============================================================================
+   GESTIÓN LUKA — Módulo 54: cada configuración aparece en UN solo lugar.
+   · «Configuración del edificio» (engranaje): datos del edificio, datos de cobro y
+     QR, numeración de recibos, departamentos, agua y expensas, cuotas, pizarra,
+     áreas sociales (con mobiliario y condiciones), colores y campos.
+   · «Configuraciones» (menú lateral): cuenta, usuarios, correos, portal, copias,
+     informes y apariencia.
+   Las secciones que antes estaban en «Configuraciones» se muestran tal cual dentro
+   de «Configuración del edificio» (mismo formulario, no una copia).
+   ============================================================================ */
+(function(){
+  function $(id){ return document.getElementById(id); }
+  var prestada=null;   // {sec, padre}
+  function devolver(){ if(prestada&&prestada.sec&&prestada.padre){ prestada.sec.classList.remove('active'); prestada.padre.appendChild(prestada.sec); } prestada=null; }
+  /* muestra una sección de «Configuraciones» dentro de «Configuración del edificio» */
+  window.lukaPrestarCfg=function(cat,b){
+    devolver();
+    var tab=document.querySelector('#cfg2-nav .cfg2-tab[data-cat="'+cat+'"]');
+    if(tab) try{ tab.click(); }catch(e){}
+    var sec=document.querySelector('.cfg2-sec[data-cat="'+cat+'"]');
+    if(!sec){ b.innerHTML='<p class="cc-hint" style="display:block">No disponible.</p>'; return; }
+    prestada={sec:sec,padre:sec.parentNode};
+    b.innerHTML=''; b.appendChild(sec); sec.classList.add('active');
+    if(cat==='deptos'||cat==='departamentos'){ var ag=sec.querySelector('#mi-agua'); if(ag) ag.style.display='none'; }
+  };
+  /* antes de cambiar de pestaña o cerrar, la sección vuelve a su lugar (no se pierde) */
+  document.addEventListener('click',function(e){
+    if(!prestada) return;
+    var t=e.target.closest&&e.target.closest('#bramar-cc-nav button, #bramar-cc-close');
+    if(t||e.target.id==='bramar-cc') devolver();
+  },true);
+  /* «Áreas sociales y mobiliario»: un solo editor (precios, cobro, recargos, condiciones y mobiliario) */
+  window.lukaCcAreas=function(b){
+    var A=((DATA.config||{}).areasLuka)||[];
+    b.innerHTML='<h3>Áreas sociales y mobiliario</h3>'+
+      '<button type="button" class="lk-ir-cc" id="lk-cc-areas"><span><b>Áreas, precios y condiciones</b><small>'+(A.length?A.map(function(a){ return a.nombre; }).join(' · '):'Todavía no hay áreas')+'</small></span><span class="chev">›</span></button>'+
+      '<button type="button" class="lk-ir-cc" id="lk-cc-mob"><span><b>Mobiliario</b><small>Sillas, mesas, freezer… con precio para propietario e inquilino</small></span><span class="chev">›</span></button>';
+    var abrir=function(mob){ var c=$('bramar-cc'); if(c) c.classList.remove('open'); if(window.__lukaOpenAreasEditor) window.__lukaOpenAreasEditor();
+      if(mob) setTimeout(function(){ var m=$('lkm'); if(m) m.scrollIntoView({block:'center'}); },120); };
+    $('lk-cc-areas').onclick=function(){ abrir(false); }; $('lk-cc-mob').onclick=function(){ abrir(true); };
+  };
+  /* «Datos del edificio»: logo, cuota por defecto e impresión (lo único que no estaba en la ficha) */
+  function subAjustes(){
+    var b=$('bramar-cc-body'); if(!b||b.querySelector('.lk-cc-sub')||!b.querySelector('#cc-ed-save')) return;
+    var d=document.createElement('div'); d.className='lk-cc-sub';
+    d.innerHTML='<span>Logo, cuota mensual por defecto, tamaño de hoja y WhatsApp de reservas</span><button type="button" class="btn" id="lk-cc-logo">Abrir</button>';
+    var h=b.querySelector('h3'); b.insertBefore(d,h?h.nextSibling:b.firstChild);
+    $('lk-cc-logo').onclick=function(){ var s=$('luka-mi-settings'); if(s) s.click(); };
+  }
+  /* la ventana de ajustes queda solo con lo que no se repite en otro lado */
+  var FUERA=/^(Nombre del edificio|QR de pago|Datos de cobro|Dirección del edificio|Empresa administradora|Sello de administración|Reglamento|Reservas en la nube|Renombrar bloques)/i;
+  function recortarAjustes(){
+    var bd=$('luka-settings-bd'); if(!bd||!bd.classList.contains('open')||bd.dataset.lkRec) return; bd.dataset.lkRec=1;
+    bd.querySelectorAll('.luka-form-field').forEach(function(f){ var l=f.querySelector('label'); if(l&&FUERA.test(l.textContent.trim())) f.style.display='none'; });
+    var h=bd.querySelector('h2'); if(h) h.textContent='Logo, cuota e impresión';
+    [].slice.call(bd.querySelectorAll('.modal > div')).forEach(function(x){ if(/Editar áreas sociales/.test(x.textContent)) [].slice.call(x.querySelectorAll('button')).forEach(function(bt){ if(!/Guardar/i.test(bt.textContent)) bt.style.display='none'; }); });
+  }
+  /* en «Configuraciones · Edificio», un acceso a la configuración del edificio */
+  function enlaceCfg(){
+    var sec=document.querySelector('.cfg2-sec[data-cat="edificio"]'); if(!sec||sec.querySelector('.lk-ir-cc')) return;
+    var bt=document.createElement('button'); bt.type='button'; bt.className='lk-ir-cc';
+    bt.innerHTML='<span><b>Configuración del edificio</b><small>Datos, cobro y QR, recibos, departamentos, agua y expensas, áreas sociales…</small></span><span class="chev">›</span>';
+    bt.onclick=function(){ var c=$('cfg2-bd'); if(c){ c.classList.remove('open'); document.body.style.overflow=''; } if(window.__bramarOpenCenter) window.__bramarOpenCenter(); };
+    var t=sec.querySelector('.cfg2-sec-desc')||sec.querySelector('.cfg2-sec-title'); sec.insertBefore(bt,t?t.nextSibling:sec.firstChild);
+  }
+  var pend=false;
+  new MutationObserver(function(){ if(pend) return; pend=true; requestAnimationFrame(function(){ pend=false; subAjustes(); recortarAjustes(); enlaceCfg();
+      var bd=$('luka-settings-bd'); if(bd&&!bd.classList.contains('open')) delete bd.dataset.lkRec; }); })
     .observe(document.body,{childList:true,subtree:true,attributes:true,attributeFilter:['class']});
 })();
 </script>
@@ -25277,7 +25394,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261024121544'; window.LUKA_BUILD=B;
+(function(){ var B='20261024123935'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }

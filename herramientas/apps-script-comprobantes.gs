@@ -789,7 +789,7 @@ function ptEstado_(portalId, lk, data, depto) {
     resumen: { deuda: deuda, vencimiento: '', actualizado: String(lk.e.upd || '').slice(0, 10) },
     movimientos: mov,
     servicios: ptServicios_(cfg),
-    areas: ptAreas_(cfg).map(function (a) { return { id: a.id, nombre: a.nombre, garantia: +a.garantia || 0, garantiaInq: a.garantiaInq, pagoAlquiler: a.pagoAlquiler || 'cualquiera', pagoGarantia: a.pagoGarantia || 'cualquiera', cargos: (a.cargos || []).map(function (c) { return { nombre: String(c.nombre || ''), monto: +c.monto || 0, montoInq: c.montoInq, pago: c.pago || 'cualquiera', destino: c.destino || 'condominio' }; }), tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: +t.monto || 0, montoInq: t.montoInq }; }) }; })
+    areas: ptAreas_(cfg).map(function (a) { return { id: a.id, nombre: a.nombre, garantia: +a.garantia || 0, garantiaInq: a.garantiaInq, condiciones: String(a.condiciones || cfg.reglamento || '').slice(0, 20000), pagoAlquiler: a.pagoAlquiler || 'cualquiera', pagoGarantia: a.pagoGarantia || 'cualquiera', cargos: (a.cargos || []).map(function (c) { return { nombre: String(c.nombre || ''), monto: +c.monto || 0, montoInq: c.montoInq, pago: c.pago || 'cualquiera', destino: c.destino || 'condominio' }; }), tramos: (a.tramos || []).map(function (t) { return { label: t.label, monto: +t.monto || 0, montoInq: t.montoInq }; }) }; })
   };
 }
 const PT_AREAS_DEF = {
@@ -815,7 +815,7 @@ function ptHojaReservas_() {
     return sh;
   })();
 }
-const PT_RES_COLS = 26;
+const PT_RES_COLS = 27;
 function ptHojaRes_() {
   const sh = ptHojaReservas_();
   if (sh.getRange(1, 18).getValue() === '') {
@@ -838,7 +838,7 @@ function ptServicios_(cfg) {
   const s = cfg.servicios || { silla: { nombre: 'Sillas', precio: 2, unidad: 'c/u' }, mesa: { nombre: 'Mesas pequeñas', precio: 3, unidad: 'c/u' }, mesaNueva: { nombre: 'Mesas nuevas 6-8p', precio: 10, unidad: 'c/u' } };
   // «oculto» = quitado en LUKA; «enabled:false» = se presta sin costo
   return Object.keys(s).filter(function (k) { return s[k] && s[k].nombre && s[k].oculto !== true; })
-    .map(function (k) { return { id: k, nombre: String(s[k].nombre || k), precio: s[k].enabled === false ? 0 : (+s[k].precio || 0), unidad: String(s[k].unidad || 'c/u') }; });
+    .map(function (k) { const libre = s[k].enabled === false; return { id: k, nombre: String(s[k].nombre || k), precio: libre ? 0 : (+s[k].precio || 0), precioInq: libre ? 0 : (s[k].precioInq == null || s[k].precioInq === '' ? null : +s[k].precioInq), unidad: String(s[k].unidad || 'c/u') }; });
 }
 /* Reservas que ya hay ese día (de LUKA y solicitudes pendientes del portal) */
 function ptOcupadas_(pid, data, fecha) {
@@ -859,7 +859,7 @@ function ptReservasLista_(filtro) {
     return { id: String(r[0]), recibida: r[1] instanceof Date ? r[1].toISOString() : String(r[1]), edificio_id: String(r[2]), edificio: String(r[3]), depto: ptTxt_(r[4]),
       responsable: String(r[5]), areaId: String(r[6]).split(' · ')[0], area: String(r[6]), tramo: ptTxt_(r[7]), fecha: fecha_(r[8]), hini: ptHora_(r[9]), hfin: ptHora_(r[10]),
       evento: String(r[11]), estado: String(r[12] || 'Pendiente'), nota: String(r[13] || ''), personas: ptTxt_(r[15]), telefono: ptTxt_(r[16]),
-      respondida: r[22] instanceof Date ? r[22].toISOString() : '', pago: String(r[23] || ''), garEstado: String(r[24] || ''), garDatos: String(r[25] || ''),
+      respondida: r[22] instanceof Date ? r[22].toISOString() : '', pago: String(r[23] || ''), garEstado: String(r[24] || ''), garDatos: String(r[25] || ''), condiciones: String(r[26] || ''),
       extrasTxt: String(r[17] || ''), alquiler: r[18] === '' || r[18] == null ? null : +r[18], garantia: r[19] === '' || r[19] == null ? null : +r[19], total: r[20] === '' || r[20] == null ? null : +r[20], extras: ex };
   }).filter(filtro).reverse();
 }
@@ -984,7 +984,8 @@ function portal_(d) {
     if (!/^\d{2}:\d{2}$/.test(d.hini) || !/^\d{2}:\d{2}$/.test(d.hfin)) return json({ ok: false, error: 'Revise las horas.' });
     // servicios extra (opcionales)
     const svc = est.servicios || [], pedidos = [];
-    svc.forEach(function (x) { const q = Math.floor(+((d.extras || {})[x.id]) || 0); if (q > 0 && q <= 500) pedidos.push({ id: x.id, nombre: x.nombre, cant: q, precio: x.precio, subtotal: q * x.precio }); });
+    svc.forEach(function (x) { const q = Math.floor(+((d.extras || {})[x.id]) || 0); const pr = (inq && x.precioInq != null) ? +x.precioInq : +x.precio; if (q > 0 && q <= 500) pedidos.push({ id: x.id, nombre: x.nombre, cant: q, precio: pr, subtotal: q * pr }); });
+    if (String(area.condiciones || '').trim() && d.acepta !== true) return json({ ok: false, error: 'Lea y acepte las condiciones de uso del área.' });
     // tarifa de inquilino cuando el área la tiene; recargos obligatorios (ej. limpieza) siempre se suman
     const pInq = function (v, vi) { return (inq && vi != null && vi !== '') ? +vi || 0 : +v || 0; };
     const alquiler = tramo ? pInq(tramo.monto, tramo.montoInq) : 0, garantia = pInq(area.garantia, area.garantiaInq);
@@ -995,7 +996,7 @@ function portal_(d) {
     ptHojaRes_().appendRow([id, new Date(), pid, est.edificio.nombre, T(est.unidad.depto, 20), (inq ? 'Inquilino · ' : '') + String(d.responsable).slice(0, 80),
       area.id + ' · ' + area.nombre, T(d.tramo, 60), d.fecha, T(d.hini, 5), T(d.hfin, 5),
       String(d.evento).slice(0, 120), 'Pendiente', '', '', T(d.personas, 10), T(d.telefono, 30),
-      pedidos.map(function (x) { return x.nombre + ' x' + x.cant; }).join(', '), alquiler, garantia, total, JSON.stringify(pedidos)]);
+      pedidos.map(function (x) { return x.nombre + ' x' + x.cant; }).join(', '), alquiler, garantia, total, JSON.stringify(pedidos), '', '', '', '', d.acepta === true ? 'Aceptadas ' + Utilities.formatDate(new Date(), 'America/La_Paz', 'dd/MM/yyyy HH:mm') : '']);
     const mismo = ocup.filter(function (o) { return o.areaId === area.id; });
     try {
       const to = destinatarios_(pid);

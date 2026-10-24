@@ -534,6 +534,14 @@ html,body{overflow-x:clip;max-width:100%}
 .inq-code b{font-size:26px;letter-spacing:.14em;color:var(--navy);font-weight:500}
 #inq-msg .alert{margin-top:12px}
 .inq-txt{margin:14px 0 0;padding:14px 16px;border-radius:14px;background:var(--sand);font:inherit;font-size:14.5px;line-height:1.55;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+#rv-cond{margin:14px 0 4px;padding:14px;border:1px solid var(--line,#E3EAF2);border-radius:14px;background:#fff}
+#rv-cond.err{border-color:#C0392B;box-shadow:0 0 0 3px rgba(192,57,43,.12)}
+#rv-cond .rc-h{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 8px}
+#rv-cond .rc-h b{font-size:14px;color:#0B2440}
+#rv-cond .rc-pdf{height:32px;padding:0 12px;border:1px solid #D5DEE8;border-radius:999px;background:#fff;font:inherit;font-size:12.5px;font-weight:600;color:#0B2440;cursor:pointer}
+#rv-cond .rc-t{max-height:180px;overflow:auto;white-space:pre-wrap;font-size:13px;line-height:1.55;color:#3c4a5c;padding:10px 12px;border-radius:10px;background:#F6F8FB}
+#rv-cond .rc-ok{display:flex;align-items:center;gap:10px;margin:12px 0 0;font-size:14px;font-weight:600;color:#0B2440;cursor:pointer}
+#rv-cond .rc-ok input{width:20px;height:20px;accent-color:#0B2440;flex:0 0 auto}
 #rv-sum .rv-fp{margin-top:8px;padding-top:8px;border-top:1px solid var(--line,#E3EAF2);font-weight:800}
 #rv-sum .rv-fp:first-child{margin-top:0;padding-top:0;border-top:0}
 #rv-sum .rv-fp span{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7d93ab)}
@@ -1169,7 +1177,7 @@ const PORTAL = {
     const L=[], alq=pInq(t.monto,t.montoInq), fa=a.pagoAlquiler||'cualquiera';
     const igual=String(t.label||'').toUpperCase()===String(a.nombre||'').toUpperCase();
     L.push({c:'Alquiler · '+(a.nombre||'')+(t.label&&!igual?' ('+t.label+')':''),m:alq,f:fa});
-    S.forEach(x=>{ if(ex[x.id]) L.push({c:x.nombre+' × '+ex[x.id],m:ex[x.id]*x.precio,f:fa}); });
+    S.forEach(x=>{ if(ex[x.id]) L.push({c:x.nombre+' × '+ex[x.id],m:ex[x.id]*pInq(x.precio,x.precioInq),f:fa}); });
     (a.cargos||[]).forEach(c=>{ const m=pInq(c.monto,c.montoInq); if(m>0) L.push({c:c.nombre+' (obligatorio)',m:m,f:c.pago}); });
     const g=pInq(a.garantia,a.garantiaInq); if(g>0) L.push({c:'Garantía (se devuelve después del evento)',m:g,f:a.pagoGarantia});
     const G={}, orden=[]; L.forEach(x=>{ const k=claveM(x.f); if(!G[k]){ G[k]=[]; orden.push(k); } G[k].push(x); });
@@ -1177,6 +1185,37 @@ const PORTAL = {
     const tot=L.reduce((s,x)=>s+x.m,0);
     $('#rv-sum').innerHTML=grupos.map(([k,G])=>(grupos.length>1?`<div class="rv-fp"><span>${etiquetaM(G[0].f)}</span><b>${money(G.reduce((s,x)=>s+x.m,0),cur)}</b></div>`:'')+G.map(x=>`<div><span>${esc(x.c)}</span><b>${money(x.m,cur)}</b></div>`).join('')).join('')+
       `<div class="tot"><span>Total a pagar si se aprueba</span><b>${money(tot,cur)}</b></div>`;
+    pintarCond();
+  }
+  /* condiciones de uso del área: se leen, se aceptan y se pueden descargar en PDF */
+  function pintarCond(){
+    let box=$('#rv-cond'); const msg=$('#rv-msg'); if(!msg) return;
+    if(!box){ box=document.createElement('div'); box.id='rv-cond'; msg.parentNode.insertBefore(box,msg); }
+    const a=areaSel(), txt=String(a.condiciones||'').trim();
+    if(!txt){ box.hidden=true; box.dataset.area=''; return; }
+    if(box.dataset.area===a.id&&!box.hidden) return;
+    box.hidden=false; box.dataset.area=a.id;
+    box.innerHTML=`<div class="rc-h"><b>Condiciones de uso</b><button type="button" class="rc-pdf" id="rc-pdf">Descargar PDF</button></div><div class="rc-t">${esc(txt)}</div>`+
+      `<label class="rc-ok"><input type="checkbox" id="rc-acepto"> <span>Leí y acepto las condiciones de uso</span></label>`;
+    $('#rc-pdf').onclick=()=>pdfCondiciones(a);
+    $('#rc-acepto').onchange=()=>box.classList.remove('err');
+  }
+  function pdfCondiciones(a){
+    const P=window.LkMiniPDF; if(!P) return;
+    const limpia=t=>String(t||'').replace(/[“”]/g,'"').replace(/[‘’]/g,"'").replace(/[–—−]/g,'-').replace(/…/g,'...').replace(/[•●▪]/g,'-');
+    const pdf=new P(); pdf.W=612; pdf.H=792; const M=56, W=612-2*M, NAVY=[14,44,77], INK=[30,36,44], MUT=[110,120,132];
+    let y=M; const ed=((data&&data.edificio&&data.edificio.nombre)||'').toUpperCase();
+    pdf.text(limpia(ed),M,y,{size:15,bold:true,color:NAVY}); y+=22;
+    pdf.text(limpia('Condiciones de uso · '+(a.nombre||'Área social')),M,y,{size:11,color:MUT}); y+=18;
+    pdf.line?pdf.line(M,y,612-M,y,NAVY,0.8):0; y+=18;
+    limpia(a.condiciones).split(/\n/).forEach(par=>{
+      const L=par.trim()?pdf.wrap(par,W,10.5,false):[''];
+      L.forEach(l=>{ if(y>792-M-20){ pdf.addPage(); y=M; } pdf.text(l,M,y,{size:10.5,color:INK}); y+=14.5; });
+      y+=3;
+    });
+    if(y>792-M-60){ pdf.addPage(); y=M; }
+    y+=16; pdf.text(limpia('Depto '+((data.unidad||{}).depto||'')+' · Documento descargado el '+new Date().toLocaleDateString('es-BO')),M,y,{size:9,color:MUT});
+    pdf.save(limpia('Condiciones de uso - '+(a.nombre||'Area social')+' - '+ed).replace(/[\\/:*?"<>|]+/g,' ').trim()+'.pdf');
   }
   let ocupT=0;
   async function revisarFecha(){
@@ -1202,7 +1241,7 @@ const PORTAL = {
     sa.onchange=pintaTramos; $('#rv-tramo').onchange=pintarSuma;
     const S=data.servicios||[];
     $('#rv-extras').hidden=!S.length;
-    $('#rv-ex-list').innerHTML=S.map(x=>`<label class="rv-ex"><span>${esc(x.nombre)}<small>${x.precio>0?money(x.precio,cur0())+' '+esc(x.unidad||'c/u'):'Sin costo'}</small></span><input type="number" inputmode="numeric" min="0" max="500" step="1" placeholder="0" data-ex="${esc(x.id)}"></label>`).join('');
+    $('#rv-ex-list').innerHTML=S.map(x=>`<label class="rv-ex"><span>${esc(x.nombre)}<small>${pInq(x.precio,x.precioInq)>0?money(pInq(x.precio,x.precioInq),cur0())+' '+esc(x.unidad||'c/u'):'Sin costo'}</small></span><input type="number" inputmode="numeric" min="0" max="500" step="1" placeholder="0" data-ex="${esc(x.id)}"></label>`).join('');
     $('#rv-ex-list').oninput=pintarSuma;
     pintaTramos();
     const hoy=new Date(); hoy.setDate(hoy.getDate()+1); $('#rv-fecha').min=hoy.toISOString().slice(0,10);
@@ -1366,10 +1405,12 @@ const PORTAL = {
     faltan.forEach(([id])=>{ const el=$('#'+id); (el.closest('.field')||(id==='rv-fecha'?$('#rv-cal'):el)).classList.add('err'); });
     if(faltan.length){ alertBox(msg,'bad','Complete todos los campos: falta '+faltan.map(f=>f[1]).join(', ')+'.'); if(faltan[0][0]!=='rv-fecha') $('#'+faltan[0][0]).focus(); return; }
     if($('#rv-hfin').value<=$('#rv-hini').value&&$('#rv-hfin').value>'06:00') { $('#rv-hfin').closest('.field').classList.add('err'); return alertBox(msg,'bad','La hora de fin debe ser después de la de inicio.'); }
+    const cond=$('#rv-cond'), acepto=!!(cond&&!cond.hidden&&$('#rc-acepto')&&$('#rc-acepto').checked);
+    if(cond&&!cond.hidden&&!acepto){ cond.classList.add('err'); cond.scrollIntoView({block:'center',behavior:'smooth'}); return alertBox(msg,'bad','Lea y acepte las condiciones de uso para enviar la solicitud.'); }
     btn.disabled=true; btn.classList.add('loading'); $('#rv-btn-t').textContent='Enviando…';
     try{
       const j=await ptCall({action:'pt_reserva',areaId:$('#rv-area').value,tramo:$('#rv-tramo').value,fecha:$('#rv-fecha').value,hini:$('#rv-hini').value,hfin:$('#rv-hfin').value,
-        responsable:$('#rv-resp').value.trim(),telefono:$('#rv-tel').value.trim(),personas:$('#rv-pers').value.trim(),evento:$('#rv-evento').value.trim(),extras:extrasSel()});
+        responsable:$('#rv-resp').value.trim(),telefono:$('#rv-tel').value.trim(),personas:$('#rv-pers').value.trim(),evento:$('#rv-evento').value.trim(),extras:extrasSel(),acepta:acepto});
       if(!j.ok) throw new Error(j.error||'error');
       const a=areaSel(), mismo=(j.ocupadas||[]).filter(o=>o.areaId===a.id);
       rvShow(false);
