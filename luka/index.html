@@ -25339,7 +25339,13 @@ button.lkrp-b:hover{border-color:#1E4E86}
   var B=null, tab='docs', filtro={q:'',tipo:'',cli:''}, edit=null, cargando=null;
   var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   var MEDIOS=['Transferencia','QR','Efectivo','Depósito','Cheque'];
-  var DEF_EMP={nombre:'BRAMAR GROUP',razon:'',nit:'',direccion:'Santa Cruz de la Sierra - Bolivia',telefono:'+591 78155275',correo:'bramargroupsrl@gmail.com',web:'',banco:'',cuenta:'',titular:'',pieNota:'',firma:'',logo:''};
+  var DEF_EMP={nombre:'BRAMAR GROUP',razon:'',nit:'',direccion:'Santa Cruz de la Sierra - Bolivia',telefono:'+591 78155275',correo:'bramargroupsrl@gmail.com',web:'',banco:'',cuenta:'',titular:'',pieNota:'',firma:'',logo:'',hoja:'carta',hojaAncho:'',hojaAlto:''};
+  /* tamaño de hoja en puntos: carta 21,6×27,9 cm · oficio 21,6×33 cm · personalizado (cm) */
+  var CM=72/2.54;
+  function hoja(E){ var t=(E&&E.hoja)||'carta';
+    if(t==='oficio') return [612,936];
+    if(t==='custom'){ var a=num(E.hojaAncho), h=num(E.hojaAlto); if(a>=10&&h>=10&&a<=60&&h<=90) return [a*CM,h*CM]; }
+    return [612,792]; }
   function $(id){ return document.getElementById(id); }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
   function num(v){ v=String(v==null?'':v).trim(); if(/,\d{1,2}$/.test(v)) v=v.replace(/\./g,'').replace(',','.'); else v=v.replace(/,/g,''); var n=parseFloat(v); return isFinite(n)?n:0; }
@@ -25388,12 +25394,18 @@ button.lkrp-b:hover{border-color:#1E4E86}
   function pdf(x){
     var E=x.empresa||emp(), logo=E.logo||LOGO;
     return Promise.all([jsPDFlib(),imgSize(logo),E.firma?imgSize(E.firma):Promise.resolve(null)]).then(function(r){
-      var J=r[0], ls=r[1], fs=r[2], doc=new J({unit:'pt',format:'letter'}), W=612, L=50, R=566, y;
+      var J=r[0], ls=r[1], fs=r[2], HJ=hoja(E), PW=HJ[0], PH=HJ[1];
+      var nuevo=function(){ var d=new J({unit:'pt',format:[PW,PH],orientation:PW>PH?'landscape':'portrait'});
+        try{ Object.keys(FUENTES).forEach(function(k){ d.addFileToVFS(k+'.ttf',FUENTES[k]); });
+          [['Roboto-Light','Roboto','light'],['Roboto-Regular','Roboto','normal'],['Roboto-Italic','Roboto','italic'],['Roboto-Medium','Roboto','medium'],['Roboto-Bold','Roboto','bold'],['RobotoCondensed-Medium','RobotoC','normal'],['RobotoCondensed-Bold','RobotoC','bold']]
+            .forEach(function(f){ d.addFont(f[0]+'.ttf',f[1],f[2]); }); d.__rob=true; }catch(e){} return d; };
+      /* se dibuja en un tamaño de trabajo y se reduce parejo para que todo entre en la hoja elegida (media carta, angosta, etc.) */
+      var dibujar=function(doc,W,H,medir){
+      var L=50, R=W-46, y;
+      var k=(R-L)/516, X=function(v){ return L+(v-50)*k; };
       /* solo dos colores: negro y el azul de Bramar */
       var AZ=NAVY, NG=[0,0,0];
-      var roboto=false; try{ Object.keys(FUENTES).forEach(function(k){ doc.addFileToVFS(k+'.ttf',FUENTES[k]); });
-        [['Roboto-Light','Roboto','light'],['Roboto-Regular','Roboto','normal'],['Roboto-Italic','Roboto','italic'],['Roboto-Medium','Roboto','medium'],['Roboto-Bold','Roboto','bold'],['RobotoCondensed-Medium','RobotoC','normal'],['RobotoCondensed-Bold','RobotoC','bold']]
-          .forEach(function(f){ doc.addFont(f[0]+'.ttf',f[1],f[2]); }); roboto=true; }catch(e){}
+      var roboto=!!doc.__rob;
       var F=function(w){ if(!roboto){ doc.setFont('helvetica',w==='italic'?'italic':(w==='bold'||w==='medium'||w==='cond'||w==='condb')?'bold':'normal'); return; }
         if(w==='cond') doc.setFont('RobotoC','normal'); else if(w==='condb') doc.setFont('RobotoC','bold'); else doc.setFont('Roboto',w||'normal'); };
       var esp=function(t,xx,yy,cs,al){ var w=doc.getTextWidth(t)+cs*(t.length-1); if(al==='right') xx-=w; else if(al==='center') xx-=w/2; doc.text(t,xx,yy,{charSpace:cs}); };
@@ -25402,31 +25414,39 @@ button.lkrp-b:hover{border-color:#1E4E86}
       var val=function(t,xx,yy,o){ o=o||{}; F(o.w||(o.b?'medium':'normal')); doc.setFontSize(o.s||9.5); col(o.c||NG); doc.text(String(t),xx,yy,{align:o.al||'left'}); };
       var nota=x.tipo==='nota', c=x.cliente||{};
       // franja lateral de marca
-      doc.setFillColor.apply(doc,AZ); doc.rect(0,0,8,792,'F');
+      var franja=function(){ doc.setFillColor.apply(doc,AZ); doc.rect(0,0,8,H,'F'); }; franja();
       // encabezado
-      var lw=0; if(ls){ lw=104; var lh=lw*ls.h/ls.w; if(lh>72){ lh=72; lw=lh*ls.w/ls.h; } try{ doc.addImage(logo,'PNG',L,34,lw,lh); }catch(e){} }
-      var ex=L+(lw||0)+18; doc.setFillColor.apply(doc,AZ); doc.rect(ex,36,1.2,68,'F'); ex+=14;
-      var ed=[[E.razon||E.nombre,'condb',10.5,AZ],[E.nit?'NIT '+E.nit:'','normal',8.5,NG],[E.direccion,'normal',8.5,NG],[E.telefono?'Tel. '+E.telefono:'','normal',8.5,NG],[E.correo,'normal',8.5,NG],[E.web,'normal',8.5,NG]].filter(function(z){ return z[0]; });
-      var ey=46; ed.forEach(function(z,i){ F(z[1]); doc.setFontSize(z[2]); col(z[3]); if(i===0) esp(String(z[0]).toUpperCase(),ex,ey,.6); else doc.text(doc.splitTextToSize(String(z[0]),170)[0],ex,ey); ey+=i===0?14:11.5; });
-      F('condb'); doc.setFontSize(18); col(AZ); esp(nota?'NOTA DE COBRANZA':'RECIBO',R,52,2.2,'right');
-      F('light'); doc.setFontSize(26); col(AZ); doc.text('N° '+pad(x.no||0),R,84,{align:'right'});
+      var lw=0; if(ls){ lw=W<480?80:104; var lh=lw*ls.h/ls.w; if(lh>72){ lh=72; lw=lh*ls.w/ls.h; } try{ doc.addImage(logo,'PNG',L,34,lw,lh); }catch(e){} }
+      var tsz=W<480?15:18, tit=nota?'NOTA DE COBRANZA':'RECIBO';
+      F('condb'); doc.setFontSize(tsz); var tw=doc.getTextWidth(tit)+2.2*(tit.length-1);
+      F('condb'); doc.setFontSize(tsz); col(AZ); esp(tit,R,52,2.2,'right');
+      F('light'); doc.setFontSize(W<480?22:26); col(AZ); doc.text('N° '+pad(x.no||0),R,84,{align:'right'});
       val(fechaLarga(x.fecha),R,100,{s:9,al:'right'});
-      doc.setDrawColor.apply(doc,AZ); doc.setLineWidth(1.4); doc.line(L,124,R,124);
+      var ed=[[E.razon||E.nombre,'condb',10.5,AZ],[E.nit?'NIT '+E.nit:'','normal',8.5,NG],[E.direccion,'normal',8.5,NG],[E.telefono?'Tel. '+E.telefono:'','normal',8.5,NG],[E.correo,'normal',8.5,NG],[E.web,'normal',8.5,NG]].filter(function(z){ return z[0]; });
+      var ex=L+(lw||0)+18, libre=R-tw-16-(ex+14), hb=124;
+      if(libre>=110){ /* datos de la empresa al lado del logo */
+        doc.setFillColor.apply(doc,AZ); doc.rect(ex,36,1.2,68,'F'); ex+=14;
+        var ey=46; ed.forEach(function(z,i){ F(z[1]); doc.setFontSize(z[2]); col(z[3]); if(i===0) esp(String(z[0]).toUpperCase(),ex,ey,.6); else doc.text(doc.splitTextToSize(String(z[0]),Math.min(170,libre))[0],ex,ey); ey+=i===0?14:11.5; });
+      } else { /* hoja angosta: datos de la empresa debajo del encabezado */
+        var ey2=124; F('condb'); doc.setFontSize(10); col(AZ); esp(String(ed[0][0]).toUpperCase(),L,ey2,.6);
+        F('normal'); doc.setFontSize(8.5); col(NG); doc.splitTextToSize(ed.slice(1).map(function(z){ return z[0]; }).join('  ·  '),R-L).forEach(function(t){ ey2+=11.5; doc.text(t,L,ey2); });
+        hb=ey2+12; }
+      doc.setDrawColor.apply(doc,AZ); doc.setLineWidth(1.4); doc.line(L,hb,R,hb);
       // cliente · período · importe
-      y=156; lab(nota?'SEÑORES':'RECIBIMOS DE',L,y);
+      y=hb+32; lab(nota?'SEÑORES':'RECIBIMOS DE',L,y);
       val(c.nombre||'',L,y+16,{b:1,s:11.5});
       var cy=y+16; F('normal'); doc.setFontSize(8.5); col(NG);
-      [c.edificio&&c.edificio!==c.nombre?c.edificio:'',c.nit?'NIT/CI '+c.nit:'',c.direccion,[c.atencion?'Atención: '+c.atencion:'',c.telefono].filter(Boolean).join(' · ')].filter(Boolean).forEach(function(t){ doc.splitTextToSize(String(t),220).slice(0,2).forEach(function(s){ cy+=12; doc.text(s,L,cy); }); });
-      lab('PERÍODO',330,y); val(mesTxt(x.mes)||'—',330,y+16,{b:1,s:10});
-      if(!nota){ lab('FORMA DE PAGO',450,y); val(x.medio||'—',450,y+16,{b:1,s:10}); if(x.ref) val('Comprobante '+x.ref,450,y+28,{s:8.5}); }
+      [c.edificio&&c.edificio!==c.nombre?c.edificio:'',c.nit?'NIT/CI '+c.nit:'',c.direccion,[c.atencion?'Atención: '+c.atencion:'',c.telefono].filter(Boolean).join(' · ')].filter(Boolean).forEach(function(t){ doc.splitTextToSize(String(t),Math.max(120,X(300)-L-20)).slice(0,2).forEach(function(s){ cy+=12; doc.text(s,L,cy); }); });
+      lab('PERÍODO',X(330),y); val(mesTxt(x.mes)||'—',X(330),y+16,{b:1,s:10});
+      if(!nota){ lab('FORMA DE PAGO',X(450),y); val(x.medio||'—',X(450),y+16,{b:1,s:10}); if(x.ref) val('Comprobante '+x.ref,X(450),y+28,{s:8.5}); }
       // detalle
       y=Math.max(cy+34,y+56);
-      var cx={n:L+4,d:L+30,q:378,p:470,i:R-4};
+      var cx={n:L+4,d:L+30,q:X(378),p:X(470),i:R-4};
       lab('N°',cx.n,y); lab('DESCRIPCIÓN',cx.d,y); lab('CANT.',cx.q,y,'center'); lab('P. UNITARIO',cx.p,y,'right'); lab('IMPORTE',cx.i,y,'right');
       y+=8; doc.setDrawColor.apply(doc,AZ); doc.setLineWidth(1.2); doc.line(L,y,R,y);
       (x.items||[]).forEach(function(it,i){
         F('normal'); doc.setFontSize(9.5);
-        var ln=doc.splitTextToSize(String(it.desc||''),300), h=Math.max(28,12+ln.length*12);
+        var ln=doc.splitTextToSize(String(it.desc||''),cx.q-cx.d-24), h=Math.max(28,12+ln.length*12);
         F('light'); col(NG); doc.text(String(i+1).padStart(2,'0'),cx.n,y+17);
         F('normal'); col(NG); doc.text(ln,cx.d,y+17); doc.text(String(it.cant),cx.q,y+17,{align:'center'});
         doc.text(bs(it.pu),cx.p,y+17,{align:'right'}); doc.text(bs(r2(it.cant*it.pu)),cx.i,y+17,{align:'right'});
@@ -25434,10 +25454,11 @@ button.lkrp-b:hover{border-color:#1E4E86}
       });
       // totales y SON
       var ty=y+22;
-      F('condb'); doc.setFontSize(11); col(AZ); esp(nota?'TOTAL A PAGAR Bs':'TOTAL RECIBIDO Bs',380,ty+12,.8); val(bs(x.total),R-4,ty+13,{w:'bold',s:17,c:AZ,al:'right'});
+      F('bold'); doc.setFontSize(17); var aw=doc.getTextWidth(bs(x.total));
+      F('condb'); doc.setFontSize(11); col(AZ); esp(nota?'TOTAL A PAGAR Bs':'TOTAL RECIBIDO Bs',R-4-aw-14,ty+12,.8,'right'); val(bs(x.total),R-4,ty+13,{w:'bold',s:17,c:AZ,al:'right'});
       doc.setFillColor.apply(doc,AZ); doc.rect(L,ty-8,2.5,34,'F');
       lab('SON',L+12,ty); F('italic'); doc.setFontSize(9); col(NG);
-      doc.text(doc.splitTextToSize(son(x.total),320),L+12,ty+14);
+      doc.text(doc.splitTextToSize(son(x.total),Math.max(150,X(370)-L-12)),L+12,ty+14);
       y=ty+70;
       // tarjeta: línea azul a la izquierda, sin fondo
       var tarjeta=function(tit,cols){ cols=cols.filter(function(k){ return k[1]; }); if(!cols.length) return;
@@ -25456,14 +25477,25 @@ button.lkrp-b:hover{border-color:#1E4E86}
       var ob=x.obs||(nota?E.pieNota:''); if(ob){ lab('OBSERVACIÓN',L,y+4); F('normal'); doc.setFontSize(9); col(NG);
         doc.splitTextToSize(String(ob),R-L).slice(0,4).forEach(function(s,i){ doc.text(s,L,y+18+i*12); }); }
       // firmas
-      var fy=716; doc.setDrawColor.apply(doc,NG); doc.setLineWidth(.5); doc.line(L,fy,230,fy); doc.line(386,fy,R,fy);
-      if(fs&&E.firma){ var fw=150, fh=fw*fs.h/fs.w; if(fh>88){ fh=88; fw=fh*fs.w/fs.h; } try{ doc.addImage(E.firma,E.firma.indexOf('image/jpeg')>0?'JPEG':'PNG',(386+R)/2-fw/2,fy-fh+8,fw,fh); }catch(e){} }
-      val(nota?'Recibí conforme':'Entregué conforme',(L+230)/2,fy+13,{b:1,s:8.5,al:'center'});
-      F('condb'); doc.setFontSize(9); col(AZ); esp(String(E.nombre||'BRAMAR GROUP').toUpperCase(),(386+R)/2,fy+13,1,'center');
-      val('Firma y aclaración',(L+230)/2,fy+24,{w:'light',s:7.5,al:'center'}); val('Firma y sello',(386+R)/2,fy+24,{w:'light',s:7.5,al:'center'});
+      if(ob) y+=22+Math.min(4,doc.splitTextToSize(String(ob),R-L).length)*12;
+      if(medir) return y;
+      /* firmas al pie */
+      var fy=Math.max(H-76,y+80);
+      var a1=X(230), a2=X(386);
+      doc.setDrawColor.apply(doc,NG); doc.setLineWidth(.5); doc.line(L,fy,a1,fy); doc.line(a2,fy,R,fy);
+      if(fs&&E.firma){ var fw=Math.min(150,R-a2), fh=fw*fs.h/fs.w; if(fh>88){ fh=88; fw=fh*fs.w/fs.h; } try{ doc.addImage(E.firma,E.firma.indexOf('image/jpeg')>0?'JPEG':'PNG',(a2+R)/2-fw/2,fy-fh+8,fw,fh); }catch(e){} }
+      val(nota?'Recibí conforme':'Entregué conforme',(L+a1)/2,fy+13,{b:1,s:8.5,al:'center'});
+      F('condb'); doc.setFontSize(9); col(AZ); esp(String(E.nombre||'BRAMAR GROUP').toUpperCase(),(a2+R)/2,fy+13,1,'center');
+      val('Firma y aclaración',(L+a1)/2,fy+24,{w:'light',s:7.5,al:'center'}); val('Firma y sello',(a2+R)/2,fy+24,{w:'light',s:7.5,al:'center'});
       if(x.anulado){ col(AZ); F('condb'); doc.setFontSize(78);
         try{ doc.saveGraphicsState(); doc.setGState(new doc.GState({opacity:.12})); }catch(e){}
-        doc.text('ANULADO',W/2,470,{align:'center',angle:28}); try{ doc.restoreGraphicsState(); }catch(e){} }
+        doc.setFontSize(Math.min(78,W/8)); doc.text('ANULADO',W/2,H*0.6,{align:'center',angle:28}); try{ doc.restoreGraphicsState(); }catch(e){} }
+      return y;
+      };
+      var s0=PW<520?PW/520:1, prueba=nuevo(), alto=dibujar(prueba,PW/s0,100000,true)+110;
+      var esc=Math.min(s0,PH/alto), doc=nuevo();
+      if(esc<0.999) doc.advancedAPI(function(d){ d.setCurrentTransformationMatrix(new d.Matrix(esc,0,0,esc,0,0)); dibujar(d,PW/esc,PH/esc,false); });
+      else dibujar(doc,PW,PH,false);
       return doc;
     });
   }
@@ -25669,11 +25701,16 @@ button.lkrp-b:hover{border-color:#1E4E86}
     b.innerHTML='<div class="lkb-g">'+F.map(function(f){ return '<label class="f'+(f[2]?' full':'')+'">'+f[1]+'<input data-k="'+f[0]+'" value="'+esc(E[f[0]])+'"></label>'; }).join('')+'</div>'+
       '<h4>Datos para el pago (salen en la nota de cobranza)</h4><div class="lkb-g lkb-g3"><label class="f">Banco<input data-k="banco" value="'+esc(E.banco)+'"></label><label class="f">N° de cuenta<input data-k="cuenta" value="'+esc(E.cuenta)+'"></label><label class="f">Titular<input data-k="titular" value="'+esc(E.titular)+'"></label></div>'+
       '<label class="f" style="margin-top:12px">Nota al pie de cada nota de cobranza<textarea data-k="pieNota" placeholder="Ej.: Pagar hasta el día 10 de cada mes.">'+esc(E.pieNota)+'</textarea></label>'+
+      '<h4>Tamaño de hoja</h4><div class="lkb-g lkb-g3"><label class="f">Hoja<select data-k="hoja" id="lkb-hj"><option value="carta">Carta · 21,6 × 27,9 cm</option><option value="oficio">Oficio · 21,6 × 33 cm</option><option value="custom">Personalizado</option></select></label>'+
+      '<label class="f lkb-hc">Ancho (cm)<input data-k="hojaAncho" inputmode="decimal" value="'+esc(E.hojaAncho)+'" placeholder="21,6"></label><label class="f lkb-hc">Alto (cm)<input data-k="hojaAlto" inputmode="decimal" value="'+esc(E.hojaAlto)+'" placeholder="14"></label></div>'+
       '<h4>Firma y sello</h4><div class="lkb-firma">'+(E.firma?'<img src="'+esc(E.firma)+'" alt="Firma">':'<span style="color:#7d93ab;font-size:13px;flex:1">Suba una foto de la firma y el sello (fondo blanco). Se imprime sobre «Firma y sello».</span>')+'<span style="flex:1"></span><button type="button" class="btn" id="lkb-fi">'+(E.firma?'Cambiar':'Subir imagen')+'</button>'+(E.firma?'<button type="button" class="btn" id="lkb-fq">Quitar</button>':'')+'<input type="file" id="lkb-ff" accept="image/*" hidden></div>'+
       '<h4>Numeración</h4><div class="lkb-g"><label class="f">Primera nota de cobranza<input id="lkb-in" inputmode="numeric" value="'+esc(I.nota||1)+'"></label><label class="f">Primer recibo<input id="lkb-ir" inputmode="numeric" value="'+esc(I.recibo||1)+'"></label></div>'+
       '<p style="font-size:12.5px;color:#7d93ab;margin:6px 0 0">Si ya tiene talonario físico, ponga el número con el que debe seguir. Siempre se continúa desde el último emitido.</p>'+
       '<h4>Catálogo de servicios y precios</h4><div id="lkb-sv"></div><button type="button" class="lkb-link" id="lkb-sadd">+ Agregar servicio</button>'+
       '<div class="lkb-msg" id="lkb-msg"></div><div class="lkb-pie"><button type="button" class="btn" id="lkb-ej">Ver nota de ejemplo</button><button type="button" class="btn primary" id="lkb-ge">Guardar</button></div>';
+    $('lkb-hj').value=E.hoja||'carta';
+    var verHoja=function(){ [].forEach.call(b.querySelectorAll('.lkb-hc'),function(l){ l.style.display=$('lkb-hj').value==='custom'?'':'none'; }); };
+    $('lkb-hj').onchange=verHoja; verHoja();
     var sv=$('lkb-sv');
     function filas(){ sv.innerHTML=S.map(function(s,i){ return '<div class="lkb-it" data-i="'+i+'" style="grid-template-columns:1fr 130px 36px"><input class="d" value="'+esc(s.nombre)+'" placeholder="Servicio de administración - {mes}"><input class="num p" inputmode="decimal" value="'+esc(s.precio)+'" placeholder="Precio Bs"><button type="button" class="x">×</button></div>'; }).join('');
       [].forEach.call(sv.querySelectorAll('.lkb-it'),function(r){ var i=+r.dataset.i; r.querySelector('.d').oninput=function(){ S[i].nombre=this.value; }; r.querySelector('.p').oninput=function(){ S[i].precio=this.value; };
@@ -25690,7 +25727,10 @@ button.lkrp-b:hover{border-color:#1E4E86}
         var px=g.getImageData(0,0,cv.width,cv.height), d=px.data; for(var i=0;i<d.length;i+=4){ var l=(d[i]+d[i+1]+d[i+2])/3; if(l>225) d[i+3]=0; else if(l>190) d[i+3]=Math.round(d[i+3]*(225-l)/35); } g.putImageData(px,0,0);
         firma=cv.toDataURL('image/png'); guardarEmp(); }; im.src=rd.result; }; rd.readAsDataURL(f); };
     function leerEmp(){ var e={}; [].forEach.call(b.querySelectorAll('[data-k]'),function(i){ e[i.dataset.k]=i.value.trim(); }); e.firma=firma||''; e.logo=E.logo&&E.logo!==LOGO?E.logo:''; return e; }
-    function guardarEmp(){ var bt=$('lkb-ge'); bt.disabled=true; $('lkb-msg').textContent='';
+    function guardarEmp(){ var bt=$('lkb-ge'); $('lkb-msg').textContent='';
+      if($('lkb-hj').value==='custom'){ var ha=num(b.querySelector('[data-k=hojaAncho]').value), hh=num(b.querySelector('[data-k=hojaAlto]').value);
+        if(!(ha>=10&&ha<=60&&hh>=10&&hh<=90)){ $('lkb-msg').textContent='Hoja personalizada: el ancho va de 10 a 60 cm y el alto de 10 a 90 cm.'; return; } }
+      bt.disabled=true;
       cfg({empresa:leerEmp(),servicios:S.filter(function(s){ return String(s.nombre).trim(); }).map(function(s){ return {nombre:String(s.nombre).trim(),precio:num(s.precio)}; }),inicio:{nota:parseInt($('lkb-in').value,10)||1,recibo:parseInt($('lkb-ir').value,10)||1}})
         .then(function(){ toast('Datos de Bramar guardados','success'); pintar(); }).catch(function(e){ bt.disabled=false; $('lkb-msg').textContent=e.message; }); }
     $('lkb-ge').onclick=guardarEmp;
@@ -25978,7 +26018,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261028171758'; window.LUKA_BUILD=B;
+(function(){ var B='20261028173329'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
