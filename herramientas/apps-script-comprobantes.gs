@@ -598,6 +598,7 @@ function luka_(d) {
     const fijos = P.getProperty('CORREOS_AVISO');
     return json({ ok: true, correos: fijos === null ? 'bramargroupsrl@gmail.com' : fijos, admins: P.getProperty('AVISO_ADMINS') !== 'no' });
   }
+  if (a === 'lk_bramar') return lkBramar_(u, d);
   if (a === 'lk_usuarios') return json({ ok: true, usuarios: lkUsuarios_().map(lkPublico_) });
   if (a === 'lk_usuario_guardar') {
     const L = lkUsuarios_(), x = d.usuario || {}, id = String(x.usuario || x.correo || '').trim().toLowerCase();
@@ -1010,4 +1011,53 @@ function portal_(d) {
     return json({ ok: true, id: id, total: total, ocupadas: ocup });
   }
   return json({ ok: false, error: 'Acción desconocida.' });
+}
+
+/* ===================== Bramar Group · notas de cobranza y recibos a edificios =====================
+   Un solo archivo en Drive («LUKA Datos/LUKA_BRAMAR_COBROS.json») con los datos de la empresa,
+   los clientes (edificios), el catálogo de servicios y todos los documentos emitidos.
+   El número de cada nota y recibo lo asigna el servidor con candado: nunca se repite entre equipos. */
+function lkBramarArchivo_() {
+  const P = lkProps_(); let id = P.getProperty('LUKA_BRAMAR_FILE');
+  if (id) { try { const f = DriveApp.getFileById(id); if (!f.isTrashed()) return f; } catch (e) {} }
+  const ini = { v: 1, empresa: {}, servicios: [], clientes: [], inicio: { nota: 1, recibo: 1 }, docs: [] };
+  const f = lkCarpeta_().createFile('LUKA_BRAMAR_COBROS.json', JSON.stringify(ini), 'application/json');
+  P.setProperty('LUKA_BRAMAR_FILE', f.getId()); return f;
+}
+function lkBramar_(u, d) {
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const f = lkBramarArchivo_(); let B;
+    try { B = JSON.parse(f.getBlob().getDataAsString('UTF-8')); } catch (e) { return json({ ok: false, error: 'No se pudo leer el archivo de cobros de Bramar.' }); }
+    B.docs = B.docs || []; B.inicio = B.inicio || { nota: 1, recibo: 1 };
+    const op = d.op || 'cargar';
+    const guardar = function (detalle) { B.v = (B.v || 0) + 1; B.upd = new Date().toISOString(); B.by = u.n; f.setContent(JSON.stringify(B)); if (detalle) lkLog_(u, 'Bramar Group', detalle[0], detalle[1] || ''); };
+    if (op === 'cfg') {
+      if (d.empresa) B.empresa = d.empresa;
+      if (d.servicios) B.servicios = d.servicios;
+      if (d.clientes) B.clientes = d.clientes;
+      if (d.inicio) ['nota', 'recibo'].forEach(function (t) { const n = parseInt(d.inicio[t], 10); if (n > 0) B.inicio[t] = n; });
+      guardar(['Cambió datos de cobro de Bramar', '']);
+    } else if (op === 'emitir') {
+      const x = d.doc || {}; if (x.tipo !== 'nota' && x.tipo !== 'recibo') return json({ ok: false, error: 'Tipo de documento inválido.' });
+      if (!x.cliente || !x.cliente.nombre) return json({ ok: false, error: 'Falta el cliente.' });
+      if (!(Number(x.total) > 0)) return json({ ok: false, error: 'El total debe ser mayor a cero.' });
+      // número correlativo: el mayor emitido de ese tipo + 1 (o el número inicial configurado)
+      let n = (B.inicio[x.tipo] || 1) - 1;
+      B.docs.forEach(function (y) { if (y.tipo === x.tipo && y.no > n) n = y.no; });
+      x.no = n + 1; x.id = x.tipo[0] + Utilities.getUuid().slice(0, 8); x.estado = x.tipo === 'recibo' ? 'emitido' : 'pendiente';
+      x.creado = new Date().toISOString(); x.por = u.n;
+      if (x.tipo === 'recibo' && x.notaId) B.docs.forEach(function (y) { if (y.id === x.notaId) { y.estado = 'pagada'; y.reciboId = x.id; y.reciboNo = x.no; } });
+      B.docs.push(x);
+      guardar([(x.tipo === 'nota' ? 'Emitió nota de cobranza ' : 'Emitió recibo ') + x.no, x.cliente.nombre + ' · Bs ' + x.total]);
+      return json({ ok: true, data: B, doc: x });
+    } else if (op === 'estado') {
+      const y = B.docs.filter(function (z) { return z.id === d.id; })[0]; if (!y) return json({ ok: false, error: 'Documento no encontrado.' });
+      if (d.estado === 'anulado') { y.anulado = true; y.motivo = String(d.motivo || '').slice(0, 200); y.anuladoPor = u.n; y.anuladoEl = new Date().toISOString();
+        B.docs.forEach(function (z) { if (z.reciboId === y.id) { z.estado = 'pendiente'; delete z.reciboId; delete z.reciboNo; } }); }
+      else if (d.estado === 'pendiente' || d.estado === 'pagada') y.estado = d.estado;
+      guardar([(d.estado === 'anulado' ? 'Anuló ' : 'Cambió estado de ') + (y.tipo === 'nota' ? 'nota ' : 'recibo ') + y.no, y.motivo || d.estado]);
+    }
+    return json({ ok: true, data: B });
+  } finally { lock.releaseLock(); }
 }
