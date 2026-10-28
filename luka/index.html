@@ -25447,10 +25447,11 @@ button.lkrp-b:hover{border-color:#1E4E86}
         y+=66; };
       if(nota) tarjeta('DATOS PARA EL PAGO',[['Banco',E.banco],['N° de cuenta',E.cuenta],['Titular',E.titular]]);
       else {
-        if(x.notaNo) tarjeta('REFERENCIA',[['Cancela',"Nota de cobranza N° "+pad(x.notaNo)]]);
-        var ant=x.saldoAnt!=null?Number(x.saldoAnt):(x.notaNo?Number(x.total):null);
-        if(ant!=null){ var nuevo=r2(ant-x.total);
-          tarjeta('ESTADO DE CUENTA',[['Saldo pendiente anterior',bs(ant)],['Pago recibido','- '+bs(x.total)],[nuevo<0?'Saldo a favor':'Nuevo saldo',bs(Math.abs(nuevo))]]); }
+        /* recibo: solo el estado, sin saldos */
+        doc.setFillColor.apply(doc,AZ); doc.rect(L,y,2.5,36,'F'); lab('ESTADO',L+12,y+12);
+        F('condb'); doc.setFontSize(14); col(AZ); esp('PAGADO',L+12,y+30,1.2);
+        if(x.notaNo){ var pw=doc.getTextWidth('PAGADO')+6; val('Nota de cobranza N° '+pad(x.notaNo),L+12+pw+14,y+30,{s:9.5}); }
+        y+=54;
       }
       var ob=x.obs||(nota?E.pieNota:''); if(ob){ lab('OBSERVACIÓN',L,y+4); F('normal'); doc.setFontSize(9); col(NG);
         doc.splitTextToSize(String(ob),R-L).slice(0,4).forEach(function(s,i){ doc.text(s,L,y+18+i*12); }); }
@@ -25977,7 +25978,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261028171309'; window.LUKA_BUILD=B;
+(function(){ var B='20261028171758'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
