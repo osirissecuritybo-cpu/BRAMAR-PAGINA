@@ -25292,6 +25292,19 @@ button.lkrp-b:hover{border-color:#1E4E86}
 #lkb .lkb-firma{display:flex;align-items:center;gap:12px;border:1px dashed #C9D5E3;border-radius:12px;padding:10px 12px}
 #lkb .lkb-firma img{height:60px;max-width:160px;object-fit:contain;background:#fff}
 #lkb .lkb-msg{font-size:13px;color:#B42318;margin-top:8px;min-height:1em}
+#lkb .lkb-fp{border:1px solid #E3EAF2;border-radius:14px;overflow:hidden}
+#lkb .lkb-fpr{border-top:1px solid #EEF2F7}
+#lkb .lkb-fpr:first-child{border-top:0}
+#lkb .lkb-fpc{display:flex;align-items:center;gap:12px;min-height:48px;padding:0 16px;cursor:pointer;font-size:14.5px;font-weight:600;color:#0B2440}
+#lkb .lkb-fpc input{position:absolute;opacity:0;pointer-events:none}
+#lkb .lkb-fpc .bx{width:20px;height:20px;border:1.5px solid #0B2440;border-radius:5px;display:grid;place-items:center;flex:0 0 auto}
+#lkb .lkb-fpc input:checked+.bx{background:#0B2440}
+#lkb .lkb-fpc input:checked+.bx::after{content:'';width:10px;height:5px;border:2px solid #fff;border-top:0;border-right:0;transform:rotate(-45deg) translate(1px,-1px)}
+#lkb .lkb-fpd{padding:0 16px 16px 48px}
+#lkb .lkb-fpn{margin:0;font-size:13px;color:#5B6B7F}
+#lkb .lkb-fpq{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
+#lkb .lkb-fpq img{width:84px;height:84px;object-fit:contain;border:1px solid #E3EAF2;border-radius:8px;background:#fff}
+@media (max-width:760px){ #lkb .lkb-fpd{padding:0 14px 14px} }
 #lkb .lkb-link{background:none;border:0;color:#0B2440;font:inherit;font-size:13.5px;font-weight:600;text-decoration:underline;cursor:pointer;padding:6px 0}
 @media (max-width:760px){
   #lkb .lkb-card{border-radius:14px}
@@ -25339,7 +25352,9 @@ button.lkrp-b:hover{border-color:#1E4E86}
   var B=null, tab='docs', filtro={q:'',tipo:'',cli:''}, edit=null, cargando=null;
   var MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
   var MEDIOS=['Transferencia','QR','Efectivo','Depósito','Cheque'];
-  var DEF_EMP={nombre:'BRAMAR GROUP',razon:'',nit:'',direccion:'Santa Cruz de la Sierra - Bolivia',telefono:'+591 78155275',correo:'bramargroupsrl@gmail.com',web:'',banco:'',cuenta:'',titular:'',pieNota:'',firma:'',logo:'',hoja:'carta',hojaAncho:'',hojaAlto:''};
+  var DEF_EMP={nombre:'BRAMAR GROUP',razon:'',nit:'',direccion:'Santa Cruz de la Sierra - Bolivia',telefono:'+591 78155275',correo:'bramargroupsrl@gmail.com',web:'',banco:'',cuenta:'',titular:'',pieNota:'',firma:'',logo:'',hoja:'carta',hojaAncho:'',hojaAlto:'',qr:'',pagoDef:null};
+  /* formas de pago de la nota de cobranza */
+  var FP=[['efectivo','Efectivo'],['transferencia','Transferencia bancaria'],['deposito','Depósito bancario'],['qr','Pago con QR'],['cheque','Cheque']];
   /* tamaño de hoja en puntos: carta 21,6×27,9 cm · oficio 21,6×33 cm · personalizado (cm) */
   var CM=72/2.54;
   function hoja(E){ var t=(E&&E.hoja)||'carta';
@@ -25466,7 +25481,19 @@ button.lkrp-b:hover{border-color:#1E4E86}
         lab(tit,L+12,y+12); var w=(R-L-24)/Math.max(cols.length,3);
         cols.forEach(function(k,i){ var xx=L+12+i*w; val(k[0],xx,y+28,{w:'light',s:8}); val(doc.splitTextToSize(String(k[1]),w-10)[0],xx,y+41,{b:1,s:9.5}); });
         y+=66; };
-      if(nota) tarjeta('DATOS PARA EL PAGO',[['Banco',E.banco],['N° de cuenta',E.cuenta],['Titular',E.titular]]);
+      if(nota&&x.pagos&&(x.pagos.metodos||[]).length){
+        var P=x.pagos, qrImg=(P.metodos.indexOf('qr')>=0)&&E.qr, qs=qrImg?86:0, y0=y, dx=L+12+Math.max(118,128*k), dw=R-(qrImg?qs+18:0)-dx;
+        lab('FORMAS DE PAGO',L+12,y+12); var ry=y+30;
+        var banc=[P.banco?(/^banco\b/i.test(P.banco)?P.banco:'Banco '+P.banco):'',P.cuenta?'Cuenta N° '+P.cuenta:'',P.titular?'Titular: '+P.titular:''].filter(Boolean).join(' · ');
+        var ambos=P.metodos.indexOf('transferencia')>=0&&P.metodos.indexOf('deposito')>=0;
+        FP.forEach(function(f){ if(P.metodos.indexOf(f[0])<0) return; if(ambos&&f[0]==='deposito') return; if(ambos&&f[0]==='transferencia') f=['transferencia','Transferencia o depósito'];
+          var det={efectivo:P.efectivo||'En oficinas de '+(E.nombre||'Bramar Group'),transferencia:banc,deposito:banc,qr:'Escanee el código QR'+(P.qrBanco?' · '+P.qrBanco:''),cheque:P.cheque?'A la orden de '+P.cheque:''}[f[0]]||'';
+          F('condb'); doc.setFontSize(9); col(AZ); esp(f[1].toUpperCase(),L+12,ry,.5);
+          F('normal'); doc.setFontSize(9); col(NG); var ls2=doc.splitTextToSize(det,dw); doc.text(ls2,dx,ry); ry+=Math.max(1,ls2.length)*11.5+5; });
+        if(qrImg){ try{ doc.addImage(E.qr,E.qr.indexOf('image/jpeg')>0?'JPEG':'PNG',R-qs,y0+4,qs,qs); }catch(e){} }
+        var hh=Math.max(ry-y0-6,qrImg?qs+6:0); doc.setFillColor.apply(doc,AZ); doc.rect(L,y0,2.5,hh,'F'); y=y0+hh+18;
+      }
+      else if(nota) tarjeta('DATOS PARA EL PAGO',[['Banco',E.banco],['N° de cuenta',E.cuenta],['Titular',E.titular]]);
       else {
         /* recibo: solo el estado, sin saldos */
         doc.setFillColor.apply(doc,AZ); doc.rect(L,y,2.5,36,'F'); lab('ESTADO',L+12,y+12);
@@ -25606,6 +25633,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
       '</div><h4>Detalle</h4><div class="lkb-it lkb-ith"><span>Descripción</span><span>Cant.</span><span>P. unit. (Bs)</span><span style="text-align:right">Importe</span><span></span></div><div id="lkb-its"></div>'+
       '<div style="display:flex;gap:14px;flex-wrap:wrap"><button type="button" class="lkb-link" id="lkb-add">+ Agregar fila</button>'+(S.length?'<select id="lkb-cat" style="min-height:40px;border:1px solid #D9E2EC;border-radius:10px;padding:0 10px;font:inherit;font-size:14px"><option value="">+ Del catálogo de servicios…</option>'+S.map(function(s,i){ return '<option value="'+i+'">'+esc(s.nombre)+(num(s.precio)?' · Bs '+bs(s.precio):'')+'</option>'; }).join('')+'</select>':'')+'</div>'+
       '<div class="lkb-tot"><span>TOTAL Bs</span><b id="lkb-t">0,00</b></div><div class="lkb-son" id="lkb-son"></div>'+
+      (nota?'<h4>Formas de pago</h4><div class="lkb-fp" id="lkb-fp"></div>':'')+
       '<label class="f" style="margin-top:14px">Observación<textarea id="lkb-ob" placeholder="Opcional">'+esc(x.obs||'')+'</textarea></label>'+
       '<div class="lkb-msg" id="lkb-msg"></div>'+
       '<div class="lkb-pie"><button type="button" class="btn" id="lkb-pv">Vista previa</button><button type="button" class="btn primary" id="lkb-em">Emitir '+(nota?'nota de cobranza':'recibo')+'</button></div>';
@@ -25634,18 +25662,49 @@ button.lkrp-b:hover{border-color:#1E4E86}
     $('lkb-add').onclick=function(){ x.items.push({desc:'',cant:1,pu:''}); filas(); var r=its.lastElementChild; if(r) r.querySelector('.d').focus(); };
     if($('lkb-cat')) $('lkb-cat').onchange=function(){ var s=S[+this.value]; this.value=''; if(!s) return; var mes=$('lkb-me').value;
       var v=x.items.filter(function(i){ return String(i.desc).trim()||num(i.pu); }); v.push({desc:String(s.nombre).replace(/\{mes\}/gi,mesTxt(mes)),cant:1,pu:num(s.precio)||''}); x.items=v; filas(); };
+    /* formas de pago: se marcan una o varias; los datos vienen de la última nota y se pueden cambiar aquí */
+    var E0=emp(), PD=E0.pagoDef||{}, P={metodos:(x.pagos&&x.pagos.metodos)||PD.metodos||['transferencia'],banco:PD.banco!=null?PD.banco:E0.banco,cuenta:PD.cuenta!=null?PD.cuenta:E0.cuenta,titular:PD.titular!=null?PD.titular:E0.titular,efectivo:PD.efectivo||'',cheque:PD.cheque!=null?PD.cheque:(E0.razon||E0.titular||''),qrBanco:PD.qrBanco||''};
+    if(x.pagos) Object.keys(x.pagos).forEach(function(k2){ P[k2]=x.pagos[k2]; });
+    P.metodos=P.metodos.slice(); var qrDato=E0.qr||'';
+    function campo(k2,t,ph){ return '<label class="f">'+t+'<input data-p="'+k2+'" value="'+esc(P[k2]||'')+'" placeholder="'+esc(ph||'')+'"></label>'; }
+    function formasPago(){ var c=$('lkb-fp'); if(!c) return; var bancoEn=P.metodos.indexOf('transferencia')>=0?'transferencia':'deposito';
+      c.innerHTML=FP.map(function(f){ var on=P.metodos.indexOf(f[0])>=0, det='';
+        if(on){ if((f[0]==='transferencia'||f[0]==='deposito')&&f[0]===bancoEn) det='<div class="lkb-g lkb-g3">'+campo('banco','Banco','Banco Nacional de Bolivia')+campo('cuenta','N° de cuenta','')+campo('titular','Titular','Bramar Group S.R.L.')+'</div>';
+          else if(f[0]==='deposito') det='<p class="lkb-fpn">Con los mismos datos bancarios de la transferencia.</p>';
+          else if(f[0]==='efectivo') det=campo('efectivo','Lugar y horario de pago','Oficina de Bramar, lunes a viernes de 9:00 a 18:00');
+          else if(f[0]==='cheque') det=campo('cheque','A la orden de','Bramar Group S.R.L.');
+          else if(f[0]==='qr') det='<div class="lkb-fpq">'+(qrDato?'<img src="'+esc(qrDato)+'" alt="QR">':'<span class="lkb-fpn">Suba la imagen del código QR de cobro.</span>')+'<div style="flex:1;min-width:180px">'+campo('qrBanco','Banco o billetera del QR (opcional)','')+'</div><button type="button" class="btn" id="lkb-qrb">'+(qrDato?'Cambiar QR':'Subir QR')+'</button><input type="file" id="lkb-qrf" accept="image/*" hidden></div>'; }
+        return '<div class="lkb-fpr'+(on?' on':'')+'"><label class="lkb-fpc"><input type="checkbox" data-m="'+f[0]+'"'+(on?' checked':'')+'><span class="bx"></span><span>'+f[1]+'</span></label>'+(det?'<div class="lkb-fpd">'+det+'</div>':'')+'</div>'; }).join('');
+      [].forEach.call(c.querySelectorAll('input[data-m]'),function(i){ i.onchange=function(){ var m=i.dataset.m, k3=P.metodos.indexOf(m); if(i.checked&&k3<0) P.metodos.push(m); if(!i.checked&&k3>=0) P.metodos.splice(k3,1); formasPago(); }; });
+      [].forEach.call(c.querySelectorAll('input[data-p]'),function(i){ i.oninput=function(){ P[i.dataset.p]=i.value; }; });
+      if($('lkb-qrb')){ $('lkb-qrb').onclick=function(){ $('lkb-qrf').click(); };
+        $('lkb-qrf').onchange=function(){ var f=this.files&&this.files[0]; if(!f) return; var rd=new FileReader(); rd.onload=function(){ var im=new Image(); im.onload=function(){
+          var kk=Math.min(1,600/Math.max(im.width,im.height)), cv=document.createElement('canvas'); cv.width=Math.round(im.width*kk); cv.height=Math.round(im.height*kk);
+          var g=cv.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,cv.width,cv.height); g.drawImage(im,0,0,cv.width,cv.height); qrDato=cv.toDataURL('image/png');
+          cfg({empresa:Object.assign(emp(),{qr:qrDato})}).then(function(){ toast('QR guardado','success'); }).catch(function(e){ toast(e.message,'error'); }); formasPago(); }; im.src=rd.result; }; rd.readAsDataURL(f); }; }
+    }
+    formasPago();
+    function leerPagos(){ var o={metodos:FP.map(function(f){ return f[0]; }).filter(function(m){ return P.metodos.indexOf(m)>=0; })};
+      ['banco','cuenta','titular','efectivo','cheque','qrBanco'].forEach(function(k2){ o[k2]=String(P[k2]||'').trim(); }); return o; }
     function leer(){ var d={tipo:x.tipo,clienteId:x.clienteId,cliente:x.cliente,fecha:$('lkb-fe').value||hoy(),mes:$('lkb-me').value,items:limpio(),obs:$('lkb-ob').value.trim(),empresa:emp()};
       d.total=totalItems(d.items);
+      if(nota){ d.pagos=leerPagos(); d.empresa.qr=qrDato; }
       if(!nota){ d.medio=$('lkb-md').value; d.ref=$('lkb-rf').value.trim(); if($('lkb-nt').value){ d.notaId=$('lkb-nt').value; d.notaNo=x.notaNo; } }
       if(!nota) d.saldoAnt=r2((B.docs||[]).filter(function(z){ return z.tipo==='nota'&&!z.anulado&&z.estado!=='pagada'&&d.clienteId&&z.clienteId===d.clienteId; }).reduce(function(t,z){ return t+(Number(z.total)||0); },0));
       return d; }
-    function validar(d){ if(!d.cliente||!d.cliente.nombre) return 'Elija el edificio.'; if(!d.items.length) return 'Agregue al menos una fila al detalle.'; if(!(d.total>0)) return 'El total debe ser mayor a cero.'; return ''; }
+    function validar(d){ if(!d.cliente||!d.cliente.nombre) return 'Elija el edificio.'; if(!d.items.length) return 'Agregue al menos una fila al detalle.'; if(!(d.total>0)) return 'El total debe ser mayor a cero.';
+      if(d.pagos){ var M=d.pagos.metodos; if(!M.length) return 'Marque al menos una forma de pago.';
+        if((M.indexOf('transferencia')>=0||M.indexOf('deposito')>=0)&&!d.pagos.cuenta) return 'Escriba el número de cuenta para la transferencia o el depósito.';
+        if(M.indexOf('qr')>=0&&!qrDato) return 'Suba la imagen del código QR.';
+        if(M.indexOf('cheque')>=0&&!d.pagos.cheque) return 'Escriba a la orden de quién va el cheque.'; }
+      return ''; }
     $('lkb-pv').onclick=function(){ var d=leer(), m=validar(d); $('lkb-msg').textContent=m; if(m) return;
       var tipo=d.tipo, sig=((B.inicio||{})[tipo]||1)-1; (B.docs||[]).forEach(function(z){ if(z.tipo===tipo&&z.no>sig) sig=z.no; }); d.no=sig+1;
       var w=window.open('','_blank'); pdf(d).then(function(doc){ var u=doc.output('bloburl'); if(w) w.location=u; else doc.save('Vista previa.pdf'); }); };
     $('lkb-em').onclick=function(){ var d=leer(), m=validar(d), bt=this; $('lkb-msg').textContent=m; if(m) return;
       bt.disabled=true; bt.textContent='Emitiendo…';
-      emitir(d).then(function(doc){ toast((nota?'Nota de cobranza':'Recibo')+' N° '+pad(doc.no)+' emitido','success'); edit=null; tab='docs'; pintar(); descargar(doc); })
+      emitir(d).then(function(doc){ toast((nota?'Nota de cobranza':'Recibo')+' N° '+pad(doc.no)+' emitido','success'); edit=null; tab='docs'; pintar(); descargar(doc);
+          if(nota&&JSON.stringify(emp().pagoDef||{})!==JSON.stringify(d.pagos)) cfg({empresa:Object.assign(emp(),{pagoDef:d.pagos,banco:d.pagos.banco,cuenta:d.pagos.cuenta,titular:d.pagos.titular})}).catch(function(){}); })
         .catch(function(e){ bt.disabled=false; bt.textContent='Emitir '+(nota?'nota de cobranza':'recibo'); $('lkb-msg').textContent=e.message; }); };
     if(x.clienteId&&nota&&!(x.items[0]&&x.items[0].desc)) deCliente(x.clienteId,true);
     filas();
@@ -25699,7 +25758,6 @@ button.lkrp-b:hover{border-color:#1E4E86}
     if(!S.length) S=[{nombre:'',precio:''}];
     var F=[['nombre','Nombre comercial'],['razon','Razón social'],['nit','NIT'],['telefono','Teléfono'],['correo','Correo'],['web','Página web'],['direccion','Dirección','full']];
     b.innerHTML='<div class="lkb-g">'+F.map(function(f){ return '<label class="f'+(f[2]?' full':'')+'">'+f[1]+'<input data-k="'+f[0]+'" value="'+esc(E[f[0]])+'"></label>'; }).join('')+'</div>'+
-      '<h4>Datos para el pago (salen en la nota de cobranza)</h4><div class="lkb-g lkb-g3"><label class="f">Banco<input data-k="banco" value="'+esc(E.banco)+'"></label><label class="f">N° de cuenta<input data-k="cuenta" value="'+esc(E.cuenta)+'"></label><label class="f">Titular<input data-k="titular" value="'+esc(E.titular)+'"></label></div>'+
       '<label class="f" style="margin-top:12px">Nota al pie de cada nota de cobranza<textarea data-k="pieNota" placeholder="Ej.: Pagar hasta el día 10 de cada mes.">'+esc(E.pieNota)+'</textarea></label>'+
       '<h4>Tamaño de hoja</h4><div class="lkb-g lkb-g3"><label class="f">Hoja<select data-k="hoja" id="lkb-hj"><option value="carta">Carta · 21,6 × 27,9 cm</option><option value="oficio">Oficio · 21,6 × 33 cm</option><option value="custom">Personalizado</option></select></label>'+
       '<label class="f lkb-hc">Ancho (cm)<input data-k="hojaAncho" inputmode="decimal" value="'+esc(E.hojaAncho)+'" placeholder="21,6"></label><label class="f lkb-hc">Alto (cm)<input data-k="hojaAlto" inputmode="decimal" value="'+esc(E.hojaAlto)+'" placeholder="14"></label></div>'+
@@ -26018,7 +26076,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261028173329'; window.LUKA_BUILD=B;
+(function(){ var B='20261029135441'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
