@@ -25305,6 +25305,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 #lkb .lkb-fpq{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
 #lkb .lkb-fpq img{width:84px;height:84px;object-fit:contain;border:1px solid #E3EAF2;border-radius:8px;background:#fff}
 @media (max-width:760px){ #lkb .lkb-fpd{padding:0 14px 14px} }
+#lkb .lkb-ed{margin:0 0 16px;padding:12px 14px;border:1px solid #0B2440;border-radius:12px;font-size:14px;color:#0B2440}
 #lkb .lkb-link{background:none;border:0;color:#0B2440;font:inherit;font-size:13.5px;font-weight:600;text-decoration:underline;cursor:pointer;padding:6px 0}
 @media (max-width:760px){
   #lkb .lkb-card{border-radius:14px}
@@ -25407,7 +25408,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
   function jsPDFlib(){ return (window.jspdf&&window.jspdf.jsPDF)?Promise.resolve(window.jspdf.jsPDF):window.loadLib(window.LIB.jspdf).then(function(){ return window.jspdf.jsPDF; }); }
   function imgSize(src){ return new Promise(function(res){ var i=new Image(); i.onload=function(){ res({w:i.naturalWidth,h:i.naturalHeight}); }; i.onerror=function(){ res(null); }; i.src=src; }); }
   function pdf(x){
-    var E=x.empresa||emp(), logo=E.logo||LOGO;
+    var E0=emp(), E=Object.assign({},E0,x.empresa||{}); ['firma','qr','logo'].forEach(function(k2){ if(!E[k2]) E[k2]=E0[k2]; }); var logo=E.logo||LOGO;
     return Promise.all([jsPDFlib(),imgSize(logo),E.firma?imgSize(E.firma):Promise.resolve(null)]).then(function(r){
       var J=r[0], ls=r[1], fs=r[2], HJ=hoja(E), PW=HJ[0], PH=HJ[1];
       var nuevo=function(){ var d=new J({unit:'pt',format:[PW,PH],orientation:PW>PH?'landscape':'portrait'});
@@ -25551,7 +25552,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     [].forEach.call($('lkb-tabs').querySelectorAll('button'),function(b){ b.onclick=function(){ tab=b.dataset.t; edit=null; pintar(); }; }); }
   function pintar(){ tabs(); var b=$('lkb-b'); if(!B){ return; }
     if(tab==='docs') return docs(b);
-    if(tab==='nueva') return form(b,{tipo:'nota'});
+    if(tab==='nueva') return form(b,edit&&edit.tipo==='nota'?edit:{tipo:'nota'});
     if(tab==='recibo') return form(b,edit&&edit.tipo==='recibo'?edit:{tipo:'recibo'});
     if(tab==='clientes') return clientes(b);
     if(tab==='empresa') return empresa(b); }
@@ -25580,14 +25581,15 @@ button.lkrp-b:hover{border-color:#1E4E86}
           '<div class="c"><b>'+esc((x.cliente||{}).nombre)+'</b><small>'+esc(mesTxt(x.mes)||fechaLarga(x.fecha))+'</small></div>'+
           '<div class="s">'+st+'</div><div class="m">Bs '+bs(x.total)+'</div><div class="lkb-acc">'+
           (x.tipo==='nota'&&!x.anulado&&x.estado!=='pagada'?'<button type="button" class="pri" data-a="cobrar">Registrar pago</button>':'')+
-          '<button type="button" data-a="pdf">PDF</button><button type="button" data-a="share">Enviar</button>'+(x.anulado?'':'<button type="button" data-a="anular">Anular</button>')+'<button type="button" data-a="eliminar">Eliminar</button></div></div>';
+          '<button type="button" data-a="pdf">PDF</button><button type="button" data-a="share">Enviar</button>'+(x.anulado?'':'<button type="button" data-a="editar">Editar</button><button type="button" data-a="anular">Anular</button>')+'<button type="button" data-a="eliminar">Eliminar</button></div></div>';
       }).join(''):'<div class="lkb-empty">'+(L.length?'Nada coincide con la búsqueda.':'Todavía no hay documentos. Empiece con «Nueva nota».')+'</div>';
       [].forEach.call($('lkb-l').querySelectorAll('button[data-a]'),function(bt){ bt.onclick=function(){ var id=bt.closest('.lkb-row').dataset.id, x=(B.docs||[]).filter(function(z){ return z.id===id; })[0]; if(!x) return;
         var a=bt.dataset.a;
         if(a==='pdf') descargar(x); else if(a==='share') compartir(x);
         else if(a==='cobrar'){ tab='recibo'; edit={tipo:'recibo',notaId:x.id,notaNo:x.no,cliente:x.cliente,clienteId:x.clienteId,mes:x.mes,items:JSON.parse(JSON.stringify(x.items||[])),fecha:hoy()}; pintar(); }
         else if(a==='anular') anular(x);
-        else if(a==='eliminar') eliminar(x); }; });
+        else if(a==='eliminar') eliminar(x);
+        else if(a==='editar'){ edit=JSON.parse(JSON.stringify(x)); edit.__editar=true; tab=x.tipo==='nota'?'nueva':'recibo'; pintar(); } }; });
     };
     $('lkb-q').oninput=function(){ filtro.q=this.value; lista(); };
     $('lkb-ft').onchange=function(){ filtro.tipo=this.value; lista(); };
@@ -25600,7 +25602,12 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var t=(x.tipo==='nota'?'la nota de cobranza':'el recibo')+' N° '+pad(x.no)+' de '+(x.cliente||{}).nombre+' (Bs '+bs(x.total)+')';
     var extra=x.tipo==='recibo'&&x.notaNo?'\nLa nota de cobranza N° '+pad(x.notaNo)+' vuelve a quedar por cobrar.':'';
     if(!confirm('¿Eliminar '+t+'?\n\nSe borra por completo y no se puede recuperar.'+extra)) return;
-    api({op:'eliminar',id:x.id}).then(function(j){ B=j.data; guardarLocal(); pintar(); toast('Documento eliminado','success'); }).catch(function(e){ toast(e.message,'error'); });
+    var antes=JSON.stringify(B.docs);
+    B.docs=(B.docs||[]).filter(function(z){ return z.id!==x.id; });
+    B.docs.forEach(function(z){ if(z.reciboId===x.id){ z.estado='pendiente'; delete z.reciboId; delete z.reciboNo; } if(z.notaId===x.id) delete z.notaId; });
+    guardarLocal(); pintar(); toast('Documento eliminado','success');
+    api({op:'eliminar',id:x.id}).then(function(j){ if(j.data) B=j.data; else if(j.v) B.v=j.v; guardarLocal(); })
+      .catch(function(e){ B.docs=JSON.parse(antes); guardarLocal(); pintar(); toast('No se pudo eliminar: '+e.message,'error'); });
   }
   function anular(x){
     var m=prompt('Anular '+(x.tipo==='nota'?'la nota de cobranza':'el recibo')+' N° '+pad(x.no)+' de '+(x.cliente||{}).nombre+'.\nEl número queda usado y no se vuelve a asignar.\n\nMotivo:');
@@ -25625,7 +25632,13 @@ button.lkrp-b:hover{border-color:#1E4E86}
   function itemsDe(c,mes){ return (c.items||[]).filter(function(i){ return i.desc||num(i.pu); }).map(function(i){ return {desc:String(i.desc||'').replace(/\{mes\}/gi,mesTxt(mes)),cant:num(i.cant)||1,pu:num(i.pu)}; }); }
   function totalItems(a){ return r2((a||[]).reduce(function(s,i){ return s+r2((Number(i.cant)||0)*(Number(i.pu)||0)); },0)); }
   function snap(c){ return {nombre:c.nombre||'',edificio:c.edificio||'',nit:c.nit||'',direccion:c.direccion||'',atencion:c.atencion||'',telefono:c.telefono||'',correo:c.correo||''}; }
-  function emitir(x){ return api({op:'emitir',doc:x}).then(function(j){ B=j.data; guardarLocal(); return j.doc; }); }
+  function liviano(e){ var o=Object.assign({},e); delete o.firma; delete o.qr; delete o.logo; return o; }
+  function emitir(x){ x=Object.assign({},x,{empresa:liviano(x.empresa||emp())});
+    return api({op:'emitir',doc:x}).then(function(j){
+      if(j.data) B=j.data; else { var d=j.doc; B.docs=(B.docs||[]).filter(function(z){ return z.id!==d.id; });
+        if(d.tipo==='recibo'&&d.notaId) B.docs.forEach(function(y){ if(y.id===d.notaId){ y.estado='pagada'; y.reciboId=d.id; y.reciboNo=d.no; } });
+        B.docs.push(d); if(j.v) B.v=j.v; }
+      guardarLocal(); return j.doc; }); }
 
   /* ---------- nueva nota / recibo ---------- */
   function form(b,x){
@@ -25644,9 +25657,11 @@ button.lkrp-b:hover{border-color:#1E4E86}
       (nota?'<h4>Formas de pago</h4><div class="lkb-fp" id="lkb-fp"></div>':'')+
       '<label class="f" style="margin-top:14px">Observación<textarea id="lkb-ob" placeholder="Opcional">'+esc(x.obs||'')+'</textarea></label>'+
       '<div class="lkb-msg" id="lkb-msg"></div>'+
-      '<div class="lkb-pie"><button type="button" class="btn" id="lkb-pv">Vista previa</button><button type="button" class="btn primary" id="lkb-em">Emitir '+(nota?'nota de cobranza':'recibo')+'</button></div>';
+      '<div class="lkb-pie">'+(x.__editar?'<button type="button" class="btn" id="lkb-cn" style="margin-right:auto">Cancelar</button>':'')+'<button type="button" class="btn" id="lkb-pv">Vista previa</button><button type="button" class="btn primary" id="lkb-em">'+(x.__editar?'Guardar cambios':'Emitir '+(nota?'nota de cobranza':'recibo'))+'</button></div>';
+    if(x.__editar) b.insertAdjacentHTML('afterbegin','<div class="lkb-ed">Editando '+(nota?'la nota de cobranza':'el recibo')+' <b>N° '+pad(x.no)+'</b> · conserva su número</div>');
     if(x.clienteId) $('lkb-cli').value=x.clienteId;
-    if(!nota){ if(x.notaId) $('lkb-nt').value=x.notaId; if(x.medio) $('lkb-md').value=x.medio; }
+    if(!nota){ if(x.notaId){ if(!$('lkb-nt').querySelector('option[value="'+x.notaId+'"]')) $('lkb-nt').insertAdjacentHTML('beforeend','<option value="'+x.notaId+'">N° '+pad(x.notaNo||0)+'</option>'); $('lkb-nt').value=x.notaId; } if(x.medio) $('lkb-md').value=x.medio; if(x.__editar) $('lkb-nt').disabled=true; }
+    if($('lkb-cn')) $('lkb-cn').onclick=function(){ edit=null; tab='docs'; pintar(); };
     var its=$('lkb-its');
     function filas(){ its.innerHTML=x.items.map(function(it,i){ return '<div class="lkb-it" data-i="'+i+'"><input class="d" value="'+esc(it.desc)+'" placeholder="Descripción del servicio"><input class="num q" inputmode="decimal" value="'+esc(it.cant)+'"><input class="num p" inputmode="decimal" value="'+esc(it.pu)+'" placeholder="0,00"><span class="imp"></span><button type="button" class="x" title="Quitar">×</button></div>'; }).join('');
       [].forEach.call(its.querySelectorAll('.lkb-it'),function(r){ var i=+r.dataset.i;
@@ -25707,9 +25722,18 @@ button.lkrp-b:hover{border-color:#1E4E86}
         if(M.indexOf('cheque')>=0&&!d.pagos.cheque) return 'Escriba a la orden de quién va el cheque.'; }
       return ''; }
     $('lkb-pv').onclick=function(){ var d=leer(), m=validar(d); $('lkb-msg').textContent=m; if(m) return;
-      var tipo=d.tipo, sig=((B.inicio||{})[tipo]||1)-1; (B.docs||[]).forEach(function(z){ if(z.tipo===tipo&&z.no>sig) sig=z.no; }); d.no=sig+1;
+      if(x.__editar) d.no=x.no; else { var tipo=d.tipo, sig=((B.inicio||{})[tipo]||1)-1; (B.docs||[]).forEach(function(z){ if(z.tipo===tipo&&z.no>sig) sig=z.no; }); d.no=sig+1; }
       var w=window.open('','_blank'); pdf(d).then(function(doc){ var u=doc.output('bloburl'); if(w) w.location=u; else doc.save('Vista previa.pdf'); }); };
     $('lkb-em').onclick=function(){ var d=leer(), m=validar(d), bt=this; $('lkb-msg').textContent=m; if(m) return;
+      if(x.__editar){ /* guardar cambios: al instante en pantalla, el servidor confirma por detrás */
+        var y=(B.docs||[]).filter(function(z){ return z.id===x.id; })[0]; if(!y) return; var antes=JSON.stringify(B.docs);
+        var nd=Object.assign({},d,{empresa:liviano(d.empresa)}); if(!nota){ delete nd.notaId; delete nd.notaNo; }
+        ['clienteId','cliente','fecha','mes','items','total','obs','pagos','medio','ref','empresa'].forEach(function(k2){ if(nd[k2]!==undefined) y[k2]=nd[k2]; });
+        guardarLocal(); edit=null; tab='docs'; pintar(); toast('Cambios guardados · N° '+pad(y.no),'success');
+        api({op:'editar',id:y.id,doc:nd}).then(function(j){ if(j.v) B.v=j.v; guardarLocal(); })
+          .catch(function(e){ B.docs=JSON.parse(antes); guardarLocal(); pintar(); toast('No se guardaron los cambios: '+e.message,'error'); });
+        if(nota&&JSON.stringify(emp().pagoDef||{})!==JSON.stringify(d.pagos)) cfg({empresa:Object.assign(emp(),{pagoDef:d.pagos,banco:d.pagos.banco,cuenta:d.pagos.cuenta,titular:d.pagos.titular})}).catch(function(){});
+        return; }
       bt.disabled=true; bt.textContent='Emitiendo…';
       emitir(d).then(function(doc){ toast((nota?'Nota de cobranza':'Recibo')+' N° '+pad(doc.no)+' emitido','success'); edit=null; tab='docs'; pintar(); descargar(doc);
           if(nota&&JSON.stringify(emp().pagoDef||{})!==JSON.stringify(d.pagos)) cfg({empresa:Object.assign(emp(),{pagoDef:d.pagos,banco:d.pagos.banco,cuenta:d.pagos.cuenta,titular:d.pagos.titular})}).catch(function(){}); })
@@ -26084,7 +26108,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261030093553'; window.LUKA_BUILD=B;
+(function(){ var B='20261030094427'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }

@@ -1030,6 +1030,9 @@ function lkBramar_(u, d) {
     const f = lkBramarArchivo_(); let B;
     try { B = JSON.parse(f.getBlob().getDataAsString('UTF-8')); } catch (e) { return json({ ok: false, error: 'No se pudo leer el archivo de cobros de Bramar.' }); }
     B.docs = B.docs || []; B.inicio = B.inicio || { nota: 1, recibo: 1 };
+    // las imágenes (logo, firma, QR) viven una sola vez en los datos de la empresa, no en cada documento
+    const liviano = function (doc) { if (doc && doc.empresa) { delete doc.empresa.firma; delete doc.empresa.qr; delete doc.empresa.logo; } };
+    B.docs.forEach(liviano);
     const op = d.op || 'cargar';
     const guardar = function (detalle) { B.v = (B.v || 0) + 1; B.upd = new Date().toISOString(); B.by = u.n; f.setContent(JSON.stringify(B)); if (detalle) lkLog_(u, 'Bramar Group', detalle[0], detalle[1] || ''); };
     if (op === 'cfg') {
@@ -1046,11 +1049,20 @@ function lkBramar_(u, d) {
       let n = (B.inicio[x.tipo] || 1) - 1;
       B.docs.forEach(function (y) { if (y.tipo === x.tipo && y.no > n) n = y.no; });
       x.no = n + 1; x.id = x.tipo[0] + Utilities.getUuid().slice(0, 8); x.estado = x.tipo === 'recibo' ? 'emitido' : 'pendiente';
-      x.creado = new Date().toISOString(); x.por = u.n;
+      x.creado = new Date().toISOString(); x.por = u.n; liviano(x);
       if (x.tipo === 'recibo' && x.notaId) B.docs.forEach(function (y) { if (y.id === x.notaId) { y.estado = 'pagada'; y.reciboId = x.id; y.reciboNo = x.no; } });
       B.docs.push(x);
       guardar([(x.tipo === 'nota' ? 'Emitió nota de cobranza ' : 'Emitió recibo ') + x.no, x.cliente.nombre + ' · Bs ' + x.total]);
-      return json({ ok: true, data: B, doc: x });
+      return json({ ok: true, doc: x, v: B.v });
+    } else if (op === 'editar') {
+      // corrige un documento ya emitido: conserva su número, tipo y estado
+      const y = B.docs.filter(function (z) { return z.id === d.id; })[0]; if (!y) return json({ ok: false, error: 'Documento no encontrado.' });
+      const n = d.doc || {}; if (!n.cliente || !n.cliente.nombre) return json({ ok: false, error: 'Falta el cliente.' });
+      if (!(Number(n.total) > 0)) return json({ ok: false, error: 'El total debe ser mayor a cero.' });
+      ['clienteId', 'cliente', 'fecha', 'mes', 'items', 'total', 'obs', 'pagos', 'medio', 'ref', 'empresa'].forEach(function (k) { if (n[k] !== undefined) y[k] = n[k]; });
+      y.editado = new Date().toISOString(); y.editadoPor = u.n; liviano(y);
+      guardar(['Editó ' + (y.tipo === 'nota' ? 'nota de cobranza ' : 'recibo ') + y.no, y.cliente.nombre + ' · Bs ' + y.total]);
+      return json({ ok: true, v: B.v });
     } else if (op === 'eliminar') {
       // borra el documento de verdad (la numeración de Bramar es independiente del resto de LUKA)
       const y = B.docs.filter(function (z) { return z.id === d.id; })[0]; if (!y) return json({ ok: false, error: 'Documento no encontrado.' });
@@ -1060,6 +1072,7 @@ function lkBramar_(u, d) {
         if (z.notaId === y.id) { delete z.notaId; }
       });
       guardar(['Eliminó ' + (y.tipo === 'nota' ? 'nota de cobranza ' : 'recibo ') + y.no, (y.cliente || {}).nombre + ' · Bs ' + y.total]);
+      return json({ ok: true, v: B.v });
     } else if (op === 'estado') {
       const y = B.docs.filter(function (z) { return z.id === d.id; })[0]; if (!y) return json({ ok: false, error: 'Documento no encontrado.' });
       if (d.estado === 'anulado') { y.anulado = true; y.motivo = String(d.motivo || '').slice(0, 200); y.anuladoPor = u.n; y.anuladoEl = new Date().toISOString();
