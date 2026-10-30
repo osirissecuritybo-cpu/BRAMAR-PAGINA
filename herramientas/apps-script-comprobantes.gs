@@ -1051,6 +1051,15 @@ function lkBramar_(u, d) {
       B.docs.push(x);
       guardar([(x.tipo === 'nota' ? 'Emitió nota de cobranza ' : 'Emitió recibo ') + x.no, x.cliente.nombre + ' · Bs ' + x.total]);
       return json({ ok: true, data: B, doc: x });
+    } else if (op === 'eliminar') {
+      // borra el documento de verdad (la numeración de Bramar es independiente del resto de LUKA)
+      const y = B.docs.filter(function (z) { return z.id === d.id; })[0]; if (!y) return json({ ok: false, error: 'Documento no encontrado.' });
+      B.docs = B.docs.filter(function (z) { return z.id !== d.id; });
+      B.docs.forEach(function (z) {
+        if (z.reciboId === y.id) { z.estado = 'pendiente'; delete z.reciboId; delete z.reciboNo; }
+        if (z.notaId === y.id) { delete z.notaId; }
+      });
+      guardar(['Eliminó ' + (y.tipo === 'nota' ? 'nota de cobranza ' : 'recibo ') + y.no, (y.cliente || {}).nombre + ' · Bs ' + y.total]);
     } else if (op === 'estado') {
       const y = B.docs.filter(function (z) { return z.id === d.id; })[0]; if (!y) return json({ ok: false, error: 'Documento no encontrado.' });
       if (d.estado === 'anulado') { y.anulado = true; y.motivo = String(d.motivo || '').slice(0, 200); y.anuladoPor = u.n; y.anuladoEl = new Date().toISOString();

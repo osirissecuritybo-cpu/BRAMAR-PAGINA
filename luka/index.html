@@ -25580,19 +25580,27 @@ button.lkrp-b:hover{border-color:#1E4E86}
           '<div class="c"><b>'+esc((x.cliente||{}).nombre)+'</b><small>'+esc(mesTxt(x.mes)||fechaLarga(x.fecha))+'</small></div>'+
           '<div class="s">'+st+'</div><div class="m">Bs '+bs(x.total)+'</div><div class="lkb-acc">'+
           (x.tipo==='nota'&&!x.anulado&&x.estado!=='pagada'?'<button type="button" class="pri" data-a="cobrar">Registrar pago</button>':'')+
-          '<button type="button" data-a="pdf">PDF</button><button type="button" data-a="share">Enviar</button>'+(x.anulado?'':'<button type="button" data-a="anular">Anular</button>')+'</div></div>';
+          '<button type="button" data-a="pdf">PDF</button><button type="button" data-a="share">Enviar</button>'+(x.anulado?'':'<button type="button" data-a="anular">Anular</button>')+'<button type="button" data-a="eliminar">Eliminar</button></div></div>';
       }).join(''):'<div class="lkb-empty">'+(L.length?'Nada coincide con la búsqueda.':'Todavía no hay documentos. Empiece con «Nueva nota».')+'</div>';
       [].forEach.call($('lkb-l').querySelectorAll('button[data-a]'),function(bt){ bt.onclick=function(){ var id=bt.closest('.lkb-row').dataset.id, x=(B.docs||[]).filter(function(z){ return z.id===id; })[0]; if(!x) return;
         var a=bt.dataset.a;
         if(a==='pdf') descargar(x); else if(a==='share') compartir(x);
         else if(a==='cobrar'){ tab='recibo'; edit={tipo:'recibo',notaId:x.id,notaNo:x.no,cliente:x.cliente,clienteId:x.clienteId,mes:x.mes,items:JSON.parse(JSON.stringify(x.items||[])),fecha:hoy()}; pintar(); }
-        else if(a==='anular') anular(x); }; });
+        else if(a==='anular') anular(x);
+        else if(a==='eliminar') eliminar(x); }; });
     };
     $('lkb-q').oninput=function(){ filtro.q=this.value; lista(); };
     $('lkb-ft').onchange=function(){ filtro.tipo=this.value; lista(); };
     if($('lkb-fc')) $('lkb-fc').onchange=function(){ filtro.cli=this.value; lista(); };
     $('lkb-mes').onclick=lote;
     lista();
+  }
+  /* eliminar: el documento desaparece del todo (no queda como anulado) */
+  function eliminar(x){
+    var t=(x.tipo==='nota'?'la nota de cobranza':'el recibo')+' N° '+pad(x.no)+' de '+(x.cliente||{}).nombre+' (Bs '+bs(x.total)+')';
+    var extra=x.tipo==='recibo'&&x.notaNo?'\nLa nota de cobranza N° '+pad(x.notaNo)+' vuelve a quedar por cobrar.':'';
+    if(!confirm('¿Eliminar '+t+'?\n\nSe borra por completo y no se puede recuperar.'+extra)) return;
+    api({op:'eliminar',id:x.id}).then(function(j){ B=j.data; guardarLocal(); pintar(); toast('Documento eliminado','success'); }).catch(function(e){ toast(e.message,'error'); });
   }
   function anular(x){
     var m=prompt('Anular '+(x.tipo==='nota'?'la nota de cobranza':'el recibo')+' N° '+pad(x.no)+' de '+(x.cliente||{}).nombre+'.\nEl número queda usado y no se vuelve a asignar.\n\nMotivo:');
@@ -26076,7 +26084,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261029135441'; window.LUKA_BUILD=B;
+(function(){ var B='20261030093553'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
