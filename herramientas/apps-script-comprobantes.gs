@@ -1125,6 +1125,34 @@ function pubHoja_() {
   if (!sh) { sh = ss.getSheets()[0]; sh.setName('Publicaciones'); sh.getRange(1, 1, 1, PUB_COLS.length).setValues([PUB_COLS]); sh.setFrozenRows(1); }
   return sh;
 }
+/* intereses de cada residente por mes (qué categorías abre, toca o filtra) para ordenar su vitrina */
+function mkHojaInt_() {
+  const ss = pubHoja_().getParent(); let sh = ss.getSheetByName('Intereses');
+  if (!sh) { sh = ss.insertSheet('Intereses'); sh.getRange(1, 1, 1, 4).setValues([['clave', 'mes', 'conteo', 'actualizado']]); sh.setFrozenRows(1); }
+  return sh;
+}
+function mkMes_(d) { return Utilities.formatDate(d || new Date(), 'America/La_Paz', 'yyyy-MM'); }
+function mkGustos_(dueno) {
+  const sh = mkHojaInt_(), n = sh.getLastRow(); if (n < 2) return {};
+  const prev = new Date(); prev.setDate(1); prev.setMonth(prev.getMonth() - 1);
+  const meses = [mkMes_(), mkMes_(prev)], out = {};
+  sh.getRange(2, 1, n - 1, 3).getValues().forEach(function (r) {
+    if (String(r[0]).indexOf(dueno + '#') !== 0 || meses.indexOf(String(r[1])) < 0) return;
+    let c = {}; try { c = JSON.parse(r[2] || '{}'); } catch (e) {}
+    const f = String(r[1]) === meses[0] ? 1 : 0.6;   // el mes actual pesa más que el anterior
+    Object.keys(c).forEach(function (k) { out[k] = (out[k] || 0) + c[k] * f; });
+  });
+  return out;
+}
+function mkSumar_(dueno, grupo, peso) {
+  const sh = mkHojaInt_(), mes = mkMes_(), clave = dueno + '#' + mes, n = sh.getLastRow();
+  const claves = n < 2 ? [] : sh.getRange(2, 1, n - 1, 1).getValues().map(function (r) { return String(r[0]); });
+  const i = claves.indexOf(clave);
+  let c = {}; if (i >= 0) { try { c = JSON.parse(sh.getRange(i + 2, 3, 1, 1).getValues()[0][0] || '{}'); } catch (e) {} }
+  c[grupo] = Math.min(9999, (c[grupo] || 0) + peso);
+  if (i >= 0) sh.getRange(i + 2, 3, 1, 2).setValues([[JSON.stringify(c), new Date()]]);
+  else sh.appendRow([clave, mes, JSON.stringify(c), new Date()]);
+}
 function pubCarpetaFotos_() { return carpeta_(lkCarpeta_(), 'Fotos de publicaciones'); }
 /* todas las filas, con caché por partes (se invalida en cada cambio) */
 function pubTodas_() {
@@ -1299,7 +1327,15 @@ function mercado_(d) {
       const vis = todas.filter(function (o) { return pubEstado_(o) === 'publicado' && ((o.datos || {}).alcance !== 'edificio' || o.edificio_id === yo.pid); })
         .sort(function (x, y) { return (y.destacado - x.destacado) || String(y.creado).localeCompare(String(x.creado)); });
       const mias = todas.filter(function (o) { return o.dueno === yo.dueno; }).sort(function (x, y) { return String(y.creado).localeCompare(String(x.creado)); });
-      return json({ ok: true, publicaciones: vis.map(function (o) { return mkTarjeta_(o, false); }), mias: mias.map(function (o) { return mkTarjeta_(o, true); }), categorias: cfg.mkCategorias, edificio: yo.edificio });
+      let gustos = {}; try { gustos = mkGustos_(yo.dueno); } catch (e) {}
+      return json({ ok: true, publicaciones: vis.map(function (o) { return mkTarjeta_(o, false); }), mias: mias.map(function (o) { return mkTarjeta_(o, true); }), categorias: cfg.mkCategorias, edificio: yo.edificio, gustos: gustos });
+    }
+    if (a === 'mk_interes') {
+      const g = pubTxt_(d.grupo, 40), peso = Math.max(1, Math.min(5, Math.round(+d.peso || 1)));
+      if (!g) return json({ ok: true });
+      const lock = LockService.getScriptLock(); lock.waitLock(20000);
+      try { mkSumar_(yo.dueno, g, peso); } finally { lock.releaseLock(); }
+      return json({ ok: true });
     }
     const lock = LockService.getScriptLock(); lock.waitLock(20000);
     try {

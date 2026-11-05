@@ -137,7 +137,7 @@
         (L.length>mostrados?'<div class="mk-more"><button type="button" class="mk-btn l" data-a="mas">Ver más</button></div>':'')
         :'<div class="mk-empty"><b>'+(D.publicaciones.length?'Nada coincide con su búsqueda':'Todavía no hay publicaciones')+'</b>'+(D.publicaciones.length?'Pruebe con otra palabra o categoría.':'Sea el primero en mostrar su negocio a sus vecinos.')+(D.publicaciones.length?'':'<br><button type="button" class="mk-btn" data-a="nuevo">Publicar mi negocio</button>')+'</div>'; };
     $('#mk-q').oninput=function(){ q=this.value; mostrados=24; lista(); };
-    $('#mk-cat').onchange=function(){ cat=this.value; mostrados=24; lista(); };
+    $('#mk-cat').onchange=function(){ cat=this.value; mostrados=24; lista(); if(cat) interes(grupo({categoria:cat}),1); };
     lista(); }
   function mias(){ var b=$('#mk-body'), hoy=new Date().toISOString();
     var E={publicado:'Publicado',pausado:'Pausado',vencido:'Vencido',rechazado:'Retirado por Bramar',pendiente:'En revisión'};
@@ -151,6 +151,7 @@
         '<button type="button" class="del" data-a="eliminar">Eliminar</button></div></div>'; }).join('')+'</div>'
       :'<div class="mk-empty"><b>Aún no publicó nada</b>Muestre su negocio, servicio o producto a sus vecinos.<br><button type="button" class="mk-btn" data-a="nuevo">Publicar mi negocio</button></div>'; }
   function detalle(r){ var x=D.publicaciones.concat(D.mias).filter(function(z){ return z.id===P; })[0]; if(!x){ vista='vitrina'; return pintar(); }
+    if(detalle.ult!==x.id&&!D.mias.some(function(z){ return z.id===x.id; })){ detalle.ult=x.id; interes(grupo(x),2); }
     var wa=tel591(x.whatsapp||x.telefono), msg='Hola '+(x.anunciante||'')+', vi su publicación «'+x.titulo+'» en el Mercado de residentes de Bramar.';
     r.innerHTML='<div class="mk mk-det"><button type="button" class="mk-back" data-a="volver">‹ Volver</button>'+
       (x.fotos.length?'<div class="mk-fotos" id="mk-fotos">'+x.fotos.map(function(f){ return '<img src="'+foto(f,1200)+'" alt="">'; }).join('')+'</div>'+(x.fotos.length>1?'<div class="mk-dots" id="mk-dots">'+x.fotos.map(function(f,i){ return '<i class="'+(i?'':'on')+'"></i>'; }).join('')+'</div>':''):'')+
@@ -233,6 +234,8 @@
     }
   });
   document.addEventListener('keydown',function(e){ if(e.key==='Enter'&&e.target.classList&&e.target.classList.contains('mk-c')) e.target.click(); });
+  /* contactar a un vecino cuenta como interés fuerte */
+  document.addEventListener('click',function(e){ var l=e.target.closest('#mk .mk-det .mk-acts a'); if(!l||!D) return; var x=D.publicaciones.filter(function(z){ return z.id===P; })[0]; if(x) interes(grupo(x),3); });
   /* vistas internas (detalle, formulario) con su propia entrada en el historial:
      el gesto de volver del celular regresa a la vitrina en vez de cerrar el mercado */
   var volverA='vitrina';
@@ -242,7 +245,7 @@
     if(sec&&sec.classList.contains('m-open')&&(vista==='detalle'||vista==='form')){ salir(); return true; } return false; };
   /* ---------- inicio: vitrina que pasa sola (publicidad de los vecinos) ---------- */
   var AD_CSS='\
-#mk-ad{background:var(--paper);border-radius:20px;padding:14px var(--g,16px) 12px;overflow:hidden}\
+#mk-ad{background:var(--paper);border-radius:20px;padding:14px var(--g,16px) 12px;overflow:hidden;margin:16px 0 0}\
 #mk-ad .h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}\
 #mk-ad .h b{font-size:15px;font-weight:500;color:var(--navy)}\
 #mk-ad .h button{border:0;background:none;font:inherit;font-size:14px;color:var(--navy);text-decoration:underline;text-underline-offset:3px;cursor:pointer;min-height:36px;padding:0}\
@@ -261,16 +264,44 @@
   var adSt=document.createElement('style'); adSt.textContent=AD_CSS; document.head.appendChild(adSt);
   var adClave='', adTimer=null;
   function abrirPub(id){ P=id; window.__bramarPortal.abrir('mk'); setTimeout(function(){ sub('detalle'); },0); }
-  function anuncios(){ var bp=window.__bramarPortal, s=bp&&bp.ses(), home=$('#m-home'), perfil=$('#view-profile');
+  /* grupo de interés: la categoría del mercado; todo lo que es inmueble cuenta como «Inmuebles» */
+  function grupo(x){ return x.inm||/^inmueble/i.test(x.categoria||'')?'Inmuebles':(x.categoria||'Otros'); }
+  function interes(g,peso){ if(!g) return; try{ D&&D.gustos&&(D.gustos[g]=(D.gustos[g]||0)+peso); }catch(e){} call({action:'mk_interes',grupo:g,peso:peso}).catch(function(){}); }
+  window.__mkInteres=interes;
+  /* barajado estable por día: varía cada día sin saltar en cada recarga */
+  function barajar(L,semilla){ var a=L.slice(), h=0; for(var k=0;k<semilla.length;k++) h=(h*31+semilla.charCodeAt(k))|0;
+    for(var i=a.length-1;i>0;i--){ h=(h*1103515245+12345)|0; var j=Math.abs(h)%(i+1), t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+  /* 70 % de lo que más le interesa y 30 % de lo demás, intercalado */
+  function mezcla(L,gustos,semilla){
+    var N=Math.min(12,L.length), sc={}, tot=0; L.forEach(function(x){ var g=grupo(x); sc[g]=+((gustos||{})[g]||0); });
+    Object.keys(sc).forEach(function(g){ tot+=sc[g]; });
+    var B=barajar(L,semilla).sort(function(a,b){ return (b.destacado?1:0)-(a.destacado?1:0); });
+    if(tot<3) return B.slice(0,N);
+    var gs=Object.keys(sc).sort(function(a,b){ return sc[b]-sc[a]; }), pref=[], acc=0;
+    gs.forEach(function(g){ if(sc[g]>0&&(pref.length===0||(acc<tot*.6&&pref.length<2))){ pref.push(g); acc+=sc[g]; } });
+    var P=B.filter(function(x){ return pref.indexOf(grupo(x))>=0; }), resto={}, out=[];
+    B.forEach(function(x){ var g=grupo(x); if(pref.indexOf(g)<0) (resto[g]=resto[g]||[]).push(x); });
+    /* lo demás, turnando categorías para que se vea variedad */
+    var O=[], gr=Object.keys(resto); while(gr.some(function(g){ return resto[g].length; })) gr.forEach(function(g){ if(resto[g].length) O.push(resto[g].shift()); });
+    for(var k=0;k<N;k++){ var otro=(k%10===2||k%10===5||k%10===8);
+      var src=otro?(O.length?O:P):(P.length?P:O); if(!src.length) break; out.push(src.shift()); }
+    return out; }
+  function anuncios(){ var bp=window.__bramarPortal, s=bp&&bp.ses(), perfil=$('#view-profile'), grid=$('.profile .grid');
     var visible=perfil&&!perfil.hidden&&s;
     if(!visible){ var v=$('#mk-ad'); if(v) v.remove(); adClave=''; return; }
     var clave=s.b+'|'+s.d+'|'+s.modo; if(adClave===clave) return; adClave=clave; D=null;
-    cargar().then(function(){ var L=D.publicaciones.filter(function(x){ return x.fotos.length; }).slice(0,12); var old=$('#mk-ad'); if(old) old.remove(); if(!L.length||!home) return;
-      var el=document.createElement('section'); el.id='mk-ad'; el.setAttribute('aria-label','Publicaciones de vecinos');
-      el.innerHTML='<div class="h"><b>Mercado de residentes</b><button type="button" data-ad="todo">Ver todo</button></div><div class="tr">'+L.map(function(x){
-        return '<button type="button" class="sl" data-ad="'+esc(x.id)+'"><img src="'+foto(x.fotos[0],240)+'" alt="" loading="lazy"><div><small>'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</small><strong>'+esc(x.titulo)+'</strong>'+(precioTxt(x)?'<em>'+esc(precioTxt(x))+'</em>':'')+'<span>'+esc(x.anunciante)+'</span></div></button>'; }).join('')+'</div>'+
+    Promise.all([cargar(),call({action:'pub_inm_lista'}).catch(function(){ return {}; })]).then(function(r){
+      var inm=((r[1]&&r[1].inmuebles)||[]).filter(function(x){ return x.foto&&!x.cerrado; }).map(function(x){
+        return {id:x.id,inm:1,titulo:x.titulo,categoria:'Inmuebles Bramar · '+({venta:'Venta',alquiler:'Alquiler',anticretico:'Anticrético'}[x.operacion]||''),fotos:[x.foto],precio:x.precio,moneda:x.moneda,
+          precioTexto:x.operacion==='alquiler'?'por mes':'',anunciante:x.zona||'',destacado:x.destacado,ejemplo:x.ejemplo}; });
+      var pool=D.publicaciones.filter(function(x){ return x.fotos.length; }).concat(inm);
+      var L=mezcla(pool,D.gustos,new Date().toISOString().slice(0,10)+clave);
+      var old=$('#mk-ad'); if(old) old.remove(); if(!L.length||!grid) return;
+      var el=document.createElement('div'); el.id='mk-ad'; el.setAttribute('role','region'); el.setAttribute('aria-label','Publicaciones de vecinos e inmuebles');
+      el.innerHTML='<div class="h"><b>Para usted</b><button type="button" data-ad="todo">Ver mercado</button></div><div class="tr">'+L.map(function(x){
+        return '<button type="button" class="sl" data-ad="'+esc(x.id)+'"'+(x.inm?' data-inm="1"':'')+'><img src="'+foto(x.fotos[0],240)+'" alt="" loading="lazy"><div><small>'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</small><strong>'+esc(x.titulo)+'</strong>'+(precioTxt(x)?'<em>'+esc(precioTxt(x))+'</em>':'')+'<span>'+esc(x.anunciante)+'</span></div></button>'; }).join('')+'</div>'+
         (L.length>1?'<div class="dt">'+L.map(function(x,i){ return '<i class="'+(i?'':'on')+'"></i>'; }).join('')+'</div>':'');
-      var ref=$('#m-pend'); if(ref&&ref.parentNode===home) home.insertBefore(el,ref.nextSibling); else home.appendChild(el);
+      grid.parentNode.insertBefore(el,grid);
       var tr=el.querySelector('.tr'), dots=el.querySelectorAll('.dt i'), i=0, pausa=0;
       var marcar=function(){ var k=Math.round(tr.scrollLeft/tr.clientWidth); [].forEach.call(dots,function(d,j){ d.classList.toggle('on',j===k); }); i=k; };
       tr.addEventListener('scroll',function(){ clearTimeout(tr._t); tr._t=setTimeout(marcar,80); },{passive:true});
@@ -279,7 +310,10 @@
       if(L.length>1&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)) adTimer=setInterval(function(){
         if(!document.body.contains(el)) return clearInterval(adTimer); if(Date.now()-pausa<7000||document.hidden) return;
         i=(i+1)%L.length; tr.scrollTo({left:i*tr.clientWidth,behavior:'smooth'}); },4500);
-      el.addEventListener('click',function(e){ var b=e.target.closest('[data-ad]'); if(!b) return; if(b.dataset.ad==='todo'){ vista='vitrina'; window.__bramarPortal.abrir('mk'); } else abrirPub(b.dataset.ad); });
+      el.addEventListener('click',function(e){ var b=e.target.closest('[data-ad]'); if(!b) return;
+        if(b.dataset.ad==='todo'){ vista='vitrina'; window.__bramarPortal.abrir('mk'); return; }
+        var x=L.filter(function(z){ return z.id===b.dataset.ad; })[0]; if(x) interes(grupo(x),2);
+        if(b.dataset.inm) window.open('inmuebles.html?id='+encodeURIComponent(b.dataset.ad),'_blank','noopener'); else abrirPub(b.dataset.ad); });
     }).catch(function(){ adClave=''; }); }
   setInterval(anuncios,1500);
 
