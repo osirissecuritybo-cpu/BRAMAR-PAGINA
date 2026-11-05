@@ -36,16 +36,16 @@
 #mk .mk-btn.wa{background:#1F8A5B}\
 #mk .mk-btn[disabled]{opacity:.55;pointer-events:none}\
 #mk .mk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:16px}\
-#mk .mk-c{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s}\
+#mk .mk-c{background:#fff;border-radius:16px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s;box-shadow:0 1px 0 var(--line)}\
 #mk .mk-c:hover{transform:translateY(-2px);box-shadow:0 16px 36px -24px rgba(6,33,69,.5)}\
 #mk .mk-c .ph{aspect-ratio:4/3;background:var(--sand);overflow:hidden}\
 #mk .mk-c .ph img{width:100%;height:100%;object-fit:cover}\
-#mk .mk-c .bd{padding:12px 14px 14px;display:flex;flex-direction:column;gap:4px;flex:1}\
-#mk .mk-c .ct{font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--brass)}\
-#mk .mk-c b{font-size:15.5px;font-weight:500;color:var(--ink);line-height:1.3}\
-#mk .mk-c .pr{font-size:15px;font-weight:500;color:var(--navy)}\
-#mk .mk-c .ds{font-size:13.5px;color:var(--muted);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\
-#mk .mk-c .wh{font-size:12.5px;color:var(--muted);margin-top:auto;padding-top:8px}\
+#mk .mk-c .bd{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px;flex:1}\
+#mk .mk-c .ct{font-size:12.5px;color:var(--muted)}\
+#mk .mk-c b{font-size:15px;font-weight:500;color:var(--ink);line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}\
+#mk .mk-c .pr{font-size:14.5px;font-weight:500;color:var(--navy)}\
+#mk .mk-c .ds{display:none}\
+#mk .mk-c .wh{display:none}\
 #mk .mk-empty{margin-top:18px;padding:36px 20px;text-align:center;border:1px dashed var(--line);border-radius:18px;color:var(--muted);font-size:15px}\
 #mk .mk-empty b{display:block;color:var(--navy);font-weight:500;font-size:17px;margin-bottom:6px}\
 #mk .mk-empty .mk-btn{margin-top:16px}\
@@ -132,7 +132,7 @@
     var lista=function(){ var t=q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
       var L=D.publicaciones.filter(function(x){ if(cat&&x.categoria!==cat) return false; if(!t) return true; var s=[x.titulo,x.descripcion,x.categoria,x.anunciante].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); return t.split(/\s+/).every(function(w){ return s.indexOf(w)>=0; }); });
       $('#mk-list').innerHTML=L.length?'<div class="mk-grid">'+L.slice(0,mostrados).map(function(x){ return '<article class="mk-c" data-id="'+esc(x.id)+'" tabindex="0" role="button">'+
-        '<div class="ph">'+(x.fotos[0]?'<img src="'+foto(x.fotos[0],500)+'" alt="" loading="lazy" decoding="async">':'')+'</div><div class="bd">'+(x.ejemplo?'<span class="ct" style="color:var(--muted)">Ejemplo</span>':'')+'<span class="ct">'+esc(x.categoria)+'</span><b>'+esc(x.titulo)+'</b>'+
+        '<div class="ph">'+(x.fotos[0]?'<img src="'+foto(x.fotos[0],500)+'" alt="" loading="lazy" decoding="async">':'')+'</div><div class="bd"><span class="ct">'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</span><b>'+esc(x.titulo)+'</b>'+
         (precioTxt(x)?'<span class="pr">'+esc(precioTxt(x))+'</span>':'')+'<span class="ds">'+esc(x.descripcion)+'</span><span class="wh">'+esc(x.anunciante)+(x.edificio?' · '+esc(x.edificio):'')+'</span></div></article>'; }).join('')+'</div>'+
         (L.length>mostrados?'<div class="mk-more"><button type="button" class="mk-btn l" data-a="mas">Ver más</button></div>':'')
         :'<div class="mk-empty"><b>'+(D.publicaciones.length?'Nada coincide con su búsqueda':'Todavía no hay publicaciones')+'</b>'+(D.publicaciones.length?'Pruebe con otra palabra o categoría.':'Sea el primero en mostrar su negocio a sus vecinos.')+(D.publicaciones.length?'':'<br><button type="button" class="mk-btn" data-a="nuevo">Publicar mi negocio</button>')+'</div>'; };
@@ -240,6 +240,49 @@
   function salir(){ vista=volverA; editando=null; P=null; pintar(); }
   window.__mkVolver=function(){ var sec=document.getElementById('mk');
     if(sec&&sec.classList.contains('m-open')&&(vista==='detalle'||vista==='form')){ salir(); return true; } return false; };
+  /* ---------- inicio: vitrina que pasa sola (publicidad de los vecinos) ---------- */
+  var AD_CSS='\
+#mk-ad{background:var(--paper);border-radius:20px;padding:14px var(--g,16px) 12px;overflow:hidden}\
+#mk-ad .h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}\
+#mk-ad .h b{font-size:15px;font-weight:500;color:var(--navy)}\
+#mk-ad .h button{border:0;background:none;font:inherit;font-size:14px;color:var(--navy);text-decoration:underline;text-underline-offset:3px;cursor:pointer;min-height:36px;padding:0}\
+#mk-ad .tr{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}\
+#mk-ad .tr::-webkit-scrollbar{display:none}\
+#mk-ad .sl{flex:0 0 100%;scroll-snap-align:start;display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:center;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}\
+#mk-ad .sl img{width:92px;height:92px;border-radius:14px;object-fit:cover;background:var(--sand)}\
+#mk-ad .sl div{min-width:0}\
+#mk-ad .sl small{display:block;font-size:12.5px;color:var(--muted)}\
+#mk-ad .sl strong{display:block;font-size:16px;font-weight:500;color:var(--ink);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\
+#mk-ad .sl em{display:block;font-style:normal;font-size:14.5px;font-weight:500;color:var(--navy);margin-top:2px}\
+#mk-ad .sl span{display:block;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\
+#mk-ad .dt{display:flex;gap:5px;justify-content:center;margin-top:12px}\
+#mk-ad .dt i{width:6px;height:6px;border-radius:50%;background:var(--line);transition:width .3s,background .3s}\
+#mk-ad .dt i.on{width:16px;border-radius:3px;background:var(--navy)}';
+  var adSt=document.createElement('style'); adSt.textContent=AD_CSS; document.head.appendChild(adSt);
+  var adClave='', adTimer=null;
+  function abrirPub(id){ P=id; window.__bramarPortal.abrir('mk'); setTimeout(function(){ sub('detalle'); },0); }
+  function anuncios(){ var bp=window.__bramarPortal, s=bp&&bp.ses(), home=$('#m-home'), perfil=$('#view-profile');
+    var visible=perfil&&!perfil.hidden&&s;
+    if(!visible){ var v=$('#mk-ad'); if(v) v.remove(); adClave=''; return; }
+    var clave=s.b+'|'+s.d+'|'+s.modo; if(adClave===clave) return; adClave=clave; D=null;
+    cargar().then(function(){ var L=D.publicaciones.filter(function(x){ return x.fotos.length; }).slice(0,12); var old=$('#mk-ad'); if(old) old.remove(); if(!L.length||!home) return;
+      var el=document.createElement('section'); el.id='mk-ad'; el.setAttribute('aria-label','Publicaciones de vecinos');
+      el.innerHTML='<div class="h"><b>Mercado de residentes</b><button type="button" data-ad="todo">Ver todo</button></div><div class="tr">'+L.map(function(x){
+        return '<button type="button" class="sl" data-ad="'+esc(x.id)+'"><img src="'+foto(x.fotos[0],240)+'" alt="" loading="lazy"><div><small>'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</small><strong>'+esc(x.titulo)+'</strong>'+(precioTxt(x)?'<em>'+esc(precioTxt(x))+'</em>':'')+'<span>'+esc(x.anunciante)+'</span></div></button>'; }).join('')+'</div>'+
+        (L.length>1?'<div class="dt">'+L.map(function(x,i){ return '<i class="'+(i?'':'on')+'"></i>'; }).join('')+'</div>':'');
+      var ref=$('#m-pend'); if(ref&&ref.parentNode===home) home.insertBefore(el,ref.nextSibling); else home.appendChild(el);
+      var tr=el.querySelector('.tr'), dots=el.querySelectorAll('.dt i'), i=0, pausa=0;
+      var marcar=function(){ var k=Math.round(tr.scrollLeft/tr.clientWidth); [].forEach.call(dots,function(d,j){ d.classList.toggle('on',j===k); }); i=k; };
+      tr.addEventListener('scroll',function(){ clearTimeout(tr._t); tr._t=setTimeout(marcar,80); },{passive:true});
+      ['touchstart','pointerdown','wheel'].forEach(function(ev){ tr.addEventListener(ev,function(){ pausa=Date.now(); },{passive:true}); });
+      clearInterval(adTimer);
+      if(L.length>1&&!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)) adTimer=setInterval(function(){
+        if(!document.body.contains(el)) return clearInterval(adTimer); if(Date.now()-pausa<7000||document.hidden) return;
+        i=(i+1)%L.length; tr.scrollTo({left:i*tr.clientWidth,behavior:'smooth'}); },4500);
+      el.addEventListener('click',function(e){ var b=e.target.closest('[data-ad]'); if(!b) return; if(b.dataset.ad==='todo'){ vista='vitrina'; window.__bramarPortal.abrir('mk'); } else abrirPub(b.dataset.ad); });
+    }).catch(function(){ adClave=''; }); }
+  setInterval(anuncios,1500);
+
   /* al abrir la sección se cargan las publicaciones */
   function alAbrir(){ var s=window.__bramarPortal&&window.__bramarPortal.ses(); var r=root(); if(!r) return;
     if(!s){ r.innerHTML='<div class="mk"><div class="mk-empty"><b>El mercado aún no está disponible para su edificio</b>Consulte con Bramar.</div></div>'; return; }
