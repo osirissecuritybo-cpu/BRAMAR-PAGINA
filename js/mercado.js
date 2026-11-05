@@ -89,6 +89,7 @@
 #mk .mk-row .ac button{min-height:40px;padding:0;border:0;background:none;color:var(--navy);font:inherit;font-size:14px;font-weight:500;cursor:pointer}\
 #mk .mk-row .ac button.del{color:#9a2a1f}\
 #mk .mk-more{display:flex;justify-content:center;margin-top:16px}\
+#mk .mk-ok{margin:16px 0 0;padding:12px 14px;border-radius:12px;background:#fff;border:1px solid var(--line);color:var(--navy);font-size:14.5px}\
 @media (min-width:601px){ .grid>section.panel.p-mk.m-open{padding-inline:max(24px,calc(50vw - 520px))} .p-mk.m-open .m-head{margin-inline:calc(-1*max(24px,calc(50vw - 520px)));padding-inline:max(16px,calc(50vw - 528px))} }\
 @media (max-width:600px){ #mk .mk-grid{grid-template-columns:1fr 1fr;gap:10px} #mk .mk-c .ds{display:none} #mk .mk-f{grid-template-columns:1fr} #mk .mk-foot .mk-btn{flex:1} #mk .mk-bar .dd{flex:1 1 100%} #mk .mk-row .ac{padding-left:0} }';
   var st=document.createElement('style'); st.textContent=CSS; document.head.appendChild(st);
@@ -139,9 +140,10 @@
     $('#mk-q').oninput=function(){ q=this.value; mostrados=24; lista(); };
     $('#mk-cat').onchange=function(){ cat=this.value; mostrados=24; lista(); if(cat) interes(grupo({categoria:cat}),1); };
     lista(); }
-  function mias(){ var b=$('#mk-body'), hoy=new Date().toISOString();
-    var E={publicado:'Publicado',pausado:'Pausado',vencido:'Vencido',rechazado:'Retirado por Bramar',pendiente:'En revisión'};
-    b.innerHTML=D.mias.length?'<div class="mk-mine">'+D.mias.map(function(x){ var off=x.estado!=='publicado';
+  var aviso='';
+  function mias(){ var b=$('#mk-body'), hoy=new Date().toISOString(), av=aviso;
+    var E={publicado:'Publicado',pausado:'Pausado',vencido:'Vencido',rechazado:'Retirado por Bramar',pendiente:'En revisión de Bramar'};
+    b.innerHTML=(av?'<p class="mk-ok">'+esc(av)+'</p>':'')+(D.mias.length?'<div class="mk-mine">'+D.mias.map(function(x){ var off=x.estado!=='publicado';
       return '<div class="mk-row" data-id="'+esc(x.id)+'">'+(x.fotos[0]?'<img src="'+foto(x.fotos[0],160)+'" alt="">':'<span class="nofoto"></span>')+
         '<div><b>'+esc(x.titulo)+'</b><small>'+esc(x.categoria)+(precioTxt(x)?' · '+esc(precioTxt(x)):'')+'</small><span class="st'+(off?' off':'')+'">'+(E[x.estado]||x.estado)+'</span>'+
         (x.estado==='publicado'&&x.vence?'<small>Visible hasta el '+new Date(x.vence).toLocaleDateString('es-BO',{day:'numeric',month:'long'})+'</small>':'')+(x.motivo?'<small>Motivo: '+esc(x.motivo)+'</small>':'')+'</div>'+
@@ -149,7 +151,7 @@
         (x.estado==='publicado'?'<button type="button" data-a="pausar">Pausar</button>':'')+(x.estado==='pausado'?'<button type="button" data-a="activar">Volver a publicar</button>':'')+
         (x.estado==='vencido'||(x.estado==='publicado'&&x.vence&&x.vence<new Date(Date.now()+10*864e5).toISOString())?'<button type="button" data-a="renovar">Renovar</button>':'')+
         '<button type="button" class="del" data-a="eliminar">Eliminar</button></div></div>'; }).join('')+'</div>'
-      :'<div class="mk-empty"><b>Aún no publicó nada</b>Muestre su negocio, servicio o producto a sus vecinos.<br><button type="button" class="mk-btn" data-a="nuevo">Publicar mi negocio</button></div>'; }
+      :'<div class="mk-empty"><b>Aún no publicó nada</b>Muestre su negocio, servicio o producto a sus vecinos.<br><button type="button" class="mk-btn" data-a="nuevo">Publicar mi negocio</button></div>'); }
   function detalle(r){ var x=D.publicaciones.concat(D.mias).filter(function(z){ return z.id===P; })[0]; if(!x){ vista='vitrina'; return pintar(); }
     if(detalle.ult!==x.id&&!D.mias.some(function(z){ return z.id===x.id; })){ detalle.ult=x.id; interes(grupo(x),2); }
     var wa=tel591(x.whatsapp||x.telefono), msg='Hola '+(x.anunciante||'')+', vi su publicación «'+x.titulo+'» en el Mercado de residentes de Bramar.';
@@ -175,7 +177,7 @@
       var qq=.8, d=c.toDataURL('image/jpeg',qq); while(d.length>880000&&qq>.45){ qq-=.08; d=c.toDataURL('image/jpeg',qq); } res(d); };
     im.onerror=function(){ rej(new Error('No se pudo leer una foto.')); }; im.src=u; }); }
   function form(r){ var x=editando||{}, s=window.__bramarPortal.ses()||{};
-    r.innerHTML='<div class="mk"><button type="button" class="mk-back" data-a="volver">‹ Volver</button><div class="mk-top" style="margin-top:12px"><div><h2>'+(editando?'Editar publicación':'Publicar mi negocio')+'</h2><p>Lo verán los residentes de los edificios administrados por Bramar.</p></div></div>'+
+    r.innerHTML='<div class="mk"><button type="button" class="mk-back" data-a="volver">‹ Volver</button><div class="mk-top" style="margin-top:12px"><div><h2>'+(editando?'Editar publicación':'Publicar mi negocio')+'</h2><p>Bramar la revisa antes de publicarla. Luego la verán los residentes de los edificios administrados por Bramar.</p></div></div>'+
       '<form class="mk-f" id="mk-form" novalidate>'+
       '<label class="full">Nombre del negocio o publicación<input name="titulo" maxlength="90" value="'+esc(x.titulo||'')+'" placeholder="Ej.: Tortas y postres Ana" required></label>'+
       '<label>Categoría<div class="dd"><select name="categoria" id="mk-fcat">'+D.categorias.map(function(c){ return '<option'+(c===x.categoria?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select></div></label>'+
@@ -205,7 +207,7 @@
       var err=!p.titulo?'Escriba el nombre del negocio o la publicación.':!p.anunciante?'Escriba su nombre.':(!p.telefono&&!p.whatsapp)?'Escriba un teléfono o WhatsApp.':bad.length?'Los enlaces deben empezar con https://':'';
       $('#mk-msg').textContent=err; if(err) return; var bt=$('#mk-ok'); bt.disabled=true; bt.textContent='Guardando…';
       call({action:'mk_guardar',id:editando?editando.id:'',publicacion:p,fotos:FOT,mantener:MANT}).then(function(j){ if(!j.ok) throw new Error(j.error==='codigo'?'Su sesión venció. Vuelva a ingresar.':j.error);
-        FOT=[]; MANT=[]; editando=null; volverA='mias'; if(history.state&&history.state.mk) history.back(); else salir(); return cargar().then(pintar); })
+        FOT=[]; MANT=[]; editando=null; volverA='mias'; aviso='Enviada a revisión. Bramar la aprobará pronto y aparecerá en la vitrina.'; if(history.state&&history.state.mk) history.back(); else salir(); return cargar().then(pintar); })
         .catch(function(e2){ bt.disabled=false; bt.textContent=editando?'Guardar cambios':'Publicar'; $('#mk-msg').textContent=e2.message==='Failed to fetch'?'Sin conexión. Intente de nuevo.':e2.message; }); }; }
   function fotos(){ var c=$('#mk-ph'); if(!c) return; var n=0;
     c.innerHTML=MANT.map(function(id,i){ return '<div><img src="'+foto(id,240)+'" alt="">'+(n++===0?'<span class="p">Principal</span>':'')+'<button type="button" class="x" data-xm="'+i+'" aria-label="Quitar">×</button></div>'; }).join('')+
@@ -217,7 +219,7 @@
     var r=root(); if(!r||!r.contains(e.target)) return;
     var t=e.target.closest('[data-a],[data-v],[data-xm],[data-xf],.mk-c');
     if(!t) return;
-    if(t.dataset.v){ vista=t.dataset.v; return pintar(); }
+    if(t.dataset.v){ vista=t.dataset.v; aviso=''; return pintar(); }
     if(t.dataset.xm!=null){ MANT.splice(+t.dataset.xm,1); return fotos(); }
     if(t.dataset.xf!=null){ FOT.splice(+t.dataset.xf,1); return fotos(); }
     if(t.classList.contains('mk-c')){ P=t.dataset.id; sub('detalle'); return; }
@@ -260,7 +262,9 @@
 #mk-ad .sl span{display:block;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\
 #mk-ad .dt{display:flex;gap:5px;justify-content:center;margin-top:12px}\
 #mk-ad .dt i{width:6px;height:6px;border-radius:50%;background:var(--line);transition:width .3s,background .3s}\
-#mk-ad .dt i.on{width:16px;border-radius:3px;background:var(--navy)}';
+#mk-ad .dt i.on{width:16px;border-radius:3px;background:var(--navy)}\
+#mk-ad .sk{height:92px;border-radius:14px;background:linear-gradient(90deg,var(--sand) 25%,#faf8f4 50%,var(--sand) 75%);background-size:200% 100%;animation:mkSk 1.2s infinite}\
+@keyframes mkSk{to{background-position:-200% 0}}';
   var adSt=document.createElement('style'); adSt.textContent=AD_CSS; document.head.appendChild(adSt);
   var adClave='', adTimer=null;
   function abrirPub(id){ P=id; window.__bramarPortal.abrir('mk'); setTimeout(function(){ sub('detalle'); },0); }
@@ -290,13 +294,23 @@
     var visible=perfil&&!perfil.hidden&&s;
     if(!visible){ var v=$('#mk-ad'); if(v) v.remove(); adClave=''; return; }
     var clave=s.b+'|'+s.d+'|'+s.modo; if(adClave===clave) return; adClave=clave; D=null;
+    /* al instante: lo último que vio este residente (guardado en el teléfono); la nube lo actualiza por detrás */
+    var ck='bramar.mkad.'+clave, c=null; try{ c=JSON.parse(localStorage.getItem(ck)||'null'); }catch(e){}
+    if(c&&c.L&&c.L.length) pintarAd(c.L); else reservarAd();
     Promise.all([cargar(),call({action:'pub_inm_lista'}).catch(function(){ return {}; })]).then(function(r){
       var inm=((r[1]&&r[1].inmuebles)||[]).filter(function(x){ return x.foto&&!x.cerrado; }).map(function(x){
         return {id:x.id,inm:1,titulo:x.titulo,categoria:'Inmuebles Bramar · '+({venta:'Venta',alquiler:'Alquiler',anticretico:'Anticrético'}[x.operacion]||''),fotos:[x.foto],precio:x.precio,moneda:x.moneda,
           precioTexto:x.operacion==='alquiler'?'por mes':'',anunciante:x.zona||'',destacado:x.destacado,ejemplo:x.ejemplo}; });
       var pool=D.publicaciones.filter(function(x){ return x.fotos.length; }).concat(inm);
       var L=mezcla(pool,D.gustos,new Date().toISOString().slice(0,10)+clave);
-      var old=$('#mk-ad'); if(old) old.remove(); if(!L.length||!grid) return;
+      try{ localStorage.setItem(ck,JSON.stringify({L:L,t:Date.now()})); }catch(e){}
+      var ids=function(A){ return (A||[]).map(function(x){ return x.id; }).join(','); };
+      if(!c||ids(c.L)!==ids(L)||!$('#mk-ad .sl')) pintarAd(L);
+    }).catch(function(){ adClave=''; var v=$('#mk-ad.cargando'); if(v) v.remove(); }); }
+  function reservarAd(){ var grid=$('.profile .grid'); if(!grid||$('#mk-ad')) return; var el=document.createElement('div'); el.id='mk-ad'; el.className='cargando';
+    el.innerHTML='<div class="h"><b>Para usted</b></div><div class="sk"></div>'; grid.parentNode.insertBefore(el,grid); }
+  function pintarAd(L){
+      var grid=$('.profile .grid'); var old=$('#mk-ad'); if(old) old.remove(); if(!L||!L.length||!grid) return;
       var el=document.createElement('div'); el.id='mk-ad'; el.setAttribute('role','region'); el.setAttribute('aria-label','Publicaciones de vecinos e inmuebles');
       el.innerHTML='<div class="h"><b>Para usted</b><button type="button" data-ad="todo">Ver mercado</button></div><div class="tr">'+L.map(function(x){
         return '<button type="button" class="sl" data-ad="'+esc(x.id)+'"'+(x.inm?' data-inm="1"':'')+'><img src="'+foto(x.fotos[0],240)+'" alt="" loading="lazy"><div><small>'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</small><strong>'+esc(x.titulo)+'</strong>'+(precioTxt(x)?'<em>'+esc(precioTxt(x))+'</em>':'')+'<span>'+esc(x.anunciante)+'</span></div></button>'; }).join('')+'</div>'+
@@ -314,8 +328,9 @@
         if(b.dataset.ad==='todo'){ vista='vitrina'; window.__bramarPortal.abrir('mk'); return; }
         var x=L.filter(function(z){ return z.id===b.dataset.ad; })[0]; if(x) interes(grupo(x),2);
         if(b.dataset.inm) window.open('inmuebles.html?id='+encodeURIComponent(b.dataset.ad),'_blank','noopener'); else abrirPub(b.dataset.ad); });
-    }).catch(function(){ adClave=''; }); }
-  setInterval(anuncios,1500);
+  }
+
+  setInterval(anuncios,400);
 
   /* al abrir la sección se cargan las publicaciones */
   function alAbrir(){ var s=window.__bramarPortal&&window.__bramarPortal.ses(); var r=root(); if(!r) return;

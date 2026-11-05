@@ -1310,6 +1310,10 @@ function mkDatos_(r, cfg) {
   if (!d.telefono && !d.whatsapp) throw new Error('Escriba un teléfono o WhatsApp de contacto.');
   return d;
 }
+function mkAvisar_(datos, yo, editada) {
+  try { const to = destinatarios_(yo.pid); if (to) MailApp.sendEmail({ to: to, name: 'Portal Bramar', subject: (editada ? 'Publicación editada' : 'Nueva publicación') + ' en el mercado por revisar · ' + datos.titulo,
+    htmlBody: '<div style="font-family:Arial,sans-serif;font-size:15px;color:#0B2440"><p>Un residente ' + (editada ? 'editó' : 'envió') + ' una publicación al Mercado de residentes:</p><p><b>' + datos.titulo + '</b><br>' + datos.categoria + ' · ' + (yo.edificio || '') + ' · Depto ' + yo.dep + '</p><p>Apruébela o recházela en Gestión LUKA → Publicaciones → Por revisar.</p></div>' }); } catch (e) {}
+}
 function mkTarjeta_(o, mio) {
   const d = o.datos || {}, t = { id: o.id, titulo: d.titulo, categoria: d.categoria, descripcion: d.descripcion, precio: d.precio, moneda: d.moneda, precioTexto: d.precioTexto,
     telefono: d.telefono, whatsapp: d.whatsapp, facebook: d.facebook, instagram: d.instagram, web: d.web, ubicacion: d.ubicacion, anunciante: d.anunciante,
@@ -1349,17 +1353,19 @@ function mercado_(d) {
           const quedan = (d.mantener || []).filter(function (id) { return (o.fotos || []).indexOf(id) >= 0; });
           (o.fotos || []).forEach(function (id) { if (quedan.indexOf(id) < 0) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e) {} } });
           o.fotos = pubFotos_(d.fotos, PUB_MAX_FOTOS.mk, quedan); datos.motivo = ''; o.datos = datos; o.titulo = datos.titulo; o.telefono = datos.telefono;
-          pubGuardar_(o); return json({ ok: true, id: o.id });
+          o.estado = 'pendiente';   // todo cambio vuelve a revisión de Bramar
+          pubGuardar_(o); mkAvisar_(datos, yo, true); return json({ ok: true, id: o.id, estado: 'pendiente' });
         }
         if (todas.filter(function (x) { return x.dueno === yo.dueno && x.modulo === 'mk'; }).length >= 20) throw new Error('Llegó al máximo de 20 publicaciones. Elimine alguna para crear otra.');
-        const o = { id: pubId_('m'), modulo: 'mk', estado: 'publicado', creado: new Date().toISOString(), vence: pubVence_(cfg.vigenciaMk), destacado: false, edificio_id: yo.pid,
+        const o = { id: pubId_('m'), modulo: 'mk', estado: 'pendiente', creado: new Date().toISOString(), vence: '', destacado: false, edificio_id: yo.pid,
           dueno: yo.dueno, telefono: datos.telefono, titulo: datos.titulo, datos: datos, fotos: pubFotos_(d.fotos, PUB_MAX_FOTOS.mk, []), reportes: [] };
-        pubGuardar_(o); return json({ ok: true, id: o.id });
+        pubGuardar_(o); mkAvisar_(datos, yo, false); return json({ ok: true, id: o.id, estado: 'pendiente' });
       }
       if (a === 'mk_estado') {
         const o = propia();
         if (d.op === 'eliminar') { pubBorrar_(o); return json({ ok: true }); }
         if (o.estado === 'rechazado') throw new Error('Esta publicación fue retirada por Bramar.');
+        if (o.estado === 'pendiente') throw new Error('Su publicación está en revisión. Bramar la aprobará pronto.');
         if (d.op === 'pausar') o.estado = 'pausado';
         else if (d.op === 'activar') o.estado = 'publicado';
         else if (d.op === 'renovar') { o.estado = 'publicado'; o.vence = pubVence_(cfg.vigenciaMk); }

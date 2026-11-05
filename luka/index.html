@@ -25966,7 +25966,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var conBarra=tab==='inm'||tab==='mk';
     b.innerHTML=(conBarra?'<div class="lkp-bar"><input type="search" id="lkp-q" placeholder="Buscar título, anunciante, teléfono, edificio" value="'+esc(filtro.q)+'"><select id="lkp-e"><option value="">Todos los estados</option>'+
       Object.keys(EST).map(function(k){ return '<option value="'+k+'"'+(filtro.est===k?' selected':'')+'>'+EST[k]+'</option>'; }).join('')+'</select></div>':
-      '<p class="lkp-note" style="margin:0 0 14px">'+(tab==='revisar'?'Inmuebles enviados desde el sitio. Solo se ven en el portal cuando los aprueba.':'Publicaciones que los visitantes o residentes reportaron.')+'</p>')+'<div id="lkp-l"></div>';
+      '<p class="lkp-note" style="margin:0 0 14px">'+(tab==='revisar'?'Inmuebles del portal y publicaciones del mercado de residentes. Solo se ven cuando usted las aprueba.':'Publicaciones que los visitantes o residentes reportaron.')+'</p>')+'<div id="lkp-l"></div>';
     var lista=function(){ var q=filtro.q.toLowerCase();
       var G=F.filter(function(x){ var d=x.datos||{}; if(filtro.est&&x.visible!==filtro.est) return false;
         return !q||[d.titulo,d.anunciante,d.telefono,d.zona,x.edificio,d.categoria].join(' ').toLowerCase().indexOf(q)>=0; });
@@ -26341,7 +26341,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261105112222'; window.LUKA_BUILD=B;
+(function(){ var B='20261105115449'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
