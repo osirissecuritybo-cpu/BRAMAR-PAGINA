@@ -53,6 +53,8 @@ function doPost(e) {
     if (d.action === 'archivo') return verArchivo_(d);
     if (String(d.action || '').indexOf('lk_') === 0) return luka_(d);
     if (String(d.action || '').indexOf('pt_') === 0) return portal_(d);
+    if (String(d.action || '').indexOf('pub_') === 0) return publico_(d);
+    if (String(d.action || '').indexOf('mk_') === 0) return mercado_(d);
     if (!d.data || !d.filename) return json({ ok: false, error: 'Falta el archivo.' });
     if (TIPOS.indexOf(d.mimeType) === -1) return json({ ok: false, error: 'Tipo de archivo no permitido.' });
     const bytes = Utilities.base64Decode(d.data);
@@ -599,6 +601,7 @@ function luka_(d) {
     return json({ ok: true, correos: fijos === null ? 'bramargroupsrl@gmail.com' : fijos, admins: P.getProperty('AVISO_ADMINS') !== 'no' });
   }
   if (a === 'lk_bramar') return lkBramar_(u, d);
+  if (a === 'lk_pub') return lkPub_(u, d);
   if (a === 'lk_usuarios') return json({ ok: true, usuarios: lkUsuarios_().map(lkPublico_) });
   if (a === 'lk_usuario_guardar') {
     const L = lkUsuarios_(), x = d.usuario || {}, id = String(x.usuario || x.correo || '').trim().toLowerCase();
@@ -1082,4 +1085,301 @@ function lkBramar_(u, d) {
     }
     return json({ ok: true, data: B });
   } finally { lock.releaseLock(); }
+}
+
+/* =====================================================================================
+   PUBLICACIONES BRAMAR · Portal inmobiliario (público) y Mercado de residentes (privado)
+   · Datos: hoja de cálculo «Publicaciones Bramar» (una fila por publicación) en la carpeta de LUKA.
+   · Fotos: carpeta de Drive «Fotos de publicaciones», con permiso de solo lectura por enlace.
+   · Acciones: pub_* (sitio público), mk_* (residentes, validados con su código), lk_pub (LUKA, solo administrador).
+   ===================================================================================== */
+const PUB_COLS = ['id', 'modulo', 'estado', 'creado', 'vence', 'actualizado', 'destacado', 'edificio_id', 'dueno', 'telefono', 'titulo', 'datos', 'fotos', 'reportes'];
+const PUB_ESTADOS = ['pendiente', 'publicado', 'rechazado', 'pausado', 'cerrado'];
+const PUB_MAX_FOTOS = { inm: 10, mk: 8 }, PUB_MAX_FOTO = 700 * 1024;
+const PUB_TIPOS_INM = ['departamento', 'monoambiente', 'casa', 'terreno', 'oficina', 'local', 'galpon', 'edificio', 'otro'];
+const PUB_OPERACIONES = ['venta', 'alquiler', 'anticretico'];
+const PUB_SITUACIONES = ['', 'estrenar', 'usado', 'preventa', 'entrega_inmediata', 'entrega_proxima', 'entrega_programada'];
+const PUB_CFG_DEF = {
+  vigenciaInm: 60, vigenciaMk: 90,
+  secciones: [
+    { id: 'venta', nombre: 'Departamentos en venta', operacion: 'venta', tipos: ['departamento', 'monoambiente'], situaciones: [] },
+    { id: 'preventa', nombre: 'Departamentos en preventa', operacion: '', tipos: ['departamento', 'monoambiente'], situaciones: ['preventa'] },
+    { id: 'entregar', nombre: 'Departamentos por entregar', operacion: '', tipos: ['departamento', 'monoambiente'], situaciones: ['entrega_inmediata', 'entrega_proxima', 'entrega_programada'] },
+    { id: 'estrenar', nombre: 'Departamentos a estrenar', operacion: '', tipos: ['departamento', 'monoambiente'], situaciones: ['estrenar'] },
+    { id: 'alquiler', nombre: 'Departamentos en alquiler', operacion: 'alquiler', tipos: ['departamento', 'monoambiente'], situaciones: [] },
+    { id: 'anticretico', nombre: 'En anticrético', operacion: 'anticretico', tipos: [], situaciones: [] },
+    { id: 'otros', nombre: 'Casas, terrenos, oficinas y más', operacion: '', tipos: ['casa', 'terreno', 'oficina', 'local', 'galpon', 'edificio', 'otro'], situaciones: [] }
+  ],
+  mkCategorias: ['Negocios', 'Servicios profesionales', 'Emprendimientos', 'Productos', 'Inmuebles en venta', 'Inmuebles en alquiler', 'Vehículos', 'Servicios técnicos', 'Gastronomía', 'Otros']
+};
+function pubCfg_() { const c = lkLeer_('PUB_CFG', null) || {}; const o = {}; Object.keys(PUB_CFG_DEF).forEach(function (k) { o[k] = c[k] != null ? c[k] : PUB_CFG_DEF[k]; }); return o; }
+function pubHoja_() {
+  const P = lkProps_(); let id = P.getProperty('PUB_HOJA'), ss = null;
+  if (id) { try { ss = SpreadsheetApp.openById(id); } catch (e) { ss = null; } }
+  if (!ss) {
+    ss = SpreadsheetApp.create('Publicaciones Bramar');
+    try { const f = DriveApp.getFileById(ss.getId()); lkCarpeta_().addFile(f); DriveApp.getRootFolder().removeFile(f); } catch (e) {}
+    P.setProperty('PUB_HOJA', ss.getId());
+  }
+  let sh = ss.getSheetByName('Publicaciones');
+  if (!sh) { sh = ss.getSheets()[0]; sh.setName('Publicaciones'); sh.getRange(1, 1, 1, PUB_COLS.length).setValues([PUB_COLS]); sh.setFrozenRows(1); }
+  return sh;
+}
+function pubCarpetaFotos_() { return carpeta_(lkCarpeta_(), 'Fotos de publicaciones'); }
+/* todas las filas, con caché por partes (se invalida en cada cambio) */
+function pubTodas_() {
+  const C = CacheService.getScriptCache(), ver = C.get('pub_ver') || '0', n = Number(C.get('pub_n_' + ver) || -1);
+  if (n >= 0) { const ks = []; for (let i = 0; i < n; i++) ks.push('pub_' + ver + '_' + i); const got = C.getAll(ks);
+    if (Object.keys(got).length === n) { try { return JSON.parse(ks.map(function (k) { return got[k]; }).join('')); } catch (e) {} } }
+  const sh = pubHoja_(), last = sh.getLastRow();
+  const filas = last < 2 ? [] : sh.getRange(2, 1, last - 1, PUB_COLS.length).getValues();
+  const L = filas.map(function (r, i) { const o = { fila: i + 2 }; PUB_COLS.forEach(function (c, j) { o[c] = r[j] instanceof Date ? r[j].toISOString() : r[j]; });
+    try { o.datos = JSON.parse(o.datos || '{}'); } catch (e) { o.datos = {}; } try { o.fotos = JSON.parse(o.fotos || '[]'); } catch (e) { o.fotos = []; }
+    try { o.reportes = JSON.parse(o.reportes || '[]'); } catch (e) { o.reportes = []; } o.destacado = o.destacado === true || o.destacado === 'TRUE'; return o; })
+    .filter(function (o) { return o.id; });
+  try { const t = JSON.stringify(L), parts = [], tam = 90000; for (let i = 0; i < t.length; i += tam) parts.push(t.slice(i, i + tam));
+    const o = {}; parts.forEach(function (p, i) { o['pub_' + ver + '_' + i] = p; }); o['pub_n_' + ver] = String(parts.length); C.putAll(o, 3600); } catch (e) {}
+  return L;
+}
+function pubInvalidar_() { const C = CacheService.getScriptCache(); C.put('pub_ver', String(Date.now()), 21600); }
+function pubFila_(o) { return PUB_COLS.map(function (c) { const v = o[c]; return (c === 'datos' || c === 'fotos' || c === 'reportes') ? JSON.stringify(v || (c === 'datos' ? {} : [])) : (v == null ? '' : v); }); }
+function pubGuardar_(o) {
+  const sh = pubHoja_(); o.actualizado = new Date().toISOString();
+  if (o.fila) sh.getRange(o.fila, 1, 1, PUB_COLS.length).setValues([pubFila_(o)]);
+  else sh.appendRow(pubFila_(o));
+  pubInvalidar_();
+}
+function pubBorrar_(o) {
+  (o.fotos || []).forEach(function (id) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e) {} });
+  if (o.fila) pubHoja_().deleteRow(o.fila);
+  pubInvalidar_();
+}
+/* estado visible: un publicado con fecha pasada se muestra como vencido */
+function pubEstado_(o) { return o.estado === 'publicado' && o.vence && String(o.vence) < new Date().toISOString() ? 'vencido' : o.estado; }
+/* ---- validación ---- */
+function pubTxt_(v, max) { return String(v == null ? '' : v).replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim().slice(0, max || 200); }
+function pubNum_(v, max) { const n = Number(String(v == null ? '' : v).replace(',', '.')); return isFinite(n) && n >= 0 ? Math.min(n, max || 1e9) : 0; }
+function pubTel_(v) { const t = String(v || '').replace(/[^\d]/g, ''); return t.length >= 7 && t.length <= 15 ? t : ''; }
+function pubUrl_(v) { const t = String(v || '').trim(); if (!t) return ''; if (!/^https?:\/\/[^\s<>"']{3,300}$/i.test(t)) return null; return t; }
+function pubFotos_(lista, max, previas) {
+  const ids = (previas || []).slice(0, max);
+  const nuevas = (lista || []).slice(0, Math.max(0, max - ids.length));
+  if (!nuevas.length) return ids;
+  const carpeta = pubCarpetaFotos_();
+  nuevas.forEach(function (u, i) {
+    const m = String(u || '').match(/^data:image\/(jpeg|png|webp);base64,([A-Za-z0-9+/=]+)$/);
+    if (!m) throw new Error('Solo se aceptan fotos JPG, PNG o WEBP.');
+    const bytes = Utilities.base64Decode(m[2]);
+    if (bytes.length > PUB_MAX_FOTO) throw new Error('Una de las fotos es demasiado grande.');
+    const f = carpeta.createFile(Utilities.newBlob(bytes, 'image/' + m[1], 'foto-' + Date.now() + '-' + i + '.' + (m[1] === 'jpeg' ? 'jpg' : m[1])));
+    f.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    ids.push(f.getId());
+  });
+  return ids;
+}
+function pubId_(p) { return p + Utilities.getUuid().replace(/-/g, '').slice(0, 10); }
+function pubVence_(dias) { return new Date(Date.now() + dias * 864e5).toISOString(); }
+/* ---- inmueble: datos limpios ---- */
+function pubInmDatos_(r) {
+  const op = PUB_OPERACIONES.indexOf(r.operacion) >= 0 ? r.operacion : '';
+  const tipo = PUB_TIPOS_INM.indexOf(r.tipo) >= 0 ? r.tipo : '';
+  if (!op) throw new Error('Elija si es venta, alquiler o anticrético.');
+  if (!tipo) throw new Error('Elija el tipo de inmueble.');
+  const enl = pubUrl_(r.enlace); if (enl === null) throw new Error('El enlace debe empezar con https://');
+  const d = {
+    titulo: pubTxt_(r.titulo, 90), operacion: op, tipo: tipo,
+    situacion: PUB_SITUACIONES.indexOf(r.situacion) >= 0 ? r.situacion : '', financiamiento: !!r.financiamiento,
+    precio: pubNum_(r.precio, 1e9), moneda: r.moneda === 'Bs' ? 'Bs' : 'USD',
+    ciudad: pubTxt_(r.ciudad || 'Santa Cruz de la Sierra', 60), zona: pubTxt_(r.zona, 80), direccion: pubTxt_(r.direccion, 140),
+    descripcion: pubTxt_(r.descripcion, 3000), dormitorios: Math.round(pubNum_(r.dormitorios, 50)), banos: Math.round(pubNum_(r.banos, 50)),
+    garajes: Math.round(pubNum_(r.garajes, 50)), sup: pubNum_(r.sup, 1e6), supTerreno: pubNum_(r.supTerreno, 1e7),
+    caracteristicas: (Array.isArray(r.caracteristicas) ? r.caracteristicas : String(r.caracteristicas || '').split(/[,\n]/)).map(function (x) { return pubTxt_(x, 60); }).filter(Boolean).slice(0, 30),
+    anunciante: pubTxt_(r.anunciante, 80), telefono: pubTel_(r.telefono), whatsapp: pubTel_(r.whatsapp || r.telefono), enlace: enl || '', entrega: pubTxt_(r.entrega, 40)
+  };
+  if (!d.titulo) throw new Error('Escriba un título para el anuncio.');
+  if (!d.anunciante) throw new Error('Escriba el nombre del anunciante.');
+  if (!d.telefono) throw new Error('Escriba un teléfono válido.');
+  if (!(d.precio > 0)) throw new Error('Escriba el precio.');
+  if (!d.zona) throw new Error('Escriba la zona o ubicación.');
+  return d;
+}
+/* tarjeta pública (sin datos de contacto ni datos internos) */
+function pubTarjetaInm_(o) {
+  const d = o.datos || {};
+  return { id: o.id, titulo: d.titulo, operacion: d.operacion, tipo: d.tipo, situacion: d.situacion, financiamiento: d.financiamiento, precio: d.precio, moneda: d.moneda,
+    zona: d.zona, ciudad: d.ciudad, dormitorios: d.dormitorios, banos: d.banos, sup: d.sup, foto: (o.fotos || [])[0] || '', nfotos: (o.fotos || []).length,
+    destacado: o.destacado, creado: o.creado, cerrado: o.estado === 'cerrado' };
+}
+function pubFichaInm_(o) { const t = pubTarjetaInm_(o), d = o.datos || {};
+  ['descripcion', 'direccion', 'garajes', 'supTerreno', 'caracteristicas', 'anunciante', 'whatsapp', 'telefono', 'enlace', 'entrega'].forEach(function (k) { t[k] = d[k]; });
+  t.fotos = o.fotos || []; return t; }
+/* ===================== Sitio público ===================== */
+function publico_(d) {
+  if (freno_()) return json({ ok: false, error: 'Demasiadas consultas, espere un minuto.' });
+  const a = d.action;
+  try {
+    if (a === 'pub_inm_lista') {
+      const L = pubTodas_().filter(function (o) { return o.modulo === 'inm' && (pubEstado_(o) === 'publicado' || (o.estado === 'cerrado' && o.actualizado > new Date(Date.now() - 15 * 864e5).toISOString())); })
+        .sort(function (x, y) { return (y.destacado - x.destacado) || String(y.creado).localeCompare(String(x.creado)); });
+      const cfg = pubCfg_();
+      return json({ ok: true, inmuebles: L.map(pubTarjetaInm_), secciones: cfg.secciones });
+    }
+    if (a === 'pub_inm_ver') {
+      const o = pubTodas_().filter(function (x) { return x.modulo === 'inm' && x.id === String(d.id || ''); })[0];
+      if (!o || (pubEstado_(o) !== 'publicado' && o.estado !== 'cerrado')) return json({ ok: false, error: 'Esta publicación ya no está disponible.' });
+      return json({ ok: true, inmueble: pubFichaInm_(o) });
+    }
+    if (a === 'pub_inm_publicar') {
+      if (d.web) return json({ ok: true }); // campo trampa: los robots lo llenan
+      const datos = pubInmDatos_(d.inmueble || {});
+      const lock = LockService.getScriptLock(); lock.waitLock(20000);
+      try {
+        const hace = new Date(Date.now() - 864e5).toISOString();
+        const recientes = pubTodas_().filter(function (o) { return o.modulo === 'inm' && String(o.telefono) === datos.telefono && String(o.creado) > hace; }).length;
+        if (recientes >= 3) return json({ ok: false, error: 'Ya recibimos varias publicaciones de este teléfono hoy. Intente mañana.' });
+        if (!(d.fotos || []).length) return json({ ok: false, error: 'Agregue al menos una foto.' });
+        const fotos = pubFotos_(d.fotos, PUB_MAX_FOTOS.inm, []);
+        const o = { id: pubId_('i'), modulo: 'inm', estado: 'pendiente', creado: new Date().toISOString(), vence: '', destacado: false, edificio_id: '', dueno: '',
+          telefono: datos.telefono, titulo: datos.titulo, datos: datos, fotos: fotos, reportes: [] };
+        pubGuardar_(o);
+        try { const to = destinatarios_(''); if (to) MailApp.sendEmail({ to: to, name: 'Portal Bramar', subject: 'Nueva publicación inmobiliaria por revisar · ' + datos.titulo,
+          htmlBody: '<div style="font-family:Arial,sans-serif;font-size:15px;color:#0B2440"><p>Llegó una publicación nueva al portal inmobiliario:</p><p><b>' + datos.titulo + '</b><br>' + datos.anunciante + ' · ' + datos.telefono + '</p><p>Revísela en Gestión LUKA → Publicaciones.</p></div>' }); } catch (e) {}
+        return json({ ok: true, id: o.id });
+      } finally { lock.releaseLock(); }
+    }
+    if (a === 'pub_reportar') {
+      const motivo = pubTxt_(d.motivo, 300); if (!motivo) return json({ ok: false, error: 'Cuéntenos el motivo.' });
+      const lock = LockService.getScriptLock(); lock.waitLock(20000);
+      try { const o = pubTodas_().filter(function (x) { return x.id === String(d.id || ''); })[0]; if (!o) return json({ ok: true });
+        if ((o.reportes || []).length < 50) { o.reportes.push({ f: new Date().toISOString(), m: motivo }); pubGuardar_(o); }
+        return json({ ok: true }); } finally { lock.releaseLock(); }
+    }
+    return json({ ok: false, error: 'Acción no válida.' });
+  } catch (e) { return json({ ok: false, error: String(e.message || e) }); }
+}
+/* ===================== Mercado de residentes ===================== */
+function mkAuth_(d) {
+  const pid = slug_(d.edificio_id), lk = ptLuka_(pid);
+  if (!lk) return null;
+  const data = ptDatos_(lk), dep = ptNormDepto_(d.depto);
+  if (!(data.deptos || []).some(function (x) { return ptNormDepto_(x.depto) === dep; })) return null;
+  const okc = ptCodigoOk_(pid, d.depto, d.codigo, data);
+  let inq = null; if (!okc) { inq = ptInquilino_(pid, dep, d.codigo); if (!inq) return null; }
+  const rol = inq ? 'inquilino' : 'propietario';
+  return { pid: pid, dep: dep, rol: rol, dueno: pid + '|' + dep + '|' + rol, edificio: (data.config || {}).nombreEdificio || lk.e.name };
+}
+function mkDatos_(r, cfg) {
+  const cat = cfg.mkCategorias.indexOf(r.categoria) >= 0 ? r.categoria : '';
+  if (!cat) throw new Error('Elija una categoría.');
+  const L = {}; ['facebook', 'instagram', 'web'].forEach(function (k) { const v = pubUrl_(r[k]); if (v === null) throw new Error('Los enlaces deben empezar con https://'); L[k] = v || ''; });
+  const d = { titulo: pubTxt_(r.titulo, 90), categoria: cat, descripcion: pubTxt_(r.descripcion, 2000), precio: pubNum_(r.precio, 1e9), moneda: r.moneda === 'USD' ? 'USD' : 'Bs',
+    precioTexto: pubTxt_(r.precioTexto, 40), telefono: pubTel_(r.telefono), whatsapp: pubTel_(r.whatsapp || r.telefono), facebook: L.facebook, instagram: L.instagram, web: L.web,
+    ubicacion: pubTxt_(r.ubicacion, 120), anunciante: pubTxt_(r.anunciante, 80), alcance: r.alcance === 'edificio' ? 'edificio' : 'todos' };
+  if (!d.titulo) throw new Error('Escriba el nombre del negocio o de la publicación.');
+  if (!d.anunciante) throw new Error('Escriba su nombre o el de su negocio.');
+  if (!d.telefono && !d.whatsapp) throw new Error('Escriba un teléfono o WhatsApp de contacto.');
+  return d;
+}
+function mkTarjeta_(o, mio) {
+  const d = o.datos || {}, t = { id: o.id, titulo: d.titulo, categoria: d.categoria, descripcion: d.descripcion, precio: d.precio, moneda: d.moneda, precioTexto: d.precioTexto,
+    telefono: d.telefono, whatsapp: d.whatsapp, facebook: d.facebook, instagram: d.instagram, web: d.web, ubicacion: d.ubicacion, anunciante: d.anunciante,
+    edificio: d.edificio, alcance: d.alcance, fotos: o.fotos || [], creado: o.creado, destacado: o.destacado };
+  if (mio) { t.estado = pubEstado_(o); t.vence = o.vence; t.motivo = d.motivo || ''; }
+  return t;
+}
+function mercado_(d) {
+  if (freno_()) return json({ ok: false, error: 'Demasiadas consultas, espere un minuto.' });
+  const yo = mkAuth_(d); if (!yo) return json({ ok: false, error: 'codigo' });
+  const a = d.action, cfg = pubCfg_();
+  try {
+    if (a === 'mk_lista') {
+      const todas = pubTodas_().filter(function (o) { return o.modulo === 'mk'; });
+      const vis = todas.filter(function (o) { return pubEstado_(o) === 'publicado' && ((o.datos || {}).alcance !== 'edificio' || o.edificio_id === yo.pid); })
+        .sort(function (x, y) { return (y.destacado - x.destacado) || String(y.creado).localeCompare(String(x.creado)); });
+      const mias = todas.filter(function (o) { return o.dueno === yo.dueno; }).sort(function (x, y) { return String(y.creado).localeCompare(String(x.creado)); });
+      return json({ ok: true, publicaciones: vis.map(function (o) { return mkTarjeta_(o, false); }), mias: mias.map(function (o) { return mkTarjeta_(o, true); }), categorias: cfg.mkCategorias, edificio: yo.edificio });
+    }
+    const lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try {
+      const todas = pubTodas_();
+      const propia = function () { const o = todas.filter(function (x) { return x.modulo === 'mk' && x.id === String(d.id || ''); })[0];
+        if (!o) throw new Error('Publicación no encontrada.'); if (o.dueno !== yo.dueno) throw new Error('Solo puede modificar sus propias publicaciones.'); return o; };
+      if (a === 'mk_guardar') {
+        const datos = mkDatos_(d.publicacion || {}, cfg); datos.edificio = yo.edificio;
+        if (d.id) {
+          const o = propia(); if (o.estado === 'rechazado') throw new Error('Esta publicación fue retirada por Bramar.');
+          const quedan = (d.mantener || []).filter(function (id) { return (o.fotos || []).indexOf(id) >= 0; });
+          (o.fotos || []).forEach(function (id) { if (quedan.indexOf(id) < 0) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e) {} } });
+          o.fotos = pubFotos_(d.fotos, PUB_MAX_FOTOS.mk, quedan); datos.motivo = ''; o.datos = datos; o.titulo = datos.titulo; o.telefono = datos.telefono;
+          pubGuardar_(o); return json({ ok: true, id: o.id });
+        }
+        if (todas.filter(function (x) { return x.dueno === yo.dueno && x.modulo === 'mk'; }).length >= 20) throw new Error('Llegó al máximo de 20 publicaciones. Elimine alguna para crear otra.');
+        const o = { id: pubId_('m'), modulo: 'mk', estado: 'publicado', creado: new Date().toISOString(), vence: pubVence_(cfg.vigenciaMk), destacado: false, edificio_id: yo.pid,
+          dueno: yo.dueno, telefono: datos.telefono, titulo: datos.titulo, datos: datos, fotos: pubFotos_(d.fotos, PUB_MAX_FOTOS.mk, []), reportes: [] };
+        pubGuardar_(o); return json({ ok: true, id: o.id });
+      }
+      if (a === 'mk_estado') {
+        const o = propia();
+        if (d.op === 'eliminar') { pubBorrar_(o); return json({ ok: true }); }
+        if (o.estado === 'rechazado') throw new Error('Esta publicación fue retirada por Bramar.');
+        if (d.op === 'pausar') o.estado = 'pausado';
+        else if (d.op === 'activar') o.estado = 'publicado';
+        else if (d.op === 'renovar') { o.estado = 'publicado'; o.vence = pubVence_(cfg.vigenciaMk); }
+        else throw new Error('Acción no válida.');
+        pubGuardar_(o); return json({ ok: true });
+      }
+      if (a === 'mk_reportar') {
+        const motivo = pubTxt_(d.motivo, 300); if (!motivo) throw new Error('Cuéntenos el motivo.');
+        const o = todas.filter(function (x) { return x.modulo === 'mk' && x.id === String(d.id || ''); })[0]; if (!o) return json({ ok: true });
+        o.reportes.push({ f: new Date().toISOString(), m: motivo, de: yo.pid }); pubGuardar_(o); return json({ ok: true });
+      }
+    } finally { lock.releaseLock(); }
+    return json({ ok: false, error: 'Acción no válida.' });
+  } catch (e) { return json({ ok: false, error: String(e.message || e) }); }
+}
+/* ===================== Administración (LUKA, solo administrador) ===================== */
+function lkPub_(u, d) {
+  const op = d.op || 'lista';
+  try {
+    if (op === 'lista') {
+      const E = lkEdificios_(), nom = {}; Object.keys(E).forEach(function (k) { nom[E[k].portal || slug_(E[k].name)] = E[k].name; });
+      const L = pubTodas_().map(function (o) { return { id: o.id, modulo: o.modulo, estado: o.estado, visible: pubEstado_(o), creado: o.creado, vence: o.vence, actualizado: o.actualizado,
+        destacado: o.destacado, edificio: nom[o.edificio_id] || o.edificio_id || '', depto: o.dueno ? String(o.dueno).split('|')[1] : '', rol: o.dueno ? String(o.dueno).split('|')[2] : '',
+        datos: o.datos, fotos: o.fotos, reportes: o.reportes }; })
+        .sort(function (x, y) { return String(y.creado).localeCompare(String(x.creado)); });
+      return json({ ok: true, publicaciones: L, cfg: pubCfg_() });
+    }
+    if (op === 'cfg') {
+      const c = pubCfg_();
+      if (d.vigenciaInm) c.vigenciaInm = Math.max(7, Math.min(365, Math.round(+d.vigenciaInm || 60)));
+      if (d.vigenciaMk) c.vigenciaMk = Math.max(7, Math.min(365, Math.round(+d.vigenciaMk || 90)));
+      if (Array.isArray(d.secciones)) c.secciones = d.secciones.slice(0, 30).map(function (s, i) { return { id: slug_(s.id || s.nombre) || ('s' + i), nombre: pubTxt_(s.nombre, 60),
+        operacion: PUB_OPERACIONES.indexOf(s.operacion) >= 0 ? s.operacion : '', tipos: (s.tipos || []).filter(function (t) { return PUB_TIPOS_INM.indexOf(t) >= 0; }),
+        situaciones: (s.situaciones || []).filter(function (t) { return t && PUB_SITUACIONES.indexOf(t) >= 0; }) }; }).filter(function (s) { return s.nombre; });
+      if (Array.isArray(d.mkCategorias)) c.mkCategorias = d.mkCategorias.map(function (x) { return pubTxt_(x, 40); }).filter(Boolean).slice(0, 40);
+      lkEscribir_('PUB_CFG', c); pubInvalidar_(); lkLog_(u, 'Publicaciones', 'Cambió la configuración de publicaciones', ''); return json({ ok: true, cfg: c });
+    }
+    const lock = LockService.getScriptLock(); lock.waitLock(20000);
+    try {
+      const o = pubTodas_().filter(function (x) { return x.id === String(d.id || ''); })[0]; if (!o) return json({ ok: false, error: 'Publicación no encontrada.' });
+      const cfg = pubCfg_(), dias = o.modulo === 'inm' ? cfg.vigenciaInm : cfg.vigenciaMk, t = (o.datos || {}).titulo || o.id;
+      if (op === 'eliminar') { pubBorrar_(o); lkLog_(u, 'Publicaciones', 'Eliminó una publicación', t); return json({ ok: true }); }
+      if (op === 'estado') {
+        if (PUB_ESTADOS.indexOf(d.estado) < 0) return json({ ok: false, error: 'Estado no válido.' });
+        if (d.estado === 'publicado' && (o.estado === 'pendiente' || !o.vence || pubEstado_(o) === 'vencido')) o.vence = pubVence_(dias);
+        if (d.estado === 'rechazado') o.datos.motivo = pubTxt_(d.motivo, 300);
+        o.estado = d.estado;
+      } else if (op === 'destacar') o.destacado = !!d.valor;
+      else if (op === 'renovar') { o.vence = pubVence_(Math.max(1, Math.min(365, +d.dias || dias))); if (o.estado === 'pausado') o.estado = 'publicado'; }
+      else if (op === 'limpiar_reportes') o.reportes = [];
+      else if (op === 'editar') {
+        const nd = o.modulo === 'inm' ? pubInmDatos_(d.datos || {}) : Object.assign(mkDatos_(d.datos || {}, cfg), { edificio: (o.datos || {}).edificio || '' });
+        if (o.datos && o.datos.motivo) nd.motivo = o.datos.motivo; o.datos = nd; o.titulo = nd.titulo; o.telefono = nd.telefono;
+        if (Array.isArray(d.orden)) { const ok = d.orden.filter(function (id) { return o.fotos.indexOf(id) >= 0; });
+          o.fotos.forEach(function (id) { if (ok.indexOf(id) < 0) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e) {} } }); o.fotos = ok; }
+      } else return json({ ok: false, error: 'Acción no válida.' });
+      pubGuardar_(o); lkLog_(u, 'Publicaciones', ({ estado: 'Cambió estado a ' + d.estado, destacar: d.valor ? 'Destacó' : 'Quitó destacado', renovar: 'Renovó', limpiar_reportes: 'Descartó reportes', editar: 'Editó' })[op] || op, t);
+      return json({ ok: true });
+    } finally { lock.releaseLock(); }
+  } catch (e) { return json({ ok: false, error: String(e.message || e) }); }
 }

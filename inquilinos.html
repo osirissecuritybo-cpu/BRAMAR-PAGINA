@@ -649,6 +649,7 @@ html,body{overflow-x:clip;max-width:100%}
         <div class="m-acts">
           <button type="button" class="tile pri" data-sheet="datos"><i><svg aria-hidden="true"><use href="#i-qr"/></svg></i>Pagar</button>
           <button type="button" class="tile" data-sheet="comprobante"><i><svg aria-hidden="true"><use href="#i-upload"/></svg></i>Comprobante</button>
+          <button type="button" class="tile" data-sheet="mk" id="t-mk"><i><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9l1.5-5h13L20 9M4 9h16M4 9v1.5a2.5 2.5 0 005 0V9m0 0v1.5a2.5 2.5 0 005 0V9m0 0v1.5a2.5 2.5 0 005 0V9M5 13v7h14v-7M10 20v-4h4v4"/></svg></i>Mercado</button>
           <button type="button" class="tile" data-sheet="rv" id="t-rv" hidden><i><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i>Reservar<em id="t-rv-b" hidden></em></button>
         </div>
         <div class="m-pend" id="m-pend"></div>
@@ -716,6 +717,8 @@ html,body{overflow-x:clip;max-width:100%}
         <div id="inq-body"></div>
       </section>
 
+      <section class="panel p-mk" id="mk" aria-label="Mercado de residentes"><div id="mk-root"></div></section>
+
       <section class="panel p-rv" id="rv" aria-labelledby="h-rv" hidden style="animation-delay:.15s">
         <div class="rv-head">
           <div><h2 id="h-rv">Áreas sociales</h2><p class="sub">Reserve la churrasquera o el salón. Bramar confirmará su solicitud.</p></div>
@@ -735,6 +738,7 @@ html,body{overflow-x:clip;max-width:100%}
     <nav class="m-nav" id="m-nav">
       <button type="button" data-sheet="estado"><span>Estado de cuenta</span><em class="m-badge" id="m-badge-estado" hidden></em></button>
       <button type="button" data-sheet="rv" id="m-nav-rv" hidden style="display:none!important"><span>Áreas sociales</span><em class="m-badge" id="m-badge-rv" hidden></em></button>
+      <button type="button" data-sheet="mk"><span>Mercado de residentes</span></button>
       <button type="button" data-sheet="inq" id="m-inq" hidden><span>Inquilino</span><em class="m-badge" id="m-badge-inq" hidden>Activo</em></button>
       <button type="button" data-sheet="clave" id="m-clave" hidden><span>Cambiar contraseña</span></button>
     </nav>
@@ -828,6 +832,7 @@ html,body{overflow-x:clip;max-width:100%}
 <script src="js/minipdf.js"></script>
 <script src="js/luka-recibo-pdf.js"></script>
 <script src="js/luka-docs.js"></script>
+<script src="js/mercado.js" defer></script>
 <script>
 /* ================================================================
    CONFIGURACIÓN DEL PORTAL
@@ -1120,7 +1125,7 @@ const PORTAL = {
 
   /* ---------- Celular: menú minimalista; cada opción se abre en su propia pantalla ---------- */
   const esCel=()=>window.matchMedia('(max-width:600px)').matches;
-  const TIT={comprobante:'Enviar comprobante',estado:'Estado de cuenta',datos:'Datos para pagar',rv:'Áreas sociales',inq:'Inquilino'};
+  const TIT={comprobante:'Enviar comprobante',estado:'Estado de cuenta',datos:'Datos para pagar',rv:'Áreas sociales',inq:'Inquilino',mk:'Mercado de residentes'};
   Object.keys(TIT).forEach(id=>{ const sec=document.getElementById(id); if(!sec) return;
     const h=document.createElement('div'); h.className='m-head';
     h.innerHTML='<button type="button" class="m-back" aria-label="Volver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><b>'+TIT[id]+'</b><span></span>';
@@ -1137,7 +1142,8 @@ const PORTAL = {
   $('#d-nav').addEventListener('click',e=>{ const b=e.target.closest('[data-sheet]'); if(!b) return;
     if(b.dataset.sheet) abrirHoja(b.dataset.sheet); else if(history.state&&history.state.hoja) history.back(); else cerrarHojas(); });
   $('#d-pass').addEventListener('click',()=>$('#p-pass').click());
-  window.addEventListener('popstate',cerrarHojas);
+  /* el mercado tiene vistas internas: si atiende el «volver», la sección sigue abierta */
+  window.addEventListener('popstate',()=>{ if(window.__mkVolver&&window.__mkVolver()) return; cerrarHojas(); });
   function irA(id){ abrirHoja(id); }
   const drawer=$('#m-drawer');
   function menu(on){ drawer.classList.toggle('open',on); drawer.setAttribute('aria-hidden',on?'false':'true'); $('#m-burger').setAttribute('aria-expanded',on?'true':'false'); }
@@ -1250,6 +1256,9 @@ const PORTAL = {
     ocupCache={};
     loadReservas();
   }
+  window.__bramarPortal={ ses:()=>session&&PORTAL.endpoint?{b:session.b,d:session.d,code:session.code,modo:MODO,
+      nombre:((data&&data.unidad)||{})[MODO==='inquilino'?'inquilino':'propietario']||'',edificio:((data&&data.edificio)||{}).nombre||''}:null,
+    call:b=>ptCall(b), abrir:id=>abrirHoja(id) };
   async function ptCall(body){
     const r=await fetch(PORTAL.endpoint,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(Object.assign({portal:MODO,edificio_id:session.b,depto:session.d,codigo:session.code},body))});
     return r.json();

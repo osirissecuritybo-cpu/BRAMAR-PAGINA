@@ -640,6 +640,19 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
   .js [data-reveal]{opacity:1;transform:none}
   .marquee .track{animation:none}
 }
+
+/* acceso al portal inmobiliario */
+.inm-cta{display:grid;grid-template-columns:1.15fr 1fr;gap:clamp(24px,4vw,56px);align-items:center;background:var(--navy-deep);color:#fff;border-radius:var(--radius-l);padding:clamp(28px,5vw,64px);overflow:hidden;position:relative}
+.inm-cta h2{font-size:clamp(30px,3.8vw,50px);margin-top:16px}
+.inm-cta h2 b{font-weight:500}
+.inm-cta p{color:rgba(255,255,255,.78);margin-top:14px;max-width:48ch}
+.inm-cta-b{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+.inm-cta-ph{display:grid;grid-template-columns:1fr 1fr;gap:14px;height:clamp(260px,32vw,420px)}
+.inm-cta-ph img{width:100%;height:100%;object-fit:cover;border-radius:20px;transition:transform .8s var(--soft)}
+.inm-cta-ph img:last-child{margin-top:40px;height:calc(100% - 40px)}
+.inm-cta:hover .inm-cta-ph img:first-child{transform:translateY(-6px)}
+.inm-cta:hover .inm-cta-ph img:last-child{transform:translateY(6px)}
+@media (max-width:860px){ .inm-cta{grid-template-columns:1fr} .inm-cta-ph{height:220px;order:-1} .inm-cta-b .btn{flex:1 1 100%} }
 </style>
 <script>document.documentElement.classList.add('js');</script>
 </head>
@@ -697,6 +710,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
       <li><a href="#nosotros" data-go="nosotros">Nosotros</a></li>
       <li><a href="#servicios" data-go="servicios">Servicios</a></li>
       <li><a href="#edificios" data-go="edificios">Edificios</a></li>
+      <li><a href="inmuebles.html">Inmuebles</a></li>
       <li><a href="#contacto" data-go="contacto">Contacto</a></li>
     </ul>
     <a class="cta-access" href="copropietarios.html"><svg aria-hidden="true"><use href="#i-key"/></svg>Copropietarios</a>
@@ -707,7 +721,8 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
     <a class="m" href="#nosotros" data-go="nosotros"><small>02</small>Nosotros</a>
     <a class="m" href="#servicios" data-go="servicios"><small>03</small>Servicios</a>
     <a class="m" href="#edificios" data-go="edificios"><small>04</small>Edificios</a>
-    <a class="m" href="#contacto" data-go="contacto"><small>05</small>Contacto</a>
+    <a class="m" href="inmuebles.html"><small>05</small>Inmuebles</a>
+    <a class="m" href="#contacto" data-go="contacto"><small>06</small>Contacto</a>
     <a class="cta-access" href="copropietarios.html"><svg aria-hidden="true"><use href="#i-key"/></svg>Acceso copropietarios</a>
   </div>
 </header>
@@ -763,6 +778,21 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
           <div class="why-big" id="why-big"><b>0%</b><span>de opacidad en las cuentas</span></div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- Portal inmobiliario: acceso destacado -->
+  <section class="tight">
+    <div class="wrap">
+      <a class="inm-cta" href="inmuebles.html" data-reveal>
+        <div class="inm-cta-tx">
+          <span class="tag light">Bramar Inmuebles</span>
+          <h2>Compra, vende o alquila <b>con confianza</b>.</h2>
+          <p>Departamentos en venta, preventa y alquiler, casas, terrenos y oficinas en Santa Cruz. Cada anuncio es revisado por Bramar.</p>
+          <div class="inm-cta-b"><span class="btn gold">Ver inmuebles <svg aria-hidden="true"><use href="#i-arrow"/></svg></span><span class="btn outline" data-pub>Publicar mi inmueble</span></div>
+        </div>
+        <div class="inm-cta-ph" aria-hidden="true"><img src="img/rise-1.jpg" alt="" width="1000" height="1333" loading="lazy" decoding="async"><img src="img/san-nicolas.jpg" alt="" width="985" height="1230" loading="lazy" decoding="async"></div>
+      </a>
     </div>
   </section>
 
@@ -1030,7 +1060,7 @@ footer{background:var(--navy-deep);color:rgba(255,255,255,.75);margin-top:clamp(
 <footer>
   <div class="wrap foot">
     <div><img src="img/logo-blanco.png" alt="Bramar Group" width="420" height="265" loading="lazy"><p>Administración integral de edificios y condominios en Santa Cruz.</p></div>
-    <div><h2>Páginas</h2><ul><li><a href="#inicio" data-go="inicio">Inicio</a></li><li><a href="#nosotros" data-go="nosotros">Nosotros</a></li><li><a href="#servicios" data-go="servicios">Servicios</a></li><li><a href="#edificios" data-go="edificios">Edificios</a></li><li><a href="#desarrolladores" data-go="desarrolladores">Desarrolladores</a></li><li><a href="#contacto" data-go="contacto">Contacto</a></li></ul></div>
+    <div><h2>Páginas</h2><ul><li><a href="#inicio" data-go="inicio">Inicio</a></li><li><a href="#nosotros" data-go="nosotros">Nosotros</a></li><li><a href="#servicios" data-go="servicios">Servicios</a></li><li><a href="#edificios" data-go="edificios">Edificios</a></li><li><a href="#desarrolladores" data-go="desarrolladores">Desarrolladores</a></li><li><a href="inmuebles.html">Inmuebles</a></li><li><a href="#contacto" data-go="contacto">Contacto</a></li></ul></div>
     <div><h2>Contacto</h2><ul><li><a data-link="tel"><span data-bind="phone"></span></a></li><li><a data-link="mail"><span data-bind="email"></span></a></li><li><span style="display:inline-flex;min-height:36px;align-items:center" data-bind="address"></span></li></ul></div>
   </div>
   <div class="wrap foot-bottom"><span>© <span id="yr">2026</span> Bramar Group</span><span>Gestión integral de edificios y condominios</span></div>
@@ -1397,5 +1427,6 @@ const SITE = {
   if(document.fonts&&document.fonts.ready) document.fonts.ready.then(()=>{navPill();});
 })();
 </script>
+<script>document.addEventListener('click',function(e){ var b=e.target.closest('.inm-cta [data-pub]'); if(b){ e.preventDefault(); location.href='inmuebles.html?publicar=1'; } });</script>
 </body>
 </html>
