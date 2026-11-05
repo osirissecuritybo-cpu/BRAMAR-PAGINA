@@ -25977,7 +25977,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var sub=x.modulo==='inm'?[OPS[d.operacion],TIPOS[d.tipo],d.zona].filter(Boolean).join(' · '):[d.categoria,x.edificio+(x.depto?' · Depto '+x.depto:''),x.rol==='inquilino'?'Inquilino':'Propietario'].filter(Boolean).join(' · ');
     return '<div class="lkp-row" data-id="'+esc(x.id)+'">'+(x.fotos&&x.fotos[0]?'<img src="'+foto(x.fotos[0],200)+'" alt="" loading="lazy">':'<span class="nf"></span>')+
       '<div><b>'+esc(d.titulo)+'</b><small>'+esc(sub)+'</small><small>'+esc(precio(x))+(precio(x)?' · ':'')+esc(d.anunciante||'')+(d.telefono?' · '+esc(d.telefono):'')+'</small>'+
-      '<span class="lkp-st'+(off?' off':'')+'">'+(x.modulo==='inm'?'Inmueble':'Mercado')+' · '+EST[x.visible]+(x.destacado?' · Destacado':'')+((x.reportes||[]).length?' · '+x.reportes.length+' reporte'+(x.reportes.length>1?'s':''):'')+'</span>'+
+      '<span class="lkp-st'+(off?' off':'')+'">'+(d.ejemplo?'Ejemplo · ':'')+(x.modulo==='inm'?'Inmueble':'Mercado')+' · '+EST[x.visible]+(x.destacado?' · Destacado':'')+((x.reportes||[]).length?' · '+x.reportes.length+' reporte'+(x.reportes.length>1?'s':''):'')+'</span>'+
       '<small>Creado '+fecha(x.creado)+(x.vence?' · vence '+fecha(x.vence):'')+'</small></div>'+
       '<div class="lkp-acc">'+(x.estado==='pendiente'?'<button type="button" class="pri" data-a="aprobar">Aprobar</button><button type="button" data-a="rechazar">Rechazar</button>':'')+'<button type="button" data-a="ver">Ver</button></div></div>'; }
   function detalle(b,x){ var d=x.datos||{}, inm=x.modulo==='inm';
@@ -26026,7 +26026,10 @@ button.lkrp-b:hover{border-color:#1E4E86}
       '<label class="f">Portal inmobiliario (días)<input id="lkp-vi" inputmode="numeric" value="'+esc(CFG.vigenciaInm)+'"></label><label class="f">Mercado de residentes (días)<input id="lkp-vm" inputmode="numeric" value="'+esc(CFG.vigenciaMk)+'"></label></div>'+
       '<h3 style="margin-top:26px">Secciones del portal inmobiliario</h3><p class="lkp-note">Cada sección es un filtro: muestra los inmuebles que cumplen la operación, los tipos y la situación marcados (sin marcar = todos).</p><div id="lkp-secs" style="margin-top:10px"></div><button type="button" class="lkp-back" id="lkp-add">+ Agregar sección</button>'+
       '<h3 style="margin-top:26px">Categorías del mercado de residentes</h3><label class="f" style="max-width:520px">Una por línea<textarea id="lkp-cats" style="min-height:200px">'+esc((CFG.mkCategorias||[]).join('\n'))+'</textarea></label>'+
-      '<p class="lkp-msg" id="lkp-msg"></p><div class="lkp-pie"><button type="button" class="btn primary" id="lkp-gc">Guardar configuración</button></div>';
+      '<p class="lkp-msg" id="lkp-msg"></p><div class="lkp-pie"><button type="button" class="btn primary" id="lkp-gc">Guardar configuración</button></div>'+
+      '<h3 style="margin-top:26px">Publicaciones de ejemplo</h3><p class="lkp-note">Hay '+L.filter(function(x){ return (x.datos||{}).ejemplo; }).length+' publicaciones marcadas como ejemplo. Quítelas cuando ya no las necesite.</p><div class="lkp-pie" style="justify-content:flex-start"><button type="button" class="btn" id="lkp-bx">Quitar publicaciones de ejemplo</button></div>';
+    $('lkp-bx').onclick=function(){ if(!confirm('¿Quitar todas las publicaciones de ejemplo y sus fotos?')) return; var bt=this; bt.disabled=true;
+      api({op:'borrar_ejemplos'}).then(function(j){ toast(j.borradas+' ejemplos quitados','success'); return cargar(); }).then(pintar).catch(function(e){ bt.disabled=false; toast(e.message,'error'); }); };
     var chk=function(arr,dic,k){ return Object.keys(dic).map(function(t){ return '<label><input type="checkbox" data-'+k+'="'+t+'"'+(arr.indexOf(t)>=0?' checked':'')+'>'+dic[t]+'</label>'; }).join(''); };
     var secs=function(){ $('lkp-secs').innerHTML=S.map(function(s,i){ return '<div class="lkp-sec" data-i="'+i+'"><div class="hd"><label class="f">Nombre<input data-n value="'+esc(s.nombre)+'"></label><label class="f" style="max-width:180px">Operación<select data-o><option value="">Todas</option>'+
       Object.keys(OPS).map(function(k){ return '<option value="'+k+'"'+(s.operacion===k?' selected':'')+'>'+OPS[k]+'</option>'; }).join('')+'</select></label><span class="ops"><button type="button" data-up title="Subir">↑</button><button type="button" data-del title="Quitar">×</button></span></div>'+
@@ -26338,7 +26341,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261105105551'; window.LUKA_BUILD=B;
+(function(){ var B='20261105112222'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }

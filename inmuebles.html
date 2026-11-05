@@ -35,8 +35,7 @@ p{margin:0}
 :focus-visible{outline:2px solid var(--brass);outline-offset:3px;border-radius:6px}
 .wrap{max-width:1320px;margin:0 auto;padding-inline:var(--gutter)}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.tag{display:inline-flex;align-items:center;gap:10px;font-size:12.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
-.tag::before{content:"";width:26px;height:2px;background:currentColor}
+.tag{display:inline-block;font-size:12.5px;font-weight:500;letter-spacing:.14em;text-transform:uppercase;color:var(--brass)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;padding:0 26px;border:0;border-radius:999px;font-size:15px;font-weight:500;cursor:pointer;transition:background .25s,color .25s,transform .15s}
 .btn:active{transform:scale(.98)}
 .btn.navy{background:var(--navy);color:#fff}.btn.navy:hover{background:var(--navy-deep)}
@@ -61,7 +60,8 @@ p{margin:0}
 @media (min-width:761px){ .top .btn .sm{display:none} }
 
 /* portada con buscador */
-.hero{position:relative;background:var(--navy-deep);color:#fff;overflow:hidden}
+.hero{position:relative;z-index:45;background:var(--navy-deep);color:#fff}
+.hero::before,.hero::after{pointer-events:none}
 .hero::before{content:"";position:absolute;inset:0;background:url(img/rise-1.jpg) center 35%/cover;opacity:.32}
 .hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,33,69,.25),rgba(6,33,69,.85))}
 .hero .wrap{position:relative;z-index:1;padding-block:clamp(48px,8vw,96px) clamp(36px,5vw,56px)}
@@ -72,23 +72,47 @@ p{margin:0}
 .search{margin-top:clamp(26px,4vw,40px);background:#fff;color:var(--ink);border-radius:22px;padding:14px;display:grid;grid-template-columns:1.1fr 1.1fr 1.4fr 1.5fr .9fr auto;gap:10px;box-shadow:0 30px 70px -30px rgba(0,0,0,.55)}
 .fld{display:flex;flex-direction:column;gap:3px;padding:8px 12px;border-radius:14px;background:var(--sand);min-width:0}
 .fld label{font-size:11.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.fld input,.fld select{border:0;background:transparent;padding:2px 0;font-size:15px;outline:none;min-width:0;width:100%;min-height:28px}
-.fld .rango{display:flex;gap:6px;align-items:center}
+.fld input{border:0;background:transparent;padding:2px 0;font-size:15px;outline:none;min-width:0;width:100%;min-height:28px}
+.fld .rango{display:flex;gap:8px;align-items:center}
 .fld .rango input{width:50%}
+.fld .rango i{font-style:normal;font-size:13px;color:var(--muted)}
 .search .btn{min-height:100%;border-radius:16px}
 @media (max-width:1100px){ .search{grid-template-columns:1fr 1fr 1fr} .search .btn{grid-column:1/-1;min-height:52px} }
 @media (max-width:600px){ .search{grid-template-columns:1fr 1fr;padding:10px;border-radius:18px} .search .s-zona,.search .s-precio{grid-column:1/-1} }
 
 /* secciones */
-.secnav{position:sticky;top:calc(68px + env(safe-area-inset-top,0px));z-index:40;background:var(--sand);border-bottom:1px solid var(--line)}
-.secnav .wrap{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;padding-block:10px}
-.secnav .wrap::-webkit-scrollbar{display:none}
-.secnav button{flex:0 0 auto;min-height:44px;padding:0 18px;border:0;border-radius:999px;background:transparent;font-size:14.5px;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap}
-.secnav button:hover{color:var(--navy)}
-.secnav button.on{background:var(--navy);color:#fff}
-.dorm{display:flex;gap:6px;flex-wrap:wrap;margin-top:18px}
-.dorm button{min-height:44px;min-width:44px;padding:0 16px;border:1px solid var(--line);border-radius:999px;background:#fff;font-size:14px;font-weight:500;color:var(--navy);cursor:pointer}
-.dorm button.on{border-color:var(--navy);background:var(--navy);color:#fff}
+.secnav{position:sticky;top:calc(68px + env(safe-area-inset-top,0px));z-index:40;background:rgba(244,241,235,.96);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.secnav .wrap{position:relative;display:flex;align-items:center}
+.tabs{display:flex;gap:28px;overflow-x:auto;scrollbar-width:none;scroll-behavior:smooth;flex:1;min-width:0;padding-inline:2px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 24px,#000 calc(100% - 24px),transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 24px,#000 calc(100% - 24px),transparent 100%)}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{position:relative;flex:0 0 auto;min-height:56px;padding:0;border:0;background:none;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer;white-space:nowrap}
+.tabs button:first-child{margin-left:22px}.tabs button:last-child{margin-right:22px}
+.tabs button:hover{color:var(--navy)}
+.tabs button.on{color:var(--navy)}
+.tabs button.on::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--navy)}
+.tabs button small{font-size:12.5px;font-weight:400;color:var(--muted);margin-left:6px}
+.tab-ar{flex:0 0 auto;width:40px;height:40px;border:0;border-radius:50%;background:#fff;color:var(--navy);display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 10px rgba(6,33,69,.12)}
+.tab-ar svg{width:16px;height:16px}
+.tab-ar[hidden]{display:none}
+/* menú desplegable propio (reemplaza los select del navegador) */
+.dd{position:relative;min-width:0}
+.dd select{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.dd-b{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:28px;padding:0;border:0;background:none;font:inherit;font-size:15px;color:var(--ink);cursor:pointer;text-align:left}
+.dd-b span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dd-b svg{flex:0 0 auto;width:16px;height:16px;color:var(--muted);transition:transform .2s}
+.dd.open .dd-b svg{transform:rotate(180deg)}
+.dd-m{position:absolute;z-index:80;left:-12px;top:calc(100% + 12px);min-width:calc(100% + 24px);max-height:320px;overflow:auto;background:#fff;border-radius:16px;padding:6px;box-shadow:0 24px 60px -18px rgba(6,33,69,.4),0 0 0 1px rgba(6,33,69,.06);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .16s,transform .16s}
+.dd.open .dd-m{opacity:1;transform:none;pointer-events:auto}
+.dd-m button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:none;font:inherit;font-size:15px;color:var(--ink);cursor:pointer;text-align:left;white-space:nowrap}
+.dd-m button:hover{background:var(--sand)}
+.dd-m button.on{color:var(--navy);font-weight:500}
+.dd-m button.on::after{content:"";width:12px;height:7px;border:2px solid var(--navy);border-top:0;border-right:0;transform:rotate(-45deg) translateY(-2px)}
+.dd.box{border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 14px}
+.dd.box .dd-b{min-height:48px}
+.dd.box .dd-m{left:0;min-width:100%;top:calc(100% + 6px)}
+.dd.pill{border:1px solid var(--line);border-radius:999px;background:#fff;padding:0 16px}
+.dd.pill .dd-b{min-height:44px;font-size:14px;gap:8px}
+.dd.pill .dd-m{left:auto;right:0;min-width:200px;top:calc(100% + 6px)}
 
 .blk{padding-block:clamp(36px,5vw,64px) 0}
 .blk-h{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
@@ -96,7 +120,7 @@ p{margin:0}
 .blk-h h2 b{font-weight:500}
 .blk-h .cnt{font-size:14px;color:var(--muted)}
 .ctrl{display:flex;gap:8px;align-items:center}
-.ctrl select{min-height:44px;border:1px solid var(--line);border-radius:999px;background:#fff;padding:0 14px;font-size:14px}
+
 .arrows{display:flex;gap:8px}
 .arrows button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:#fff;color:var(--navy);cursor:pointer;display:grid;place-items:center}
 .arrows button:hover{border-color:var(--navy)}
@@ -117,9 +141,8 @@ p{margin:0}
 .card .ph{position:relative;aspect-ratio:4/3;background:#E9E4DA;overflow:hidden}
 .card .ph img{width:100%;height:100%;object-fit:cover;transition:transform .6s var(--soft)}
 .card:hover .ph img{transform:scale(1.04)}
-.card .op{position:absolute;left:12px;top:12px;background:rgba(6,33,69,.86);color:#fff;font-size:12px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px;border-radius:8px}
-.card .dest{position:absolute;right:12px;top:12px;background:var(--brass);color:#fff;font-size:12px;font-weight:500;padding:6px 10px;border-radius:8px}
-.card .nf{position:absolute;right:12px;bottom:12px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;padding:4px 8px;border-radius:8px}
+.card .kind{font-size:12px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--brass)}
+.card .kind b{font-weight:500;color:var(--navy)}
 .card .bd{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1}
 .card .pr{font-size:21px;font-weight:500;color:var(--navy);letter-spacing:-.01em}
 .card .pr small{font-size:13px;font-weight:400;color:var(--muted)}
@@ -274,17 +297,17 @@ footer a{color:#fff}
         <h1>Encuentra tu <b>próximo hogar</b>.</h1>
         <p class="lede">Departamentos, casas, terrenos y oficinas en venta, alquiler, anticrético y preventa. Cada anuncio es revisado por Bramar antes de publicarse.</p>
         <form class="search" id="search" role="search" aria-label="Buscar inmuebles">
-          <div class="fld"><label for="s-op">Operación</label><select id="s-op"><option value="">Todas</option><option value="venta">Venta</option><option value="alquiler">Alquiler</option><option value="anticretico">Anticrético</option></select></div>
-          <div class="fld"><label for="s-tipo">Inmueble</label><select id="s-tipo"><option value="">Todos</option></select></div>
+          <div class="fld"><label for="s-op">Operación</label><div class="dd"><select id="s-op"><option value="">Todas</option><option value="venta">Venta</option><option value="alquiler">Alquiler</option><option value="anticretico">Anticrético</option></select></div></div>
+          <div class="fld"><label for="s-tipo">Inmueble</label><div class="dd"><select id="s-tipo"><option value="">Todos</option></select></div></div>
           <div class="fld s-zona"><label for="s-zona">Zona o palabra clave</label><input id="s-zona" type="search" placeholder="Equipetrol, Urubó, piscina…" autocomplete="off"></div>
-          <div class="fld s-precio"><label>Precio ($us)</label><div class="rango"><input id="s-min" inputmode="numeric" placeholder="Mínimo" aria-label="Precio mínimo"><span>–</span><input id="s-max" inputmode="numeric" placeholder="Máximo" aria-label="Precio máximo"></div></div>
-          <div class="fld"><label for="s-dorm">Dormitorios</label><select id="s-dorm"><option value="">Todos</option><option value="0">Monoambiente</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4 o más</option></select></div>
+          <div class="fld s-precio"><label>Precio en dólares</label><div class="rango"><input id="s-min" inputmode="numeric" placeholder="Desde" aria-label="Precio desde"><i>a</i><input id="s-max" inputmode="numeric" placeholder="Hasta" aria-label="Precio hasta"></div></div>
+          <div class="fld"><label for="s-dorm">Dormitorios</label><div class="dd"><select id="s-dorm"><option value="">Todos</option><option value="0">Monoambiente</option><option value="1">1 dormitorio</option><option value="2">2 dormitorios</option><option value="3">3 dormitorios</option><option value="4">4 o más</option></select></div></div>
           <button class="btn navy" type="submit">Buscar</button>
         </form>
       </div>
     </section>
 
-    <nav class="secnav" aria-label="Secciones"><div class="wrap" id="secnav"></div></nav>
+    <nav class="secnav" aria-label="Secciones"><div class="wrap"><button type="button" class="tab-ar" id="t-prev" aria-label="Ver secciones anteriores" hidden><svg><use href="#i-left"/></svg></button><div class="tabs" id="secnav"></div><button type="button" class="tab-ar" id="t-next" aria-label="Ver más secciones" hidden><svg><use href="#i-right"/></svg></button></div></nav>
 
     <div class="wrap">
       <section class="blk" id="b-dest" hidden>
@@ -295,14 +318,13 @@ footer a{color:#fff}
 
       <section class="blk" id="b-res">
         <div class="blk-h"><div><span class="tag" id="res-tag">Todos los inmuebles</span><h2 id="res-h">Explora <b>oportunidades</b></h2><p class="cnt" id="res-n"></p></div>
-          <div class="ctrl"><label class="sr-only" for="orden">Ordenar</label><select id="orden"><option value="rec">Más recientes</option><option value="pmin">Menor precio</option><option value="pmax">Mayor precio</option></select></div></div>
-        <div class="dorm" id="dorm" aria-label="Dormitorios"></div>
+          <div class="ctrl"><div class="dd pill"><select id="orden" aria-label="Ordenar"><option value="rec">Más recientes</option><option value="pmin">Menor precio</option><option value="pmax">Mayor precio</option></select></div></div></div>
         <div class="grid" id="grid"></div>
         <div class="more" id="more" hidden><button class="btn line" type="button" id="more-b">Ver más inmuebles</button></div>
       </section>
 
       <div class="band">
-        <div><span class="tag" style="color:var(--brass-soft)">¿Vendes o alquilas?</span><h2 style="margin-top:12px">Publica tu inmueble <b>con Bramar</b>.</h2><p>Completa el formulario con fotos y datos. Lo revisamos y lo publicamos para que te contacten directo por WhatsApp.</p></div>
+        <div><span class="tag" style="color:var(--brass-soft)">¿Vendes o alquilas?</span><h2 style="margin-top:12px">Publica tu inmueble <b>con Bramar</b>.</h2><p>Completa el formulario con fotos y datos. Lo revisamos, lo publicamos y te ponemos en contacto con los interesados.</p></div>
         <a class="btn gold" href="inmuebles.html?publicar=1" data-ir="publicar">Publicar mi inmueble <svg aria-hidden="true"><use href="#i-arrow"/></svg></a>
       </div>
     </div>
@@ -318,13 +340,13 @@ footer a{color:#fff}
       <div class="card-f" id="pub-card">
         <span class="tag">Publica tu inmueble</span>
         <h1>Cuéntanos sobre <b>tu inmueble</b>.</h1>
-        <p class="lede">Los anuncios se revisan antes de publicarse. Tu número solo se muestra en la ficha del inmueble para que te contacten.</p>
+        <p class="lede">Bramar revisa cada anuncio y atiende a los interesados por ti. Tus datos de contacto no se publican: solo los ve Bramar.</p>
         <form id="pub" novalidate style="margin-top:30px">
           <div class="fs"><h3>Operación e inmueble</h3>
             <div class="g">
-              <label class="f">Operación<select name="operacion" required><option value="venta">Venta</option><option value="alquiler">Alquiler</option><option value="anticretico">Anticrético</option></select></label>
-              <label class="f">Tipo de inmueble<select name="tipo" id="p-tipo" required></select></label>
-              <label class="f">Situación<select name="situacion"><option value="">Sin especificar</option><option value="estrenar">A estrenar</option><option value="usado">Usado</option><option value="preventa">En preventa / en construcción</option><option value="entrega_inmediata">Entrega inmediata</option><option value="entrega_proxima">Próxima entrega</option><option value="entrega_programada">Entrega programada</option></select></label>
+              <label class="f">Operación<div class="dd box"><select name="operacion" required><option value="venta">Venta</option><option value="alquiler">Alquiler</option><option value="anticretico">Anticrético</option></select></div></label>
+              <label class="f">Tipo de inmueble<div class="dd box"><select name="tipo" id="p-tipo" required></select></div></label>
+              <label class="f">Situación<div class="dd box"><select name="situacion"><option value="">Sin especificar</option><option value="estrenar">A estrenar</option><option value="usado">Usado</option><option value="preventa">En preventa / en construcción</option><option value="entrega_inmediata">Entrega inmediata</option><option value="entrega_proxima">Próxima entrega</option><option value="entrega_programada">Entrega programada</option></select></div></label>
               <label class="f two">Título del anuncio<input name="titulo" maxlength="90" placeholder="Ej.: Departamento de 2 dormitorios con piscina en Equipetrol" required></label>
               <label class="f">Fecha de entrega<input name="entrega" maxlength="40" placeholder="Ej.: diciembre 2027"></label>
               <label class="chk full"><input type="checkbox" name="financiamiento"> Ofrece financiamiento o plan de pagos</label>
@@ -333,7 +355,7 @@ footer a{color:#fff}
           <div class="fs"><h3>Precio y ubicación</h3>
             <div class="g">
               <label class="f n">Precio<input name="precio" inputmode="decimal" placeholder="95000" required></label>
-              <label class="f n">Moneda<select name="moneda"><option value="USD">Dólares</option><option value="Bs">Bolivianos</option></select></label>
+              <label class="f n">Moneda<div class="dd box"><select name="moneda"><option value="USD">Dólares</option><option value="Bs">Bolivianos</option></select></div></label>
               <label class="f">Ciudad<input name="ciudad" value="Santa Cruz de la Sierra" maxlength="60"></label>
               <label class="f">Zona o barrio<input name="zona" maxlength="80" placeholder="Equipetrol, 3er anillo…" required></label>
               <label class="f two">Dirección o referencia (opcional)<input name="direccion" maxlength="140" placeholder="Calle, edificio o referencia"></label>
@@ -355,7 +377,7 @@ footer a{color:#fff}
             <input type="file" id="ph-in" accept="image/jpeg,image/png,image/webp" multiple hidden>
             <p class="hint">Hasta 10 fotos. La marcada como «Principal» es la que se ve en las tarjetas. Las fotos se optimizan antes de enviarse.</p>
           </div>
-          <div class="fs"><h3>Contacto</h3>
+          <div class="fs"><h3>Tus datos (solo para Bramar)</h3>
             <div class="g">
               <label class="f">Nombre del anunciante<input name="anunciante" maxlength="80" autocomplete="name" required></label>
               <label class="f">Teléfono<input name="telefono" type="tel" inputmode="tel" autocomplete="tel" placeholder="70000000" required></label>
@@ -396,9 +418,26 @@ footer a{color:#fff}
   function api(body){ return fetch(API,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)}).then(function(r){ return r.json(); }); }
   $('#yr').textContent=new Date().getFullYear();
   Object.keys(TIPOS).forEach(function(k){ $('#s-tipo').insertAdjacentHTML('beforeend','<option value="'+k+'">'+TIPOS[k]+'</option>'); $('#p-tipo').insertAdjacentHTML('beforeend','<option value="'+k+'">'+TIPOS[k]+'</option>'); });
+  setTimeout(function(){ ddInit(); },0);
 
   /* ---------- datos ---------- */
   var TODOS=[], SECC=[], cargado=null, sec='', dorm='', mostrados=POR_PAG;
+  var BRAMAR_WA='59178155275', BRAMAR_TEL='+59178155275';
+
+  /* ---------- menús desplegables propios ---------- */
+  var CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  function ddSync(sel){ var w=sel.closest('.dd'); if(!w||!w._b) return; var o=sel.options[sel.selectedIndex]; w._b.querySelector('span').textContent=o?o.text:'';
+    w._m.innerHTML=[].map.call(sel.options,function(op,i){ return '<button type="button" data-i="'+i+'" class="'+(i===sel.selectedIndex?'on':'')+'">'+esc(op.text)+'</button>'; }).join(''); }
+  function ddInit(rootEl){ [].forEach.call((rootEl||document).querySelectorAll('.dd'),function(w){ if(w._b) return; var sel=w.querySelector('select'); if(!sel) return;
+    var b=document.createElement('button'); b.type='button'; b.className='dd-b'; b.setAttribute('aria-haspopup','listbox'); b.innerHTML='<span></span>'+CHEV;
+    var m=document.createElement('div'); m.className='dd-m'; m.setAttribute('role','listbox'); w.appendChild(b); w.appendChild(m); w._b=b; w._m=m;
+    var lab=w.closest('.fld,.f'); if(lab){ var l=lab.querySelector('label[for]'); if(l) l.addEventListener('click',function(e){ e.preventDefault(); b.click(); }); }
+    b.onclick=function(e){ e.preventDefault(); var abierto=w.classList.contains('open'); cerrarDd(); if(!abierto){ ddSync(sel); w.classList.add('open'); var on=m.querySelector('.on'); if(on) m.scrollTop=on.offsetTop-80; } };
+    m.onclick=function(e){ var it=e.target.closest('[data-i]'); if(!it) return; sel.selectedIndex=+it.dataset.i; ddSync(sel); cerrarDd(); sel.dispatchEvent(new Event('change',{bubbles:true})); b.focus(); };
+    ddSync(sel); }); }
+  function cerrarDd(){ [].forEach.call(document.querySelectorAll('.dd.open'),function(w){ w.classList.remove('open'); }); }
+  document.addEventListener('click',function(e){ if(!e.target.closest('.dd')) cerrarDd(); });
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape') cerrarDd(); });
   function cargar(){ if(cargado) return cargado;
     var c=null; try{ c=JSON.parse(sessionStorage.getItem('bramar.inm')||'null'); }catch(e){}
     if(c&&Date.now()-c.t<120000){ TODOS=c.d.inmuebles; SECC=c.d.secciones; return cargado=Promise.resolve(); }
@@ -410,15 +449,14 @@ footer a{color:#fff}
   function tarjeta(x){
     var dm=x.tipo==='monoambiente'||(x.dormitorios===0&&x.tipo==='departamento')?'Monoambiente':(x.dormitorios?x.dormitorios+' dorm.':'');
     return '<article class="card'+(x.cerrado?' cerrado':'')+'" data-id="'+esc(x.id)+'" tabindex="0" role="link" aria-label="'+esc(x.titulo)+'">'+
-      '<div class="ph">'+(x.foto?'<img src="'+foto(x.foto,640)+'" alt="" loading="lazy" decoding="async">':'')+'<span class="op">'+esc(x.cerrado?(x.operacion==='venta'?'Vendido':'Alquilado'):OPS[x.operacion]||'')+'</span>'+
-      (x.destacado&&!x.cerrado?'<span class="dest">Destacado</span>':'')+(x.nfotos>1?'<span class="nf">'+x.nfotos+' fotos</span>':'')+'</div>'+
-      '<div class="bd"><div class="pr">'+esc(precio(x))+(x.operacion==='alquiler'?' <small>/ mes</small>':'')+'</div><h3>'+esc(x.titulo)+'</h3>'+
+      '<div class="ph">'+(x.foto?'<img src="'+foto(x.foto,640)+'" alt="" loading="lazy" decoding="async">':'')+'</div>'+
+      '<div class="bd">'+(x.ejemplo?'<span class="kind" style="color:var(--muted)">Ejemplo de publicación</span>':'')+'<span class="kind">'+esc(x.cerrado?(x.operacion==='venta'?'Vendido':'Alquilado'):OPS[x.operacion]||'')+(x.destacado&&!x.cerrado?' · <b>Destacado</b>':'')+'</span><div class="pr">'+esc(precio(x))+(x.operacion==='alquiler'?' <small>/ mes</small>':'')+'</div><h3>'+esc(x.titulo)+'</h3>'+
       '<div class="loc">'+esc([TIPOS[x.tipo],x.zona].filter(Boolean).join(' · '))+'</div>'+(x.situacion?'<div class="st">'+esc(SIT[x.situacion]||'')+'</div>':'')+
       '<div class="specs">'+(dm?'<span><svg><use href="#i-bed"/></svg>'+dm+'</span>':'')+(x.banos?'<span><svg><use href="#i-bath"/></svg>'+x.banos+' baño'+(x.banos>1?'s':'')+'</span>':'')+(x.sup?'<span><svg><use href="#i-area"/></svg>'+miles(x.sup)+' m²</span>':'')+'</div></div></article>';
   }
   function filtro(){
     var s=SECC.filter(function(z){ return z.id===sec; })[0];
-    var op=$('#s-op').value, tp=$('#s-tipo').value, q=$('#s-zona').value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''), mn=+($('#s-min').value.replace(/\D/g,''))||0, mx=+($('#s-max').value.replace(/\D/g,''))||0, dr=$('#s-dorm').value||dorm;
+    var op=$('#s-op').value, tp=$('#s-tipo').value, q=$('#s-zona').value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''), mn=+($('#s-min').value.replace(/\D/g,''))||0, mx=+($('#s-max').value.replace(/\D/g,''))||0, dr=$('#s-dorm').value;
     return TODOS.filter(function(x){
       if(x.cerrado&&!s) { /* vendidos recientes solo al ver todo */ }
       if(s){ if(s.operacion&&x.operacion!==s.operacion) return false; if((s.tipos||[]).length&&s.tipos.indexOf(x.tipo)<0) return false; if((s.situaciones||[]).length&&s.situaciones.indexOf(x.situacion)<0) return false; }
@@ -444,18 +482,20 @@ footer a{color:#fff}
   }
   function pintarSecciones(){
     $('#secnav').innerHTML='<button type="button" data-s=""'+(sec?'':' class="on"')+'>Todos</button>'+SECC.map(function(s){ var n=TODOS.filter(function(x){ return !x.cerrado&&(!s.operacion||x.operacion===s.operacion)&&(!(s.tipos||[]).length||s.tipos.indexOf(x.tipo)>=0)&&(!(s.situaciones||[]).length||s.situaciones.indexOf(x.situacion)>=0); }).length;
-      return '<button type="button" data-s="'+esc(s.id)+'"'+(sec===s.id?' class="on"':'')+'>'+esc(s.nombre)+(n?' · '+n:'')+'</button>'; }).join('');
-    var D=[['','Todos'],['0','Monoambiente'],['1','1 dormitorio'],['2','2 dormitorios'],['3','3 dormitorios'],['4','4 o más']];
-    $('#dorm').innerHTML=D.map(function(d){ return '<button type="button" data-d="'+d[0]+'"'+(dorm===d[0]?' class="on"':'')+'>'+d[1]+'</button>'; }).join('');
+      return '<button type="button" data-s="'+esc(s.id)+'"'+(sec===s.id?' class="on"':'')+'>'+esc(s.nombre)+(n?'<small>'+n+'</small>':'')+'</button>'; }).join('');
+    flechas();
   }
+  function flechas(){ var t=$('#secnav'); $('#t-prev').hidden=t.scrollLeft<8; $('#t-next').hidden=t.scrollLeft+t.clientWidth>=t.scrollWidth-8; }
+  $('#secnav').addEventListener('scroll',flechas,{passive:true}); window.addEventListener('resize',flechas);
+  $('#t-prev').onclick=function(){ var t=$('#secnav'); t.scrollBy({left:-t.clientWidth*.7,behavior:'smooth'}); };
+  $('#t-next').onclick=function(){ var t=$('#secnav'); t.scrollBy({left:t.clientWidth*.7,behavior:'smooth'}); };
   function lista(){ $('#grid').innerHTML=new Array(8).join('<div class="skel"></div>');
     cargar().then(function(){ var p=new URLSearchParams(location.search); sec=p.get('s')||sec; pintarSecciones(); pintarLista(); })
       .catch(function(){ $('#grid').innerHTML='<div class="empty" style="grid-column:1/-1"><b>No pudimos cargar los inmuebles</b>Revise su conexión e intente de nuevo.<br><button class="btn navy" type="button" onclick="location.reload()">Reintentar</button></div>'; }); }
   $('#secnav').addEventListener('click',function(e){ var b=e.target.closest('[data-s]'); if(!b) return; sec=b.dataset.s; mostrados=POR_PAG; pintarSecciones(); pintarLista();
     try{ history.replaceState(history.state,'',sec?'?s='+encodeURIComponent(sec):'inmuebles.html'); }catch(x){} b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); });
-  $('#dorm').addEventListener('click',function(e){ var b=e.target.closest('[data-d]'); if(!b) return; dorm=b.dataset.d; $('#s-dorm').value=''; mostrados=POR_PAG; pintarSecciones(); pintarLista(); });
-  $('#search').addEventListener('submit',function(e){ e.preventDefault(); dorm=''; mostrados=POR_PAG; pintarSecciones(); pintarLista(); $('#b-res').scrollIntoView({behavior:'smooth'}); });
-  ['#s-op','#s-tipo','#s-dorm','#orden'].forEach(function(s){ $(s).addEventListener('change',function(){ if(s==='#s-dorm') dorm=''; mostrados=POR_PAG; pintarSecciones(); pintarLista(); }); });
+  $('#search').addEventListener('submit',function(e){ e.preventDefault(); mostrados=POR_PAG; pintarSecciones(); pintarLista(); $('#b-res').scrollIntoView({behavior:'smooth'}); });
+  ['#s-op','#s-tipo','#s-dorm','#orden'].forEach(function(s){ $(s).addEventListener('change',function(){ mostrados=POR_PAG; pintarSecciones(); pintarLista(); }); });
   $('#more-b').onclick=function(){ mostrados+=POR_PAG; pintarLista(); };
   $('#r-prev').onclick=function(){ var r=$('#rail'); r.scrollBy({left:-r.clientWidth*.9,behavior:'smooth'}); };
   $('#r-next').onclick=function(){ var r=$('#rail'); r.scrollBy({left:r.clientWidth*.9,behavior:'smooth'}); };
@@ -471,7 +511,7 @@ footer a{color:#fff}
       var x=j.inmueble; galeria=x.fotos||[]; gi=0; document.title=x.titulo+' · Bramar Inmuebles';
       var dm=x.tipo==='monoambiente'?'Monoambiente':(x.dormitorios||'—');
       var facts=[['Operación',OPS[x.operacion]],['Inmueble',TIPOS[x.tipo]],['Situación',SIT[x.situacion]],['Dormitorios',dm],['Baños',x.banos||''],['Garajes',x.garajes||''],['Sup. construida',x.sup?miles(x.sup)+' m²':''],['Sup. terreno',x.supTerreno?miles(x.supTerreno)+' m²':''],['Entrega',x.entrega],['Financiamiento',x.financiamiento?'Sí':'']].filter(function(a){ return a[1]!==''&&a[1]!=null&&a[1]!==undefined; });
-      var wa=tel591(x.whatsapp||x.telefono), msg='Hola, vi su anuncio en Bramar Inmuebles: «'+x.titulo+'». ¿Sigue disponible?';
+      var msg='Hola Bramar, me interesa el inmueble '+x.codigo+': «'+x.titulo+'». ¿Me pueden dar más información?';
       f.innerHTML='<button class="back" type="button" data-volver><svg aria-hidden="true"><use href="#i-left"/></svg>Volver a inmuebles</button>'+
         '<div class="gal"><div class="main" data-lb="0">'+(galeria[0]?'<img src="'+foto(galeria[0],1600)+'" alt="'+esc(x.titulo)+'" fetchpriority="high">':'')+'</div><div class="side">'+
         [1,2].map(function(k){ return galeria[k]?'<div data-lb="'+k+'"><img src="'+foto(galeria[k],800)+'" alt="" loading="lazy">'+(k===2&&galeria.length>3?'<b>+'+(galeria.length-3)+(galeria.length-3===1?' foto':' fotos')+'</b>':'')+'</div>':'<div></div>'; }).join('')+'</div></div>'+
@@ -482,10 +522,9 @@ footer a{color:#fff}
         ((x.caracteristicas||[]).length?'<div class="txt"><h2>Características</h2><ul>'+x.caracteristicas.map(function(c){ return '<li>'+esc(c)+'</li>'; }).join('')+'</ul></div>':'')+'</div>'+
         '<aside class="side-card"><div class="op">'+esc(OPS[x.operacion])+'</div><div class="pr">'+esc(precio(x))+(x.operacion==='alquiler'?' <small>/ mes</small>':'')+'</div>'+
         (x.cerrado?'<p class="cerrado-av">Este inmueble ya fue '+(x.operacion==='venta'?'vendido':'alquilado')+'.</p>':'')+
-        '<div class="who"><b>'+esc(x.anunciante)+'</b>Anunciante</div><div class="acts">'+
-        (!x.cerrado&&wa?'<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/'+wa+'?text='+encodeURIComponent(msg)+'"><svg><use href="#i-wa"/></svg>Escribir por WhatsApp</a>':'')+
-        (!x.cerrado&&x.telefono?'<a class="btn line" href="tel:+'+tel591(x.telefono)+'"><svg><use href="#i-phone"/></svg>Llamar</a>':'')+
-        (x.enlace?'<a class="btn line" target="_blank" rel="noopener nofollow ugc" href="'+esc(x.enlace)+'"><svg><use href="#i-link"/></svg>Ver más información</a>':'')+
+        '<div class="who"><b>Código '+esc(x.codigo)+'</b>Consulte con Bramar: coordinamos la visita y le ponemos en contacto con el propietario.</div><div class="acts">'+
+        (!x.cerrado?'<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/'+BRAMAR_WA+'?text='+encodeURIComponent(msg)+'"><svg><use href="#i-wa"/></svg>Consultar por WhatsApp</a>':'')+
+        (!x.cerrado?'<a class="btn line" href="tel:'+BRAMAR_TEL+'"><svg><use href="#i-phone"/></svg>Llamar a Bramar</a>':'')+
         '</div><div class="mini"><button class="link-btn" type="button" id="f-share"><svg style="width:16px;height:16px;vertical-align:-3px"><use href="#i-share"/></svg> Compartir</button><button class="link-btn" type="button" id="f-rep">Reportar anuncio</button></div></aside></div>';
       $('#f-share').onclick=function(){ var u=location.origin+location.pathname+'?id='+encodeURIComponent(x.id), d={title:x.titulo,text:x.titulo+' · '+precio(x),url:u};
         if(navigator.share) navigator.share(d).catch(function(){}); else if(navigator.clipboard) navigator.clipboard.writeText(u).then(function(){ toast('Enlace copiado'); }); else prompt('Copie el enlace',u); };

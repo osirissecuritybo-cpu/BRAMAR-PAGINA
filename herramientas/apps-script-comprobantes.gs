@@ -1208,11 +1208,13 @@ function pubTarjetaInm_(o) {
   const d = o.datos || {};
   return { id: o.id, titulo: d.titulo, operacion: d.operacion, tipo: d.tipo, situacion: d.situacion, financiamiento: d.financiamiento, precio: d.precio, moneda: d.moneda,
     zona: d.zona, ciudad: d.ciudad, dormitorios: d.dormitorios, banos: d.banos, sup: d.sup, foto: (o.fotos || [])[0] || '', nfotos: (o.fotos || []).length,
-    destacado: o.destacado, creado: o.creado, cerrado: o.estado === 'cerrado' };
+    destacado: o.destacado, creado: o.creado, cerrado: o.estado === 'cerrado', codigo: pubCodigo_(o.id), ejemplo: !!d.ejemplo };
 }
+/* ficha pública: los datos del anunciante solo los ve Bramar, que hace de intermediario */
 function pubFichaInm_(o) { const t = pubTarjetaInm_(o), d = o.datos || {};
-  ['descripcion', 'direccion', 'garajes', 'supTerreno', 'caracteristicas', 'anunciante', 'whatsapp', 'telefono', 'enlace', 'entrega'].forEach(function (k) { t[k] = d[k]; });
-  t.fotos = o.fotos || []; return t; }
+  ['descripcion', 'direccion', 'garajes', 'supTerreno', 'caracteristicas', 'entrega'].forEach(function (k) { t[k] = d[k]; });
+  t.codigo = pubCodigo_(o.id); t.fotos = o.fotos || []; return t; }
+function pubCodigo_(id) { return 'BR-' + String(id || '').slice(1, 7).toUpperCase(); }
 /* ===================== Sitio público ===================== */
 function publico_(d) {
   if (freno_()) return json({ ok: false, error: 'Demasiadas consultas, espere un minuto.' });
@@ -1283,7 +1285,7 @@ function mkDatos_(r, cfg) {
 function mkTarjeta_(o, mio) {
   const d = o.datos || {}, t = { id: o.id, titulo: d.titulo, categoria: d.categoria, descripcion: d.descripcion, precio: d.precio, moneda: d.moneda, precioTexto: d.precioTexto,
     telefono: d.telefono, whatsapp: d.whatsapp, facebook: d.facebook, instagram: d.instagram, web: d.web, ubicacion: d.ubicacion, anunciante: d.anunciante,
-    edificio: d.edificio, alcance: d.alcance, fotos: o.fotos || [], creado: o.creado, destacado: o.destacado };
+    edificio: d.edificio, alcance: d.alcance, fotos: o.fotos || [], creado: o.creado, destacado: o.destacado, ejemplo: !!d.ejemplo };
   if (mio) { t.estado = pubEstado_(o); t.vence = o.vence; t.motivo = d.motivo || ''; }
   return t;
 }
@@ -1359,6 +1361,23 @@ function lkPub_(u, d) {
       if (Array.isArray(d.mkCategorias)) c.mkCategorias = d.mkCategorias.map(function (x) { return pubTxt_(x, 40); }).filter(Boolean).slice(0, 40);
       lkEscribir_('PUB_CFG', c); pubInvalidar_(); lkLog_(u, 'Publicaciones', 'Cambió la configuración de publicaciones', ''); return json({ ok: true, cfg: c });
     }
+    if (op === 'ejemplo') {
+      // publicación de muestra, marcada como EJEMPLO, para ver el diseño (se quitan con «borrar_ejemplos»)
+      const cfg = pubCfg_(), mod = d.modulo === 'mk' ? 'mk' : 'inm';
+      const datos = mod === 'inm' ? pubInmDatos_(d.datos || {}) : Object.assign(mkDatos_(d.datos || {}, cfg), { edificio: 'Bramar Group' });
+      datos.ejemplo = true;
+      const o = { id: pubId_(mod === 'inm' ? 'i' : 'm'), modulo: mod, estado: 'publicado', creado: new Date().toISOString(), vence: pubVence_(mod === 'inm' ? cfg.vigenciaInm : cfg.vigenciaMk),
+        destacado: !!d.destacado, edificio_id: mod === 'mk' ? 'bramar' : '', dueno: mod === 'mk' ? 'bramar|ejemplo|admin' : '', telefono: datos.telefono, titulo: datos.titulo, datos: datos,
+        fotos: pubFotos_(d.fotos, PUB_MAX_FOTOS[mod], []), reportes: [] };
+      pubGuardar_(o); return json({ ok: true, id: o.id });
+    }
+    if (op === 'borrar_ejemplos') {
+      const lock0 = LockService.getScriptLock(); lock0.waitLock(20000);
+      try { const E = pubTodas_().filter(function (x) { return (x.datos || {}).ejemplo; }).sort(function (a, b) { return b.fila - a.fila; });
+        E.forEach(function (x) { (x.fotos || []).forEach(function (id) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e) {} }); pubHoja_().deleteRow(x.fila); });
+        pubInvalidar_(); lkLog_(u, 'Publicaciones', 'Quitó las publicaciones de ejemplo', String(E.length)); return json({ ok: true, borradas: E.length });
+      } finally { lock0.releaseLock(); }
+    }
     const lock = LockService.getScriptLock(); lock.waitLock(20000);
     try {
       const o = pubTodas_().filter(function (x) { return x.id === String(d.id || ''); })[0]; if (!o) return json({ ok: false, error: 'Publicación no encontrada.' });
@@ -1374,7 +1393,7 @@ function lkPub_(u, d) {
       else if (op === 'limpiar_reportes') o.reportes = [];
       else if (op === 'editar') {
         const nd = o.modulo === 'inm' ? pubInmDatos_(d.datos || {}) : Object.assign(mkDatos_(d.datos || {}, cfg), { edificio: (o.datos || {}).edificio || '' });
-        if (o.datos && o.datos.motivo) nd.motivo = o.datos.motivo; o.datos = nd; o.titulo = nd.titulo; o.telefono = nd.telefono;
+        if (o.datos && o.datos.motivo) nd.motivo = o.datos.motivo; if (o.datos && o.datos.ejemplo) nd.ejemplo = true; o.datos = nd; o.titulo = nd.titulo; o.telefono = nd.telefono;
         if (Array.isArray(d.orden)) { const ok = d.orden.filter(function (id) { return o.fotos.indexOf(id) >= 0; });
           o.fotos.forEach(function (id) { if (ok.indexOf(id) < 0) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e) {} } }); o.fotos = ok; }
       } else return json({ ok: false, error: 'Acción no válida.' });

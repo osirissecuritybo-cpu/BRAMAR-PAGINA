@@ -12,12 +12,25 @@
 #mk .mk-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}\
 #mk .mk-top h2{font-size:26px;color:var(--navy);font-weight:300}\
 #mk .mk-top p{font-size:14px;color:var(--muted);margin-top:4px}\
-#mk .mk-seg{display:flex;gap:6px;margin:16px 0 0;padding:4px;background:var(--sand);border-radius:14px}\
-#mk .mk-seg button{flex:1;min-height:44px;border:0;border-radius:11px;background:transparent;font-size:14.5px;font-weight:500;color:var(--muted);cursor:pointer}\
-#mk .mk-seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(6,33,69,.12)}\
+#mk .mk-seg{display:flex;gap:26px;margin:14px 0 0;border-bottom:1px solid var(--line)}\
+#mk .mk-seg button{position:relative;min-height:48px;padding:0;border:0;background:none;font:inherit;font-size:15px;font-weight:500;color:var(--muted);cursor:pointer}\
+#mk .mk-seg button.on{color:var(--navy)}\
+#mk .mk-seg button.on::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--navy)}\
+#mk .dd{position:relative;min-width:0}\
+#mk .dd select{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}\
+#mk .dd-b{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:46px;padding:0 14px;border:1px solid var(--line);border-radius:12px;background:#fff;font:inherit;font-size:15px;font-weight:400;color:var(--ink);cursor:pointer;text-align:left;box-sizing:border-box}\
+#mk .dd-b span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\
+#mk .dd-b svg{flex:0 0 auto;width:16px;height:16px;color:var(--muted);transition:transform .2s}\
+#mk .dd.open .dd-b svg{transform:rotate(180deg)}\
+#mk .dd-m{position:absolute;z-index:20;left:0;right:0;top:calc(100% + 6px);max-height:300px;overflow:auto;background:#fff;border-radius:14px;padding:6px;box-shadow:0 24px 60px -18px rgba(6,33,69,.4),0 0 0 1px rgba(6,33,69,.06);display:none}\
+#mk .dd.open .dd-m{display:block}\
+#mk .dd-m button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;min-height:44px;padding:0 12px;border:0;border-radius:10px;background:none;font:inherit;font-size:15px;color:var(--ink);cursor:pointer;text-align:left}\
+#mk .dd-m button:hover{background:var(--sand)}\
+#mk .dd-m button.on{color:var(--navy);font-weight:500}\
+#mk .dd-m button.on::after{content:"";width:12px;height:7px;border:2px solid var(--navy);border-top:0;border-right:0;transform:rotate(-45deg) translateY(-2px)}\
 #mk .mk-bar{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}\
-#mk .mk-bar input,#mk .mk-bar select{min-height:46px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 14px;font:inherit;font-size:15px;color:var(--ink)}\
-#mk .mk-bar input{flex:1 1 200px}#mk .mk-bar select{flex:0 1 220px}\
+#mk .mk-bar input{min-height:46px;border:1px solid var(--line);border-radius:12px;background:#fff;padding:0 14px;font:inherit;font-size:15px;color:var(--ink)}\
+#mk .mk-bar input{flex:1 1 200px}#mk .mk-bar .dd{flex:0 1 240px}\
 #mk .mk-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:0 20px;border:0;border-radius:999px;background:var(--navy);color:#fff;font:inherit;font-size:14.5px;font-weight:500;cursor:pointer;text-decoration:none}\
 #mk .mk-btn.l{background:#fff;color:var(--navy);box-shadow:inset 0 0 0 1px var(--line)}\
 #mk .mk-btn.wa{background:#1F8A5B}\
@@ -53,7 +66,7 @@
 #mk .mk-f{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}\
 #mk .mk-f .full{grid-column:1/-1}\
 #mk .mk-f label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:500;color:var(--muted)}\
-#mk .mk-f input,#mk .mk-f select,#mk .mk-f textarea{min-height:48px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font:inherit;font-size:15.5px;font-weight:400;color:var(--ink);background:#fff;width:100%;box-sizing:border-box}\
+#mk .mk-f input,#mk .mk-f textarea{min-height:48px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font:inherit;font-size:15.5px;font-weight:400;color:var(--ink);background:#fff;width:100%;box-sizing:border-box}\
 #mk .mk-f textarea{min-height:110px;resize:vertical}\
 #mk .mk-f h4{grid-column:1/-1;margin:10px 0 0;font-size:15px;font-weight:500;color:var(--navy)}\
 #mk .mk-ph{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}\
@@ -72,11 +85,12 @@
 #mk .mk-row small{display:block;color:var(--muted);font-size:13px}\
 #mk .mk-row .st{font-size:13px;font-weight:500;color:var(--navy)}\
 #mk .mk-row .st.off{color:var(--muted)}\
-#mk .mk-row .ac{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}\
-#mk .mk-row .ac button{min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--navy);font:inherit;font-size:13.5px;font-weight:500;cursor:pointer}\
+#mk .mk-row .ac{grid-column:1/-1;display:flex;gap:22px;flex-wrap:wrap;padding-left:76px}\
+#mk .mk-row .ac button{min-height:40px;padding:0;border:0;background:none;color:var(--navy);font:inherit;font-size:14px;font-weight:500;cursor:pointer}\
+#mk .mk-row .ac button.del{color:#9a2a1f}\
 #mk .mk-more{display:flex;justify-content:center;margin-top:16px}\
 @media (min-width:601px){ .grid>section.panel.p-mk.m-open{padding-inline:max(24px,calc(50vw - 520px))} .p-mk.m-open .m-head{margin-inline:calc(-1*max(24px,calc(50vw - 520px)));padding-inline:max(16px,calc(50vw - 528px))} }\
-@media (max-width:600px){ #mk .mk-grid{grid-template-columns:1fr 1fr;gap:10px} #mk .mk-c .ds{display:none} #mk .mk-f{grid-template-columns:1fr} #mk .mk-foot .mk-btn{flex:1} #mk .mk-bar select{flex:1 1 100%} }';
+@media (max-width:600px){ #mk .mk-grid{grid-template-columns:1fr 1fr;gap:10px} #mk .mk-c .ds{display:none} #mk .mk-f{grid-template-columns:1fr} #mk .mk-foot .mk-btn{flex:1} #mk .mk-bar .dd{flex:1 1 100%} #mk .mk-row .ac{padding-left:0} }';
   var st=document.createElement('style'); st.textContent=CSS; document.head.appendChild(st);
 
   var $=function(s,r){ return (r||document).querySelector(s); };
@@ -88,6 +102,17 @@
   var precioTxt=function(x){ return x.precio>0?(x.moneda==='USD'?'$us ':'Bs ')+miles(x.precio)+(x.precioTexto?' · '+x.precioTexto:''):(x.precioTexto||''); };
   var P=null, D=null, vista='vitrina', q='', cat='', mostrados=24, editando=null, FOT=[], MANT=[], cargando=null;
   function root(){ return $('#mk-root'); }
+  var CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
+  function ddSync(sel){ var w=sel.closest('.dd'); if(!w||!w._b) return; var o=sel.options[sel.selectedIndex]; w._b.querySelector('span').textContent=o?o.text:'';
+    w._m.innerHTML=[].map.call(sel.options,function(op,i){ return '<button type="button" data-ddi="'+i+'" class="'+(i===sel.selectedIndex?'on':'')+'">'+esc(op.text)+'</button>'; }).join(''); }
+  function ddInit(r){ [].forEach.call(r.querySelectorAll('.dd'),function(w){ if(w._b) return; var sel=w.querySelector('select');
+    var b=document.createElement('button'); b.type='button'; b.className='dd-b'; b.innerHTML='<span></span>'+CHEV; var m=document.createElement('div'); m.className='dd-m';
+    w.appendChild(b); w.appendChild(m); w._b=b; w._m=m;
+    b.onclick=function(e){ e.preventDefault(); e.stopPropagation(); var ab=w.classList.contains('open'); cerrarDd(); if(!ab){ ddSync(sel); w.classList.add('open'); } };
+    m.onclick=function(e){ e.preventDefault(); e.stopPropagation(); var it=e.target.closest('[data-ddi]'); if(!it) return; sel.selectedIndex=+it.dataset.ddi; ddSync(sel); cerrarDd(); sel.dispatchEvent(new Event('change',{bubbles:true})); };
+    ddSync(sel); }); }
+  function cerrarDd(){ [].forEach.call(document.querySelectorAll('#mk .dd.open'),function(w){ w.classList.remove('open'); }); }
+  document.addEventListener('click',function(e){ if(!e.target.closest('#mk .dd')) cerrarDd(); });
   function call(b){ return window.__bramarPortal.call(b); }
 
   function cargar(){ if(cargando) return cargando;
@@ -103,11 +128,11 @@
     if(vista==='mias') mias(); else vitrina(); }
   function vitrina(){ var b=$('#mk-body');
     var cats=D.categorias.filter(function(c){ return D.publicaciones.some(function(x){ return x.categoria===c; }); });
-    b.innerHTML='<div class="mk-bar"><input type="search" id="mk-q" placeholder="Buscar: tortas, plomero, clases…" value="'+esc(q)+'"><select id="mk-cat"><option value="">Todas las categorías</option>'+cats.map(function(c){ return '<option'+(c===cat?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select></div><div id="mk-list"></div>';
+    b.innerHTML='<div class="mk-bar"><input type="search" id="mk-q" placeholder="Buscar: tortas, plomero, clases…" value="'+esc(q)+'"><div class="dd"><select id="mk-cat" aria-label="Categoría"><option value="">Todas las categorías</option>'+cats.map(function(c){ return '<option'+(c===cat?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select></div></div><div id="mk-list"></div>'; ddInit(b);
     var lista=function(){ var t=q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
       var L=D.publicaciones.filter(function(x){ if(cat&&x.categoria!==cat) return false; if(!t) return true; var s=[x.titulo,x.descripcion,x.categoria,x.anunciante].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); return t.split(/\s+/).every(function(w){ return s.indexOf(w)>=0; }); });
       $('#mk-list').innerHTML=L.length?'<div class="mk-grid">'+L.slice(0,mostrados).map(function(x){ return '<article class="mk-c" data-id="'+esc(x.id)+'" tabindex="0" role="button">'+
-        '<div class="ph">'+(x.fotos[0]?'<img src="'+foto(x.fotos[0],500)+'" alt="" loading="lazy" decoding="async">':'')+'</div><div class="bd"><span class="ct">'+esc(x.categoria)+'</span><b>'+esc(x.titulo)+'</b>'+
+        '<div class="ph">'+(x.fotos[0]?'<img src="'+foto(x.fotos[0],500)+'" alt="" loading="lazy" decoding="async">':'')+'</div><div class="bd">'+(x.ejemplo?'<span class="ct" style="color:var(--muted)">Ejemplo</span>':'')+'<span class="ct">'+esc(x.categoria)+'</span><b>'+esc(x.titulo)+'</b>'+
         (precioTxt(x)?'<span class="pr">'+esc(precioTxt(x))+'</span>':'')+'<span class="ds">'+esc(x.descripcion)+'</span><span class="wh">'+esc(x.anunciante)+(x.edificio?' · '+esc(x.edificio):'')+'</span></div></article>'; }).join('')+'</div>'+
         (L.length>mostrados?'<div class="mk-more"><button type="button" class="mk-btn l" data-a="mas">Ver más</button></div>':'')
         :'<div class="mk-empty"><b>'+(D.publicaciones.length?'Nada coincide con su búsqueda':'Todavía no hay publicaciones')+'</b>'+(D.publicaciones.length?'Pruebe con otra palabra o categoría.':'Sea el primero en mostrar su negocio a sus vecinos.')+(D.publicaciones.length?'':'<br><button type="button" class="mk-btn" data-a="nuevo">Publicar mi negocio</button>')+'</div>'; };
@@ -123,7 +148,7 @@
         '<div class="ac">'+(x.estado!=='rechazado'?'<button type="button" data-a="editar">Editar</button>':'')+
         (x.estado==='publicado'?'<button type="button" data-a="pausar">Pausar</button>':'')+(x.estado==='pausado'?'<button type="button" data-a="activar">Volver a publicar</button>':'')+
         (x.estado==='vencido'||(x.estado==='publicado'&&x.vence&&x.vence<new Date(Date.now()+10*864e5).toISOString())?'<button type="button" data-a="renovar">Renovar</button>':'')+
-        '<button type="button" data-a="eliminar">Eliminar</button></div></div>'; }).join('')+'</div>'
+        '<button type="button" class="del" data-a="eliminar">Eliminar</button></div></div>'; }).join('')+'</div>'
       :'<div class="mk-empty"><b>Aún no publicó nada</b>Muestre su negocio, servicio o producto a sus vecinos.<br><button type="button" class="mk-btn" data-a="nuevo">Publicar mi negocio</button></div>'; }
   function detalle(r){ var x=D.publicaciones.concat(D.mias).filter(function(z){ return z.id===P; })[0]; if(!x){ vista='vitrina'; return pintar(); }
     var wa=tel591(x.whatsapp||x.telefono), msg='Hola '+(x.anunciante||'')+', vi su publicación «'+x.titulo+'» en el Mercado de residentes de Bramar.';
@@ -152,11 +177,11 @@
     r.innerHTML='<div class="mk"><button type="button" class="mk-back" data-a="volver">‹ Volver</button><div class="mk-top" style="margin-top:12px"><div><h2>'+(editando?'Editar publicación':'Publicar mi negocio')+'</h2><p>Lo verán los residentes de los edificios administrados por Bramar.</p></div></div>'+
       '<form class="mk-f" id="mk-form" novalidate>'+
       '<label class="full">Nombre del negocio o publicación<input name="titulo" maxlength="90" value="'+esc(x.titulo||'')+'" placeholder="Ej.: Tortas y postres Ana" required></label>'+
-      '<label>Categoría<select name="categoria" id="mk-fcat">'+D.categorias.map(function(c){ return '<option'+(c===x.categoria?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select></label>'+
-      '<label>¿Quién lo ve?<select name="alcance"><option value="todos"'+(x.alcance!=='edificio'?' selected':'')+'>Todos los edificios Bramar</option><option value="edificio"'+(x.alcance==='edificio'?' selected':'')+'>Solo mi edificio</option></select></label>'+
+      '<label>Categoría<div class="dd"><select name="categoria" id="mk-fcat">'+D.categorias.map(function(c){ return '<option'+(c===x.categoria?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select></div></label>'+
+      '<label>¿Quién lo ve?<div class="dd"><select name="alcance"><option value="todos"'+(x.alcance!=='edificio'?' selected':'')+'>Todos los edificios Bramar</option><option value="edificio"'+(x.alcance==='edificio'?' selected':'')+'>Solo mi edificio</option></select></div></label>'+
       '<label class="full">Descripción<textarea name="descripcion" maxlength="2000" placeholder="Qué ofrece, horarios, zona de entrega…">'+esc(x.descripcion||'')+'</textarea></label>'+
       '<h4>Precio</h4><label>Precio <span id="mk-popc"></span><input name="precio" inputmode="decimal" value="'+(x.precio>0?esc(x.precio):'')+'" placeholder="0"></label>'+
-      '<label>Moneda<select name="moneda"><option value="Bs"'+(x.moneda!=='USD'?' selected':'')+'>Bolivianos</option><option value="USD"'+(x.moneda==='USD'?' selected':'')+'>Dólares</option></select></label>'+
+      '<label>Moneda<div class="dd"><select name="moneda"><option value="Bs"'+(x.moneda!=='USD'?' selected':'')+'>Bolivianos</option><option value="USD"'+(x.moneda==='USD'?' selected':'')+'>Dólares</option></select></div></label>'+
       '<label class="full">Nota de precio (opcional)<input name="precioTexto" maxlength="40" value="'+esc(x.precioTexto||'')+'" placeholder="Ej.: desde, por hora, a convenir"></label>'+
       '<h4>Fotos</h4><div class="mk-ph" id="mk-ph"></div><input type="file" id="mk-fin" accept="image/jpeg,image/png,image/webp" multiple hidden>'+
       '<h4>Contacto</h4><label>Su nombre o el de su negocio<input name="anunciante" maxlength="80" value="'+esc(x.anunciante||s.nombre||'')+'" required></label>'+
@@ -167,6 +192,7 @@
       '<label>Instagram<input name="instagram" type="url" inputmode="url" value="'+esc(x.instagram||'')+'" placeholder="https://instagram.com/…"></label>'+
       '<label class="full">Página web<input name="web" type="url" inputmode="url" value="'+esc(x.web||'')+'" placeholder="https://"></label>'+
       '<p class="mk-msg" id="mk-msg" role="alert"></p><div class="mk-foot"><button type="button" class="mk-btn l" data-a="volver">Cancelar</button><button type="submit" class="mk-btn" id="mk-ok">'+(editando?'Guardar cambios':'Publicar')+'</button></div></form></div>';
+    ddInit(r);
     var popc=function(){ $('#mk-popc').textContent=PRECIO_OPC.indexOf($('#mk-fcat').value)>=0?'(opcional)':''; }; $('#mk-fcat').onchange=popc; popc();
     fotos(); var sec=$('#mk'); if(sec) sec.scrollTop=0;
     $('#mk-fin').onchange=function(){ var fs=[].slice.call(this.files||[]).slice(0,8-MANT.length-FOT.length); this.value=''; $('#mk-msg').textContent=fs.length?'Optimizando fotos…':'';
