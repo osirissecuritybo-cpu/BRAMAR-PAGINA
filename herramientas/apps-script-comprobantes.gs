@@ -1101,6 +1101,8 @@ const PUB_OPERACIONES = ['venta', 'alquiler', 'anticretico'];
 const PUB_SITUACIONES = ['', 'estrenar', 'usado', 'preventa', 'entrega_inmediata', 'entrega_proxima', 'entrega_programada'];
 const PUB_CFG_DEF = {
   vigenciaInm: 60, vigenciaMk: 90,
+  // a dónde se redirige a quien consulta por un inmueble (Bramar es el intermediario)
+  contacto: { whatsapp: '59178155275', telefono: '59178155275', nombre: 'Bramar Group' },
   secciones: [
     { id: 'venta', nombre: 'Departamentos en venta', operacion: 'venta', tipos: ['departamento', 'monoambiente'], situaciones: [] },
     { id: 'preventa', nombre: 'Departamentos en preventa', operacion: '', tipos: ['departamento', 'monoambiente'], situaciones: ['preventa'] },
@@ -1252,12 +1254,12 @@ function publico_(d) {
       const L = pubTodas_().filter(function (o) { return o.modulo === 'inm' && (pubEstado_(o) === 'publicado' || (o.estado === 'cerrado' && o.actualizado > new Date(Date.now() - 15 * 864e5).toISOString())); })
         .sort(function (x, y) { return (y.destacado - x.destacado) || String(y.creado).localeCompare(String(x.creado)); });
       const cfg = pubCfg_();
-      return json({ ok: true, inmuebles: L.map(pubTarjetaInm_), secciones: cfg.secciones });
+      return json({ ok: true, inmuebles: L.map(pubTarjetaInm_), secciones: cfg.secciones, contacto: cfg.contacto });
     }
     if (a === 'pub_inm_ver') {
       const o = pubTodas_().filter(function (x) { return x.modulo === 'inm' && x.id === String(d.id || ''); })[0];
       if (!o || (pubEstado_(o) !== 'publicado' && o.estado !== 'cerrado')) return json({ ok: false, error: 'Esta publicación ya no está disponible.' });
-      return json({ ok: true, inmueble: pubFichaInm_(o) });
+      return json({ ok: true, inmueble: pubFichaInm_(o), contacto: pubCfg_().contacto });
     }
     if (a === 'pub_inm_publicar') {
       if (d.web) return json({ ok: true }); // campo trampa: los robots lo llenan
@@ -1400,6 +1402,11 @@ function lkPub_(u, d) {
       if (Array.isArray(d.secciones)) c.secciones = d.secciones.slice(0, 30).map(function (s, i) { return { id: slug_(s.id || s.nombre) || ('s' + i), nombre: pubTxt_(s.nombre, 60),
         operacion: PUB_OPERACIONES.indexOf(s.operacion) >= 0 ? s.operacion : '', tipos: (s.tipos || []).filter(function (t) { return PUB_TIPOS_INM.indexOf(t) >= 0; }),
         situaciones: (s.situaciones || []).filter(function (t) { return t && PUB_SITUACIONES.indexOf(t) >= 0; }) }; }).filter(function (s) { return s.nombre; });
+      if (d.contacto) {
+        const k = { whatsapp: pubTel_(d.contacto.whatsapp), telefono: pubTel_(d.contacto.telefono), nombre: pubTxt_(d.contacto.nombre, 60) || 'Bramar Group' };
+        if (!k.whatsapp && !k.telefono) return json({ ok: false, error: 'Escriba al menos un número de contacto para los inmuebles.' });
+        c.contacto = k;
+      }
       if (Array.isArray(d.mkCategorias)) c.mkCategorias = d.mkCategorias.map(function (x) { return pubTxt_(x, 40); }).filter(Boolean).slice(0, 40);
       lkEscribir_('PUB_CFG', c); pubInvalidar_(); lkLog_(u, 'Publicaciones', 'Cambió la configuración de publicaciones', ''); return json({ ok: true, cfg: c });
     }

@@ -393,7 +393,7 @@ footer a{color:#fff}
   </div>
 </main>
 
-<footer><div class="wrap"><span>© <span id="yr"></span> Bramar Group · Santa Cruz de la Sierra</span><span><a href="index.html">Sitio Bramar</a> · <a href="https://wa.me/59178155275" target="_blank" rel="noopener">WhatsApp +591 78155275</a></span></div></footer>
+<footer><div class="wrap"><span>© <span id="yr"></span> Bramar Group · Santa Cruz de la Sierra</span><span><a href="index.html">Sitio Bramar</a> · <a id="f-wa" href="https://wa.me/59178155275" target="_blank" rel="noopener">WhatsApp +591 78155275</a></span></div></footer>
 
 <div class="lb" id="lb" role="dialog" aria-modal="true" aria-label="Fotos"><img id="lb-img" alt=""><button class="x" type="button" aria-label="Cerrar">×</button><button class="pv" type="button" aria-label="Anterior">‹</button><button class="nx" type="button" aria-label="Siguiente">›</button><span class="n" id="lb-n"></span></div>
 <div class="toast" id="toast" role="status"></div>
@@ -422,6 +422,11 @@ footer a{color:#fff}
   /* ---------- datos ---------- */
   var TODOS=[], SECC=[], cargado=null, sec='', dorm='', mostrados=POR_PAG;
   var BRAMAR_WA='59178155275', BRAMAR_TEL='+59178155275';
+  /* número de contacto que Bramar configura en LUKA → Publicaciones → Configuración */
+  function n591(v){ v=String(v||'').replace(/\D/g,''); return v.length===8?'591'+v:v; }
+  function fmtTel(v){ v=n591(v); return v.indexOf('591')===0&&v.length===11?'+591 '+v.slice(3):'+'+v; }
+  function contacto(k){ if(!k) return; if(k.whatsapp) BRAMAR_WA=n591(k.whatsapp); if(k.telefono) BRAMAR_TEL='+'+n591(k.telefono);
+    var f=document.getElementById('f-wa'); if(f&&BRAMAR_WA){ f.href='https://wa.me/'+BRAMAR_WA; f.textContent='WhatsApp '+fmtTel(BRAMAR_WA); } }
 
   /* ---------- menús desplegables propios ---------- */
   var CHEV='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
@@ -439,9 +444,9 @@ footer a{color:#fff}
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') cerrarDd(); });
   function cargar(){ if(cargado) return cargado;
     var c=null; try{ c=JSON.parse(sessionStorage.getItem('bramar.inm')||'null'); }catch(e){}
-    if(c&&Date.now()-c.t<120000){ TODOS=c.d.inmuebles; SECC=c.d.secciones; return cargado=Promise.resolve(); }
+    if(c&&Date.now()-c.t<120000){ TODOS=c.d.inmuebles; SECC=c.d.secciones; contacto(c.d.contacto); return cargado=Promise.resolve(); }
     return cargado=api({action:'pub_inm_lista'}).then(function(j){ if(!j.ok) throw new Error(j.error||'Error');
-      TODOS=j.inmuebles||[]; SECC=j.secciones||[]; try{ sessionStorage.setItem('bramar.inm',JSON.stringify({t:Date.now(),d:j})); }catch(e){} })
+      TODOS=j.inmuebles||[]; SECC=j.secciones||[]; contacto(j.contacto); try{ sessionStorage.setItem('bramar.inm',JSON.stringify({t:Date.now(),d:j})); }catch(e){} })
       .catch(function(e){ cargado=null; throw e; }); }
 
   /* ---------- tarjetas ---------- */
@@ -507,7 +512,7 @@ footer a{color:#fff}
     var f=$('#ficha'); f.innerHTML='<button class="back" type="button" data-volver><svg aria-hidden="true"><use href="#i-left"/></svg>Volver</button><div class="skel" style="margin-top:16px;aspect-ratio:16/7"></div>';
     api({action:'pub_inm_ver',id:id}).then(function(j){
       if(!j.ok){ f.innerHTML='<button class="back" type="button" data-volver><svg aria-hidden="true"><use href="#i-left"/></svg>Volver</button><div class="empty"><b>Esta publicación ya no está disponible</b>Puede que se haya vendido, alquilado o retirado.</div>'; return; }
-      var x=j.inmueble; galeria=x.fotos||[]; gi=0; document.title=x.titulo+' · Bramar Inmuebles';
+      contacto(j.contacto); var x=j.inmueble; galeria=x.fotos||[]; gi=0; document.title=x.titulo+' · Bramar Inmuebles';
       var dm=x.tipo==='monoambiente'?'Monoambiente':(x.dormitorios||'—');
       var facts=[['Operación',OPS[x.operacion]],['Inmueble',TIPOS[x.tipo]],['Situación',SIT[x.situacion]],['Dormitorios',dm],['Baños',x.banos||''],['Garajes',x.garajes||''],['Sup. construida',x.sup?miles(x.sup)+' m²':''],['Sup. terreno',x.supTerreno?miles(x.supTerreno)+' m²':''],['Entrega',x.entrega],['Financiamiento',x.financiamiento?'Sí':'']].filter(function(a){ return a[1]!==''&&a[1]!=null&&a[1]!==undefined; });
       var msg='Hola Bramar, me interesa el inmueble '+x.codigo+': «'+x.titulo+'». ¿Me pueden dar más información?';
@@ -523,7 +528,7 @@ footer a{color:#fff}
         (x.cerrado?'<p class="cerrado-av">Este inmueble ya fue '+(x.operacion==='venta'?'vendido':'alquilado')+'.</p>':'')+
         '<div class="who"><b>Código '+esc(x.codigo)+'</b>Consulte con Bramar: coordinamos la visita y le ponemos en contacto con el propietario.</div><div class="acts">'+
         (!x.cerrado?'<a class="btn wa" target="_blank" rel="noopener" href="https://wa.me/'+BRAMAR_WA+'?text='+encodeURIComponent(msg)+'"><svg><use href="#i-wa"/></svg>Consultar por WhatsApp</a>':'')+
-        (!x.cerrado?'<a class="btn line" href="tel:'+BRAMAR_TEL+'"><svg><use href="#i-phone"/></svg>Llamar a Bramar</a>':'')+
+        (!x.cerrado&&BRAMAR_TEL?'<a class="btn line" href="tel:'+BRAMAR_TEL+'"><svg><use href="#i-phone"/></svg>Llamar a Bramar</a>':'')+
         '</div><div class="mini"><button class="link-btn" type="button" id="f-share"><svg style="width:16px;height:16px;vertical-align:-3px"><use href="#i-share"/></svg> Compartir</button><button class="link-btn" type="button" id="f-rep">Reportar anuncio</button></div></aside></div>';
       $('#f-share').onclick=function(){ var u=location.origin+location.pathname+'?id='+encodeURIComponent(x.id), d={title:x.titulo,text:x.titulo+' · '+precio(x),url:u};
         if(navigator.share) navigator.share(d).catch(function(){}); else if(navigator.clipboard) navigator.clipboard.writeText(u).then(function(){ toast('Enlace copiado'); }); else prompt('Copie el enlace',u); };

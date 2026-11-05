@@ -26021,8 +26021,11 @@ button.lkrp-b:hover{border-color:#1E4E86}
       bt.disabled=true; api({op:'editar',id:x.id,datos:nd,orden:FO}).then(function(){ toast('Cambios guardados','success'); editar=false; return cargar(); }).then(pintar)
         .catch(function(e){ bt.disabled=false; $('lkp-msg').textContent=e.message; }); }; }
   /* ---------- configuración ---------- */
-  function config(b){ var S=JSON.parse(JSON.stringify(CFG.secciones||[]));
-    b.innerHTML='<h3>Vigencia</h3><p class="lkp-note">Días que una publicación queda visible antes de vencer. Se puede renovar.</p><div class="lkp-g" style="margin-top:10px;max-width:520px">'+
+  function config(b){ var S=JSON.parse(JSON.stringify(CFG.secciones||[])), K=CFG.contacto||{};
+    b.innerHTML='<h3>Contacto para inmuebles</h3><p class="lkp-note">Quien consulte por un inmueble del portal escribe o llama a este número. Los datos del propietario nunca se muestran: Bramar hace de intermediario.</p>'+
+      '<div class="lkp-g" style="margin-top:10px;max-width:520px"><label class="f">WhatsApp<input id="lkp-cw" type="tel" inputmode="tel" value="'+esc(K.whatsapp||'')+'" placeholder="70000000"></label><label class="f">Teléfono para llamadas<input id="lkp-ct" type="tel" inputmode="tel" value="'+esc(K.telefono||'')+'" placeholder="70000000"></label></div>'+
+      '<h3 style="margin-top:26px">Contacto en el mercado de residentes</h3><p class="lkp-note">Cada propietario escribe su propio nombre o el de su negocio, teléfono, WhatsApp y redes al publicar, y los residentes le escriben directamente. Usted ve esos datos al revisar cada publicación y puede corregirlos con «Editar».</p>'+
+      '<h3 style="margin-top:26px">Vigencia</h3><p class="lkp-note">Días que una publicación queda visible antes de vencer. Se puede renovar.</p><div class="lkp-g" style="margin-top:10px;max-width:520px">'+
       '<label class="f">Portal inmobiliario (días)<input id="lkp-vi" inputmode="numeric" value="'+esc(CFG.vigenciaInm)+'"></label><label class="f">Mercado de residentes (días)<input id="lkp-vm" inputmode="numeric" value="'+esc(CFG.vigenciaMk)+'"></label></div>'+
       '<h3 style="margin-top:26px">Secciones del portal inmobiliario</h3><p class="lkp-note">Cada sección es un filtro: muestra los inmuebles que cumplen la operación, los tipos y la situación marcados (sin marcar = todos).</p><div id="lkp-secs" style="margin-top:10px"></div><button type="button" class="lkp-back" id="lkp-add">+ Agregar sección</button>'+
       '<h3 style="margin-top:26px">Categorías del mercado de residentes</h3><label class="f" style="max-width:520px">Una por línea<textarea id="lkp-cats" style="min-height:200px">'+esc((CFG.mkCategorias||[]).join('\n'))+'</textarea></label>'+
@@ -26041,7 +26044,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
       if(e.target.hasAttribute('data-del')){ leer(); S.splice(i,1); secs(); } if(e.target.hasAttribute('data-up')&&i>0){ leer(); S.splice(i-1,0,S.splice(i,1)[0]); secs(); } };
     $('lkp-add').onclick=function(){ leer(); S.push({nombre:'Nueva sección',operacion:'',tipos:[],situaciones:[]}); secs(); };
     $('lkp-gc').onclick=function(){ leer(); var bt=this; bt.disabled=true;
-      api({op:'cfg',vigenciaInm:$('lkp-vi').value,vigenciaMk:$('lkp-vm').value,secciones:S.filter(function(s){ return s.nombre; }),mkCategorias:$('lkp-cats').value.split('\n').map(function(c){ return c.trim(); }).filter(Boolean)})
+      api({op:'cfg',contacto:{whatsapp:$('lkp-cw').value,telefono:$('lkp-ct').value},vigenciaInm:$('lkp-vi').value,vigenciaMk:$('lkp-vm').value,secciones:S.filter(function(s){ return s.nombre; }),mkCategorias:$('lkp-cats').value.split('\n').map(function(c){ return c.trim(); }).filter(Boolean)})
         .then(function(j){ CFG=j.cfg; bt.disabled=false; toast('Configuración guardada','success'); pintar(); }).catch(function(e){ bt.disabled=false; $('lkp-msg').textContent=e.message; }); }; }
   /* ---------- acciones ---------- */
   function hacer(x,a){
@@ -26341,7 +26344,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261105115449'; window.LUKA_BUILD=B;
+(function(){ var B='20261105125202'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }

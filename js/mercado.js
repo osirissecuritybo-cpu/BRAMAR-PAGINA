@@ -69,6 +69,7 @@
 #mk .mk-f input,#mk .mk-f textarea{min-height:48px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font:inherit;font-size:15.5px;font-weight:400;color:var(--ink);background:#fff;width:100%;box-sizing:border-box}\
 #mk .mk-f textarea{min-height:110px;resize:vertical}\
 #mk .mk-f h4{grid-column:1/-1;margin:10px 0 0;font-size:15px;font-weight:500;color:var(--navy)}\
+#mk .mk-hint{grid-column:1/-1;margin:-4px 0 0;font-size:13.5px;color:var(--muted,#5b6472)}\
 #mk .mk-ph{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}\
 #mk .mk-ph div{position:relative;aspect-ratio:1;border-radius:12px;overflow:hidden;background:var(--sand)}\
 #mk .mk-ph img{width:100%;height:100%;object-fit:cover}\
@@ -187,8 +188,8 @@
       '<label>Moneda<div class="dd"><select name="moneda"><option value="Bs"'+(x.moneda!=='USD'?' selected':'')+'>Bolivianos</option><option value="USD"'+(x.moneda==='USD'?' selected':'')+'>Dólares</option></select></div></label>'+
       '<label class="full">Nota de precio (opcional)<input name="precioTexto" maxlength="40" value="'+esc(x.precioTexto||'')+'" placeholder="Ej.: desde, por hora, a convenir"></label>'+
       '<h4>Fotos</h4><div class="mk-ph" id="mk-ph"></div><input type="file" id="mk-fin" accept="image/jpeg,image/png,image/webp" multiple hidden>'+
-      '<h4>Contacto</h4><label>Su nombre o el de su negocio<input name="anunciante" maxlength="80" value="'+esc(x.anunciante||s.nombre||'')+'" required></label>'+
-      '<label>Teléfono<input name="telefono" type="tel" inputmode="tel" value="'+esc(x.telefono||'')+'" placeholder="70000000"></label>'+
+      '<h4>Sus datos de contacto</h4><p class="mk-hint full">Los residentes le escribirán o llamarán directamente a estos datos.</p><label>Su nombre o el de su negocio<input name="anunciante" maxlength="80" value="'+esc(x.anunciante||s.nombre||'')+'" required></label>'+
+      '<label>Teléfono para llamadas<input name="telefono" type="tel" inputmode="tel" value="'+esc(x.telefono||'')+'" placeholder="70000000"></label>'+
       '<label>WhatsApp (si es otro número)<input name="whatsapp" type="tel" inputmode="tel" value="'+esc(x.whatsapp&&x.whatsapp!==x.telefono?x.whatsapp:'')+'"></label>'+
       '<label>Ubicación (opcional)<input name="ubicacion" maxlength="120" value="'+esc(x.ubicacion||'')+'" placeholder="Ej.: entrega en el edificio"></label>'+
       '<label>Facebook<input name="facebook" type="url" inputmode="url" value="'+esc(x.facebook||'')+'" placeholder="https://facebook.com/…"></label>'+
