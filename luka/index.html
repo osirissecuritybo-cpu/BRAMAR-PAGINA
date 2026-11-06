@@ -5,7 +5,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#0b2440">
-<title>Gestión LUKA — Administración de condominios</title>
+<title>Gestión LUKA · Administración de condominios</title>
 <meta name="robots" content="noindex,nofollow">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -219,7 +219,7 @@
   }
   .topbar-burger { display: none; background: none; border: 1px solid var(--gridline); border-radius: 8px; cursor: pointer; color: var(--text-primary); padding: 6px 9px; }
   .topbar-title { font-size: 16px; font-weight: 800; color: var(--text-primary); }
-  /* Marca de gestión (LUKA) — pequeña, junto al título */
+  /* Marca de gestión (LUKA) · pequeña, junto al título */
   .luka-brand {
     display: inline-flex; align-items: baseline; gap: 5px;
     padding: 3px 10px; border-radius: 999px;
@@ -525,7 +525,7 @@
   .theme-dark table.plan-table tfoot td { background: #14263c; color: #dbe6f5; }
   .plan-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700;
     background: var(--series-blue-bg); color: var(--series-blue); padding: 2px 7px; border-radius: 20px; margin-left: 8px; vertical-align: middle; }
-  /* ===== PDF del plan de pagos — tamaño carta, multipágina, números legibles ===== */
+  /* ===== PDF del plan de pagos · tamaño carta, multipágina, números legibles ===== */
   .planpdf { background: #fff; color: #20242a; font-family: 'Roboto','Lato','Segoe UI',system-ui,-apple-system,Arial,sans-serif; font-size: 12pt; line-height: 1.5; }
   .planpdf .pp-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 4px; }
   .planpdf .pp-logo { height: 78px; width: auto; }
@@ -922,7 +922,7 @@
 
   /* En celular, una fila con 5 bloques en una sola línea queda amontonada o se corta.
      Se reacomoda en varias líneas: nombre+estado arriba, deuda en su propia línea,
-     y última fecha + botón de pago abajo — todo bien legible sin scroll horizontal. */
+     y última fecha + botón de pago abajo · todo bien legible sin scroll horizontal. */
   @media (max-width: 640px) {
     .row {
       flex-wrap: wrap; row-gap: 8px; padding: 12px 14px;
@@ -1322,7 +1322,7 @@
   }
   .diario-empty { padding: 40px; text-align: center; color: var(--text-muted); font-size: 13.5px; }
 
-  /* ---- Pizarra (Excel-style board) — fixed light palette so it always exports cleanly ---- */
+  /* ---- Pizarra (Excel-style board) · fixed light palette so it always exports cleanly ---- */
   .pizarra-box {
     --p-navy: #1f3864; --p-navy-2: #2e5395; --p-cream: #fff6d6; --p-green: #57bb6e;
     --p-green-txt: #0d4d1f; --p-red: #d6413f; --p-line: #b9c2d4; --p-ink: #17160f;
@@ -1403,7 +1403,7 @@
     .no-print { display: none !important; }
   }
 
-  /* Theme is user-chosen (default LIGHT) — toggled via a class, never forced by the OS */
+  /* Theme is user-chosen (default LIGHT) · toggled via a class, never forced by the OS */
   html.theme-dark {
     --surface-1: #131a24;
     --page-plane: #0b1220;
@@ -1445,7 +1445,7 @@
   <div class="modal" id="qr-modal-content" style="text-align:center; max-width:360px;">
     <button class="close-btn" id="qr-modal-close" title="Cerrar">&times;</button>
     <h2 style="margin-bottom:4px;">Escaneá para pagar</h2>
-    <p class="modal-sub" id="qr-cuenta-text" style="margin-bottom:16px;">—</p>
+    <p class="modal-sub" id="qr-cuenta-text" style="margin-bottom:16px;">Sin dato</p>
     <img id="qr-pago-img" src="" alt="QR de pago del edificio" style="width:100%; max-width:300px; border-radius:14px; box-shadow:0 6px 20px rgba(0,0,0,.15);">
     <p id="qr-empty-hint" style="font-size:12.5px; color:var(--text-muted); margin-top:12px; display:none;">Todavía no cargaste el QR de este edificio. Podés cargarlo desde <strong>Ajustes del edificio</strong>.</p>
   </div>
@@ -1570,7 +1570,7 @@
     <div class="topbar no-print">
       <button class="topbar-burger" id="sidebar-open" title="Abrir menú">☰</button>
       <div class="topbar-title" id="topbar-title">Departamentos</div>
-      <div class="luka-brand no-print" id="luka-brand" title="LUKA — Administración de condominios">
+      <div class="luka-brand no-print" id="luka-brand" title="LUKA · Administración de condominios">
         <span class="luka-g">Gestión</span>
         <span class="luka-sep">·</span>
         <span class="luka-name">LUKA</span>
@@ -3415,7 +3415,7 @@ img,video{max-width:100%;height:auto}
         <h3 class="font-display font-semibold text-sm" style="color:var(--ink);">Movimientos detectados</h3>
         <span id="bankTxCount" class="text-xs" style="color:var(--ink-faint);"></span>
       </div>
-      <p class="text-xs mb-3" style="color:var(--ink-soft);">Revisá la clasificación (Ingreso / Egreso) de cada movimiento antes de verificar — los extractos varían de banco a banco, así que puede necesitar algún ajuste manual. Podés quitar filas que no correspondan a un movimiento real (ej. saldos, fechas sueltas).</p>
+      <p class="text-xs mb-3" style="color:var(--ink-soft);">Revisá la clasificación (Ingreso / Egreso) de cada movimiento antes de verificar · los extractos varían de banco a banco, así que puede necesitar algún ajuste manual. Podés quitar filas que no correspondan a un movimiento real (ej. saldos, fechas sueltas).</p>
       <div id="bankTxList" class="table-scroll flex flex-col gap-1.5 rounded-xl border p-2" style="border-color:var(--border); max-height: 360px;"></div>
       <div class="flex justify-end mt-3">
         <button id="btnRunBankReconcile" class="text-sm font-semibold px-4 py-2.5 rounded-xl text-white" style="background: var(--navy);">Verificar contra el panel</button>
@@ -3487,7 +3487,7 @@ img,video{max-width:100%;height:auto}
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4" style="position:relative; z-index:1;">
         <div class="min-w-0">
           <p class="pf-tile-label">Resumen del mes</p>
-          <h2 id="heroMonthLabel" class="font-display font-bold text-white text-lg sm:text-xl leading-tight truncate mt-0.5">—</h2>
+          <h2 id="heroMonthLabel" class="font-display font-bold text-white text-lg sm:text-xl leading-tight truncate mt-0.5">Sin dato</h2>
         </div>
         <button id="pfMasterToggle" type="button" class="pf-master" data-open="0">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -3505,7 +3505,7 @@ img,video{max-width:100%;height:auto}
             <div class="spark-box" style="width:78px;"><canvas id="sparkIngresos"></canvas></div>
           </div>
           <p class="pf-tile-label mt-3">Ingresos del mes</p>
-          <p id="kpiIngresos" class="pf-tile-value">—</p>
+          <p id="kpiIngresos" class="pf-tile-value">Sin dato</p>
           <span id="deltaIngresos" class="delta-badge mt-2"></span>
         </div>
 
@@ -3518,7 +3518,7 @@ img,video{max-width:100%;height:auto}
             <div class="spark-box" style="width:78px;"><canvas id="sparkGastos"></canvas></div>
           </div>
           <p class="pf-tile-label mt-3">Gastos del mes</p>
-          <p id="kpiGastos" class="pf-tile-value">—</p>
+          <p id="kpiGastos" class="pf-tile-value">Sin dato</p>
           <span id="deltaGastos" class="delta-badge mt-2"></span>
         </div>
 
@@ -3536,7 +3536,7 @@ img,video{max-width:100%;height:auto}
             </div>
           </div>
           <p class="pf-tile-label mt-3">Ganancia neta</p>
-          <p id="kpiGanancia" class="pf-tile-value">—</p>
+          <p id="kpiGanancia" class="pf-tile-value">Sin dato</p>
           <span id="deltaGanancia" class="delta-badge mt-2"></span>
         </div>
 
@@ -3548,7 +3548,7 @@ img,video{max-width:100%;height:auto}
             </div>
           </div>
           <p class="pf-tile-label mt-3">Cobranza de expensas</p>
-          <p id="heroCobrado" class="pf-tile-value">—</p>
+          <p id="heroCobrado" class="pf-tile-value">Sin dato</p>
           <div class="pf-progress"><span id="heroCobradoBar" style="width:0%; background: linear-gradient(90deg, var(--gold), #f0c778);"></span></div>
           <p id="heroCobradoSub" class="pf-tile-sub"></p>
         </div>
@@ -3575,7 +3575,7 @@ img,video{max-width:100%;height:auto}
             <span class="dot flex-shrink-0" style="width:8px; height:8px; border-radius:999px; background:var(--expensas); display:inline-block;"></span>
             <span class="text-sm font-medium" style="color:var(--ink);">Expensas Cobradas</span>
           </div>
-          <span id="kpiExpensasCobradas" class="font-mono font-semibold text-sm">—</span>
+          <span id="kpiExpensasCobradas" class="font-mono font-semibold text-sm">Sin dato</span>
         </div>
         <p id="kpiExpensasDetalle" class="text-xs mb-2 ml-4" style="color:var(--ink-faint);"></p>
         <div id="expensasCategoriasBox" class="ml-4 mb-4 flex flex-col gap-1.5"></div>
@@ -3585,7 +3585,7 @@ img,video{max-width:100%;height:auto}
             <span class="dot flex-shrink-0" style="width:8px; height:8px; border-radius:999px; background:var(--extras); display:inline-block;"></span>
             <span class="text-sm font-medium" style="color:var(--ink);">Ingresos Variables (Extra)</span>
           </div>
-          <span id="kpiIngresosExtra" class="font-mono font-semibold text-sm">—</span>
+          <span id="kpiIngresosExtra" class="font-mono font-semibold text-sm">Sin dato</span>
         </div>
         <p id="kpiExtraDetalle" class="text-xs ml-4" style="color:var(--ink-faint);"></p>
         <div id="ingresosVariosDetalle" class="mt-3 pt-3 ml-4 border-t hidden" style="border-color:var(--border);">
@@ -3599,14 +3599,14 @@ img,video{max-width:100%;height:auto}
               <span class="dot flex-shrink-0" style="width:8px; height:8px; border-radius:999px; background:#9a6b00; display:inline-block;"></span>
               <span class="text-sm font-medium" style="color:var(--ink);">Cuota extraordinaria cobrada</span>
             </div>
-            <span id="kpiCuotaAscensor" class="font-mono font-semibold text-sm">—</span>
+            <span id="kpiCuotaAscensor" class="font-mono font-semibold text-sm">Sin dato</span>
           </div>
           <p class="text-xs ml-4" style="color:var(--ink-faint);">Ya incluida en el total de ingresos</p>
         </div>
 
         <div class="flex items-center justify-between gap-3 mt-3 pt-3" style="border-top:2px solid var(--brand-navy, #0b2440);">
           <span class="text-sm font-semibold" style="color:var(--ink);">Total de ingresos del mes</span>
-          <span id="kpiTotalIngresosBox" class="font-mono font-bold text-sm" style="color:var(--ink);">—</span>
+          <span id="kpiTotalIngresosBox" class="font-mono font-bold text-sm" style="color:var(--ink);">Sin dato</span>
         </div>
       </div>
       <div class="card p-4 sm:p-5" data-widget="donutIngresos">
@@ -3848,7 +3848,7 @@ var QR = (function () {
     [28,2,46,29,47],[28,10,46,23,47],[28,14,46,21,47],[28,14,46,23,47],[28,12,47,26,48],
     [28,6,47,34,48],[28,29,46,14,47],[28,13,46,32,47],[28,40,47,7,48],[28,18,47,31,48]
   ];
-  // Total data codewords per version (level M) — derived, but we compute from ECM.
+  // Total data codewords per version (level M) · derived, but we compute from ECM.
   function dataCapacity(ver) {
     var b = ECM[ver];
     return b[1] * b[2] + b[3] * b[4];
@@ -3934,7 +3934,7 @@ var QR = (function () {
     finder(0, 0); finder(0, size - 7); finder(size - 7, 0);
     // timing
     for (var i = 8; i < size - 8; i++) { if (!reserved[6][i]) setF(6, i, i % 2 === 0 ? 1 : 0); if (!reserved[i][6]) setF(i, 6, i % 2 === 0 ? 1 : 0); }
-    // alignment — placed at every center pair EXCEPT the three that collide with the
+    // alignment · placed at every center pair EXCEPT the three that collide with the
     // finder patterns; note they DO sit on the timing lines and overwrite them there.
     var ac = ALIGN[ver];
     for (var a = 0; a < ac.length; a++) for (var b = 0; b < ac.length; b++) {
@@ -4204,12 +4204,12 @@ if (initialData) {
    UTILIDADES
    ========================================================================== */
 function fmtMoney(n){
-  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n === null || n === undefined || isNaN(n)) return 'Sin dato';
   const sign = n < 0 ? '-' : '';
   return sign + 'Bs. ' + Math.abs(n).toLocaleString('es-BO', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function fmtPct(n){
-  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n === null || n === undefined || isNaN(n)) return 'Sin dato';
   return (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
 }
 function isDateLike(v){ return v instanceof Date || (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}/.test(v)); }
@@ -4218,7 +4218,7 @@ function norm(s){ return (s || '').toString().trim().toUpperCase(); }
 function monthKey(year, monthIdx){ return `${year}-${String(monthIdx+1).padStart(2,'0')}`; }
 
 /* Concept-level categorization: the source file does NOT reliably tag each
-   expense line with a real category — "Fijo" vs "Variable" was only ever a
+   expense line with a real category · "Fijo" vs "Variable" was only ever a
    positional guess based on where in the list the concept appeared. That
    guess can be wrong (e.g. "Agua" or "Conserjería" showing up after the
    "Mantenimiento" subtitle even though they're really fixed costs). So the
@@ -4232,7 +4232,7 @@ function normalizeConcepto(s){ return (s || '').toString().trim().toLowerCase().
    (p.ej. un mes se nivelan 2 facturas de agua en vez de 1), el concepto en sí es un
    costo fijo recurrente, no un gasto de mantenimiento puntual.
    Se compara por INICIO de texto (no "contiene") para no confundir reparaciones que
-   solo mencionan la misma palabra — p.ej. "Pulsador ascensor repuesto" o "Cambio de
+   solo mencionan la misma palabra · p.ej. "Pulsador ascensor repuesto" o "Cambio de
    acrilicos ascensores" son arreglos puntuales (Variable), no el contrato fijo mensual,
    aunque ambos incluyan la palabra "ascensor".
    Esta lista es solo la mejor estimación inicial; el usuario puede corregir cualquier
@@ -4295,13 +4295,13 @@ function showToast(message, type = 'info'){
 
      Además de esa estructura fija (columnas B/C/E/G/I/J), el mes puede traer
      CUALQUIER cantidad de bloques extra en cualquier otra columna (K/L, N/O,
-     o las que sea) — por ejemplo "INGRESOS VARIOS" o "PROYECTOS CONCLUIDOS".
+     o las que sea) · por ejemplo "INGRESOS VARIOS" o "PROYECTOS CONCLUIDOS".
      En vez de tener una columna fija para cada uno, scanExtraBlocks() los
      detecta automáticamente: en la misma fila donde está la fecha del mes,
      busca cualquier celda de texto en una columna no usada por la estructura
      fija (ese texto es el título del bloque, ej. "PROYECTOS CONCLUIDOS"), y
      junta como ítems las filas de abajo que tengan texto en esa columna y un
-     monto en la columna siguiente — el monto puede venir como número puro o
+     monto en la columna siguiente · el monto puede venir como número puro o
      como texto con letras alrededor (ej. "5000 BS"). Así, un bloque nuevo que
      se agregue en el futuro, en cualquier columna, se reconoce solo.
    ========================================================================== */
@@ -4450,7 +4450,7 @@ function parseSheetRows(rows){
 }
 
 /* Reads a sheet as an array-of-arrays, ALWAYS aligned so index 0 = real column A,
-   index 1 = real column B, etc. — regardless of where the sheet's used range
+   index 1 = real column B, etc. · regardless of where the sheet's used range
    actually starts. Without this, sheets whose data begins at column B or later
    (very common: e.g. "!ref": "B1:J88") get re-indexed by SheetJS so that their
    first used column becomes index 0, which silently breaks any parser that
@@ -4555,7 +4555,7 @@ function getSortedMonthKeys(){
   return Object.keys(state.monthsData).filter(k => k >= PANEL_FINANCIERO_INICIO_GESTION).sort();
 }
 function getPeriodLabel(keys){
-  if (!keys.length) return '—';
+  if (!keys.length) return 'Sin dato';
   const first = state.monthsData[keys[0]];
   const last = state.monthsData[keys[keys.length - 1]];
   if (keys.length === 1) return `${first.monthName} ${first.year}`;
@@ -4670,7 +4670,7 @@ const CHART_TITLES = {
 };
 
 /* =========================================================================
-   REPORTE PDF — portada + resumen general + KPIs/gráficos del mes + detalle
+   REPORTE PDF · portada + resumen general + KPIs/gráficos del mes + detalle
    ========================================================================= */
 async function generatePDFReport(){
   const keys = getSortedMonthKeys();
@@ -4713,7 +4713,7 @@ async function generatePDFReport(){
     function foot(n){
       doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5);
       doc.setTextColor(...C.inkSoft);
-      doc.text(`Panel Financiero · Condominio — generado el ${fechaGenerado}`, marginX, pageH - 8);
+      doc.text(`Panel Financiero · Condominio · generado el ${fechaGenerado}`, marginX, pageH - 8);
       doc.text(`Página ${n}`, pageW - marginX, pageH - 8, { align: 'right' });
     }
     function kpiBox(x, y, w, h, label, value, color){
@@ -4962,7 +4962,7 @@ async function generatePDFReport(){
 }
 
 /* =========================================================================
-   PRESENTACIÓN POWERPOINT — portada, resumen, KPIs, gráficos y detalle
+   PRESENTACIÓN POWERPOINT · portada, resumen, KPIs, gráficos y detalle
    ========================================================================= */
 
 
@@ -5143,7 +5143,7 @@ function renderCrossComparison(){
       </div>
     </div>
     <p class="text-xs mt-3" style="color:var(--ink-faint);">
-      ${sameMonth ? `Mismo mes seleccionado en ambos lados — esto equivale a la ganancia neta de ${a.monthName}.` : ''}
+      ${sameMonth ? `Mismo mes seleccionado en ambos lados · esto equivale a la ganancia neta de ${a.monthName}.` : ''}
       ${pctCobertura !== null ? ` Los ingresos de ${a.monthName} cubren el <strong style="color:var(--ink);">${pctCobertura.toFixed(1)}%</strong> de los gastos de ${b.monthName}.` : ''}
     </p>`;
 }
@@ -5225,7 +5225,7 @@ state.bankTransactions = [];
 const BANK_INGRESO_KEYWORDS = ['abono','deposito','depósito','credito','crédito','transferencia recibida','transf recibida','pago recibido','ingreso'];
 const BANK_EGRESO_KEYWORDS  = ['retiro','cargo','debito','débito','pago a','compra','comision','comisión','cheque','transferencia enviada','transf enviada','egreso'];
 
-// Monto CON signo explícito (+123.45 / -123.45) — así distinguimos Débito/Crédito
+// Monto CON signo explícito (+123.45 / -123.45) · así distinguimos Débito/Crédito
 // del Saldo (que en los extractos va sin signo y sería el último número de la línea).
 const SIGNED_AMOUNT_RE = /([+-])\s?\d{1,3}(?:[.,]\d{3})*[.,]\d{2}\b/g;
 // Fallback: cualquier monto, con o sin signo (para extractos sin +/- explícito).
@@ -5286,13 +5286,13 @@ function guessTipoFromLine(line){
    formatos, en orden de confiabilidad:
    A) Monto con signo explícito: "-100.00" / "+100.00" → el signo dice el
       tipo con certeza (ej. BancoSol, BNB en algunos formatos).
-   B) Débito / Crédito / Saldo en columnas separadas, sin signo — se
+   B) Débito / Crédito / Saldo en columnas separadas, sin signo · se
       reconocen 3 montos al final de la línea; el que no es 0.00 entre los
       dos primeros define el tipo (ej. Banco de Crédito / MAKROBANX).
    C) Monto / Saldo, solo el egreso lleva signo "-" y el ingreso no lleva
-      signo — se reconocen 2 montos al final; el primero es el Monto real,
+      signo · se reconocen 2 montos al final; el primero es el Monto real,
       el segundo el Saldo acumulado (ej. BCP).
-   D) Un solo monto sin signo y sin columna de saldo detectable — se usa la
+   D) Un solo monto sin signo y sin columna de saldo detectable · se usa la
       descripción (palabras clave) para adivinar el tipo, como último recurso. */
 function parseLineAmount(line){
   // A) Signo explícito
@@ -5340,7 +5340,7 @@ function parseLineAmount(line){
     return { amount: 0, tipo: 'ingreso', stripTokens: tail };
   }
 
-  // C) Monto / Saldo (2 montos al final, sin signo — solo llega acá si no
+  // C) Monto / Saldo (2 montos al final, sin signo · solo llega acá si no
   //    hubo match con signo, así que por convención el monto es positivo).
   if (matches.length === 2) {
     return { amount: Math.abs(parseAmountToken(matches[0])), tipo: 'ingreso', stripTokens: matches };
@@ -5535,7 +5535,7 @@ function runBankReconciliation(){
 
   // Movimientos de ingreso "no identificados": si el Excel trajo el detalle
   // línea por línea de los ingresos variables (columnas INGRESOS VARIOS/MONTO),
-  // los emparejamos por monto exacto igual que los egresos — mucho más preciso
+  // los emparejamos por monto exacto igual que los egresos · mucho más preciso
   // que comparar solo la suma total. Si el mes no trae ese detalle, se sigue
   // usando la comparación por total (como antes).
   const ingresosVariosDisponibles = (monthData.ingresosVariosItems || []).length > 0;
@@ -5667,7 +5667,7 @@ function runBankReconciliation(){
       <div class="mt-3">
         <div class="card p-3.5" style="background:var(--bg-soft); border-color:var(--border);">
           <h4 class="text-sm font-semibold mb-1" style="color:var(--ink);">Coincidencias por nombre, monto distinto <span class="text-xs font-normal" style="color:var(--ink-faint);">(${coincidenciasPorTexto.length})</span></h4>
-          <p class="text-xs mb-2" style="color:var(--ink-soft);">No coincidió el monto exacto, pero el nombre del movimiento se parece a un concepto ya cargado — revisá si es el mismo gasto con un monto distinto.</p>
+          <p class="text-xs mb-2" style="color:var(--ink-soft);">No coincidió el monto exacto, pero el nombre del movimiento se parece a un concepto ya cargado · revisá si es el mismo gasto con un monto distinto.</p>
           <div class="table-scroll flex flex-col gap-1.5" style="max-height: 220px;">
             ${coincidenciasPorTexto.map(t => `
               <div class="flex items-center justify-between gap-2 text-xs px-2 py-1.5 rounded-lg" style="background:var(--surface); border:1px solid var(--border);">
@@ -6186,7 +6186,7 @@ function animateMoney(el, target){
 /* Rellena el tile "Cobranza de expensas" del hero + la etiqueta del mes. */
 function updateHeroCobranza(monthData, cobrado, esperado){
   const lbl = doc.getElementById('heroMonthLabel');
-  if (lbl){ const nm = monthData.monthName || MONTH_NAMES[monthData.monthIdx] || ''; lbl.textContent = ((nm ? nm + ' ' : '') + (monthData.year || '')).trim() || '—'; }
+  if (lbl){ const nm = monthData.monthName || MONTH_NAMES[monthData.monthIdx] || ''; lbl.textContent = ((nm ? nm + ' ' : '') + (monthData.year || '')).trim() || 'Sin dato'; }
   animateMoney(doc.getElementById('heroCobrado'), cobrado);
   const bar = doc.getElementById('heroCobradoBar');
   const sub = doc.getElementById('heroCobradoSub');
@@ -6893,7 +6893,7 @@ function checkReservaHoyBanner() {
   const items = reservasHoy.map(r => {
     const area = AS_AREAS[r.areaKey];
     const linea1 = `Depto ${r.depto} · ${area ? area.label : ''} · ${r.tipoEvento || 'Evento'}`;
-    const mensaje = `Recordatorio: hoy ${hoy} hay reserva de área social.\nDepto: ${r.depto}\nÁrea: ${area ? area.label : ''}\nEvento: ${r.tipoEvento || '—'}\nCantidad: ${AS_TIER_LABELS[r.tier] || r.tier}`;
+    const mensaje = `Recordatorio: hoy ${hoy} hay reserva de área social.\nDepto: ${r.depto}\nÁrea: ${area ? area.label : ''}\nEvento: ${r.tipoEvento || 'Sin dato'}\nCantidad: ${AS_TIER_LABELS[r.tier] || r.tier}`;
     const wa = `https://wa.me/${WHATSAPP_ADMIN_NUMERO}?text=${encodeURIComponent(mensaje)}`;
     return `
       <div class="rh-text"><strong>Hoy hay reserva de área social</strong><span>${linea1}</span></div>
@@ -6908,7 +6908,7 @@ function checkReservaHoyBanner() {
 // Esto es un extra sobre el botón manual de WhatsApp: si el usuario activa el
 // aviso, el navegador muestra una notificación nativa a las 9:00am si hay una
 // reserva de área social ese día. IMPORTANTE (limitación real, no se puede
-// evitar): esto solo funciona si esta pestaña/ventana queda abierta — un archivo
+// evitar): esto solo funciona si esta pestaña/ventana queda abierta · un archivo
 // HTML no puede "despertarse" solo si el navegador está cerrado. Al tocar la
 // notificación, se abre WhatsApp con el mensaje ya armado, listo para enviar.
 let _recordatorioInterval = null;
@@ -6956,7 +6956,7 @@ function iniciarChequeoRecordatorio() {
     _recordatorioUltimoDisparo = hoy;
     reservasHoy.forEach(r => {
       const area = AS_AREAS[r.areaKey];
-      const mensaje = `Recordatorio: hoy ${hoy} hay reserva de área social.\nDepto: ${r.depto}\nÁrea: ${area ? area.label : ''}\nEvento: ${r.tipoEvento || '—'}`;
+      const mensaje = `Recordatorio: hoy ${hoy} hay reserva de área social.\nDepto: ${r.depto}\nÁrea: ${area ? area.label : ''}\nEvento: ${r.tipoEvento || 'Sin dato'}`;
       const n = new Notification('Hoy hay reserva de área social', {
         body: `Depto ${r.depto} · ${area ? area.label : ''} · ${r.tipoEvento || 'Evento'}`,
       });
@@ -7046,12 +7046,12 @@ function migrarPagosAntiguosPorTipo() {
       if (ascMonto > 0.005) {
         DATA.diarioCounter += 1;
         DATA.diario.push({ id: 'm' + DATA.diarioCounter, fecha: viejo.fecha, tipo: 'ingreso', categoria: 'ascensor',
-          motivo: `Pago Depto ${d.depto} — Cuota extraordinaria ascensor`, monto: ascMonto, ...extra });
+          motivo: `Pago Depto ${d.depto} · Cuota extraordinaria ascensor`, monto: ascMonto, ...extra });
       }
       if (cargosMonto > 0.005) {
         DATA.diarioCounter += 1;
         DATA.diario.push({ id: 'm' + DATA.diarioCounter, fecha: viejo.fecha, tipo: 'ingreso', categoria: 'cargo',
-          motivo: `Pago Depto ${d.depto} — Multas y cargos extra`, monto: cargosMonto, ...extra });
+          motivo: `Pago Depto ${d.depto} · Multas y cargos extra`, monto: cargosMonto, ...extra });
       }
       if (nuevoMontoViejo > 0.005) {
         viejo.monto = nuevoMontoViejo;
@@ -7092,7 +7092,7 @@ document.getElementById('btn-theme').addEventListener('click', toggleTheme);
 // ---- Automatic monthly billing (accrual) ----
 // Each block advances on its own cycle (the source sheet had A on Julio and B still
 // on Junio). Every time the file opens, any month that has started but wasn't billed
-// yet gets charged to every depto of that block — except those marked "adelantado".
+// yet gets charged to every depto of that block · except those marked "adelantado".
 const ADELANTADOS_HASTA = { '504B': ['Noviembre', 2026] };
 function monthIdx(mesNombre, anio) {
   return parseInt(anio) * 12 + MESES_LARGOS.indexOf(mesNombre);
@@ -7145,7 +7145,7 @@ function accrueExpensas() {
         d.meses_adeudados.unshift({ mes, anio, monto: cuota });
         recalcDepto(d);
       });
-      billed.push(`${mes} ${anio}` + (bl ? (' — ' + bl) : ''));
+      billed.push(`${mes} ${anio}` + (bl ? (' · ' + bl) : ''));
     }
   });
   if (billed.length) {
@@ -7183,7 +7183,7 @@ function setDeudaManual(d, montoTotal, expensaMensual) {
 }
 
 // ---- Fill static icon placeholders (kept in JS so every icon has one source of truth) ----
-document.getElementById('updated-line').innerHTML = icon('calendar', 13) + ' Actualizado al <strong id="fecha-actualizacion">—</strong>';
+document.getElementById('updated-line').innerHTML = icon('calendar', 13) + ' Actualizado al <strong id="fecha-actualizacion">Sin dato</strong>';
 document.getElementById('nav-lista').innerHTML = icon('list', 16) + ' Departamentos';
 document.getElementById('nav-pizarra').innerHTML = icon('grid', 16) + ' Pizarra';
 document.getElementById('nav-diario').innerHTML = icon('wallet', 16) + ' Reporte diario';
@@ -7217,7 +7217,7 @@ function fmtMoney(n) {
 // de columnas (que a veces deja una fila suelta con huecos, ej. 4+2 en vez de
 // 3+3), esto calcula cuántas columnas dejan la ÚLTIMA fila más completa posible
 // según el ancho disponible, y reparte el ancho de cada tarjeta acorde. Se
-// recalcula solo con cada render y al cambiar el tamaño de ventana — nunca hay
+// recalcula solo con cada render y al cambiar el tamaño de ventana · nunca hay
 // que tocar esto a mano por cada apartado nuevo que use tarjetas tipo grilla.
 // ============================================================================
 function autoBalanceGrid(container, opts) {
@@ -7318,7 +7318,7 @@ function detectBlockCurrentMonth(deptos) {
 // 1 (verde) = el departamento registró un pago de EXPENSAS (al menos un mes de
 // expensas cubierto) dentro del mes calendario EN CURSO; 0 (rojo) = todavía no
 // pagó expensas este mes. Pagar solo cuota extraordinaria, ascensor, multas u
-// otros cargos NO habilita el 1 — tiene que haber expensas de por medio.
+// otros cargos NO habilita el 1 · tiene que haber expensas de por medio.
 // Si se anula el pago, vuelve solo a 0.
 // EXCEPCIÓN: si la cuenta de expensas está en cero (no debe nada de expensas),
 // se considera al día y figura como 1 (pagó), aunque no haya un pago registrado
@@ -7688,7 +7688,7 @@ function switchView(view) {
   document.querySelector('main').classList.toggle('panel-mode', view === 'panel');
   // En la vista del panel financiero se oculta la barra superior de la app:
   // el encabezado propio del panel (con Descargar / Cargar Excel / Vista) es
-  // el ÚNICO encabezado — sin títulos repetidos.
+  // el ÚNICO encabezado · sin títulos repetidos.
   document.body.classList.toggle('panel-view', view === 'panel');
   if (view === 'pizarra') renderPizarra();
   if (view === 'diario') renderDiario();
@@ -7713,7 +7713,7 @@ function categoriaGasto(motivo) {
 }
 // Transforma DATA.diario + expensas al formato de meses que espera el panel financiero
 // Ingresos diferidos (devengamiento): recorre TODO el diario y arma, por mes
-// ("YYYY-MM"), cuánto le corresponde reconocer de pagos adelantados — sin importar
+// ("YYYY-MM"), cuánto le corresponde reconocer de pagos adelantados · sin importar
 // en qué fecha entró la plata a caja. Además clasifica cada porción en una de 3
 // categorías, comparando el mes al que corresponde la cuota contra el mes real en
 // que se pagó:
@@ -7726,7 +7726,7 @@ function categoriaGasto(motivo) {
 // Reconstruye a qué mes(es) corresponde un pago de expensas leyendo su propio texto,
 // para los pagos que se registraron ANTES de que el sistema guardara la imputación
 // explícita (campo `imputaciones`). El texto sigue 2 formatos fijos que ya usa la app:
-//   - "... — Expensas: Mayo 2026, Junio 2026 (parcial Bs. 100)"
+//   - "... · Expensas: Mayo 2026, Junio 2026 (parcial Bs. 100)"
 //   - "... cobradas de Abril 2026 (histórico · Panel financiero)"
 // Si no matchea ninguno de los 2 formatos, devuelve null (no se fuerza nada: ese pago
 // sigue cayendo, como antes, completo en el mes de la fecha de caja).
@@ -7781,7 +7781,7 @@ function getImputacionesEfectivas(e) {
   return parseImputacionesDesdeMotivo(e);
 }
 
-// Suma, por mes ("YYYY-MM"), la cuota extraordinaria de ascensor cobrada — esto NO
+// Suma, por mes ("YYYY-MM"), la cuota extraordinaria de ascensor cobrada · esto NO
 // está en los Excel mensuales de gastos/ingresos (esa plata se lleva en una hoja
 // aparte), así que para los meses cargados por Excel hay que sumarla de nuevo
 // arriba de lo que trae el Excel (a diferencia de las expensas, que el Excel ya
@@ -7809,23 +7809,23 @@ function computeDeferredContributions() {
       if (!imps || !imps.length) return;
       const pagoKey = e.fecha.slice(0, 7);
       // Todo ingreso cuenta completo en el mes en que efectivamente entró la
-      // plata (pagoKey) — igual que los egresos siempre cuentan en el mes en que
+      // plata (pagoKey) · igual que los egresos siempre cuentan en el mes en que
       // salieron. No se reparte nada entre meses. La categoría (actual / mora /
       // adelanto) es solo una ETIQUETA informativa de a qué mes corresponde la
       // cuota, no cambia en qué mes se contabiliza el ingreso.
       imps.forEach(imp => {
         const impKey = mesAnioAKey(imp.mes, imp.anio);
-        const deptoTxt = e.depto ? `Depto ${e.depto} — ` : '';
+        const deptoTxt = e.depto ? `Depto ${e.depto} · ` : '';
         let cat, concepto;
         if (impKey === pagoKey) {
           cat = 'actual';
           concepto = `${deptoTxt}Expensa de ${imp.mes} ${imp.anio} (pagada en el mes)`;
         } else if (impKey < pagoKey) {
           cat = 'morosidad';
-          concepto = `${deptoTxt}Bs. ${imp.monto} — expensa de ${imp.mes} ${imp.anio} recuperada (mora cobrada este mes)`;
+          concepto = `${deptoTxt}Bs. ${imp.monto} · expensa de ${imp.mes} ${imp.anio} recuperada (mora cobrada este mes)`;
         } else {
           cat = 'adelantado';
-          concepto = `${deptoTxt}Bs. ${imp.monto} — adelanto de la cuota de ${imp.mes} ${imp.anio} (pagado el ${fmtDate(e.fecha)})`;
+          concepto = `${deptoTxt}Bs. ${imp.monto} · adelanto de la cuota de ${imp.mes} ${imp.anio} (pagado el ${fmtDate(e.fecha)})`;
         }
         const bucket = ensure(pagoKey);
         bucket.total += imp.monto;
@@ -7934,8 +7934,8 @@ function defaultMonthKey(months, keys){
 
 // El panel financiero SIEMPRE debe estar vinculado al reporte diario: cada pago o
 // gasto que se carga en la app aparece acá y los meses se inicializan solos. Este
-// merge toma como base los datos vivos del diario (buildPanelData) —fuente de la
-// verdad— y encima conserva lo que el usuario haya cargado directamente en el panel:
+// merge toma como base los datos vivos del diario (buildPanelData) ·fuente de la
+// verdad· y encima conserva lo que el usuario haya cargado directamente en el panel:
 // meses históricos que no están en el diario (p. ej. importados de un Excel del panel),
 // las notas de cada mes y las reclasificaciones de categoría (Fijos/Variable).
 function panelDataMerged() {
@@ -7968,7 +7968,7 @@ function panelDataMerged() {
         om.ingresosExpensaItems.push(...def.items.filter(i => i.categoria !== 'actual'));
       }
       // Los 3 sub-totales (mes en curso / morosidad / adelanto) son solo un
-      // DESGLOSE informativo de "ingresoCobrado" — siempre se recalculan desde
+      // DESGLOSE informativo de "ingresoCobrado" · siempre se recalculan desde
       // cero a partir del ingresoCobrado del Excel (que nunca se toca acá), en
       // vez de ir restando sobre el valor de la vez anterior. Así, sin importar
       // cuántas veces se abra/guarde el panel, el resultado es siempre el mismo.
@@ -7976,7 +7976,7 @@ function panelDataMerged() {
       om.totals.ingresoAdelantado = adelantadoInfo;
       om.totals.ingresoMesActual = Math.round(((om.totals.ingresoCobrado || 0) - morosidadInfo - adelantadoInfo) * 100) / 100;
       // La cuota de ascensor no viene en el Excel mensual (se lleva aparte), así
-      // que se toma directamente de lo cargado en el diario para ese mes — se
+      // que se toma directamente de lo cargado en el diario para ese mes · se
       // ASIGNA (no se suma encima de lo anterior) para que no se duplique si
       // esto se recalcula varias veces.
       om.totals.ingresoAscensor = Math.round((ascensorPorMes[k] || 0) * 100) / 100;
@@ -8186,7 +8186,7 @@ function _mountPanelShadow(dataObj){
     const pfUp = root.getElementById('pfUpdated');
     if (pfUp) {
       const f = document.getElementById('fecha-actualizacion');
-      pfUp.textContent = (f && f.textContent && f.textContent !== '—') ? ('Actualizado al ' + f.textContent + ' · ') : '';
+      pfUp.textContent = (f && f.textContent && f.textContent !== 'Sin dato') ? ('Actualizado al ' + f.textContent + ' · ') : '';
     }
   } catch (e) {}
 
@@ -8452,12 +8452,12 @@ function renderDiario() {
       const cats = [...new Set(items.map(e => e.categoria))].sort((a, b) => orden.indexOf(a) - orden.indexOf(b));
       const tags = cats.map(c => tagDe(c, 'ingreso')).join('');
       const extraTag = extraTagDe(items.find(e => e.categoria === 'expensa'));
-      const prefijo = (base.motivo.split(' — ')[0]) || base.motivo;
+      const prefijo = (base.motivo.split(' · ')[0]) || base.motivo;
       const nombreCat = { expensa: 'Expensas', ascensor: 'Cuota ascensor', cargo: 'Multas/Cargos' };
       const conceptoTxt = cats.map(c => nombreCat[c] || c).join(' + ');
       body += `<tr>
         <td style="width:90px; color:var(--text-muted); font-size:12px;">${base.recibo ? 'Rec. ' + base.recibo : ''}</td>
-        <td>${tags}${extraTag}${prefijo} — ${conceptoTxt}</td>
+        <td>${tags}${extraTag}${prefijo} · ${conceptoTxt}</td>
         <td class="num ing">${montoIngreso ? fmtMoney(montoIngreso) : ''}</td>
         <td class="num" style="color:var(--warning);">${montoAscensor ? fmtMoney(montoAscensor) : ''}</td>
         <td class="num egr">${montoEgreso ? fmtMoney(montoEgreso) : ''}</td>
@@ -8507,7 +8507,7 @@ function renderDiario() {
         anularPago(d, pago);
         renderDiario(); renderSummary(); renderGrid();
         autosaveIfLinked();
-        showSaveToast(icon('checkCircle', 15) + ` Pago anulado (recibo #${pago.recibo_no}) — deuda restaurada`);
+        showSaveToast(icon('checkCircle', 15) + ` Pago anulado (recibo #${pago.recibo_no}) · deuda restaurada`);
       } else {
         // No se pudo vincular a un recibo de la pizarra: se quita solo la línea del reporte
         if (!confirm(`Este movimiento no está vinculado a un recibo de la pizarra, así que solo se quitará del reporte diario (la deuda del departamento no cambiará). ¿Continuar?`)) return;
@@ -8858,11 +8858,11 @@ function openModal(deptoCode) {
       if (document.getElementById('view-diario').style.display !== 'none') renderDiario();
       openModal(d.id||d.depto);
       autosaveIfLinked();
-      showSaveToast(icon('checkCircle', 15) + ` Pago anulado (recibo #${pago.recibo_no}) — deuda restaurada`);
+      showSaveToast(icon('checkCircle', 15) + ` Pago anulado (recibo #${pago.recibo_no}) · deuda restaurada`);
     });
   });
 
-  // Marca/desmarca un pago como "verificado" — deja un historial checkeable, sin tocar montos ni deuda
+  // Marca/desmarca un pago como "verificado" · deja un historial checkeable, sin tocar montos ni deuda
   document.querySelectorAll('#modal-content [data-verificar-idx]').forEach(chk => {
     chk.addEventListener('change', () => {
       const pago = d.pagos_registrados[parseInt(chk.dataset.verificarIdx)];
@@ -8961,7 +8961,7 @@ function openPayModal(deptoCode) {
       <div class="form-field recibo-no-field">
         <label>N.º de recibo (correlativo del talonario físico)</label>
         <input type="text" id="pf-recibo-no" value="${String(DATA.receiptCounter).padStart(6,'0')}" required>
-        <div class="hint">Editable — escribe el número del recibo físico que estás usando. El siguiente sugerido se calcula a partir de este.</div>
+        <div class="hint">Editable · escribe el número del recibo físico que estás usando. El siguiente sugerido se calcula a partir de este.</div>
       </div>
 
       <div class="form-field">
@@ -8971,7 +8971,7 @@ function openPayModal(deptoCode) {
             <label class="pay-item">
               <span><input type="checkbox" data-idx="${i}" checked>${it.label}<span class="tag ${it.tag}">${it.tagLabel}</span></span>
               <span class="amt">${fmtMoney(it.monto)}</span>
-            </label>`).join('') : '<div style="padding:10px 12px; font-size:13px; color:var(--text-muted);">Este departamento no tiene deudas pendientes — el pago se registrará como adelanto.</div>'}
+            </label>`).join('') : '<div style="padding:10px 12px; font-size:13px; color:var(--text-muted);">Este departamento no tiene deudas pendientes · el pago se registrará como adelanto.</div>'}
         </div>
         <div class="pay-items-toolbar no-print">
           <a id="pay-sel-all">Seleccionar todo</a>
@@ -9092,7 +9092,7 @@ function openPayModal(deptoCode) {
         <input class="pd-input" type="number" min="0" max="${it.monto}" step="0.01" data-key="${key}" value="${Math.round(val * 100) / 100}">
       </div>`;
     }).join('');
-    box.innerHTML = `<div class="pd-title">${icon('checkCircle', 13)} Cómo se reparte ${fmtMoney(monto)} <span style="font-weight:500; text-transform:none; letter-spacing:0; color:var(--text-muted);">— editá cada monto</span><a id="pd-hide" style="margin-left:auto; font-weight:600; text-transform:none; letter-spacing:0; color:var(--series-blue); cursor:pointer;">ocultar</a></div>`
+    box.innerHTML = `<div class="pd-title">${icon('checkCircle', 13)} Cómo se reparte ${fmtMoney(monto)} <span style="font-weight:500; text-transform:none; letter-spacing:0; color:var(--text-muted);">· editá cada monto</span><a id="pd-hide" style="margin-left:auto; font-weight:600; text-transform:none; letter-spacing:0; color:var(--series-blue); cursor:pointer;">ocultar</a></div>`
       + rows
       + `<div class="pd-total" id="pd-total-row"></div>`
       + `<div class="pd-edithint">Ajustá libremente cuánto va a cada concepto (por ejemplo, liquidar el ascensor y repartir el resto en meses). Volvé a tocar "Repartir pago" para el reparto automático del más antiguo al más nuevo.</div>`;
@@ -9127,7 +9127,7 @@ function openPayModal(deptoCode) {
     totalRow.classList.remove('pd-over', 'pd-credit');
     if (dif < -0.005) {
       totalRow.classList.add('pd-over');
-      totalRow.innerHTML = `<span>Asignado ${fmtMoney(total)} — supera el monto pagado por ${fmtMoney(-dif)}</span><span>${fmtMoney(total)}</span>`;
+      totalRow.innerHTML = `<span>Asignado ${fmtMoney(total)} · supera el monto pagado por ${fmtMoney(-dif)}</span><span>${fmtMoney(total)}</span>`;
     } else if (dif > 0.005) {
       totalRow.classList.add('pd-credit');
       totalRow.innerHTML = `<span>Asignado ${fmtMoney(total)} · sobran ${fmtMoney(dif)} → pago adelantado</span><span>${fmtMoney(total)}</span>`;
@@ -9256,7 +9256,7 @@ function registrarPago(d, monto, metodo, fecha, recibido, obs, reciboNo, selecci
   // Datos para poder ANULAR el pago después (restaurar exactamente la deuda)
   const anulaMeses = []; let anulaAscensor = 0; const anulaCargos = [];
 
-  // Montos aplicados POR TIPO — para que el diario y el panel registren cada
+  // Montos aplicados POR TIPO · para que el diario y el panel registren cada
   // concepto como lo que es (expensas / cuota extraordinaria ascensor / multas y
   // cargos), en vez de mezclar todo bajo "expensa".
   let montoExpensas = 0, montoAscensor = 0, montoCargos = 0;
@@ -9410,29 +9410,29 @@ function registrarPago(d, monto, metodo, fecha, recibido, obs, reciboNo, selecci
   };
   d.pagos_registrados.push(pago);
 
-  // Auto-entries in the daily income/expense journal — UN asiento por CADA
+  // Auto-entries in the daily income/expense journal · UN asiento por CADA
   // concepto realmente pagado, para que expensas, cuota extraordinaria de
   // ascensor y multas/cargos extra queden separados (no todo bajo "expensa").
   // Todos comparten pagoId para poder anular el pago completo de una vez.
   const extraInfo = { depto: d.depto, recibo: reciboFinal, auto: true, pagoId: pago.id };
   if (montoExpensas > 0.005) {
     agregarMovimientoDiario(fecha, 'ingreso', 'expensa',
-      `Pago Depto ${d.depto} (${metodo}) — Expensas`, montoExpensas,
+      `Pago Depto ${d.depto} (${metodo}) · Expensas`, montoExpensas,
       { ...extraInfo, imputaciones: imputacionesExpensa });
   }
   if (montoAscensor > 0.005) {
     agregarMovimientoDiario(fecha, 'ingreso', 'ascensor',
-      `Pago Depto ${d.depto} (${metodo}) — Cuota extraordinaria ascensor`, montoAscensor, extraInfo);
+      `Pago Depto ${d.depto} (${metodo}) · Cuota extraordinaria ascensor`, montoAscensor, extraInfo);
   }
   if (montoCargos > 0.005) {
     agregarMovimientoDiario(fecha, 'ingreso', 'cargo',
-      `Pago Depto ${d.depto} (${metodo}) — Multas y cargos extra`, montoCargos, extraInfo);
+      `Pago Depto ${d.depto} (${metodo}) · Multas y cargos extra`, montoCargos, extraInfo);
   }
   // Salvaguarda: si por algún motivo no se aplicó nada a ninguno de los tres
   // (no debería pasar), igual se deja un registro para que la caja cuadre.
   if (montoExpensas <= 0.005 && montoAscensor <= 0.005 && montoCargos <= 0.005 && monto > 0.005) {
     agregarMovimientoDiario(fecha, 'ingreso', 'expensa',
-      `Pago Depto ${d.depto} (${metodo}) — ${concepto}`, monto, extraInfo);
+      `Pago Depto ${d.depto} (${metodo}) · ${concepto}`, monto, extraInfo);
   }
 
   closePayModal();
@@ -9547,7 +9547,7 @@ function qrToSVG(text, sizePx) {
     '<g fill="#0b0b0b">' + rects + '</g></svg>';
 }
 
-// Recibo: sección que muestra, mes a mes, qué queda pagado con ESTE pago —
+// Recibo: sección que muestra, mes a mes, qué queda pagado con ESTE pago ·
 // tanto meses de mora/actual como los cubiertos por adelanto (ingreso diferido).
 // Así el recibo deja explícito "esto cubre Julio, Agosto, Septiembre... 2026"
 // en vez de dejar el excedente como un genérico "a favor".
@@ -9613,7 +9613,7 @@ function buildReceiptBoxHTML(d, pago) {
         <div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">${d.depto}${d.bloque? ' · '+d.bloque:''}</div></div>
         <div class="r-info-item"><div class="r-label">Fecha de pago</div><div class="r-value">${fmtDateLong(pago.fecha)}</div></div>
         <div class="r-info-item"><div class="r-label">Método de pago</div><div class="r-value">${pago.metodo}</div></div>
-        <div class="r-info-item"><div class="r-label">Recibido por</div><div class="r-value">${pago.recibido || '—'}</div></div>
+        <div class="r-info-item"><div class="r-label">Recibido por</div><div class="r-value">${pago.recibido || 'Sin dato'}</div></div>
       </div>
 
       <div class="r-concept-box">
@@ -9758,7 +9758,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 // ============================================================================
-// Excel export — self-contained .xlsx writer (no external library, works offline)
+// Excel export · self-contained .xlsx writer (no external library, works offline)
 // An .xlsx is a ZIP of XML parts; entries are STORED (no compression) so we only
 // need a CRC32 and the OOXML markup, including a styles.xml for the visual format.
 // ============================================================================
@@ -9924,7 +9924,7 @@ function statusXlsStyle(st) {
 // differs from the standard quota (e.g. an old partial balance of Bs. 250).
 function resumenMesesRango(d) {
   const ms = orderedMonthsOldestFirst(d);
-  if (!ms.length) return '—';
+  if (!ms.length) return 'Sin dato';
   const std = d.expensaMensual || DATA.config.expensaMensual;
   const irregulares = ms.filter(m => Math.abs(m.monto - std) > 0.005)
     .map(m => `${m.mes.slice(0,3)} ${m.anio}: ${m.monto < std ? 'saldo ' : ''}Bs. ${m.monto.toLocaleString('es-BO')}`);
@@ -9946,7 +9946,7 @@ function exportExcel(monthFilter) {
   const s = computeSummary();
   const hoy = fmtDateLong(todayISO());
   const mesTxt = monthFilter ? mesLabelDe(monthFilter + '-01') : null;
-  const scopeSub = monthFilter ? ('Reporte del mes de ' + mesTxt + ' — generado el ' + hoy) : ('Estado de cuentas — generado el ' + hoy);
+  const scopeSub = monthFilter ? ('Reporte del mes de ' + mesTxt + ' · generado el ' + hoy) : ('Estado de cuentas · generado el ' + hoy);
 
   // --- Sheet 1: Resumen ---
   const resumen = [
@@ -9966,7 +9966,7 @@ function exportExcel(monthFilter) {
   // --- Sheet 2: Estado de cuentas por depto ---
   const header2 = ['Bloque', 'Depto.', 'Estado', 'Expensas adeudadas (meses)', 'Meses en mora (desde – hasta)', 'Deuda expensas (Bs.)', 'Cuota ascensor (Bs.)', 'Multas/cargos (Bs.)', 'DEUDA TOTAL (Bs.)', 'Último pago'];
   const estado = [
-    [{ v: buildingName().toUpperCase() + ' — Estado de cuentas por departamento', s: XS.TITLE }],
+    [{ v: buildingName().toUpperCase() + ' · Estado de cuentas por departamento', s: XS.TITLE }],
     [{ v: 'Actualizado al ' + hoy, s: XS.SUBTITLE }],
     [],
     header2.map(h => ({ v: h, s: XS.HEADER })),
@@ -9983,7 +9983,7 @@ function exportExcel(monthFilter) {
       { v: d.depto, s: XS.CELL_B },
       { v: statusLabel(st, d.num_meses_mora), s: statusXlsStyle(st) },
       { v: d.num_meses_mora, s: XS.NUM, n: true },
-      { v: mesesDet || '—', s: XS.CELL },
+      { v: mesesDet || 'Sin dato', s: XS.CELL },
       { v: d.expensa_debt, s: XS.NUM, n: true },
       { v: d.ascensor_debt, s: XS.NUM, n: true },
       { v: d.cargos_debt || 0, s: XS.NUM, n: true },
@@ -9998,7 +9998,7 @@ function exportExcel(monthFilter) {
 
   // --- Sheet 3: Pagos registrados ---
   const pagos = [
-    [{ v: buildingName().toUpperCase() + ' — Pagos registrados en la pizarra', s: XS.TITLE }],
+    [{ v: buildingName().toUpperCase() + ' · Pagos registrados en la pizarra', s: XS.TITLE }],
     [{ v: (monthFilter ? 'Pagos de ' + mesTxt + ' · generado el ' + hoy : 'Generado el ' + hoy), s: XS.SUBTITLE }],
     [],
     ['Recibo N.º', 'Fecha', 'Depto.', 'Bloque', 'Monto (Bs.)', 'Método', 'Concepto', 'Recibido por', 'Observaciones'].map(h => ({ v: h, s: XS.HEADER })),
@@ -10016,7 +10016,7 @@ function exportExcel(monthFilter) {
     { v: p.monto, s: XS.TOTALNUM, n: true },
     { v: p.metodo, s: XS.CELL },
     { v: p.concepto, s: XS.CELL },
-    { v: p.recibido || '—', s: XS.CELL },
+    { v: p.recibido || 'Sin dato', s: XS.CELL },
     { v: p.obs || '', s: XS.CELL },
   ]));
   if (!allPagos.length) pagos.push([{ v: (monthFilter ? 'No hay pagos registrados en ' + mesTxt : 'Aún no hay pagos registrados en esta pizarra'), s: XS.SUBTITLE }]);
@@ -10026,7 +10026,7 @@ function exportExcel(monthFilter) {
   const pizB = DATA.deptos.filter(d => d.bloque === 'B').sort((a, b) => (a.item || 0) - (b.item || 0));
   const curA = detectBlockCurrentMonth(pizA), curB = detectBlockCurrentMonth(pizB);
   const pizarraRows = [
-    [{ v: buildingName().toUpperCase() + ' — Pizarra de deudas', s: XS.TITLE }],
+    [{ v: buildingName().toUpperCase() + ' · Pizarra de deudas', s: XS.TITLE }],
     [{ v: 'Actualizada al ' + hoy + ' · 1 = pagó el mes en curso, 0 = no pagó · T. DEUDA incluye multas y cargos extra', s: XS.SUBTITLE }],
     [],
     [{ v: 'BLOQUE A', s: XS.HEADER }, { v: '', s: XS.HEADER }, { v: '', s: XS.HEADER }, { v: '', s: XS.HEADER }, { v: '', s: XS.HEADER }, { v: '', s: XS.HEADER },
@@ -10071,7 +10071,7 @@ function exportExcel(monthFilter) {
 
   // --- Sheet 5: Reporte Diario (ingresos y egresos agrupados por día, como tu reporte semanal) ---
   const diarioRows = [
-    [{ v: buildingName().toUpperCase() + ' — Reporte diario de ingresos y egresos', s: XS.TITLE }],
+    [{ v: buildingName().toUpperCase() + ' · Reporte diario de ingresos y egresos', s: XS.TITLE }],
     [{ v: (monthFilter ? 'Mes de ' + mesTxt + ' · generado el ' + hoy : 'Generado el ' + hoy), s: XS.SUBTITLE }],
     [],
     ['FECHA', 'PAGOS DE EXPENSAS (deptos / recibos)', 'INGRESO EXPENSAS (Bs.)', 'CUOTA ASCENSOR (detalle)', 'CUOTA ASCENSOR (Bs.)', 'OTROS INGRESOS (detalle)', 'OTROS INGRESOS (Bs.)', 'EGRESOS (detalle)', 'EGRESO (Bs.)', 'TOTAL INGRESO DÍA', 'DIFERENCIA DÍA'].map(h => ({ v: h, s: XS.HEADER })),
@@ -10092,18 +10092,18 @@ function exportExcel(monthFilter) {
     const egrSum = egresos.reduce((a, e) => a + e.monto, 0);
     const totalIng = expSum + otrosSum;
     gExp += expSum; gAsc += ascSum; gOtros += otrosSum; gIng += totalIng; gEgr += egrSum;
-    const expDet = expMovs.map(e => e.depto ? `${e.depto}${e.recibo ? ' (Rec. ' + e.recibo + ')' : ''}` : e.motivo.replace('Pago expensas — ', '').replace('Pago expensas adelantados — ', '(adel.) ')).join(', ');
+    const expDet = expMovs.map(e => e.depto ? `${e.depto}${e.recibo ? ' (Rec. ' + e.recibo + ')' : ''}` : e.motivo.replace('Pago expensas · ', '').replace('Pago expensas adelantados · ', '(adel.) ')).join(', ');
     const ascDet = ascMovs.map(e => e.depto ? `${e.depto}${e.recibo ? ' (Rec. ' + e.recibo + ')' : ''}` : e.motivo).join(', ');
     const diff = totalIng - egrSum;
     diarioRows.push([
       { v: fmtDate(f), s: XS.CELL_B },
-      { v: expDet || '—', s: XS.CELL },
+      { v: expDet || 'Sin dato', s: XS.CELL },
       { v: expSum, s: expSum ? XS.NUM : XS.GOODN, n: true },
-      { v: ascDet || '—', s: XS.CELL },
+      { v: ascDet || 'Sin dato', s: XS.CELL },
       { v: ascSum, s: XS.NUM, n: true },
-      { v: otrosIng.map(e => e.motivo).join(' · ') || '—', s: XS.CELL },
+      { v: otrosIng.map(e => e.motivo).join(' · ') || 'Sin dato', s: XS.CELL },
       { v: otrosSum, s: XS.NUM, n: true },
-      { v: egresos.map(e => `${e.motivo} (Bs. ${e.monto.toLocaleString('es-BO')})`).join(' · ') || '—', s: XS.CELL },
+      { v: egresos.map(e => `${e.motivo} (Bs. ${e.monto.toLocaleString('es-BO')})`).join(' · ') || 'Sin dato', s: XS.CELL },
       { v: egrSum, s: egrSum ? XS.CRITN : XS.NUM, n: true },
       { v: totalIng, s: XS.NUM, n: true },
       { v: diff, s: diff >= 0 ? XS.GOODN : XS.CRITN, n: true },
@@ -10215,7 +10215,7 @@ function exportEstadoCuentaPortal(){
 window.exportEstadoCuentaPortal = exportEstadoCuentaPortal;
 
 // ============================================================================
-// Reporte mensual PROFESIONAL — 100% autónomo (sin librerías externas / offline).
+// Reporte mensual PROFESIONAL · 100% autónomo (sin librerías externas / offline).
 // Generador de PDF propio (MiniPDF) + pizarra dibujada en un <canvas>.
 // La pizarra y el estado de cuentas reflejan la última actualización; el reporte
 // diario (itemizado) y los pagos se filtran por el mes elegido.
@@ -10671,10 +10671,10 @@ function renderPizarraCanvasMovil(scale) {
 }
 
 // ---------------------------------------------------------------------------
-// MiniPDF — escritor de PDF mínimo y autónomo (texto Helvetica WinAnsi, rects,
+// MiniPDF · escritor de PDF mínimo y autónomo (texto Helvetica WinAnsi, rects,
 // líneas e imágenes JPEG). Sin dependencias externas.
 // ---------------------------------------------------------------------------
-const WINANSI = { 'á':0xE1,'é':0xE9,'í':0xED,'ó':0xF3,'ú':0xFA,'ü':0xFC,'ñ':0xF1,'Á':0xC1,'É':0xC9,'Í':0xCD,'Ó':0xD3,'Ú':0xDA,'Ü':0xDC,'Ñ':0xD1,'¿':0xBF,'¡':0xA1,'·':0xB7,'º':0xBA,'ª':0xAA,'°':0xB0,'–':0x96,'—':0x97,'’':0x92,'‘':0x91,'“':0x93,'”':0x94,'€':0x80,'…':0x85 };
+const WINANSI = { 'á':0xE1,'é':0xE9,'í':0xED,'ó':0xF3,'ú':0xFA,'ü':0xFC,'ñ':0xF1,'Á':0xC1,'É':0xC9,'Í':0xCD,'Ó':0xD3,'Ú':0xDA,'Ü':0xDC,'Ñ':0xD1,'¿':0xBF,'¡':0xA1,'·':0xB7,'º':0xBA,'ª':0xAA,'°':0xB0,'–':0x96,'Sin dato':0x97,'’':0x92,'‘':0x91,'“':0x93,'”':0x94,'€':0x80,'…':0x85 };
 class MiniPDF {
   constructor() {
     // Tamaño de hoja global (carta por defecto). Se puede cambiar en Ajustes del
@@ -10869,7 +10869,7 @@ async function generateMonthlyPDF(monthFilter) {
 
   // --- Bloque 1: SITUACIÓN ACTUAL (totales vigentes, no del mes) ---
   let ky = sectionHeader(134, 'Situación actual del condominio', TAG_ACTUAL,
-    'Deuda vigente acumulada a la última actualización de la pizarra — no corresponde solo al mes.');
+    'Deuda vigente acumulada a la última actualización de la pizarra · no corresponde solo al mes.');
   const kpis = [
     ['Deuda total general', money(s.deuda_total_general), RED_TX],
     ['Deuda de expensas', money(s.deuda_total_expensas), NAVY],
@@ -10946,7 +10946,7 @@ async function generateMonthlyPDF(monthFilter) {
   const movs = diarioMovimientosMes(monthFilter);
   const diaData = movs.length
     ? movs.map(m => [fmtDate(m.fecha), m.concepto, m.ingreso != null ? money(m.ingreso) : '', m.ascensor != null ? money(m.ascensor) : '', m.egreso != null ? money(m.egreso) : ''])
-    : [['—', 'Sin movimientos registrados en ' + mesTxt, '', '', '']];
+    : [['Sin dato', 'Sin movimientos registrados en ' + mesTxt, '', '', '']];
   diaData.push(['', 'TOTAL DEL MES', money(caja.tIng), money(caja.tAsc), money(caja.tEgr)]);
   diaData.push(['', 'SALDO DEL MES', money(caja.saldo), '', '']);
   const nMovs = movs.length;
@@ -10980,7 +10980,7 @@ async function generateMonthlyPDF(monthFilter) {
     pdf.addPage();
     sectionHeader(46, 'Pagos registrados', TAG_MES,
       'Recibos de pago cargados en el mes de ' + mesTxt + '.');
-    const pagData = pagosMes.map(p => [String(p.recibo_no || '—'), fmtDate(p.fecha), p.depto, money(p.monto), p.metodo || '—', p.concepto || '—']);
+    const pagData = pagosMes.map(p => [String(p.recibo_no || 'Sin dato'), fmtDate(p.fecha), p.depto, money(p.monto), p.metodo || 'Sin dato', p.concepto || 'Sin dato']);
     pdfDrawTable(pdf, {
       x: M, w: CW, startY: 88, contTop: 56, fontSize: 8,
       onPage: (p, y) => p.text('Pagos registrados (continuación)', M + 8, y, { size: 11, bold: true, color: NAVY }),
@@ -11006,7 +11006,7 @@ async function generateMonthlyPDF(monthFilter) {
 }
 
 // ---- PDF enfocado: SOLO "Reporte diario de caja" + "Pagos registrados" ----
-// (sin KPIs, sin pizarra, sin estado de cuentas) — pensado para el botón dentro
+// (sin KPIs, sin pizarra, sin estado de cuentas) · pensado para el botón dentro
 // de la vista "Reporte diario".
 async function generateDiarioPagosPDF(monthFilter) {
   const pdf = new MiniPDF();
@@ -11051,7 +11051,7 @@ async function generateDiarioPagosPDF(monthFilter) {
   const movs = diarioMovimientosMes(monthFilter);
   const diaData = movs.length
     ? movs.map(m => [fmtDate(m.fecha), m.concepto, m.ingreso != null ? money(m.ingreso) : '', m.ascensor != null ? money(m.ascensor) : '', m.egreso != null ? money(m.egreso) : ''])
-    : [['—', 'Sin movimientos registrados en ' + mesTxt, '', '', '']];
+    : [['Sin dato', 'Sin movimientos registrados en ' + mesTxt, '', '', '']];
   diaData.push(['', 'TOTAL DEL MES', money(caja.tIng), money(caja.tAsc), money(caja.tEgr)]);
   diaData.push(['', 'SALDO DEL MES', money(caja.saldo), '', '']);
   const nMovs = movs.length;
@@ -11085,8 +11085,8 @@ async function generateDiarioPagosPDF(monthFilter) {
   DATA.deptos.forEach(d => (d.pagos_registrados || []).forEach(p => allPagos.push({ ...p, depto: d.depto, bloque: d.bloque })));
   const pagosMes = allPagos.filter(p => !monthFilter || (p.fecha || '').slice(0, 7) === monthFilter).sort((a, b) => String(a.recibo_no).localeCompare(String(b.recibo_no)));
   const pagData = pagosMes.length
-    ? pagosMes.map(p => [String(p.recibo_no || '—'), fmtDate(p.fecha), p.depto, money(p.monto), p.metodo || '—', p.concepto || '—'])
-    : [['—', '—', '—', 'Sin pagos registrados en ' + mesTxt, '', '']];
+    ? pagosMes.map(p => [String(p.recibo_no || 'Sin dato'), fmtDate(p.fecha), p.depto, money(p.monto), p.metodo || 'Sin dato', p.concepto || 'Sin dato'])
+    : [['Sin dato', 'Sin dato', 'Sin dato', 'Sin pagos registrados en ' + mesTxt, '', '']];
   pdfDrawTable(pdf, {
     x: M, w: CW, startY: 88, contTop: 56, fontSize: 8,
     onPage: (p, y) => p.text('Pagos registrados (continuación)', M + 8, y, { size: 11, bold: true, color: NAVY }),
@@ -11319,7 +11319,7 @@ function downloadHTML() {
 
 // ---- Save-to-disk ("Drive-style" autosave) via the File System Access API ----
 // Where supported (Chrome/Edge desktop), the app can write straight to a file the
-// user picks once — e.g. a file inside their Google Drive for Desktop folder — so
+// user picks once · e.g. a file inside their Google Drive for Desktop folder · so
 // Drive (or OneDrive, etc.) syncs it like any other local file. No account linking
 // or upload step needed. Firefox/Safari don't support this API, so we fall back to
 // manual JSON download/upload there.
@@ -11362,7 +11362,7 @@ function downloadJSON() {
 }
 
 async function autosaveIfLinked() {
-  // SIEMPRE guarda una copia local dentro del navegador — sin diálogos ni permisos.
+  // SIEMPRE guarda una copia local dentro del navegador · sin diálogos ni permisos.
   // Es lo que hace que, al reabrir la app, tus datos vuelvan solos.
   saveDataLocal();
   // Además, si vinculaste un archivo (p.ej. en Google Drive), lo actualiza también.
@@ -11376,7 +11376,7 @@ async function autosaveIfLinked() {
 }
 
 // ============================================================================
-// CARGA AUTOMÁTICA — recordar el último archivo vinculado entre sesiones
+// CARGA AUTOMÁTICA · recordar el último archivo vinculado entre sesiones
 // ----------------------------------------------------------------------------
 // El File System Access API permite guardar un "handle" (referencia) al archivo
 // que elegiste dentro de IndexedDB, la base de datos local del navegador. Así,
@@ -11425,7 +11425,7 @@ async function restoreLocalIfAny() {
   // en el navegador, NO restaurar la vieja: se sigue usando lo que ya viene cargado
   // en este archivo, y esa versión pasa a ser la nueva copia guardada. Así, cuando
   // se entrega un archivo corregido, el navegador no lo vuelve a tapar con el
-  // estado anterior — pero los cambios que hagas DESPUÉS de abrir este archivo sí
+  // estado anterior · pero los cambios que hagas DESPUÉS de abrir este archivo sí
   // se siguen guardando y restaurando normalmente entre sesiones, como siempre.
   const embeddedVersion = (DATA.config && DATA.config.buildVersion) || null;
   const savedVersion = (saved.config && saved.config.buildVersion) || null;
@@ -11755,7 +11755,7 @@ function todosLosCodigosTarjetaConOrigen(excluir) {
       const c = (item.codigo || '').trim();
       if (!c) return;
       if (excluir && excluir.tipo === 'extra' && excluir.sec === key && excluir.id === item.id) return;
-      list.push({ code: c, origen: origenesExtra[key] + (item.nombre ? ' — ' + item.nombre : '') });
+      list.push({ code: c, origen: origenesExtra[key] + (item.nombre ? ' · ' + item.nombre : '') });
     });
   });
   return list;
@@ -12078,7 +12078,7 @@ function asEliminarReserva(id) {
 
 function asBuildReservaBox(r) {
   const area = AS_AREAS[r.areaKey];
-  const fechaFmt = r.fecha ? new Date(r.fecha + 'T00:00:00').toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric' }) : '—';
+  const fechaFmt = r.fecha ? new Date(r.fecha + 'T00:00:00').toLocaleDateString('es-BO', { day: '2-digit', month: 'long', year: 'numeric' }) : 'Sin dato';
   return `
     <div class="as-print-box">
       <div class="ap-head">
@@ -12091,7 +12091,7 @@ function asBuildReservaBox(r) {
       <div class="ap-grid">
         <div><div class="ap-label">Departamento</div><div class="ap-value">${r.depto}</div></div>
         <div><div class="ap-label">Fecha del evento</div><div class="ap-value">${fechaFmt}</div></div>
-        <div><div class="ap-label">Tipo de evento</div><div class="ap-value">${r.tipoEvento || '—'}</div></div>
+        <div><div class="ap-label">Tipo de evento</div><div class="ap-value">${r.tipoEvento || 'Sin dato'}</div></div>
         <div><div class="ap-label">Área social</div><div class="ap-value">${area ? area.label : ''}</div></div>
         <div><div class="ap-label">Cantidad de personas</div><div class="ap-value">${AS_TIER_LABELS[r.tier] || r.tier}</div></div>
         <div><div class="ap-label">Sillas / Mesas / Mesas nuevas</div><div class="ap-value">${r.sillas} / ${r.mesas} / ${r.mesasNuevas}</div></div>
@@ -12164,7 +12164,7 @@ function renderTarjetas() {
     aviso.className = 'plan-aviso no-print';
     aviso.innerHTML = `<strong>${protegidos.length} depto(s) con deuda no se bloquean:</strong> `
       + protegidos.map(d => d.depto).join(', ')
-      + ` — están cumpliendo su plan de pagos, así que quedan fuera del PDF de morosos.`;
+      + ` · están cumpliendo su plan de pagos, así que quedan fuera del PDF de morosos.`;
     container.parentNode.insertBefore(aviso, container);
   }
 
@@ -12235,7 +12235,7 @@ function downloadTarjetasHistorial() {
   pdf.rect(0, 90, PW, 3, ORANGE);
   try { const lg = (window.__pizLogoDark?window.__pizLogoDark():document.getElementById('__pizLogo')); const c = document.createElement('canvas'); c.width = lg.naturalWidth; c.height = lg.naturalHeight; c.getContext('2d').drawImage(lg, 0, 0); window.__pizFit(pdf,c, PW - M - 74, 20, 74, 35); } catch (e) {}
   pdf.text(buildingName().toUpperCase(), M, 26, { size: 20, bold: true, color: [255, 255, 255] });
-  pdf.text('Tarjetas de acceso — ' + filtroLabel, M, 54, { size: 12, color: [223, 230, 240] });
+  pdf.text('Tarjetas de acceso · ' + filtroLabel, M, 54, { size: 12, color: [223, 230, 240] });
   pdf.text('Generado el ' + hoy, M, 72, { size: 9, color: [200, 210, 226] });
 
   // ---------- Tabla 1: por depto ----------
@@ -12294,7 +12294,7 @@ function downloadTarjetasHistorial() {
   })();
   const _secsX = (_torresPdf.length<=1)
     ? [ { key:'personal', title:'Personal del condominio' }, { key:'visitasA', title:'Tarjetas de visitas' } ]
-    : [ { key:'personal', title:'Personal del condominio' }, { key:'visitasA', title:'Tarjetas de visitas — '+_torresPdf[0] }, { key:'visitasB', title:'Tarjetas de visitas — '+_torresPdf[1] } ];
+    : [ { key:'personal', title:'Personal del condominio' }, { key:'visitasA', title:'Tarjetas de visitas · '+_torresPdf[0] }, { key:'visitasB', title:'Tarjetas de visitas · '+_torresPdf[1] } ];
   if (_secsX.some(s => Array.isArray(_extra[s.key]) && _extra[s.key].length)) {
     pdf.addPage();
     let ey = sectionHeader(56, 'Personal y tarjetas de visitas', 'Tarjetas de acceso que no pertenecen a un departamento.');
@@ -12306,7 +12306,7 @@ function downloadTarjetasHistorial() {
           x: M, w: CW, startY: ey, contTop: 56, fontSize: 8.5,
           onPage: (p, py) => p.text(s.title + ' (continuación)', M + 8, py, { size: 11, bold: true, color: NAVY }),
           cols: [ { title: 'Nombre / referencia', w: CW - 130 - 170 }, { title: 'Código', w: 130, align: 'center' }, { title: 'Nota', w: 170 } ],
-          rows: list.map(it => [it.nombre || '—', it.codigo || '—', it.nota || '']),
+          rows: list.map(it => [it.nombre || 'Sin dato', it.codigo || 'Sin dato', it.nota || '']),
           cellStyle: (ri, ci) => ci === 1 ? { bold: true } : null,
         }) + 12;
       } else {
@@ -12657,7 +12657,7 @@ function planModalSectionHTML(d) {
   };
   const sim = simularPlanPago(cfg);
   const r = sim.resumen;
-  const fin = (r && r.meses) ? planIdxLabel(r.mesFinIdx) : '—';
+  const fin = (r && r.meses) ? planIdxLabel(r.mesFinIdx) : 'Sin dato';
   const filasCount = r ? r.meses : 0;
   return `<div class="modal-section">
       <h3>Plan de pagos activo</h3>
@@ -12668,7 +12668,7 @@ function planModalSectionHTML(d) {
       <div class="breakdown-row"><span>Termina de pagar</span><span class="amt">${fin}</span></div>
       ${p.vigencia ? `<div class="breakdown-row"><span>Válido hasta (vigencia)</span><span class="amt">${fmtDate(p.vigencia)}</span></div>` : ''}
       ${p.diaPago ? `<div class="breakdown-row"><span>Pago máx. cada mes</span><span class="amt">Día ${p.diaPago}</span></div>` : ''}
-      <div class="breakdown-row total"><span><strong>Total a pagar</strong></span><span class="amt">${r ? fmtMoney(r.totalPagado) : '—'}</span></div>
+      <div class="breakdown-row total"><span><strong>Total a pagar</strong></span><span class="amt">${r ? fmtMoney(r.totalPagado) : 'Sin dato'}</span></div>
       <p style="font-size:11.5px; color:var(--text-muted); margin:8px 0 0;">Abrí "Ver plan de pagos" para el cronograma completo y el PDF.</p>
     </div>`;
 }
@@ -12832,7 +12832,7 @@ function renderPlanPagos(preselectDepto) {
   const ordenados = DATA.deptos.slice().sort((a, b) => a.depto.localeCompare(b.depto));
   sel.innerHTML = ordenados.map(d => {
     const marca = d.planPago ? ' ● con plan' : '';
-    return `<option value="${d.depto}">${d.depto} — debe ${fmtMoney(d.total_debt)}${marca}</option>`;
+    return `<option value="${d.depto}">${d.depto} · debe ${fmtMoney(d.total_debt)}${marca}</option>`;
   }).join('');
   if (prev && ordenados.some(d => d.depto === prev)) sel.value = prev;
 
@@ -12946,7 +12946,7 @@ function renderPlanResultado(d, cfg, sim, guardado) {
     return;
   }
   const r = sim.resumen;
-  const finLabel = r.meses ? planIdxLabel(r.mesFinIdx) : '—';
+  const finLabel = r.meses ? planIdxLabel(r.mesFinIdx) : 'Sin dato';
   const savedNote = guardado
     ? `<div class="plan-ok-note">${icon('checkCircle', 14)} Plan guardado para el Depto ${d.depto}. Podés recalcularlo cambiando los datos y tocando "Generar plan"; luego volvé a guardarlo.</div>`
     : `<div class="plan-warn">${icon('alertTriangle', 14)} Vista previa: ya podés <strong>imprimir el PDF</strong>. Para que el plan quede aplicado al depto (con su marca en Departamentos), tocá <strong>"Guardar plan en el depto"</strong>.</div>`;
@@ -12960,9 +12960,9 @@ function renderPlanResultado(d, cfg, sim, guardado) {
       <td>${k + 1}</td>
       <td class="l">${planIdxLabel(f.idx)}</td>
       <td>${fmtMoney(f.saldoIni)}</td>
-      <td>${cfg.sumarExpensa ? fmtMoney(f.expensa) : '—'}</td>
-      <td>${cfg.interesActivo ? fmtMoney(f.interes) : '—'}</td>
-      <td>${f.adelanto > 0.005 ? fmtMoney(f.adelanto) : '—'}</td>
+      <td>${cfg.sumarExpensa ? fmtMoney(f.expensa) : 'Sin dato'}</td>
+      <td>${cfg.interesActivo ? fmtMoney(f.interes) : 'Sin dato'}</td>
+      <td>${f.adelanto > 0.005 ? fmtMoney(f.adelanto) : 'Sin dato'}</td>
       <td>${fmtMoney(f.cuota)}</td>
       <td>${fmtMoney(f.saldoFin)}</td>
     </tr>`;
@@ -12992,9 +12992,9 @@ function renderPlanResultado(d, cfg, sim, guardado) {
           <tfoot>
             <tr>
               <td colspan="3" class="l">Totales</td>
-              <td>${cfg.sumarExpensa ? fmtMoney(r.totalExpensa) : '—'}</td>
-              <td>${cfg.interesActivo ? fmtMoney(r.totalInteres) : '—'}</td>
-              <td>${r.totalAdelanto > 0.005 ? fmtMoney(r.totalAdelanto) : '—'}</td>
+              <td>${cfg.sumarExpensa ? fmtMoney(r.totalExpensa) : 'Sin dato'}</td>
+              <td>${cfg.interesActivo ? fmtMoney(r.totalInteres) : 'Sin dato'}</td>
+              <td>${r.totalAdelanto > 0.005 ? fmtMoney(r.totalAdelanto) : 'Sin dato'}</td>
               <td>${fmtMoney(r.totalCuota)}</td>
               <td>${fmtMoney(0)}</td>
             </tr>
@@ -13036,7 +13036,7 @@ function planLegalRow(f, cfg, expensaVigente) {
 function buildPlanBoxHTML(d, cfg, sim) {
   const hoy = fmtDateLong(todayISO());
   const r = sim.resumen;
-  const finLabel = r.meses ? planIdxLabel(r.mesFinIdx) : '—';
+  const finLabel = r.meses ? planIdxLabel(r.mesFinIdx) : 'Sin dato';
   const plazoAnios = planPlazoEnAnios(r.meses);
   const expensaVig = cfg.expensa || d.expensaMensual || DATA.config.expensaMensual || 550;
 
@@ -13128,7 +13128,7 @@ function buildPlanBoxHTML(d, cfg, sim) {
 }
 
 // Refresca en _planActual.cfg los datos de texto (nombre, C.I., vigencia, día de
-// pago) leyéndolos del formulario en el momento — no afectan el cálculo del plan.
+// pago) leyéndolos del formulario en el momento · no afectan el cálculo del plan.
 function planRefreshMeta() {
   if (!_planActual) return;
   const g = (id) => document.getElementById(id);
@@ -13231,7 +13231,7 @@ function irAPlanDepto(deptoCode) {
 }
 
 // ============================================================================
-// CUOTA EXTRAORDINARIA MASIVA — cargar un cargo a TODOS los deptos de una vez
+// CUOTA EXTRAORDINARIA MASIVA · cargar un cargo a TODOS los deptos de una vez
 // ----------------------------------------------------------------------------
 // Útil cuando la Asamblea aprueba una nueva cuota extraordinaria: se agrega como
 // cargo (con su nombre) a cada departamento del alcance elegido, aumentando su
@@ -13264,7 +13264,7 @@ function openBulkCargoModal() {
 
     <div class="bulk-field">
       <label for="bulk-nombre">Concepto de la cuota</label>
-      <input type="text" id="bulk-nombre" placeholder="Ej. Cuota extraordinaria — pintura de fachada" required>
+      <input type="text" id="bulk-nombre" placeholder="Ej. Cuota extraordinaria · pintura de fachada" required>
     </div>
     <div style="display:flex; gap:12px; flex-wrap:wrap;">
       <div class="bulk-field" style="flex:1 1 150px;">
@@ -13467,7 +13467,7 @@ checkReservaHoyBanner();
 
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 34: LUKA en la nube (usuarios + datos sincronizados)
+   GESTIÓN LUKA · Módulo 34: LUKA en la nube (usuarios + datos sincronizados)
    Los datos de cada edificio viven en el Google Drive de Bramar (servidor del
    portal). Este navegador guarda una copia para trabajar sin conexión y sube
    cada cambio. Si otro dispositivo guardó antes, avisa para no pisar cambios.
@@ -14267,7 +14267,7 @@ window.lukaCloud = (function(){
 
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Capa multi-edificio, marca, logo/QR, alta de departamentos y
+   GESTIÓN LUKA · Capa multi-edificio, marca, logo/QR, alta de departamentos y
    ajustes por edificio. Se ejecuta después del script principal (usa sus
    funciones globales: initData, accrueExpensas, renderSummary, renderGrid,
    switchView, autosaveIfLinked, idbGet, idbSet, setDeudaManual, icon, etc.).
@@ -14305,7 +14305,7 @@ window.lukaCloud = (function(){
     const qrTxt = document.getElementById('qr-cuenta-text');
     if (qrImg){ if (qr){ qrImg.src = qr; qrImg.style.display=''; if(qrHint) qrHint.style.display='none'; } else { qrImg.removeAttribute('src'); qrImg.style.display='none'; if(qrHint) qrHint.style.display='block'; } }
     if (qrTxt){ qrTxt.textContent = (DATA.config && DATA.config.cuentaText) ? DATA.config.cuentaText : (name + ' · Cobro de expensas'); }
-    document.title = name === 'Gestión LUKA' ? 'Gestión LUKA — Administración de condominios' : (name + ' — Gestión LUKA');
+    document.title = name === 'Gestión LUKA' ? 'Gestión LUKA · Administración de condominios' : (name + ' · Gestión LUKA');
     try { if (typeof COM_DIRECCION !== 'undefined') COM_DIRECCION = (DATA.config && DATA.config.direccion) || ''; } catch(e){}
     const lb = document.getElementById('luka-brand'); // la etiqueta del topbar muestra el edificio activo
     if (lb){ const nm = lb.querySelector('.luka-tag'); if (nm) nm.textContent = (name==='Gestión LUKA') ? 'Administración de condominios' : name; }
@@ -14473,7 +14473,7 @@ window.lukaCloud = (function(){
 </script>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 2: botones de barra lateral, ajustes del edificio
+   GESTIÓN LUKA · Módulo 2: botones de barra lateral, ajustes del edificio
    (nombre, logo, QR, cuota), alta de departamentos (manual), editor de áreas
    sociales, facturación mensual genérica (cualquier bloque) y ocultado de la
    cuota de ascensor.
@@ -14520,7 +14520,7 @@ window.lukaCloud = (function(){
             d.meses_adeudados.unshift({ mes, anio, monto: cuota });
             recalcDepto(d);
           });
-          billed.push(`${mes} ${anio}${bl ? (' — ' + bl) : ''}`);
+          billed.push(`${mes} ${anio}${bl ? (' · ' + bl) : ''}`);
         }
       });
       if (billed.length) {
@@ -14651,7 +14651,7 @@ window.lukaCloud = (function(){
             </div>
           </div>
           <div class="luka-form-field">
-            <label>Datos de cobro (banco / cuenta) — se muestran junto al QR</label>
+            <label>Datos de cobro (banco / cuenta) · se muestran junto al QR</label>
             <input type="text" id="luka-set-cuenta" maxlength="120" placeholder="Ej. BancoSol · Cuenta Nº 000-000 · Titular">
           </div>
           <div class="luka-form-field">
@@ -14704,7 +14704,7 @@ window.lukaCloud = (function(){
             <p style="font-size:11.5px; color:var(--text-muted); margin:6px 0 0;">Este texto es el que el propietario debe aceptar en la solicitud de reserva online. Editable por edificio.</p>
           </div>
           <div class="luka-form-field">
-            <label>Reservas en la nube — Configuración de Firebase (opcional)</label>
+            <label>Reservas en la nube · Configuración de Firebase (opcional)</label>
             <textarea id="luka-set-firebase" rows="5" placeholder="Pegá acá el bloque firebaseConfig que te da la consola de Firebase" style="width:100%; padding:9px 11px; border:1px solid var(--gridline,#d9dee7); border-radius:10px; background:var(--surface-1,#fff); color:var(--text-primary,#1c2431); font-family:monospace; font-size:12px; resize:vertical;"></textarea>
             <p style="font-size:11.5px; color:var(--text-muted); margin:6px 0 0;" id="luka-fb-status"></p>
             <p style="font-size:11.5px; color:var(--text-muted); margin:4px 0 0;">ID de este edificio en la nube: <b id="luka-fb-nubeid"></b> (se usa para separar las solicitudes de cada edificio).</p>
@@ -14739,7 +14739,7 @@ window.lukaCloud = (function(){
             <input type="number" id="luka-add-cuota" min="0" step="0.01">
           </div>
           <div class="luka-form-field">
-            <label>Deuda inicial de expensas (Bs.) — opcional</label>
+            <label>Deuda inicial de expensas (Bs.) · opcional</label>
             <input type="number" id="luka-add-deuda" min="0" step="0.01" placeholder="0">
           </div>
           <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:8px;">
@@ -14752,7 +14752,7 @@ window.lukaCloud = (function(){
       <div class="modal-backdrop no-print" id="luka-areas-bd">
         <div class="modal" style="max-width:720px;">
           <button class="close-btn" id="luka-areas-close" title="Cerrar">&times;</button>
-          <h2 style="margin-bottom:4px;">Áreas sociales — nombres y precios</h2>
+          <h2 style="margin-bottom:4px;">Áreas sociales · nombres y precios</h2>
           <p class="modal-sub" style="margin-bottom:14px;">Editá el nombre y el precio de cada área según cada franja de personas. Dejá vacío un precio que no aplique.</p>
           <div id="luka-areas-body" style="overflow:auto;"></div>
           <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:14px;">
@@ -15129,7 +15129,7 @@ window.lukaCloud = (function(){
 </script>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 3: Copia de seguridad automática a una carpeta del disco.
+   GESTIÓN LUKA · Módulo 3: Copia de seguridad automática a una carpeta del disco.
    El usuario elige una carpeta (File System Access API). Cada cierto tiempo (y
    luego de cambios) se guarda, dentro de esa carpeta, una subcarpeta por cada
    edificio con: respaldo_datos.json (todo), estado_de_cuentas y
@@ -15149,7 +15149,7 @@ window.lukaCloud = (function(){
   let needRegrant = false;
 
   const round2 = x => Math.round((Number(x)||0)*100)/100;
-  const fmtTs = ts => { try { return ts ? new Date(ts).toLocaleString() : '—'; } catch(e){ return '—'; } };
+  const fmtTs = ts => { try { return ts ? new Date(ts).toLocaleString() : 'Sin dato'; } catch(e){ return 'Sin dato'; } };
 
   async function loadCfg(){ try { const c = await idbGet(CFG_KEY); if (c) cfg = Object.assign(cfg, c); } catch(e){} }
   async function saveCfg(){ try { await idbSet(CFG_KEY, cfg); } catch(e){} }
@@ -15394,7 +15394,7 @@ window.lukaCloud = (function(){
 </script>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 4:
+   GESTIÓN LUKA · Módulo 4:
    (a) Áreas sociales genéricas: cada edificio define sus propias áreas desde cero
        (nombre, monto y garantía). Sin "personas / sillas / mesas" (eso era de LIMCO).
    (b) Menús que no se superponen (se cierran entre sí).
@@ -15627,7 +15627,7 @@ window.lukaCloud = (function(){
       const areaOf = () => areas.find(x=>x.id===selA.value) || areas[0];
       const fillTramos = ()=>{
         const a = areaOf();
-        selT.innerHTML = (a.tramos||[]).map((t,i)=>`<option value="${i}">${esc(t.label||'General')} — ${money(t.monto)}</option>`).join('') || '<option value="0">General</option>';
+        selT.innerHTML = (a.tramos||[]).map((t,i)=>`<option value="${i}">${esc(t.label||'General')} · ${money(t.monto)}</option>`).join('') || '<option value="0">General</option>';
       };
       const extras = ()=>{
         const sillas = parseInt(_('asx-sillas').value) || 0;
@@ -15767,7 +15767,7 @@ window.lukaCloud = (function(){
           ${r.tramoLabel?`<div class="k">Cantidad de personas</div><div class="v">${esc(r.tramoLabel)}</div>`:''}
           <div class="k">Fecha del evento</div><div class="v">${esc(fdate(r.fecha))}</div>
           ${r.evento?`<div class="k">Tipo de evento</div><div class="v">${esc(r.evento)}</div>`:''}
-          <div class="k">Departamento</div><div class="v">${r.depto?esc(r.depto):'—'}</div>
+          <div class="k">Departamento</div><div class="v">${r.depto?esc(r.depto):'Sin dato'}</div>
         </div>
         <div class="asx-comp-montos">
           <div class="asx-comp-line"><span>Alquiler del área</span><span>${money(r.monto)}</span></div>
@@ -15824,7 +15824,7 @@ window.lukaCloud = (function(){
     const areaOf=()=>areas.find(x=>x.id===selA.value)||areas[0]||{tramos:[],garantia:0,nombre:''};
     const fillTramos=(preLabel)=>{
       const a=areaOf();
-      selT.innerHTML=(a.tramos||[]).map((t,i)=>`<option value="${i}">${esc(t.label||'General')} — ${money(t.monto)}</option>`).join('')||'<option value="0">General</option>';
+      selT.innerHTML=(a.tramos||[]).map((t,i)=>`<option value="${i}">${esc(t.label||'General')} · ${money(t.monto)}</option>`).join('')||'<option value="0">General</option>';
       if(preLabel!=null){ const idx=(a.tramos||[]).findIndex(t=>(t.label||'')===preLabel); if(idx>=0) selT.value=String(idx); }
     };
     const upd=()=>{
@@ -15957,7 +15957,7 @@ window.lukaCloud = (function(){
 </script>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 5: tema "elegante & minimalista" con micro-animaciones.
+   GESTIÓN LUKA · Módulo 5: tema "elegante & minimalista" con micro-animaciones.
    Mantiene la paleta (azul marino + dorado) y las tipografías (Sora / Inter).
    ============================================================================ */
 (function(){
@@ -16077,7 +16077,7 @@ window.lukaCloud = (function(){
 </script>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 6: barra lateral ordenada.
+   GESTIÓN LUKA · Módulo 6: barra lateral ordenada.
    Arriba: navegación (secciones útiles).
    Abajo: UN solo botón "Configuraciones" (desplegable y scrolleable) que reúne
    Agregar departamento, ajustes del edificio, guardado/archivos y tema.
@@ -16161,7 +16161,7 @@ window.lukaCloud = (function(){
     if(actions) actions.style.display='none';
     if(footer) footer.style.display='none';
 
-    // Abrir / cerrar — robusto: el cierre por afuera usa mousedown (no compite con
+    // Abrir / cerrar · robusto: el cierre por afuera usa mousedown (no compite con
     // el click que abre), así el primer clic siempre funciona.
     const setOpen = (o)=>{ panel.classList.toggle('open', o); trig.classList.toggle('is-open', o); };
     const close = ()=> setOpen(false);
@@ -16181,7 +16181,7 @@ window.lukaCloud = (function(){
 </script>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 7: limpieza de descargas (íconos propios, sin
+   GESTIÓN LUKA · Módulo 7: limpieza de descargas (íconos propios, sin
    redundancias) + legibilidad (letras más nítidas, nada de texto borroso).
    ============================================================================ */
 (function(){
@@ -16237,7 +16237,7 @@ window.lukaCloud = (function(){
 </script>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 8: quitar el chip dorado, fondo limpio (sin neblina),
+   GESTIÓN LUKA · Módulo 8: quitar el chip dorado, fondo limpio (sin neblina),
    ventanas flotantes compactas y escroleables, y animaciones fluidas.
    ============================================================================ */
 (function(){
@@ -16319,7 +16319,7 @@ window.lukaCloud = (function(){
   document.addEventListener('click', e => {
     // Solo actuar sobre clics REALES del mouse. Los clics que dispara la app
     // (por ej. abrir el selector de archivos con input.click()) tienen
-    // isTrusted=false y NO deben bloquearse — si no, no abre el diálogo.
+    // isTrusted=false y NO deben bloquearse · si no, no abre el diálogo.
     if (!e.isTrusted) return;
     const md = __mdTarget;
     if (!md || !md.closest) return;
@@ -16422,9 +16422,9 @@ window.lukaCloud = (function(){
     const sortDepto=(a,b)=>String(a.depto).localeCompare(String(b.depto));
     if(metric==='total'){
       title='Total de departamentos';
-      const byB={}; d.forEach(x=>{ const b=(x.bloque||'').trim()||'—'; byB[b]=(byB[b]||0)+1; });
-      sub = Object.keys(byB).sort().map(b=>`${b==='—'?'—':b}: ${byB[b]}`).join('  ·  ');
-      rows = d.slice().sort(sortDepto).map(x=>({depto:x.depto, l:x.depto, r:(x.bloque? x.bloque : '—')}));
+      const byB={}; d.forEach(x=>{ const b=(x.bloque||'').trim()||'Sin dato'; byB[b]=(byB[b]||0)+1; });
+      sub = Object.keys(byB).sort().map(b=>`${b==='Sin dato'?'Sin dato':b}: ${byB[b]}`).join('  ·  ');
+      rows = d.slice().sort(sortDepto).map(x=>({depto:x.depto, l:x.depto, r:(x.bloque? x.bloque : 'Sin dato')}));
     } else if(metric==='aldia'){
       title='Departamentos al día (sin deuda)';
       const l=d.filter(x=>(x.total_debt||0)<=0).sort(sortDepto);
@@ -16443,7 +16443,7 @@ window.lukaCloud = (function(){
     } else if(metric==='cargos'){
       title='Multas y cargos extraordinarios';
       d.slice().sort(sortDepto).forEach(x=>(x.cargos_extra||[]).forEach(c=>{
-        rows.push({depto:x.depto, l:`${x.depto} — ${c.nombre||'Cargo'}`, r:M(c.monto||0)});
+        rows.push({depto:x.depto, l:`${x.depto} · ${c.nombre||'Cargo'}`, r:M(c.monto||0)});
       }));
       total=M(d.reduce((s,x)=>s+(x.cargos_debt||0),0));
       if(!rows.length) sub='No hay multas ni cargos cargados.';
@@ -16682,7 +16682,7 @@ window.lukaCloud = (function(){
     band(doc, pageW, 'Pizarra', `${edificio} · ${label}`);
     let y = 34;
     const deptos = (data.deptos||[]).slice();
-    const bloques = {}; deptos.forEach(d=>{ const b=d.bloque||'—'; (bloques[b]=bloques[b]||[]).push(d); });
+    const bloques = {}; deptos.forEach(d=>{ const b=d.bloque||'Sin dato'; (bloques[b]=bloques[b]||[]).push(d); });
     const nBloques = Object.keys(bloques).length || 1;
     const alDia = deptos.filter(d=> (Number(d.total_debt)||0)<=0).length;
     const enMora = deptos.length - alDia;
@@ -16823,7 +16823,7 @@ window.lukaCloud = (function(){
   document.head.appendChild(st);
 
   /* =========================================================================
-     1) PLAN DE PAGOS — resumen de departamentos con plan (parte baja)
+     1) PLAN DE PAGOS · resumen de departamentos con plan (parte baja)
      ========================================================================= */
   function ensurePlanResumen(){
     let host = _('lk-plan-activos');
@@ -16845,12 +16845,12 @@ window.lukaCloud = (function(){
     conPlan.sort((a,b)=> String(a.depto).localeCompare(String(b.depto),'es',{numeric:true}));
     const rows = conPlan.map(d=>{
       const p = d.planPago; const r = p.resumen || {};
-      const meses = r.meses != null ? r.meses : '—';
-      const desde = (p.mesInicioIdx!=null && typeof planIdxLabel==='function') ? planIdxLabel(p.mesInicioIdx) : '—';
-      const hasta = (r.mesFinIdx!=null && typeof planIdxLabel==='function') ? planIdxLabel(r.mesFinIdx) : '—';
-      const total = r.totalPagado != null ? money(r.totalPagado) : '—';
-      const dia = p.diaPago ? ('día '+p.diaPago) : '—';
-      const vig = p.vigencia ? esc(p.vigencia) : '—';
+      const meses = r.meses != null ? r.meses : 'Sin dato';
+      const desde = (p.mesInicioIdx!=null && typeof planIdxLabel==='function') ? planIdxLabel(p.mesInicioIdx) : 'Sin dato';
+      const hasta = (r.mesFinIdx!=null && typeof planIdxLabel==='function') ? planIdxLabel(r.mesFinIdx) : 'Sin dato';
+      const total = r.totalPagado != null ? money(r.totalPagado) : 'Sin dato';
+      const dia = p.diaPago ? ('día '+p.diaPago) : 'Sin dato';
+      const vig = p.vigencia ? esc(p.vigencia) : 'Sin dato';
       return `<tr>
         <td><strong>${esc(d.depto)}</strong></td>
         <td class="num">${money(p.cuota)}</td>
@@ -16882,7 +16882,7 @@ window.lukaCloud = (function(){
   }
 
   /* =========================================================================
-     2) TARJETAS — Personal del condominio + Visitas Bloque A / B
+     2) TARJETAS · Personal del condominio + Visitas Bloque A / B
         Tres botones arriba (entre el buscador y los departamentos) que abren
         una ventana emergente para registrar/quitar tarjetas de cada apartado.
      ========================================================================= */
@@ -17001,7 +17001,7 @@ window.lukaCloud = (function(){
           <div class="lk-x-name">${esc(item.nombre||'(sin nombre)')}</div>
           ${item.nota ? `<div class="lk-x-meta">${esc(item.nota)}</div>` : ''}
         </div>
-        <span class="lk-x-code">${esc(item.codigo||'—')}</span>
+        <span class="lk-x-code">${esc(item.codigo||'Sin dato')}</span>
         <button type="button" class="lk-x-del" data-id="${esc(item.id)}" title="Quitar">Quitar</button>
       </div>`).join('') : `<div class="lk-empty">Todavía no hay tarjetas en este apartado. Agregá la primera abajo.</div>`;
     cont.querySelectorAll('.lk-x-del').forEach(btn=> btn.addEventListener('click', ()=>{
@@ -17131,7 +17131,7 @@ window.lukaCloud = (function(){
   }
 
   /* =========================================================================
-     5) ICONOS DE MENÚ — uno propio y coherente por apartado
+     5) ICONOS DE MENÚ · uno propio y coherente por apartado
      ========================================================================= */
   const NAV_ICONS = {
     'lista': '<path d="M3 21h18"></path><path d="M5 21V7l7-4 7 4v14"></path><path d="M9 21v-5h6v5"></path><line x1="9" y1="9" x2="9" y2="9.01"></line><line x1="15" y1="9" x2="15" y2="9.01"></line><line x1="9" y1="12.5" x2="9" y2="12.51"></line><line x1="15" y1="12.5" x2="15" y2="12.51"></line>',
@@ -17234,7 +17234,7 @@ window.lukaCloud = (function(){
 </script>
 <script id="cfg2-modulo">
 /* ============================================================================
-   GESTIÓN LUKA — Configuraciones reorganizadas
+   GESTIÓN LUKA · Configuraciones reorganizadas
    ----------------------------------------------------------------------------
    El menú anterior mezclaba tres cosas distintas en una misma lista: acciones
    que descargan un archivo, acciones que abren una ventana y acordeones que
@@ -18235,7 +18235,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     html+=`<div class="lk-rec-list">`;
     if(outliers.length){
       html+=`<div style="padding:11px 13px;background:var(--warning-bg,#fdf3d7);border-radius:10px;color:#7a5b00;font-size:12.5px;margin-bottom:12px;">
-        <strong>Revisá estos recibos mal cargados</strong> (número fuera de rango, probablemente dos recibos pegados o un cero de más). Editalos desde el historial del departamento —si fueron dos recibos para un mismo pago, separalos con guión (ej. <em>005129 - 005131</em>)— y volvé a revisar:<br>
+        <strong>Revisá estos recibos mal cargados</strong> (número fuera de rango, probablemente dos recibos pegados o un cero de más). Editalos desde el historial del departamento ·si fueron dos recibos para un mismo pago, separalos con guión (ej. <em>005129 - 005131</em>)· y volvé a revisar:<br>
         ${outliers.map(n=>`<span class="lk-rec-dup" title="${esc((map[n]||[]).map(x=>x.depto+' · '+(x.fecha||'')).join(' | '))}">${esc(String(n))}${(map[n]&&map[n][0]&&map[n][0].depto)?(' · Depto '+esc(map[n][0].depto)):''}</span>`).join('')}
       </div>`;
     }
@@ -18340,7 +18340,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     if(!(min>0)){ if(inp) inp.focus(); return; }
     const list=(DATA.deptos||[]).filter(d=>(d.total_debt||0)>=min).slice().sort((a,b)=>(b.total_debt||0)-(a.total_debt||0));
     tarjetasPDFLista(list, {
-      portada:`Tarjetas — deudores desde ${money(min)}`,
+      portada:`Tarjetas · deudores desde ${money(min)}`,
       titulo:`Deptos que deben ${money(min)} o más`,
       valor:d=>money(d.total_debt||0), valorTitulo:'Deuda',
       slug:'tarjetas_desde_monto', pie:'Tarjetas por monto de deuda',
@@ -18359,7 +18359,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   function imprimirPlanVencido(){
     const list=(DATA.deptos||[]).filter(planVencido).slice().sort((a,b)=>(b.total_debt||0)-(a.total_debt||0));
     tarjetasPDFLista(list, {
-      portada:'Tarjetas — planes de pago vencidos',
+      portada:'Tarjetas · planes de pago vencidos',
       titulo:'Deptos que no cumplieron su fecha del plan de pagos',
       valor:d=>{ const p=d.planPago||{}; return p.diaPago?('día '+p.diaPago):(p.vigencia||'vencido'); }, valorTitulo:'Vence',
       slug:'tarjetas_plan_vencido', pie:'Tarjetas · plan de pagos vencido',
@@ -18809,7 +18809,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       let col;
       if(bq==='A') col='var(--series-blue)';
       else if(bq==='B') col='var(--series-aqua)';
-      else { const key=bq||'—'; if(!(key in seen)) seen[key]=BLOQUE_PAL[pi++ % BLOQUE_PAL.length]; col=seen[key]; }
+      else { const key=bq||'Sin dato'; if(!(key in seen)) seen[key]=BLOQUE_PAL[pi++ % BLOQUE_PAL.length]; col=seen[key]; }
       row.style.setProperty('border-left-color', col, 'important');
       row.style.setProperty('border-left-width','6px','important');
       row.style.setProperty('border-left-style','solid','important');
@@ -18897,7 +18897,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
         if(inp){
           inp.value=pad(nextSugerido());
           var hint=inp.parentNode&&inp.parentNode.querySelector('.hint');
-          if(hint) hint.textContent='Editable — se sugiere el siguiente al recibo más alto ('+pad(maxIncome()||0)+'). Cámbialo sólo si estás llenando uno que te saltaste.';
+          if(hint) hint.textContent='Editable · se sugiere el siguiente al recibo más alto ('+pad(maxIncome()||0)+'). Cámbialo sólo si estás llenando uno que te saltaste.';
           // Aviso VISIBLE (no depende de confirm, funciona también en el APK): se
           // muestra en rojo debajo del campo cuando el número ya fue usado o se saltea.
           var warn=inp.parentNode&&inp.parentNode.querySelector('#pf-recibo-warn');
@@ -18965,7 +18965,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 </script>
 
 <script>
-/* ===== Módulo 21: Reporte diario — click en fila abre recibo/comprobante + carga por ítems =====
+/* ===== Módulo 21: Reporte diario · click en fila abre recibo/comprobante + carga por ítems =====
    1) Click sobre una fila de INGRESO vinculada a un pago -> abre su RECIBO.
    2) Click sobre una fila de EGRESO o de un ingreso manual -> abre un COMPROBANTE imprimible.
    3) Botón "Cargar por ítems": registra UN movimiento (ingreso o egreso) con varias
@@ -18998,7 +18998,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
         '<table style="width:100%; border-collapse:collapse; font-size:12.5px; margin-top:4px;">'+
         items.map(function(it,i){
           return '<tr style="border-bottom:1px solid rgba(0,0,0,.07);">'+
-            '<td style="padding:6px 4px; color:var(--r-ink,#1c2431);">'+(i+1)+'. '+esc(it.concepto||'—')+'</td>'+
+            '<td style="padding:6px 4px; color:var(--r-ink,#1c2431);">'+(i+1)+'. '+esc(it.concepto||'Sin dato')+'</td>'+
             '<td style="padding:6px 4px; text-align:right; font-weight:700; white-space:nowrap; color:'+accent+';">'+money(it.monto)+'</td></tr>';
         }).join('')+
         '</table></div>';
@@ -19019,7 +19019,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
         (mov.depto?('<div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">'+esc(mov.depto)+'</div></div>'):'')+
         (mov.categoria&&mov.categoria!=='otro'?('<div class="r-info-item"><div class="r-label">Categoría</div><div class="r-value">'+esc(mov.categoria)+'</div></div>'):'')+
       '</div>'+
-      '<div class="r-concept-box"><div class="r-concept-label">'+(items?'Motivo':'Concepto')+'</div>'+esc(mov.motivo||'—')+'</div>'+
+      '<div class="r-concept-box"><div class="r-concept-label">'+(items?'Motivo':'Concepto')+'</div>'+esc(mov.motivo||'Sin dato')+'</div>'+
       itemsHTML+
       '<div class="r-total-band" style="background:'+accent+';"><div class="r-total-label" style="color:#fff;">'+(esEgreso?'Total egreso':'Total ingreso')+'</div><div class="r-total-value" style="color:#fff;">'+money(total)+'</div></div>'+
       '<div class="r-sign">'+
@@ -19504,10 +19504,10 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     box(M+2*(bw+gap), saldo>=0?'Saldo a devolver':'Faltante', saldo, saldo>=0?GREEN:RED);
     // Tabla de ítems
     var rows=(caja.items||[]).filter(function(it){return (it.concepto||'').trim()||(parseFloat(it.monto)||0)>0;})
-      .map(function(it,i){ return [String(i+1), it.concepto||'—', money(parseFloat(it.monto)||0)]; });
-    if(!rows.length) rows=[['—','(sin gastos cargados)','']];
+      .map(function(it,i){ return [String(i+1), it.concepto||'Sin dato', money(parseFloat(it.monto)||0)]; });
+    if(!rows.length) rows=[['Sin dato','(sin gastos cargados)','']];
     var y=pdfDrawTable(pdf,{ x:M, w:CW, startY:by+bh+18, contTop:56, fontSize:9.5,
-      onPage:function(p,py){ p.text('Rendición de caja chica — '+(caja.nombre||''),M,py,{size:10,bold:true,color:NAVY}); },
+      onPage:function(p,py){ p.text('Rendición de caja chica · '+(caja.nombre||''),M,py,{size:10,bold:true,color:NAVY}); },
       cols:[ {title:'N.º',w:44,align:'center'}, {title:'Detalle del gasto',w:CW-44-120}, {title:'Monto',w:120,align:'right'} ],
       rows:rows, cellStyle:function(ri,ci){ return ci===2?{bold:true,color:INK}:null; } });
     // Total gastado (fila)
@@ -19563,7 +19563,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 <script>
 /* ===== Módulo 25: Ver la pizarra de una fecha (reconstruida) =====
    Ponés una fecha y se reconstruye cómo estaba la pizarra ESE día. No usa fotos
-   guardadas: se calcula a partir del historial de pagos — revierte los pagos
+   guardadas: se calcula a partir del historial de pagos · revierte los pagos
    hechos después de esa fecha (con el detalle guardado de cada pago) y quita los
    meses/cargos que todavía no existían en esa fecha. */
 (function(){
@@ -19672,7 +19672,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 
 
 <script>
-/* ===== Módulo 27: Reservas — panel de administración con navegación por pestañas =====
+/* ===== Módulo 27: Reservas · panel de administración con navegación por pestañas =====
    Presentación integrada: encabezado + franja de indicadores reales + navegación
    compacta (pestañas). Cada pestaña muestra SOLO su contenido. Reutiliza áreas
    (DATA.config.areasLuka), comprobante (__lukaOpenReservaDetalle) y editor de áreas
@@ -19699,7 +19699,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   function resIni(r){ return r.inicio || (r.fecha? (r.fecha+'T00:00'):''); }
   function resFin(r){ return r.fin || (r.fecha? (r.fecha+'T23:59'):''); }
   function estadoTemp(r){ var f=resFin(r), i=resIni(r), n=nowLocal(); if(f && f<n) return 'finalizada'; if(i && i>n) return 'proxima'; return 'activa'; }
-  function fmtDT(s){ if(!s) return '—'; s=String(s); var d=s.split('T'); var dp=(d[0]||'').split('-'); var out=dp.length===3?(dp[2]+'/'+dp[1]+'/'+dp[0]):d[0]; var h=(d[1]||'').match(/^(\d{1,2}):(\d{2})/); if(h&&!/1899|GMT/.test(d[1])) out+=' '+(h[1].length<2?'0':'')+h[1]+':'+h[2]; return out; }
+  function fmtDT(s){ if(!s) return 'Sin dato'; s=String(s); var d=s.split('T'); var dp=(d[0]||'').split('-'); var out=dp.length===3?(dp[2]+'/'+dp[1]+'/'+dp[0]):d[0]; var h=(d[1]||'').match(/^(\d{1,2}):(\d{2})/); if(h&&!/1899|GMT/.test(d[1])) out+=' '+(h[1].length<2?'0':'')+h[1]+':'+h[2]; return out; }
   function fdateLong(s){ try{ if(s && typeof fmtDateLong==='function') return fmtDateLong(s.slice(0,10)); }catch(e){} return s; }
 
   function garState(r){ if(!r.garDev||typeof r.garDev!=='object') r.garDev={estado:'pendiente',historial:[]}; if(!Array.isArray(r.garDev.historial)) r.garDev.historial=[]; if(r.garDev.estado!=='devuelta') r.garDev.estado='pendiente'; return r.garDev; }
@@ -19708,7 +19708,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   function garDev(){ return conGar().filter(function(r){ return garState(r).estado==='devuelta'; }); }
   function totalPend(){ return garPend().reduce(function(a,r){ return a+(+r.garantia||0); },0); }
   function ultDev(r){ var h=garState(r).historial; return h.length?h[h.length-1]:null; }
-  function responsable(r){ return r.responsable || (r.depto?('Depto '+r.depto):'') || '—'; }
+  function responsable(r){ return r.responsable || (r.depto?('Depto '+r.depto):'') || 'Sin dato'; }
 
   // ---- CSS ----
   var st=document.createElement('style'); st.textContent=
@@ -19894,7 +19894,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       '</div>';
     var selA=_('lkr-area'), selT=_('lkr-tramo');
     var areaOf=function(){ return A.find(function(x){return x.id===selA.value;})||A[0]; };
-    var fillTramos=function(preLabel){ var a=areaOf(); selT.innerHTML=(a.tramos||[]).map(function(t,i){return '<option value="'+i+'">'+esc(t.label||'General')+' — '+money(t.monto)+'</option>';}).join('')||'<option value="0">General</option>';
+    var fillTramos=function(preLabel){ var a=areaOf(); selT.innerHTML=(a.tramos||[]).map(function(t,i){return '<option value="'+i+'">'+esc(t.label||'General')+' · '+money(t.monto)+'</option>';}).join('')||'<option value="0">General</option>';
       if(preLabel!=null){ var idx=(a.tramos||[]).findIndex(function(t){return (t.label||'')===preLabel;}); if(idx>=0) selT.value=String(idx); } };
     var extras=function(){ var M=(window.lukaMobiliario?window.lukaMobiliario():[]), lista=[], tot=0, q={};
       document.querySelectorAll('.lkr-mb').forEach(function(i){ var n=parseInt(i.value)||0; if(n<=0) return; var m=M.filter(function(x){ return x.id===i.dataset.mb; })[0]; if(!m) return; var sub=n*(+m.precio||0); tot+=sub; q[m.id]=n; lista.push({id:m.id,nombre:m.nombre,cant:n,precio:+m.precio||0,subtotal:sub}); });
@@ -20087,11 +20087,11 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     pdf.text('COMPROBANTE DE DEVOLUCIÓN DE GARANTÍA',M,47,{size:12.5,bold:true,color:[233,215,170]});
     pdf.text('Reserva de área social',M,72,{size:9.5,color:[200,210,226]});
     var y=120; function row(l,v){ pdf.text(l,M,y,{size:10,color:MUT}); pdf.text(String(v),M+190,y,{size:11,bold:true,color:INK}); y+=22; }
-    row('Área', r.areaNombre||'—'); row('Responsable', responsable(r)); if(r.depto) row('Departamento', r.depto);
-    row('Evento', (r.evento||'—')+' · '+fmtDT(resIni(r)));
+    row('Área', r.areaNombre||'Sin dato'); row('Responsable', responsable(r)); if(r.depto) row('Departamento', r.depto);
+    row('Evento', (r.evento||'Sin dato')+' · '+fmtDT(resIni(r)));
     row('Garantía recibida', money(r.garantia));
     y+=6; pdf.line(M,y-2,PW-M,y-2,[220,224,232],1); y+=14;
-    row('Fecha de devolución', fdateLong(en.fecha)); row('N.º de comprobante', en.comprobante||'—');
+    row('Fecha de devolución', fdateLong(en.fecha)); row('N.º de comprobante', en.comprobante||'Sin dato');
     if(en.recibio) row('Recibió', en.recibio); if(en.obs) row('Observación', en.obs);
     y+=6; pdf.rect(M,y,CW,34,SOFT); pdf.text('MONTO DEVUELTO',M+10,y+13,{size:10,bold:true,color:NAVY}); pdf.text(money(en.monto),PW-M-10,y+13,{size:16,bold:true,color:GREEN,align:'right'}); y+=60;
     pdf.line(M+10,y,M+190,y,INK,0.8); pdf.text('Entregó (administración)',M+10,y+8,{size:9,color:MUT});
@@ -20113,7 +20113,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 
 <script>
 /* ============================================================================
-   GESTIÓN LUKA / BRAMAR — Módulo 29: Configuración por edificio (Fase 1)
+   GESTIÓN LUKA / BRAMAR · Módulo 29: Configuración por edificio (Fase 1)
    - Normaliza DATA.config.servicios (precios de sillas/mesas) y DATA.config.tema (colores)
      con valores por defecto = los actuales de LIMCO, para no cambiar nada existente.
    - Aplica los colores del edificio con variables CSS (personalización visual).
@@ -20356,7 +20356,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 
 <script>
 /* ============================================================================
-   GESTIÓN LUKA / BRAMAR — Módulo 30: Centro de Configuración (⚙️)
+   GESTIÓN LUKA / BRAMAR · Módulo 30: Centro de Configuración (⚙️)
    Panel único con: Edificio (info+contactos+conteos+torres N), Cuotas
    extraordinarias genéricas, Pizarra configurable, Servicios, Áreas,
    Personalización visual y Campos personalizados. Todo aditivo y con
@@ -20749,7 +20749,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     var cols = (typeof pizColumnas==='function') ? pizColumnas() : [];
     var filtro = (c.pizarra && c.pizarra.filtro) || 'todos';
     b.innerHTML=
-      '<h3>Pizarra — qué mostrar</h3>'+
+      '<h3>Pizarra · qué mostrar</h3>'+
       '<p class="cc-hint">Elegí qué columnas aparecen, en qué orden y con qué título. Y qué departamentos entran en la pizarra.</p>'+
       '<div class="cc-card"><strong style="font-size:13.5px;">Columnas</strong>'+
         '<p class="cc-hint" style="margin:2px 0 8px;">Marcá para mostrar. Cambiá el título si querés. Usá ▲▼ para reordenar.</p>'+
@@ -20867,7 +20867,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 
 <script>
 /* ============================================================================
-   GESTIÓN LUKA / BRAMAR — Módulo 31: Menú de personalización DENTRO de la Pizarra
+   GESTIÓN LUKA / BRAMAR · Módulo 31: Menú de personalización DENTRO de la Pizarra
    Barra estética con grupos (columnas / departamentos). El botón "Personalizar"
    vive en la cabecera (btn-piz-personalizar) y abre las opciones avanzadas.
    También refresca los chips de bloque de Tarjetas según las torres reales.
@@ -20988,7 +20988,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 
 <script>
 /* ============================================================================
-   GESTIÓN LUKA / BRAMAR — Módulo 32: Solicitud de reserva ONLINE
+   GESTIÓN LUKA / BRAMAR · Módulo 32: Solicitud de reserva ONLINE
    - Genera una página independiente (para hostear) que el propietario llena,
      acepta el reglamento (editable por edificio), ve el QR de pago y envía la
      solicitud + comprobante por WhatsApp con un código.
@@ -21092,7 +21092,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     H += 'var selA=$("f-area"),selT=$("f-tramo");';
     H += 'selA.innerHTML=CFG.areas.map(function(a){return "<option value=\\""+a.id+"\\">"+a.nombre+"</option>";}).join("");';
     H += 'function areaOf(){return CFG.areas.filter(function(a){return a.id===selA.value;})[0]||CFG.areas[0];}';
-    H += 'function fillT(){var a=areaOf();selT.innerHTML=(a&&a.tramos.length?a.tramos:[{label:"General",monto:0}]).map(function(t,i){return "<option value=\\""+i+"\\">"+t.label+" — "+money(t.monto)+"</option>";}).join("");}';
+    H += 'function fillT(){var a=areaOf();selT.innerHTML=(a&&a.tramos.length?a.tramos:[{label:"General",monto:0}]).map(function(t,i){return "<option value=\\""+i+"\\">"+t.label+" · "+money(t.monto)+"</option>";}).join("");}';
     H += 'function extras(){var s=parseInt($("f-sillas").value)||0,m=parseInt($("f-mesas").value)||0,mn=parseInt($("f-mesasN").value)||0;return {s:s,m:m,mn:mn,tot:s*CFG.precioSilla+m*CFG.precioMesa+mn*CFG.precioMesaNueva};}';
     H += 'function calc(){var a=areaOf();var t=(a&&a.tramos[parseInt(selT.value)||0])||{monto:0};var alq=+t.monto||0;var gar=+(a&&a.garantia||0);var ex=extras();return {alq:alq,gar:gar,ex:ex.tot,total:alq+gar+ex.tot,exObj:ex,tramo:t};}';
     H += 'function upd(){var c=calc();$("f-total").innerHTML="<div class=\\"tl\\"><span>Alquiler</span><span>"+money(c.alq)+"</span></div><div class=\\"tl\\"><span>Extras (sillas/mesas)</span><span>"+money(c.ex)+"</span></div><div class=\\"tl\\"><span>Garantía (reembolsable)</span><span>"+money(c.gar)+"</span></div><div class=\\"tl g\\"><span>Total a pagar</span><span>"+money(c.total)+"</span></div>";}';
@@ -21137,7 +21137,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
         '<ol style="font-size:12.5px;color:var(--text-secondary);margin:0;padding-left:18px;line-height:1.6;">'+
           '<li>Descargá el archivo con el botón de arriba.</li>'+
           '<li>Entrá a <b>app.netlify.com/drop</b> y arrastrá el archivo.</li>'+
-          '<li>Netlify te da un link — ese es el que mandás por WhatsApp.</li>'+
+          '<li>Netlify te da un link · ese es el que mandás por WhatsApp.</li>'+
         '</ol>'+
         '<textarea id="sol-html" style="position:absolute;left:-9999px;top:0;"></textarea>'+
       '</div>';
@@ -21200,7 +21200,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
     DATA.reservasSociales.push(obj);
     try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); }catch(e){}
     try{ if(typeof renderAreasSociales==='function') renderAreasSociales(); }catch(e){}
-    alert('Solicitud importada: '+(obj.areaNombre||'')+' — '+(obj.responsable||'')+' (Depto '+(obj.depto||'-')+').\\nQuedó como «Tentativa» para que la revises y confirmes.');
+    alert('Solicitud importada: '+(obj.areaNombre||'')+' · '+(obj.responsable||'')+' (Depto '+(obj.depto||'-')+').\\nQuedó como «Tentativa» para que la revises y confirmes.');
     if(typeof showSaveToast==='function') showSaveToast('Solicitud de reserva importada (Tentativa).');
   }
   window.__lukaImportarSolicitud=importarSolicitud;
@@ -21304,7 +21304,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 
 <script>
 /* ============================================================================
-   GESTIÓN LUKA / BRAMAR — Módulo 33: Reservas en la nube (Firebase, opcional)
+   GESTIÓN LUKA / BRAMAR · Módulo 33: Reservas en la nube (Firebase, opcional)
    Si el edificio tiene configurado Firebase, las solicitudes que el propietario
    envía desde el link aparecen acá para aprobar con un clic (sin pegar código).
    Si no hay Firebase, no hace nada (se sigue usando el código manual).
@@ -21384,7 +21384,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
         var p=d.data;
         var total=(+p.monto||0)+(+p.garantia||0)+(+p.extras||0);
         return '<div class="cc-card" data-doc="'+esc(d.id)+'" style="border:1px solid var(--gridline,#d9dee7);border-radius:11px;padding:12px;margin-bottom:8px;">'+
-          '<div style="font-weight:800;color:var(--brand-navy,#0b2440);">'+esc(p.areaNombre||'')+' — '+esc(p.responsable||'')+(p.depto?(' · Depto '+esc(p.depto)):'')+'</div>'+
+          '<div style="font-weight:800;color:var(--brand-navy,#0b2440);">'+esc(p.areaNombre||'')+' · '+esc(p.responsable||'')+(p.depto?(' · Depto '+esc(p.depto)):'')+'</div>'+
           '<div style="font-size:12.5px;color:var(--text-secondary);margin:4px 0;">'+esc(p.evento||'')+' · '+esc(p.fecha||'')+' '+esc(p.hini||'')+(p.hfin?(' a '+esc(p.hfin)):'')+' · '+esc(p.tramoLabel||'')+'</div>'+
           '<div style="font-size:12.5px;color:var(--text-secondary);">Sillas '+(+p.sillas||0)+' · Mesas '+(+p.mesas||0)+' · Mesas nuevas '+(+p.mesasNuevas||0)+' · Total '+money(total)+'</div>'+
           '<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px;">'+
@@ -21440,7 +21440,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 
 <script>
 /* ============================================================================
-   GESTIÓN LUKA / BRAMAR — Módulo 32: Comprobantes del portal de copropietarios
+   GESTIÓN LUKA / BRAMAR · Módulo 32: Comprobantes del portal de copropietarios
    · Cada edificio de LUKA se vincula con UN edificio del portal BRAMAR
      (DATA.config.portalBramar.portalId, elegido de la lista real del portal).
    · Solo se listan los comprobantes de ese edificio; los demás se informan aparte.
@@ -21463,7 +21463,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
   function guardar(){ try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); }catch(e){} try{ if(typeof saveDataLocal==='function') saveDataLocal(); }catch(e){} }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
   function money(v){ var n=parseFloat(String(v||'').replace(',','.')); if(isNaN(n)) return String(v||''); return (typeof fmtMoney==='function')?fmtMoney(n):('Bs. '+n.toFixed(2)); }
-  function fcorta(s){ if(!s) return '—'; var d=new Date(String(s).length<=10?s+'T00:00:00':s); return isNaN(d)?s:d.toLocaleDateString('es-BO',{day:'2-digit',month:'short',year:'numeric'}); }
+  function fcorta(s){ if(!s) return 'Sin dato'; var d=new Date(String(s).length<=10?s+'T00:00:00':s); return isNaN(d)?s:d.toLocaleDateString('es-BO',{day:'2-digit',month:'short',year:'numeric'}); }
   function normDep(s){ return String(s||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
   function deptoDe(r){ var k=normDep(r.depto); return (DATA.deptos||[]).find(function(d){ return normDep(d.depto)===k; })||null; }
   function edificio(){ try{ return (typeof buildingName==='function')?buildingName():((DATA.config&&DATA.config.nombreEdificio)||''); }catch(e){ return ''; } }
@@ -21607,7 +21607,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       var marcar=function(){ lista=lista.filter(function(x){ return x!==r; }); badge(lista.length); api({action:'estado',fila:r.fila,archivo:r.archivo,estado:'Verificado'}).then(function(){ cargar(true); }).catch(function(){ cargar(true); }); };
       if(res.pago){ if(confirm('Esta reserva ya está cobrada (recibo '+res.pago.no+'). ¿Marcar el comprobante como verificado?')) marcar(); return; }
       var marcar0=marcar; marcar=function(rr){ try{ if(rr&&rr.pago){ rr.pago.comprobante={fila:r.fila,archivo:r.archivo}; guardar(); } }catch(e){} marcar0(); };
-      window.lukaPagoReserva(res,{monto:n>0?n:0,fecha:/^\d{4}-\d{2}-\d{2}$/.test(r.fecha||'')?r.fecha:'',obs:'Comprobante del portal'+(r.nota?' — '+r.nota.replace(/^\[Alquiler\]\s*/,''):''),onDone:marcar});
+      window.lukaPagoReserva(res,{monto:n>0?n:0,fecha:/^\d{4}-\d{2}-\d{2}$/.test(r.fecha||'')?r.fecha:'',obs:'Comprobante del portal'+(r.nota?' · '+r.nota.replace(/^\[Alquiler\]\s*/,''):''),onDone:marcar});
       return;
     }
     var d=deptoDe(r); if(!d) return;
@@ -21620,7 +21620,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
       var n=parseFloat(String(r.monto||'').replace(',','.'));
       if(m&&n>0){ m.value=n; m.dispatchEvent(new Event('input',{bubbles:true})); m.dispatchEvent(new Event('change',{bubbles:true})); }
       if(f&&/^\d{4}-\d{2}-\d{2}$/.test(r.fecha||'')) f.value=r.fecha;
-      if(o&&!o.value) o.value='Comprobante enviado por el portal'+(r.nota?' — '+r.nota:'');
+      if(o&&!o.value) o.value='Comprobante enviado por el portal'+(r.nota?' · '+r.nota:'');
     },60);
   }
   /* ---------- ver / descargar un comprobante sin salir de LUKA ---------- */
@@ -21707,7 +21707,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 36: Portal de propietarios en línea
+   GESTIÓN LUKA · Módulo 36: Portal de propietarios en línea
    · «Portal de propietarios» (Configuraciones): edificio vinculado, propietario,
      teléfono y código de acceso de cada depto; mensaje por WhatsApp; importar
      los códigos del Excel privado (NO-SUBIR-codigos-de-acceso.xlsx).
@@ -21949,7 +21949,7 @@ html.theme-dark .plan-aviso strong { color: var(--oro); }
 
 <style id="luka-diseno-unificado">
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 33: Sistema de diseño unificado (v9)
+   GESTIÓN LUKA · Módulo 33: Sistema de diseño unificado (v9)
    Una sola regla para todo: tipografía, botones, tarjetas, filtros, cabecera
    y colores por bloque. Va al final para ordenar las capas anteriores.
    ============================================================================ */
@@ -22167,7 +22167,7 @@ textarea{font-size:var(--lk-fs)!important;border-radius:var(--lk-r-sm)!important
 
 <style id="luka-movil">
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 35: celular (iPhone / Safari / abierto desde WhatsApp)
+   GESTIÓN LUKA · Módulo 35: celular (iPhone / Safari / abierto desde WhatsApp)
    · Toques de al menos 44 px · campos en 16 px (Safari no hace zoom)
    · Ventanas a pantalla completa con su botón de cerrar siempre visible
    · Respeta el notch y la barra inferior del iPhone
@@ -22312,7 +22312,7 @@ body{overscroll-behavior-y:none}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 37: Verificar recibo por su código único
+   GESTIÓN LUKA · Módulo 37: Verificar recibo por su código único
    Cada recibo lleva un QR con un "Cod. verificacion" (firma de sus datos).
    Si alguien presenta un recibo, se escanea el QR y se pega el código (o todo
    el texto del QR) aquí: LUKA busca a qué recibo real pertenece.
@@ -22366,7 +22366,7 @@ body{overscroll-behavior-y:none}
         res.innerHTML=r.lista.map(function(x,i){
           if(x.tipo){ var R=x.r, P=x.tipo==='reserva'?R.pago:x.h;
             return '<div class="lk-ver-ok" style="margin-bottom:10px"><b>'+(x.porCodigo?(x.tipo==='reserva'?'Recibo de alquiler auténtico':'Comprobante de devolución auténtico'):'Encontrado por número')+'</b>'+
-              '<div class="lk-ver-kv"><span>N.º</span><div>'+esc(P.no)+'</div><span>Departamento</span><div>'+esc(R.depto||'—')+'</div><span>Área</span><div>'+esc(R.areaNombre||'')+'</div>'+
+              '<div class="lk-ver-kv"><span>N.º</span><div>'+esc(P.no)+'</div><span>Departamento</span><div>'+esc(R.depto||'Sin dato')+'</div><span>Área</span><div>'+esc(R.areaNombre||'')+'</div>'+
               '<span>Monto</span><div>'+esc(fmtMoney(x.tipo==='reserva'?P.total:P.monto))+'</div><span>Fecha</span><div>'+esc(fmtDate(P.fecha)||'')+'</div><span>Código</span><div>'+esc(x.c)+'</div></div>'+
               '<button type="button" class="btn" data-ver="'+i+'">Ver documento</button></div>'; }
           var d=x.d,p=x.p;
@@ -22426,7 +22426,7 @@ body{overscroll-behavior-y:none}
   var SECRET = 'LIMCO-II::clave-interna::9f3a7b2e5c1d';
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function money(n) { return 'Bs. ' + Number(n || 0).toLocaleString('es-BO', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
-  function fLarga(iso) { if (!iso) return '—'; var p = String(iso).slice(0, 10).split('-'); var M = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']; return parseInt(p[2], 10) + ' de ' + M[parseInt(p[1], 10) - 1] + ' de ' + p[0]; }
+  function fLarga(iso) { if (!iso) return 'Sin dato'; var p = String(iso).slice(0, 10).split('-'); var M = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']; return parseInt(p[2], 10) + ' de ' + M[parseInt(p[1], 10) - 1] + ' de ' + p[0]; }
   function fCorta(iso) { if (!iso) return ''; var p = String(iso).slice(0, 10).split('-'); var M = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']; return parseInt(p[2], 10) + ' ' + M[parseInt(p[1], 10) - 1] + ' ' + p[0]; }
   function hoy() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function sinTildes(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/º/g, 'o'); }
@@ -22460,10 +22460,10 @@ body{overscroll-behavior-y:none}
     if (+p.garantia > 0) filas.push(['Garantía (depósito reembolsable, no es ingreso)', money(p.garantia), 'gar']);
     return '<div class="receipt-box r-reserva">' + cab(E, 'Recibo de alquiler de área social', 'Recibo N.º ' + p.no) +
       '<div class="r-info-grid">' +
-      '<div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">' + esc(U.depto || '—') + (U.bloque ? ' · ' + esc(U.bloque) : '') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">' + esc(U.depto || 'Sin dato') + (U.bloque ? ' · ' + esc(U.bloque) : '') + '</div></div>' +
       '<div class="r-info-item"><div class="r-label">Fecha de pago</div><div class="r-value">' + fLarga(p.fecha) + '</div></div>' +
-      '<div class="r-info-item"><div class="r-label">Método de pago</div><div class="r-value">' + esc(p.metodo || '—') + '</div></div>' +
-      '<div class="r-info-item"><div class="r-label">Recibido por</div><div class="r-value">' + esc(p.recibido || '—') + '</div></div></div>' +
+      '<div class="r-info-item"><div class="r-label">Método de pago</div><div class="r-value">' + esc(p.metodo || 'Sin dato') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">Recibido por</div><div class="r-value">' + esc(p.recibido || 'Sin dato') + '</div></div></div>' +
       '<div class="r-concept-box"><div class="r-concept-label">Reserva</div>' + esc(p.area || '') + ' · ' + fLarga(p.fechaEvento) + (p.horario ? ' · ' + esc(p.horario) : '') +
       (p.responsable ? '<br>Responsable: ' + esc(p.responsable) : '') + (p.obs ? '<br><span style="color:var(--r-muted)">Obs: ' + esc(p.obs) + '</span>' : '') + '</div>' +
       tabla(filas) +
@@ -22479,10 +22479,10 @@ body{overscroll-behavior-y:none}
     filas.push(['<b>Monto devuelto</b>', '<b>' + money(d.monto) + '</b>', 'sub']);
     return '<div class="receipt-box r-reserva r-egreso">' + cab(E, 'Comprobante de devolución de garantía', 'Devolución N.º ' + d.no) +
       '<div class="r-info-grid">' +
-      '<div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">' + esc(U.depto || '—') + (U.bloque ? ' · ' + esc(U.bloque) : '') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">' + esc(U.depto || 'Sin dato') + (U.bloque ? ' · ' + esc(U.bloque) : '') + '</div></div>' +
       '<div class="r-info-item"><div class="r-label">Fecha de devolución</div><div class="r-value">' + fLarga(d.fecha) + '</div></div>' +
-      '<div class="r-info-item"><div class="r-label">Medio</div><div class="r-value">' + esc(d.metodo || '—') + '</div></div>' +
-      '<div class="r-info-item"><div class="r-label">N.º de transacción</div><div class="r-value">' + esc(d.comprobante || '—') + '</div></div></div>' +
+      '<div class="r-info-item"><div class="r-label">Medio</div><div class="r-value">' + esc(d.metodo || 'Sin dato') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">N.º de transacción</div><div class="r-value">' + esc(d.comprobante || 'Sin dato') + '</div></div></div>' +
       '<div class="r-concept-box"><div class="r-concept-label">Reserva</div>' + esc(d.area || '') + (d.fechaEvento ? ' · ' + fLarga(d.fechaEvento) : '') +
       (d.destino ? '<br>Destino: ' + esc(d.destino) : '') + '</div>' + tabla(filas) +
       '<div class="r-total-band"><div class="r-total-label">Devuelto al propietario</div><div class="r-total-value">' + money(d.monto) + '</div></div>' +
@@ -22535,7 +22535,7 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 38
+   GESTIÓN LUKA · Módulo 38
    · Numeración de recibos (talonario físico, correlativo virtual o aleatorio único).
    · Cobro de una reserva de área social: el alquiler y los extras son INGRESO (van al
      reporte diario); la garantía es un depósito en custodia: NO es ingreso, se controla
@@ -22615,7 +22615,7 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
       '<div><b>QR de pago</b><p class="lkrp-nota">El mismo QR se muestra en LUKA y en el portal.</p><label class="btn" style="display:inline-flex;cursor:pointer">Subir QR<input type="file" accept="image/*" id="lkc-qr" hidden></label> '+(c.qr?'<button type="button" class="btn" id="lkc-qr-x">Quitar</button>':'')+'</div></div>'+
       '<p class="lkrp-prev">Así lo verá el propietario: <b id="lkc-prev" style="font-family:inherit"></b></p>'+
       '<div class="lkrp-foot"><button type="button" class="btn primary" id="lkc-save">Guardar</button></div>';
-    var prev=function(){ $('lkc-prev').textContent=[$('lkc-banco').value,$('lkc-num').value&&('Cta. '+$('lkc-num').value),$('lkc-tit').value].filter(Boolean).join(' · ')||(c.cuentaText||'—'); };
+    var prev=function(){ $('lkc-prev').textContent=[$('lkc-banco').value,$('lkc-num').value&&('Cta. '+$('lkc-num').value),$('lkc-tit').value].filter(Boolean).join(' · ')||(c.cuentaText||'Sin dato'); };
     sec.querySelectorAll('input[id^=lkc-]').forEach(function(i){ i.addEventListener('input',prev); }); prev();
     $('lkc-qr').onchange=function(e){ var fl=e.target.files[0]; if(!fl) return; var r=new FileReader(); r.onload=function(){ var img=new Image(); img.onload=function(){
       var k=Math.min(1,900/Math.max(img.width,img.height)), cv=document.createElement('canvas'); cv.width=Math.round(img.width*k); cv.height=Math.round(img.height*k); cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
@@ -22792,7 +22792,7 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
 
 <style>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 39: interfaz sobria
+   GESTIÓN LUKA · Módulo 39: interfaz sobria
    · Cabecera: título a la izquierda; a la derecha solo dos íconos (descargas y
      comprobantes). Las descargas de cada vista quedan en un menú.
    · Sin textos que explican lo obvio ni tarjetas de cifras repetidas (esas
@@ -22978,7 +22978,7 @@ html.lk-modal-abierto,html.lk-modal-abierto body{overflow:hidden!important}
     d.hoy.forEach(function(r){
       var hora=String(r.inicio||'').slice(11,16), msg='Recordatorio: hoy hay reserva de '+(r.areaNombre||'área social')+(hora?' a las '+hora:'')+'. Depto '+(r.depto||'')+(r.responsable?' · '+r.responsable:'')+'.';
       var num=(typeof WHATSAPP_ADMIN_NUMERO!=='undefined'?WHATSAPP_ADMIN_NUMERO:'');
-      h+='<a href="https://wa.me/'+num+'?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener"><span>Hoy: '+(r.areaNombre||'Área social')+(hora?' · '+hora:'')+'<small>Depto '+(r.depto||'—')+(r.responsable?' · '+r.responsable:'')+' · enviar recordatorio</small></span></a>';
+      h+='<a href="https://wa.me/'+num+'?text='+encodeURIComponent(msg)+'" target="_blank" rel="noopener"><span>Hoy: '+(r.areaNombre||'Área social')+(hora?' · '+hora:'')+'<small>Depto '+(r.depto||'Sin dato')+(r.responsable?' · '+r.responsable:'')+' · enviar recordatorio</small></span></a>';
     });
     box.innerHTML=h||'<div class="vacio">Sin notificaciones</div>';
     box.querySelectorAll('[data-n]').forEach(function(x){ x.onclick=function(){ $('lk-bell').classList.remove('open'); if(x.dataset.n==='comp'){ var pb=$('pb-btn'); if(pb) pb.click(); } else { try{ switchView('areas-sociales'); }catch(e){} } }; });
@@ -23109,7 +23109,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 40
+   GESTIÓN LUKA · Módulo 40
    · QR de pago siempre a mano (ícono en la cabecera).
    · Reporte diario y caja chica: el formulario de alta queda fijo.
    · Ficha del depto: sin textos de ayuda, sin «al día», pagos en filas limpias.
@@ -23333,7 +23333,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 42: bloques plegables en todo el programa
+   GESTIÓN LUKA · Módulo 42: bloques plegables en todo el programa
    Cada formulario de alta (nuevo movimiento, nueva caja chica, nuevo plan,
    ajustes de la ficha, secciones de Configuración) queda como un bloque
    cerrado: al tocar su título se despliega y al tocarlo de nuevo se cierra.
@@ -23467,7 +23467,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 41: ficha del departamento
+   GESTIÓN LUKA · Módulo 41: ficha del departamento
    Arriba el total y las tres acciones; abajo tres pestañas:
    Deuda (lo que debe, ítem por ítem) · Pagos (recibos) · Ajustes (cargar deuda,
    cuota extraordinaria, multas, marcar al día). Se reacomodan los mismos
@@ -23614,7 +23614,7 @@ button:active:not(:disabled),.btn:active{transform:scale(.97)}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 43: mobiliario que se alquila con las áreas sociales
+   GESTIÓN LUKA · Módulo 43: mobiliario que se alquila con las áreas sociales
    (sillas, mesas, freezer… o nada). Se configura en «Áreas y precios» y lo usan
    la reserva manual y el portal. «Cobrar» apagado = se presta sin costo.
    ============================================================================ */
@@ -24080,9 +24080,9 @@ button.lkrp-b:hover{border-color:#1E4E86}
       '<div class="lkc-tabla"><table><thead><tr><th>Mes</th><th>Reservas</th><th>Ingresos por alquiler</th><th>De eso, sin recibo</th><th>Garantías recibidas</th><th>Devueltas</th><th>Retenido</th><th>En custodia</th></tr></thead><tbody>'+
       V.map(function(x){ var mi=+x.k.slice(5,7)-1; return '<tr><td><b>'+MES[mi]+'</b> '+x.k.slice(0,4)+'</td><td>'+(x.n||'<span class="mut">0</span>')+'</td>'+
         '<td class="'+(x.alq?'ing':'mut')+'">'+money(x.alq)+'</td>'+
-        '<td class="mut">'+(x.sin?money(x.sin)+'<small>'+x.nSin+' reserva(s)</small>':'—')+'</td>'+
+        '<td class="mut">'+(x.sin?money(x.sin)+'<small>'+x.nSin+' reserva(s)</small>':'Sin dato')+'</td>'+
         '<td>'+money(x.gIn)+'</td><td class="'+(x.gOut?'out':'mut')+'">'+money(x.gOut)+'</td><td class="'+(x.gRet?'ing':'mut')+'">'+money(x.gRet)+'</td><td>'+money(x.cust)+'</td></tr>'; }).join('')+
-      '<tr class="tot"><td>Total '+(anio==='todo'?'':anio)+'</td><td>'+T.n+'</td><td>'+money(T.alq)+'</td><td>'+(T.sin?money(T.sin):'—')+'</td><td>'+money(T.gIn)+'</td><td>'+money(T.gOut)+'</td><td>'+money(T.gRet)+'</td><td>'+money(custodia)+'</td></tr>'+
+      '<tr class="tot"><td>Total '+(anio==='todo'?'':anio)+'</td><td>'+T.n+'</td><td>'+money(T.alq)+'</td><td>'+(T.sin?money(T.sin):'Sin dato')+'</td><td>'+money(T.gIn)+'</td><td>'+money(T.gOut)+'</td><td>'+money(T.gRet)+'</td><td>'+money(custodia)+'</td></tr>'+
       '</tbody></table></div>';
     cont.querySelectorAll('[data-a]').forEach(function(b){ b.onclick=function(){ anio=b.dataset.a; window.lukaContaAreas(cont); }; });
   };
@@ -24172,7 +24172,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 49: un número de recibo se usa UNA sola vez.
+   GESTIÓN LUKA · Módulo 49: un número de recibo se usa UNA sola vez.
    Cuenta cobros de expensas, alquileres de áreas, ingresos manuales del reporte
    diario y recibos anulados. No deja registrar ni editar con un número usado, y
    «Corregir repetidos» pasa los repetidos al siguiente número libre.
@@ -24346,7 +24346,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 50: el pago de una reserva (recibo, fecha, montos y
+   GESTIÓN LUKA · Módulo 50: el pago de una reserva (recibo, fecha, montos y
    garantía) se puede corregir después de registrado; la devolución también.
    En Contabilidad, al tocar un mes se despliegan sus reservas para editarlas.
    ============================================================================ */
@@ -24407,7 +24407,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var bd=$('lkr-det-bd'), r=window.__lkDetR; if(!bd||!bd.classList.contains('open')||!r) return;
     var md=bd.querySelector('.modal'); if(!md||md.querySelector('.lke-pago')) return;
     var p=r.pago, box=document.createElement('div'); box.className='lke-pago';
-    box.innerHTML='<h4>Pago</h4>'+(p?('<div class="lke-r"><span>Recibo N.º</span><b>'+esc(p.no||'—')+'</b></div><div class="lke-r"><span>Fecha de pago</span><b>'+esc(fl(p.fecha))+'</b></div><div class="lke-r"><span>Método</span><b>'+esc(p.metodo||'—')+'</b></div><div class="lke-r"><span>Ingreso por alquiler</span><b>'+money(ingDe(p))+'</b></div>'+((+p.garantia||0)>0?'<div class="lke-r"><span>Garantía</span><b>'+money(p.garantia)+'</b></div>':'')):'<div class="lke-r"><span>Sin pago registrado</span></div>')+
+    box.innerHTML='<h4>Pago</h4>'+(p?('<div class="lke-r"><span>Recibo N.º</span><b>'+esc(p.no||'Sin dato')+'</b></div><div class="lke-r"><span>Fecha de pago</span><b>'+esc(fl(p.fecha))+'</b></div><div class="lke-r"><span>Método</span><b>'+esc(p.metodo||'Sin dato')+'</b></div><div class="lke-r"><span>Ingreso por alquiler</span><b>'+money(ingDe(p))+'</b></div>'+((+p.garantia||0)>0?'<div class="lke-r"><span>Garantía</span><b>'+money(p.garantia)+'</b></div>':'')):'<div class="lke-r"><span>Sin pago registrado</span></div>')+
       '<div class="lke-acc">'+(p?'<button type="button" class="btn" id="lke-dp">Editar pago</button><button type="button" class="btn" id="lke-dr">Recibo</button>':'<button type="button" class="btn primary" id="lke-dp">Registrar pago</button>')+'</div>';
     var pie=md.querySelector('#lkr-det-edit'); pie=pie&&pie.parentNode;
     var gbox=[].slice.call(md.children).filter(function(x){ return /Garant/i.test(x.textContent)&&x.querySelector('button'); })[0];
@@ -24444,7 +24444,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     return '<div class="lkc-it" data-r="'+esc(r.id)+'"><div><b>'+esc(fl(r.fecha||String(r.inicio||'').slice(0,10)))+'</b></div>'+
       '<div><b>'+esc(r.areaNombre||'')+'</b><small>'+(r.depto?'Depto '+esc(r.depto)+' · ':'')+esc(r.responsable||'')+(p?' · Recibo '+esc(p.no):' · Sin recibo')+'</small></div>'+
       '<div class="n">'+money(p?ingDe(p):((+r.monto||0)+(+r.extras||0)))+'<small>alquiler</small></div>'+
-      '<div class="n">'+(gar?money(gar):'—')+'<small>'+gTxt+'</small></div>'+
+      '<div class="n">'+(gar?money(gar):'Sin dato')+'<small>'+gTxt+'</small></div>'+
       '<div class="acc">'+(p?'<button type="button" class="btn" data-k="pago">Editar pago</button>':'<button type="button" class="btn" data-k="pago">Registrar pago</button>')+
       (gar?'<button type="button" class="btn" data-k="gar">'+(dev?'Editar devolución':'Devolver garantía')+'</button>':'')+
       '<button type="button" class="btn" data-k="ver">Ver</button></div></div>';
@@ -24491,7 +24491,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 51: Reporte diario con buscador a la vista (recibo, depto
+   GESTIÓN LUKA · Módulo 51: Reporte diario con buscador a la vista (recibo, depto
    o motivo, junto al mes) y descarga en imagen: con detalle (cada movimiento y sus
    ítems) o sin detalle (un renglón por día). Respeta el mes y la búsqueda.
    ============================================================================ */
@@ -24570,7 +24570,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
         txt(money(e.monto),eg?cE:cI,m,{b:1,s:13.5,a:'right',c:eg?ROJO:VERDE}); }
       else if(f.t==='item'){ txt('· '+(f.it.concepto||''),cD+16,m,{s:12,c:'#5B6B7F',w:cI-cD-150}); txt(money(f.it.monto),(f.eg?cE:cI)-0,m,{s:12,c:'#5B6B7F',a:'right'}); }
       else { var d=f.d, df2=d.ing-d.egr; txt(fecha(f.k),PAD,m,{b:1,s:14}); txt(d.L.length+' movimiento'+(d.L.length===1?'':'s'),PAD+220,m,{s:13,c:'#5B6B7F'});
-        txt(d.ing?money(d.ing):'—',cI,m,{b:1,s:13.5,a:'right',c:d.ing?VERDE:MUT}); txt(d.egr?money(d.egr):'—',cE,m,{b:1,s:13.5,a:'right',c:d.egr?ROJO:MUT}); txt((df2>=0?'+ ':'')+money(df2),cF,m,{b:1,s:13.5,a:'right',c:df2<0?ROJO:NAVY}); }
+        txt(d.ing?money(d.ing):'Sin dato',cI,m,{b:1,s:13.5,a:'right',c:d.ing?VERDE:MUT}); txt(d.egr?money(d.egr):'Sin dato',cE,m,{b:1,s:13.5,a:'right',c:d.egr?ROJO:MUT}); txt((df2>=0?'+ ':'')+money(df2),cF,m,{b:1,s:13.5,a:'right',c:df2<0?ROJO:NAVY}); }
       y+=h; if(f.t!=='item') linea(y);
     });
     if(!filas.length){ txt('Sin movimientos para este filtro.',PAD,y+24,{s:14,c:MUT}); y+=48; }
@@ -24639,7 +24639,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 52: en «Configuración del edificio» → «Agua y expensas»:
+   GESTIÓN LUKA · Módulo 52: en «Configuración del edificio» → «Agua y expensas»:
    · Agua del mes: plantilla Excel con todos los deptos, carga del Excel, o carga
      rápida depto por depto (Enter o «Siguiente» pasa al próximo).
    · Expensas por año: plantilla con los 12 meses de cada depto (monto adeudado),
@@ -24831,7 +24831,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 53: condiciones de cobro de cada área social.
+   GESTIÓN LUKA · Módulo 53: condiciones de cobro de cada área social.
    · En «Áreas y precios», cada área define cómo se paga el alquiler y la garantía
      (cualquier medio / solo transferencia / solo efectivo) y sus cargos obligatorios
      (ej. limpieza Bs 100 en efectivo, que se entrega a la persona de limpieza).
@@ -25066,7 +25066,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 54: cada configuración aparece en UN solo lugar.
+   GESTIÓN LUKA · Módulo 54: cada configuración aparece en UN solo lugar.
    · «Configuración del edificio» (engranaje): datos del edificio, datos de cobro y
      QR, numeración de recibos, departamentos, agua y expensas, cuotas, pizarra,
      áreas sociales (con mobiliario y condiciones), colores y campos.
@@ -25160,7 +25160,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </style>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 55: navegación como una app.
+   GESTIÓN LUKA · Módulo 55: navegación como una app.
    · Cada ventana que se abre y cada sección queda en el historial: el gesto de
      volver (o el botón atrás de Android) cierra la ventana abierta o vuelve a la
      sección anterior, en vez de salir de LUKA.
@@ -25341,7 +25341,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </div></div></div>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 56: Bramar Group cobra a sus edificios.
+   GESTIÓN LUKA · Módulo 56: Bramar Group cobra a sus edificios.
    · Nota de cobranza y recibo en PDF con el logo y los datos de Bramar.
    · Clientes (edificios) con su cobro mensual; catálogo de servicios con precios.
    · El número lo asigna el servidor: correlativo, sin repetidos entre equipos.
@@ -25454,8 +25454,8 @@ button.lkrp-b:hover{border-color:#1E4E86}
       val(c.nombre||'',L,y+16,{b:1,s:11.5});
       var cy=y+16; F('normal'); doc.setFontSize(8.5); col(NG);
       [c.edificio&&c.edificio!==c.nombre?c.edificio:'',c.nit?'NIT/CI '+c.nit:'',c.direccion,[c.atencion?'Atención: '+c.atencion:'',c.telefono].filter(Boolean).join(' · ')].filter(Boolean).forEach(function(t){ doc.splitTextToSize(String(t),Math.max(120,X(300)-L-20)).slice(0,2).forEach(function(s){ cy+=12; doc.text(s,L,cy); }); });
-      lab('PERÍODO',X(330),y); val(mesTxt(x.mes)||'—',X(330),y+16,{b:1,s:10});
-      if(!nota){ lab('FORMA DE PAGO',X(450),y); val(x.medio||'—',X(450),y+16,{b:1,s:10}); if(x.ref) val('Comprobante '+x.ref,X(450),y+28,{s:8.5}); }
+      lab('PERÍODO',X(330),y); val(mesTxt(x.mes)||'Sin dato',X(330),y+16,{b:1,s:10});
+      if(!nota){ lab('FORMA DE PAGO',X(450),y); val(x.medio||'Sin dato',X(450),y+16,{b:1,s:10}); if(x.ref) val('Comprobante '+x.ref,X(450),y+28,{s:8.5}); }
       // detalle
       y=Math.max(cy+34,y+56);
       var cx={n:L+4,d:L+30,q:X(378),p:X(470),i:R-4};
@@ -25623,7 +25623,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var ya=C.filter(function(c){ return (B.docs||[]).some(function(x){ return x.tipo==='nota'&&!x.anulado&&x.clienteId===c.id&&x.mes===mes; }); });
     var falta=C.filter(function(c){ return ya.indexOf(c)<0; });
     if(!falta.length){ toast('Todos los edificios ya tienen su nota de '+mesTxt(mes)+'.','info'); return; }
-    if(!confirm('Se emitirán '+falta.length+' notas de cobranza de '+mesTxt(mes)+':\n\n'+falta.map(function(c){ return '· '+c.nombre+' — Bs '+bs(totalItems(itemsDe(c,mes))); }).join('\n')+(ya.length?'\n\nYa tienen nota este mes: '+ya.map(function(c){ return c.nombre; }).join(', '):'')+'\n\n¿Emitir?')) return;
+    if(!confirm('Se emitirán '+falta.length+' notas de cobranza de '+mesTxt(mes)+':\n\n'+falta.map(function(c){ return '· '+c.nombre+' · Bs '+bs(totalItems(itemsDe(c,mes))); }).join('\n')+(ya.length?'\n\nYa tienen nota este mes: '+ya.map(function(c){ return c.nombre; }).join(', '):'')+'\n\n¿Emitir?')) return;
     var hechos=[], i=0;
     (function sig(){ if(i>=falta.length){ toast(hechos.length+' notas emitidas','success'); pintar(); return; }
       var c=falta[i++], it=itemsDe(c,mes);
@@ -25647,7 +25647,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var nota=x.tipo==='nota', C=B.clientes||[], S=B.servicios||[];
     var pendientes=(B.docs||[]).filter(function(z){ return z.tipo==='nota'&&!z.anulado&&z.estado!=='pagada'; });
     b.innerHTML='<div class="lkb-g">'+
-      '<label class="f full">Edificio<select id="lkb-cli"><option value="">— Elegir edificio —</option>'+C.map(function(c){ return '<option value="'+c.id+'">'+esc(c.nombre)+'</option>'; }).join('')+'<option value="__n">+ Agregar edificio…</option></select></label>'+
+      '<label class="f full">Edificio<select id="lkb-cli"><option value="">· Elegir edificio ·</option>'+C.map(function(c){ return '<option value="'+c.id+'">'+esc(c.nombre)+'</option>'; }).join('')+'<option value="__n">+ Agregar edificio…</option></select></label>'+
       (!nota?'<label class="f full">Nota de cobranza que cancela<select id="lkb-nt"><option value="">Ninguna (pago suelto)</option>'+pendientes.map(function(p){ return '<option value="'+p.id+'">N° '+pad(p.no)+' · '+esc((p.cliente||{}).nombre)+' · '+esc(mesTxt(p.mes))+' · Bs '+bs(p.total)+'</option>'; }).join('')+'</select></label>':'')+
       '<label class="f">Fecha<input type="date" id="lkb-fe" value="'+esc(x.fecha)+'"></label>'+
       '<label class="f">Mes que se cobra<input type="month" id="lkb-me" value="'+esc(x.mes)+'"></label>'+
@@ -25922,7 +25922,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </div></div></div>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 57: Publicaciones (solo coordinador general).
+   GESTIÓN LUKA · Módulo 57: Publicaciones (solo coordinador general).
    · Portal inmobiliario: aprobar o rechazar lo que se publica en inmuebles.html,
      pausar, marcar vendido/alquilado, destacar, renovar, editar y eliminar.
    · Mercado de residentes: controlar lo que publican propietarios e inquilinos.
@@ -25941,11 +25941,11 @@ button.lkrp-b:hover{border-color:#1E4E86}
   var OPS={venta:'Venta',alquiler:'Alquiler',anticretico:'Anticrético'};
   var SIT={estrenar:'A estrenar',usado:'Usado',preventa:'En preventa',entrega_inmediata:'Entrega inmediata',entrega_proxima:'Próxima entrega',entrega_programada:'Entrega programada'};
   var EST={pendiente:'Por revisar',publicado:'Publicado',rechazado:'Rechazado',pausado:'Pausado',cerrado:'Vendido / alquilado',vencido:'Vencido'};
-  var L=null, CFG=null, tab='revisar', sel=null, editar=false, filtro={q:'',est:''}, cargando=null;
+  var L=null, CFG=null, tab='revisar', sel=null, editar=false, nuevo=null, filtro={q:'',est:''}, cargando=null;
   function cargar(){ if(cargando) return cargando;
     return cargando=api({op:'lista'}).then(function(j){ cargando=null; L=j.publicaciones||[]; CFG=j.cfg; return j; },function(e){ cargando=null; throw e; }); }
   function precio(x){ var d=x.datos||{}; return d.precio>0?((d.moneda==='USD'?'$us ':'Bs ')+miles(d.precio)+(x.modulo==='inm'&&d.operacion==='alquiler'?' / mes':'')):(d.precioTexto||''); }
-  function fecha(s){ return s?new Date(s).toLocaleDateString('es-BO',{day:'numeric',month:'short',year:'numeric'}):'—'; }
+  function fecha(s){ return s?new Date(s).toLocaleDateString('es-BO',{day:'numeric',month:'short',year:'numeric'}):'Sin dato'; }
 
   function vista(){ ubicar(); if(!L) $('lkp-b').innerHTML='<div class="lkp-empty">Cargando…</div>'; pintar();
     cargar().then(function(){ if(!editar) pintar(); }).catch(function(e){ $('lkp-b').innerHTML='<div class="lkp-empty">'+esc(e.message)+'</div>'; }); }
@@ -25955,8 +25955,9 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var nr=(L||[]).filter(function(x){ return x.estado==='pendiente'; }).length, nrep=(L||[]).filter(function(x){ return (x.reportes||[]).length; }).length;
     var T=[['revisar','Por revisar'+(nr?' · '+nr:'')],['inm','Inmuebles'],['mk','Mercado de residentes'],['rep','Reportes'+(nrep?' · '+nrep:'')],['cfg','Configuración']];
     $('lkp-tabs').innerHTML=T.map(function(t){ return '<button type="button" class="lkp-tab'+(t[0]===tab?' on':'')+'" data-t="'+t[0]+'">'+t[1]+'</button>'; }).join('');
-    [].forEach.call($('lkp-tabs').querySelectorAll('button'),function(b){ b.onclick=function(){ tab=b.dataset.t; sel=null; editar=false; pintar(); }; }); }
+    [].forEach.call($('lkp-tabs').querySelectorAll('button'),function(b){ b.onclick=function(){ tab=b.dataset.t; sel=null; editar=false; nuevo=null; pintar(); }; }); }
   function pintar(){ tabs(); var b=$('lkp-b'); if(!L) return;
+    if(nuevo) return form(b,nuevo);
     if(sel){ var x=L.filter(function(z){ return z.id===sel; })[0]; if(x) return editar?form(b,x):detalle(b,x); sel=null; }
     if(tab==='cfg') return config(b);
     var F=L.filter(function(x){
@@ -25965,7 +25966,8 @@ button.lkrp-b:hover{border-color:#1E4E86}
       return x.modulo===tab; });
     var conBarra=tab==='inm'||tab==='mk';
     b.innerHTML=(conBarra?'<div class="lkp-bar"><input type="search" id="lkp-q" placeholder="Buscar título, anunciante, teléfono, edificio" value="'+esc(filtro.q)+'"><select id="lkp-e"><option value="">Todos los estados</option>'+
-      Object.keys(EST).map(function(k){ return '<option value="'+k+'"'+(filtro.est===k?' selected':'')+'>'+EST[k]+'</option>'; }).join('')+'</select></div>':
+      Object.keys(EST).map(function(k){ return '<option value="'+k+'"'+(filtro.est===k?' selected':'')+'>'+EST[k]+'</option>'; }).join('')+'</select>'+(tab==='mk'?'<button type="button" class="btn primary" data-a="nuevo">Publicar anuncio</button>':'')+'</div>'+
+      (tab==='mk'?'<p class="lkp-note" style="margin:-4px 0 14px">Los anuncios que publica Bramar, propios o de empresas aliadas, salen al instante en el portal de todos los edificios.</p>':''):
       '<p class="lkp-note" style="margin:0 0 14px">'+(tab==='revisar'?'Inmuebles del portal y publicaciones del mercado de residentes. Solo se ven cuando usted las aprueba.':'Publicaciones que los visitantes o residentes reportaron.')+'</p>')+'<div id="lkp-l"></div>';
     var lista=function(){ var q=filtro.q.toLowerCase();
       var G=F.filter(function(x){ var d=x.datos||{}; if(filtro.est&&x.visible!==filtro.est) return false;
@@ -25999,7 +26001,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
       (x.visible==='publicado'&&inm?'<p class="lkp-note" style="margin-top:10px">Se ve en <a href="../inmuebles.html?id='+encodeURIComponent(x.id)+'" target="_blank" rel="noopener">inmuebles.html</a></p>':'')+'</div></div>';
     [].forEach.call(b.querySelectorAll('img[data-full]'),function(im){ im.onclick=function(){ window.open(foto(im.dataset.full,2000),'_blank'); }; }); }
   /* ---------- editar ---------- */
-  function form(b,x){ var d=x.datos||{}, inm=x.modulo==='inm', FO=(x.fotos||[]).slice();
+  function form(b,x){ var d=x.datos||{}, inm=x.modulo==='inm', FO=(x.fotos||[]).slice(), NF=[], esNuevo=!!x.nuevo;
     var opt=function(o,v){ return Object.keys(o).map(function(k){ return '<option value="'+k+'"'+(k===v?' selected':'')+'>'+o[k]+'</option>'; }).join(''); };
     var inp=function(k,t,c,tipo){ return '<label class="f'+(c?' '+c:'')+'">'+t+'<input data-k="'+k+'" value="'+esc(d[k]==null?'':d[k])+'"'+(tipo?' inputmode="'+tipo+'"':'')+'></label>'; };
     var html=inm?'<div class="lkp-g">'+inp('titulo','Título','full')+'<label class="f">Operación<select data-k="operacion">'+opt(OPS,d.operacion)+'</select></label><label class="f">Inmueble<select data-k="tipo">'+opt(TIPOS,d.tipo)+'</select></label><label class="f">Situación<select data-k="situacion"><option value="">Sin especificar</option>'+opt(SIT,d.situacion)+'</select></label>'+
@@ -26011,14 +26013,25 @@ button.lkrp-b:hover{border-color:#1E4E86}
       :'<div class="lkp-g">'+inp('titulo','Título','full')+'<label class="f">Categoría<select data-k="categoria">'+CFG.mkCategorias.map(function(c){ return '<option'+(c===d.categoria?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select></label>'+
       '<label class="f">Visible para<select data-k="alcance">'+opt({todos:'Todos los edificios',edificio:'Solo su edificio'},d.alcance)+'</select></label>'+inp('precio','Precio','','decimal')+'<label class="f">Moneda<select data-k="moneda">'+opt({Bs:'Bolivianos',USD:'Dólares'},d.moneda)+'</select></label>'+inp('precioTexto','Nota de precio')+
       '<label class="f full">Descripción<textarea data-k="descripcion">'+esc(d.descripcion||'')+'</textarea></label>'+inp('anunciante','Anunciante')+inp('telefono','Teléfono','','tel')+inp('whatsapp','WhatsApp','','tel')+inp('ubicacion','Ubicación')+inp('facebook','Facebook')+inp('instagram','Instagram')+inp('web','Página web','full')+'</div>';
-    b.innerHTML='<button type="button" class="lkp-back" data-a="cancelar">‹ Volver sin guardar</button><h3 style="margin-top:8px">Editar publicación</h3>'+html+'<h4>Fotos · la primera es la principal</h4><div class="lkp-gal" id="lkp-fo"></div><p class="lkp-msg" id="lkp-msg"></p>'+
-      '<div class="lkp-pie"><button type="button" class="btn" data-a="cancelar">Cancelar</button><button type="button" class="btn primary" id="lkp-g">Guardar cambios</button></div>';
-    var fotos=function(){ $('lkp-fo').innerHTML=FO.map(function(f,i){ return '<div><img src="'+foto(f,300)+'" alt="">'+(i===0?'<span class="pri">Principal</span>':'')+'<span class="ctl">'+(i?'<button type="button" data-p="'+i+'" title="Hacer principal">★</button>':'')+'<button type="button" data-q="'+i+'" title="Quitar">×</button></span></div>'; }).join('')||'<p class="lkp-note">Sin fotos.</p>'; };
-    $('lkp-fo').onclick=function(e){ var t=e.target; if(t.dataset.p){ FO.unshift(FO.splice(+t.dataset.p,1)[0]); fotos(); } if(t.dataset.q){ FO.splice(+t.dataset.q,1); fotos(); } };
+    b.innerHTML='<button type="button" class="lkp-back" data-a="cancelar">‹ Volver sin guardar</button><h3 style="margin-top:8px">'+(esNuevo?'Nuevo anuncio':'Editar publicación')+'</h3>'+
+      (esNuevo?'<p class="lkp-note">Negocios, servicios, emprendimientos y gastronomía se muestran como pancarta: use una foto horizontal y una primera frase corta en la descripción, que sale como lema.</p>':'')+html+
+      '<h4>Fotos · la primera es la principal</h4><div class="lkp-gal" id="lkp-fo"></div><input type="file" id="lkp-fin" accept="image/jpeg,image/png,image/webp" multiple hidden><div class="lkp-pie" style="justify-content:flex-start;margin-top:8px"><button type="button" class="btn" id="lkp-fadd">Agregar fotos</button></div><p class="lkp-msg" id="lkp-msg"></p>'+
+      '<div class="lkp-pie"><button type="button" class="btn" data-a="cancelar">Cancelar</button><button type="button" class="btn primary" id="lkp-g">'+(esNuevo?'Publicar anuncio':'Guardar cambios')+'</button></div>';
+    var fotos=function(){ $('lkp-fo').innerHTML=(FO.map(function(f,i){ return '<div><img src="'+foto(f,300)+'" alt="">'+(i===0?'<span class="pri">Principal</span>':'')+'<span class="ctl">'+(i?'<button type="button" data-p="'+i+'" title="Hacer principal">★</button>':'')+'<button type="button" data-q="'+i+'" title="Quitar">×</button></span></div>'; }).join('')+
+      NF.map(function(u,i){ return '<div><img src="'+u+'" alt="">'+(!FO.length&&i===0?'<span class="pri">Principal</span>':'<span class="pri">Nueva</span>')+'<span class="ctl"><button type="button" data-nq="'+i+'" title="Quitar">×</button></span></div>'; }).join(''))||'<p class="lkp-note">Sin fotos.</p>'; };
+    $('lkp-fo').onclick=function(e){ var t=e.target; if(t.dataset.p){ FO.unshift(FO.splice(+t.dataset.p,1)[0]); fotos(); } if(t.dataset.q){ FO.splice(+t.dataset.q,1); fotos(); } if(t.dataset.nq){ NF.splice(+t.dataset.nq,1); fotos(); } };
+    var achicar=function(file){ return new Promise(function(res,rej){ if(!/^image\/(jpeg|png|webp)$/.test(file.type)) return rej(new Error('Solo fotos JPG, PNG o WEBP.'));
+      var u=URL.createObjectURL(file), im=new Image(); im.onload=function(){ URL.revokeObjectURL(u); var k=Math.min(1,1600/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*k); c.height=Math.round(im.height*k);
+        var g=c.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,c.width,c.height); g.drawImage(im,0,0,c.width,c.height); var q=.85, out=c.toDataURL('image/jpeg',q); while(out.length>900000&&q>.45){ q-=.08; out=c.toDataURL('image/jpeg',q); } res(out); };
+      im.onerror=function(){ rej(new Error('No se pudo leer una foto.')); }; im.src=u; }); };
+    $('lkp-fadd').onclick=function(){ $('lkp-fin').click(); };
+    $('lkp-fin').onchange=function(){ var fs=[].slice.call(this.files,0,Math.max(0,8-FO.length-NF.length)); this.value=''; $('lkp-msg').textContent='';
+      Promise.all(fs.map(achicar)).then(function(A){ NF=NF.concat(A); fotos(); }).catch(function(e){ $('lkp-msg').textContent=e.message; }); };
     fotos();
     $('lkp-g').onclick=function(){ var nd={}, bt=this; [].forEach.call(b.querySelectorAll('[data-k]'),function(i){ nd[i.dataset.k]=i.type==='checkbox'?i.checked:i.value.trim(); });
-      if(FO.length<(x.fotos||[]).length&&!confirm('Se quitarán '+((x.fotos||[]).length-FO.length)+' foto(s). ¿Continuar?')) return;
-      bt.disabled=true; api({op:'editar',id:x.id,datos:nd,orden:FO}).then(function(){ toast('Cambios guardados','success'); editar=false; return cargar(); }).then(pintar)
+      if(!esNuevo&&FO.length<(x.fotos||[]).length&&!confirm('Se quitarán '+((x.fotos||[]).length-FO.length)+' foto(s). ¿Continuar?')) return;
+      if(esNuevo&&!NF.length){ $('lkp-msg').textContent='Agregue al menos una foto: es la imagen del anuncio.'; return; }
+      bt.disabled=true; (esNuevo?api({op:'crear',datos:nd,fotos:NF}):api({op:'editar',id:x.id,datos:nd,orden:FO,fotos:NF})).then(function(j){ toast(esNuevo?'Anuncio publicado':'Cambios guardados','success'); editar=false; nuevo=null; if(esNuevo&&j&&j.id) sel=j.id; return cargar(); }).then(pintar)
         .catch(function(e){ bt.disabled=false; $('lkp-msg').textContent=e.message; }); }; }
   /* ---------- configuración ---------- */
   function config(b){ var S=JSON.parse(JSON.stringify(CFG.secciones||[])), K=CFG.contacto||{};
@@ -26063,7 +26076,8 @@ button.lkrp-b:hover{border-color:#1E4E86}
   document.addEventListener('click',function(e){ var b=$('lkp-b'); if(!b||!b.contains(e.target)) return;
     var t=e.target.closest('[data-a]'); if(!t) return; var a=t.dataset.a, row=t.closest('.lkp-row'), id=row?row.dataset.id:sel, x=L&&L.filter(function(z){ return z.id===id; })[0];
     if(a==='volver'){ sel=null; editar=false; return pintar(); }
-    if(a==='cancelar'){ editar=false; return pintar(); }
+    if(a==='cancelar'){ editar=false; nuevo=null; return pintar(); }
+    if(a==='nuevo'){ sel=null; editar=false; nuevo={nuevo:1,modulo:'mk',fotos:[],datos:{categoria:'Negocios',alcance:'todos',moneda:'Bs',anunciante:'Bramar Group'}}; return pintar(); }
     if(a==='ver'){ sel=id; editar=false; return pintar(); }
     if(a==='editar'){ editar=true; return pintar(); }
     if(x) hacer(x,a); });
@@ -26086,7 +26100,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* ============================================================================
-   Recibos y comprobantes de Bramar / Gestión LUKA en PDF — UN solo diseño para
+   Recibos y comprobantes de Bramar / Gestión LUKA en PDF · UN solo diseño para
    todos (expensas, alquiler de áreas, devolución de garantía, ingresos y egresos).
    Hoja carta, siempre UNA página, poca tinta. Lo usan LUKA y el portal.
    Necesita MiniPDF y QR (en LUKA ya existen; en el portal vienen de js/minipdf.js).
@@ -26122,7 +26136,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var P = PDFc(); if (!P) { alert('No se pudo generar el PDF.'); return; }
     var fmt = s.dinero || dinero;
     var pdf = new P(); pdf.W = 612; pdf.H = 792;
-    var LIM = { '×': 'x', '−': '-', '–': '-', '—': '-', '→': '->', '·': '·', '“': '"', '”': '"', '‘': "'", '’': "'", '…': '...' };
+    var LIM = { '×': 'x', '−': '-', '–': '-', 'Sin dato': '-', '→': '->', '·': '·', '“': '"', '”': '"', '‘': "'", '’': "'", '…': '...' };
     var limpia = function (t) { return String(t == null ? '' : t).replace(/[×−–—→“”‘’…]/g, function (c) { return LIM[c] || ''; }); };
     var _t = pdf.text.bind(pdf), _w = pdf.wrap.bind(pdf), _tw = pdf.textWidth.bind(pdf);
     pdf.text = function (t, x, y, o) { return _t(limpia(t), x, y, o); };
@@ -26228,7 +26242,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </script>
 <script>
 /* ============================================================================
-   GESTIÓN LUKA — Módulo 47: TODOS los recibos y comprobantes salen con el mismo
+   GESTIÓN LUKA · Módulo 47: TODOS los recibos y comprobantes salen con el mismo
    diseño en PDF de una hoja (js/luka-recibo-pdf.js): expensas, alquiler de áreas,
    devolución de garantía e ingresos / egresos del reporte diario.
    ============================================================================ */
@@ -26252,8 +26266,8 @@ button.lkrp-b:hover{border-color:#1E4E86}
     return lukaDocPDF(Object.assign(base(),{
       subtitulo:'Recibo oficial de pago · Expensas y cuotas', noLabel:'RECIBO N.º', no:pago.recibo_no,
       persona:{label:'RECIBÍ DE', nombre:pago.a_nombre||''},
-      campos:[['Departamento',d.depto+(d.bloque?' · '+d.bloque:'')],['Fecha de pago',fl(pago.fecha)],['Método de pago',pago.metodo||'—'],['Recibido por',pago.recibido||'—']],
-      concepto:pago.concepto||'—', obs:pago.obs||'',
+      campos:[['Departamento',d.depto+(d.bloque?' · '+d.bloque:'')],['Fecha de pago',fl(pago.fecha)],['Método de pago',pago.metodo||'Sin dato'],['Recibido por',pago.recibido||'Sin dato']],
+      concepto:pago.concepto||'Sin dato', obs:pago.obs||'',
       lista:{titulo:'Meses cubiertos por este pago', filas:mesesDe(pago).map(function(m){ return {t:m.mes+' '+m.anio, v:m.monto, nota:m.tipo==='adelanto'?'Adelanto':(m.parcial?'Parcial':'Pagado'), tipo:m.tipo==='adelanto'?'info':'ok'}; })},
       monto:{label:'Monto pagado', valor:+pago.monto||0},
       lado:{label:'Saldo pendiente tras este pago', valor:+pago.saldo_restante||0, alerta:!cancel},
@@ -26275,7 +26289,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     return lukaDocPDF(Object.assign(base(),{
       subtitulo:'Recibo de alquiler · Área social', noLabel:'RECIBO N.º', no:p.no,
       persona:{label:'RECIBÍ DE', nombre:p.a_nombre||p.responsable||r.responsable||''},
-      campos:[['Departamento',(r.depto||'—')],['Fecha de pago',fl(p.fecha)],['Método de pago',p.metodo||'—'],['Recibido por',p.recibido||'—']],
+      campos:[['Departamento',(r.depto||'Sin dato')],['Fecha de pago',fl(p.fecha)],['Método de pago',p.metodo||'Sin dato'],['Recibido por',p.recibido||'Sin dato']],
       conceptoLabel:'RESERVA', concepto:(p.area||r.areaNombre||'')+' · '+fl(p.fechaEvento||r.fecha)+(p.horario?' · '+p.horario:''), obs:p.obs||'',
       lista:{titulo:'Detalle', filas:filas},
       monto:{label:'Total recibido', valor:+p.total||ing+gar+(p.terceros||[]).reduce(function(a,l){ return a+(+l.monto||0); },0)},
@@ -26297,7 +26311,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     return lukaDocPDF(Object.assign(base(),{
       egreso:true, subtitulo:'Comprobante de egreso · Devolución de garantía', noLabel:'DEVOLUCIÓN N.º', no:u.no||'',
       persona:{label:'ENTREGADO A', nombre:u.recibio||r.responsable||''},
-      campos:[['Departamento',r.depto||'—'],['Fecha de devolución',fl(u.fecha)],['Medio',u.metodo||'—'],['N.º de transacción',u.comprobante||'—']],
+      campos:[['Departamento',r.depto||'Sin dato'],['Fecha de devolución',fl(u.fecha)],['Medio',u.metodo||'Sin dato'],['N.º de transacción',u.comprobante||'Sin dato']],
       conceptoLabel:'RESERVA', concepto:(u.area||r.areaNombre||'')+(u.fechaEvento||r.fecha?' · '+fl(u.fechaEvento||r.fecha):'')+(u.destino?' · Destino: '+u.destino:''),
       lista:{titulo:'Detalle', filas:filas},
       monto:{label:'Monto devuelto', valor:+u.monto||0},
@@ -26317,8 +26331,8 @@ button.lkrp-b:hover{border-color:#1E4E86}
       egreso:eg, subtitulo:(eg?'Comprobante de egreso':'Comprobante de ingreso')+' · Reporte diario', noLabel:'COMPROBANTE N.º', no:no,
       persona:mov.beneficiario?{label:eg?'PAGADO A':'RECIBÍ DE', nombre:mov.beneficiario}:null,
       campos:[['Fecha',fl(mov.fecha)],['Tipo',eg?'Egreso / Gasto':'Ingreso'],['Departamento',mov.depto||''],['Categoría',mov.categoria&&mov.categoria!=='otro'?mov.categoria:'']],
-      conceptoLabel:items?'MOTIVO':'CONCEPTO', concepto:mov.motivo||'—',
-      lista:items?{titulo:'Detalle por ítems', filas:items.map(function(it,i){ return {t:(i+1)+'. '+(it.concepto||'—'), v:+it.monto||0, tipo:eg?'menos':'ok'}; })}:null,
+      conceptoLabel:items?'MOTIVO':'CONCEPTO', concepto:mov.motivo||'Sin dato',
+      lista:items?{titulo:'Detalle por ítems', filas:items.map(function(it,i){ return {t:(i+1)+'. '+(it.concepto||'Sin dato'), v:+it.monto||0, tipo:eg?'menos':'ok'}; })}:null,
       monto:{label:eg?'Total egreso':'Total ingreso', valor:total},
       selloDigital:eg?'EGRESO':'INGRESO',
       qr:(eg?'Egreso ':'Ingreso ')+no+' · '+ed()+' · '+(mov.fecha||'')+' · Bs '+total,
@@ -26344,7 +26358,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261105125202'; window.LUKA_BUILD=B;
+(function(){ var B='20261106155931'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }

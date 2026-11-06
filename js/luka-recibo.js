@@ -44,7 +44,7 @@ var QR = (function () {
     [28,2,46,29,47],[28,10,46,23,47],[28,14,46,21,47],[28,14,46,23,47],[28,12,47,26,48],
     [28,6,47,34,48],[28,29,46,14,47],[28,13,46,32,47],[28,40,47,7,48],[28,18,47,31,48]
   ];
-  // Total data codewords per version (level M) — derived, but we compute from ECM.
+  // Total data codewords per version (level M) · derived, but we compute from ECM.
   function dataCapacity(ver) {
     var b = ECM[ver];
     return b[1] * b[2] + b[3] * b[4];
@@ -130,7 +130,7 @@ var QR = (function () {
     finder(0, 0); finder(0, size - 7); finder(size - 7, 0);
     // timing
     for (var i = 8; i < size - 8; i++) { if (!reserved[6][i]) setF(6, i, i % 2 === 0 ? 1 : 0); if (!reserved[i][6]) setF(i, 6, i % 2 === 0 ? 1 : 0); }
-    // alignment — placed at every center pair EXCEPT the three that collide with the
+    // alignment · placed at every center pair EXCEPT the three that collide with the
     // finder patterns; note they DO sit on the timing lines and overwrite them there.
     var ac = ALIGN[ver];
     for (var a = 0; a < ac.length; a++) for (var b = 0; b < ac.length; b++) {
@@ -344,7 +344,7 @@ var QR = (function () {
       '<div class="r-info-grid"><div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">'+esc(d.depto)+(d.bloque?' · '+esc(d.bloque):'')+'</div></div>'+
       '<div class="r-info-item"><div class="r-label">Fecha de pago</div><div class="r-value">'+esc(fmtDateLong(p.fecha))+'</div></div>'+
       '<div class="r-info-item"><div class="r-label">Método de pago</div><div class="r-value">'+esc(p.metodo)+'</div></div>'+
-      '<div class="r-info-item"><div class="r-label">Recibido por</div><div class="r-value">'+esc(p.recibido||'—')+'</div></div></div>'+
+      '<div class="r-info-item"><div class="r-label">Recibido por</div><div class="r-value">'+esc(p.recibido||'Sin dato')+'</div></div></div>'+
       '<div class="r-concept-box"><div class="r-concept-label">Concepto</div>'+esc(p.concepto)+(p.obs?'<br><span style="color:var(--r-muted)">Obs: '+esc(p.obs)+'</span>':'')+'</div>'+mesesHTML(p)+
       '<div class="r-total-band"><div class="r-total-label">Monto pagado</div><div class="r-total-value">'+fmtMoney(p.monto)+'</div></div>'+
       '<div class="r-balance-row"><span>Saldo pendiente tras este pago</span><strong>'+fmtMoney(p.saldo)+'</strong></div>'+

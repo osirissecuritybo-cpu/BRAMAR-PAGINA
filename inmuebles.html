@@ -513,7 +513,7 @@ footer a{color:#fff}
     api({action:'pub_inm_ver',id:id}).then(function(j){
       if(!j.ok){ f.innerHTML='<button class="back" type="button" data-volver><svg aria-hidden="true"><use href="#i-left"/></svg>Volver</button><div class="empty"><b>Esta publicación ya no está disponible</b>Puede que se haya vendido, alquilado o retirado.</div>'; return; }
       contacto(j.contacto); var x=j.inmueble; galeria=x.fotos||[]; gi=0; document.title=x.titulo+' · Bramar Inmuebles';
-      var dm=x.tipo==='monoambiente'?'Monoambiente':(x.dormitorios||'—');
+      var dm=x.tipo==='monoambiente'?'Monoambiente':(x.dormitorios||'');
       var facts=[['Operación',OPS[x.operacion]],['Inmueble',TIPOS[x.tipo]],['Situación',SIT[x.situacion]],['Dormitorios',dm],['Baños',x.banos||''],['Garajes',x.garajes||''],['Sup. construida',x.sup?miles(x.sup)+' m²':''],['Sup. terreno',x.supTerreno?miles(x.supTerreno)+' m²':''],['Entrega',x.entrega],['Financiamiento',x.financiamiento?'Sí':'']].filter(function(a){ return a[1]!==''&&a[1]!=null&&a[1]!==undefined; });
       var msg='Hola Bramar, me interesa el inmueble '+x.codigo+': «'+x.titulo+'». ¿Me pueden dar más información?';
       f.innerHTML='<button class="back" type="button" data-volver><svg aria-hidden="true"><use href="#i-left"/></svg>Volver a inmuebles</button>'+

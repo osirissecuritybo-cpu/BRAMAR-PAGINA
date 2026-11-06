@@ -8,7 +8,7 @@
   var SECRET = 'LIMCO-II::clave-interna::9f3a7b2e5c1d';
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function money(n) { return 'Bs. ' + Number(n || 0).toLocaleString('es-BO', { minimumFractionDigits: 0, maximumFractionDigits: 2 }); }
-  function fLarga(iso) { if (!iso) return '—'; var p = String(iso).slice(0, 10).split('-'); var M = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']; return parseInt(p[2], 10) + ' de ' + M[parseInt(p[1], 10) - 1] + ' de ' + p[0]; }
+  function fLarga(iso) { if (!iso) return 'Sin dato'; var p = String(iso).slice(0, 10).split('-'); var M = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']; return parseInt(p[2], 10) + ' de ' + M[parseInt(p[1], 10) - 1] + ' de ' + p[0]; }
   function fCorta(iso) { if (!iso) return ''; var p = String(iso).slice(0, 10).split('-'); var M = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']; return parseInt(p[2], 10) + ' ' + M[parseInt(p[1], 10) - 1] + ' ' + p[0]; }
   function hoy() { var d = new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   function sinTildes(s) { return String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/º/g, 'o'); }
@@ -42,10 +42,10 @@
     if (+p.garantia > 0) filas.push(['Garantía (depósito reembolsable, no es ingreso)', money(p.garantia), 'gar']);
     return '<div class="receipt-box r-reserva">' + cab(E, 'Recibo de alquiler de área social', 'Recibo N.º ' + p.no) +
       '<div class="r-info-grid">' +
-      '<div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">' + esc(U.depto || '—') + (U.bloque ? ' · ' + esc(U.bloque) : '') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">' + esc(U.depto || 'Sin dato') + (U.bloque ? ' · ' + esc(U.bloque) : '') + '</div></div>' +
       '<div class="r-info-item"><div class="r-label">Fecha de pago</div><div class="r-value">' + fLarga(p.fecha) + '</div></div>' +
-      '<div class="r-info-item"><div class="r-label">Método de pago</div><div class="r-value">' + esc(p.metodo || '—') + '</div></div>' +
-      '<div class="r-info-item"><div class="r-label">Recibido por</div><div class="r-value">' + esc(p.recibido || '—') + '</div></div></div>' +
+      '<div class="r-info-item"><div class="r-label">Método de pago</div><div class="r-value">' + esc(p.metodo || 'Sin dato') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">Recibido por</div><div class="r-value">' + esc(p.recibido || 'Sin dato') + '</div></div></div>' +
       '<div class="r-concept-box"><div class="r-concept-label">Reserva</div>' + esc(p.area || '') + ' · ' + fLarga(p.fechaEvento) + (p.horario ? ' · ' + esc(p.horario) : '') +
       (p.responsable ? '<br>Responsable: ' + esc(p.responsable) : '') + (p.obs ? '<br><span style="color:var(--r-muted)">Obs: ' + esc(p.obs) + '</span>' : '') + '</div>' +
       tabla(filas) +
@@ -61,10 +61,10 @@
     filas.push(['<b>Monto devuelto</b>', '<b>' + money(d.monto) + '</b>', 'sub']);
     return '<div class="receipt-box r-reserva r-egreso">' + cab(E, 'Comprobante de devolución de garantía', 'Devolución N.º ' + d.no) +
       '<div class="r-info-grid">' +
-      '<div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">' + esc(U.depto || '—') + (U.bloque ? ' · ' + esc(U.bloque) : '') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">Departamento</div><div class="r-value">' + esc(U.depto || 'Sin dato') + (U.bloque ? ' · ' + esc(U.bloque) : '') + '</div></div>' +
       '<div class="r-info-item"><div class="r-label">Fecha de devolución</div><div class="r-value">' + fLarga(d.fecha) + '</div></div>' +
-      '<div class="r-info-item"><div class="r-label">Medio</div><div class="r-value">' + esc(d.metodo || '—') + '</div></div>' +
-      '<div class="r-info-item"><div class="r-label">N.º de transacción</div><div class="r-value">' + esc(d.comprobante || '—') + '</div></div></div>' +
+      '<div class="r-info-item"><div class="r-label">Medio</div><div class="r-value">' + esc(d.metodo || 'Sin dato') + '</div></div>' +
+      '<div class="r-info-item"><div class="r-label">N.º de transacción</div><div class="r-value">' + esc(d.comprobante || 'Sin dato') + '</div></div></div>' +
       '<div class="r-concept-box"><div class="r-concept-label">Reserva</div>' + esc(d.area || '') + (d.fechaEvento ? ' · ' + fLarga(d.fechaEvento) : '') +
       (d.destino ? '<br>Destino: ' + esc(d.destino) : '') + '</div>' + tabla(filas) +
       '<div class="r-total-band"><div class="r-total-label">Devuelto al propietario</div><div class="r-total-value">' + money(d.monto) + '</div></div>' +

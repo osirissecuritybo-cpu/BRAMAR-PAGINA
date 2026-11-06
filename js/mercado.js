@@ -35,7 +35,7 @@
 #mk .mk-btn.l{background:#fff;color:var(--navy);box-shadow:inset 0 0 0 1px var(--line)}\
 #mk .mk-btn.wa{background:#1F8A5B}\
 #mk .mk-btn[disabled]{opacity:.55;pointer-events:none}\
-#mk .mk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:16px}\
+#mk .mk-grid{display:grid;grid-auto-flow:row dense;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-top:16px}\
 #mk .mk-c{background:#fff;border-radius:16px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;transition:transform .25s,box-shadow .25s;box-shadow:0 1px 0 var(--line)}\
 #mk .mk-c:hover{transform:translateY(-2px);box-shadow:0 16px 36px -24px rgba(6,33,69,.5)}\
 #mk .mk-c .ph{aspect-ratio:4/3;background:var(--sand);overflow:hidden}\
@@ -46,6 +46,22 @@
 #mk .mk-c .pr{font-size:14.5px;font-weight:500;color:var(--navy)}\
 #mk .mk-c .ds{display:none}\
 #mk .mk-c .wh{display:none}\
+#mk .mk-c.ban{grid-column:1/-1;position:relative;display:block;min-width:0;height:clamp(210px,30vw,320px);background:var(--navy);color:#fff}\
+#mk .mk-c.ban .ph{position:absolute;inset:0;aspect-ratio:auto}\
+#mk .mk-c.ban::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,20,38,.94) 0%,rgba(5,20,38,.78) 42%,rgba(5,20,38,.15) 100%)}\
+#mk .mk-c.ban .bd{position:absolute;z-index:1;inset:0;padding:22px 24px;justify-content:center;gap:6px;max-width:min(560px,78%)}\
+#mk .mk-c.ban .ct{color:var(--brass);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase}\
+#mk .mk-c.ban b{color:#fff;font-size:clamp(22px,3.4vw,32px);font-weight:500;line-height:1.1;letter-spacing:-.01em}\
+#mk .mk-c.ban .ds{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:14.5px;line-height:1.4;color:rgba(255,255,255,.86)}\
+#mk .mk-c.ban .pr{color:#fff}\
+#mk .mk-c.ban .cta{align-self:flex-start;margin-top:8px;display:inline-flex;align-items:center;min-height:38px;padding:0 16px;border-radius:8px;background:#fff;color:var(--navy);font-size:14px;font-weight:500}\
+#mk .mk-hero{position:relative;margin-top:14px;border-radius:18px;overflow:hidden;background:var(--navy);color:#fff;height:clamp(250px,48vw,390px);min-width:0;display:flex;align-items:flex-end}\
+#mk .mk-hero img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}\
+#mk .mk-hero::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(5,20,38,.95) 0%,rgba(5,20,38,.55) 50%,rgba(5,20,38,.05) 100%)}\
+#mk .mk-hero div{position:relative;z-index:1;padding:22px 24px}\
+#mk .mk-hero small{display:block;color:var(--brass);font-size:12px;font-weight:500;letter-spacing:.14em;text-transform:uppercase}\
+#mk .mk-det .mk-hero h3{color:#fff;font-size:clamp(26px,4.4vw,38px);font-weight:500;line-height:1.08;margin:6px 0 0;letter-spacing:-.01em}\
+#mk .mk-hero p{margin-top:8px;font-size:15.5px;color:rgba(255,255,255,.88);max-width:520px}\
 #mk .mk-empty{margin-top:18px;padding:36px 20px;text-align:center;border:1px dashed var(--line);border-radius:18px;color:var(--muted);font-size:15px}\
 #mk .mk-empty b{display:block;color:var(--navy);font-weight:500;font-size:17px;margin-bottom:6px}\
 #mk .mk-empty .mk-btn{margin-top:16px}\
@@ -92,7 +108,7 @@
 #mk .mk-more{display:flex;justify-content:center;margin-top:16px}\
 #mk .mk-ok{margin:16px 0 0;padding:12px 14px;border-radius:12px;background:#fff;border:1px solid var(--line);color:var(--navy);font-size:14.5px}\
 @media (min-width:601px){ .grid>section.panel.p-mk.m-open{padding-inline:max(24px,calc(50vw - 520px))} .p-mk.m-open .m-head{margin-inline:calc(-1*max(24px,calc(50vw - 520px)));padding-inline:max(16px,calc(50vw - 528px))} }\
-@media (max-width:600px){ #mk .mk-grid{grid-template-columns:1fr 1fr;gap:10px} #mk .mk-c .ds{display:none} #mk .mk-f{grid-template-columns:1fr} #mk .mk-foot .mk-btn{flex:1} #mk .mk-bar .dd{flex:1 1 100%} #mk .mk-row .ac{padding-left:0} }';
+@media (max-width:600px){ #mk .mk-c.ban{height:220px} #mk .mk-c.ban .bd{max-width:100%;padding:18px} #mk .mk-c.ban::after{background:linear-gradient(90deg,rgba(5,20,38,.94) 0%,rgba(5,20,38,.7) 65%,rgba(5,20,38,.35) 100%)} #mk .mk-grid{grid-template-columns:1fr 1fr;gap:10px} #mk .mk-c .ds{display:none} #mk .mk-f{grid-template-columns:1fr} #mk .mk-foot .mk-btn{flex:1} #mk .mk-bar .dd{flex:1 1 100%} #mk .mk-row .ac{padding-left:0} }';
   var st=document.createElement('style'); st.textContent=CSS; document.head.appendChild(st);
 
   var $=function(s,r){ return (r||document).querySelector(s); };
@@ -100,6 +116,10 @@
   var foto=function(id,w){ return 'https://lh3.googleusercontent.com/d/'+encodeURIComponent(id)+'=w'+(w||600); };
   var miles=function(n){ return (Math.round((+n||0)*100)/100).toString().replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.'); };
   var tel591=function(t){ t=String(t||'').replace(/\D/g,''); return t.length===8?'591'+t:t; };
+  /* los negocios y servicios se muestran como pancarta publicitaria; inmuebles y artículos, como tarjeta */
+  var NEGOCIO=['Negocios','Servicios profesionales','Servicios técnicos','Emprendimientos','Gastronomía'];
+  var esNeg=function(x){ return !x.inm&&NEGOCIO.indexOf(x.categoria)>=0&&!!(x.fotos||[]).length; };
+  var lema=function(x){ var t=String(x.descripcion||'').split(/\n/)[0].trim(), m=t.match(/^.{20,}?[.!?](\s|$)/); t=m?m[0].trim():t; return t.length>110?t.slice(0,107).replace(/\s+\S*$/,'')+'…':t; };
   var PRECIO_OPC=['Negocios','Servicios profesionales','Servicios técnicos','Emprendimientos','Gastronomía','Otros'];
   var precioTxt=function(x){ return x.precio>0?(x.moneda==='USD'?'$us ':'Bs ')+miles(x.precio)+(x.precioTexto?' · '+x.precioTexto:''):(x.precioTexto||''); };
   var P=null, D=null, vista='vitrina', q='', cat='', mostrados=24, editando=null, FOT=[], MANT=[], cargando=null;
@@ -133,7 +153,10 @@
     b.innerHTML='<div class="mk-bar"><input type="search" id="mk-q" placeholder="Buscar: tortas, plomero, clases…" value="'+esc(q)+'"><div class="dd"><select id="mk-cat" aria-label="Categoría"><option value="">Todas las categorías</option>'+cats.map(function(c){ return '<option'+(c===cat?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select></div></div><div id="mk-list"></div>'; ddInit(b);
     var lista=function(){ var t=q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
       var L=D.publicaciones.filter(function(x){ if(cat&&x.categoria!==cat) return false; if(!t) return true; var s=[x.titulo,x.descripcion,x.categoria,x.anunciante].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); return t.split(/\s+/).every(function(w){ return s.indexOf(w)>=0; }); });
-      $('#mk-list').innerHTML=L.length?'<div class="mk-grid">'+L.slice(0,mostrados).map(function(x){ return '<article class="mk-c" data-id="'+esc(x.id)+'" tabindex="0" role="button">'+
+      $('#mk-list').innerHTML=L.length?'<div class="mk-grid">'+L.slice(0,mostrados).map(function(x){ if(esNeg(x)) return '<article class="mk-c ban" data-id="'+esc(x.id)+'" tabindex="0" role="button" aria-label="'+esc(x.titulo)+'">'+
+        '<div class="ph"><img src="'+foto(x.fotos[0],1400)+'" alt="" loading="lazy" decoding="async"></div><div class="bd"><span class="ct">'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</span><b>'+esc(x.titulo)+'</b>'+
+        (lema(x)?'<span class="ds">'+esc(lema(x))+'</span>':'')+'<span class="cta">Ver negocio</span></div></article>';
+        return '<article class="mk-c" data-id="'+esc(x.id)+'" tabindex="0" role="button">'+
         '<div class="ph">'+(x.fotos[0]?'<img src="'+foto(x.fotos[0],500)+'" alt="" loading="lazy" decoding="async">':'')+'</div><div class="bd"><span class="ct">'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</span><b>'+esc(x.titulo)+'</b>'+
         (precioTxt(x)?'<span class="pr">'+esc(precioTxt(x))+'</span>':'')+'<span class="ds">'+esc(x.descripcion)+'</span><span class="wh">'+esc(x.anunciante)+(x.edificio?' · '+esc(x.edificio):'')+'</span></div></article>'; }).join('')+'</div>'+
         (L.length>mostrados?'<div class="mk-more"><button type="button" class="mk-btn l" data-a="mas">Ver más</button></div>':'')
@@ -155,12 +178,14 @@
       :'<div class="mk-empty"><b>Aún no publicó nada</b>Muestre su negocio, servicio o producto a sus vecinos.<br><button type="button" class="mk-btn" data-a="nuevo">Publicar mi negocio</button></div>'); }
   function detalle(r){ var x=D.publicaciones.concat(D.mias).filter(function(z){ return z.id===P; })[0]; if(!x){ vista='vitrina'; return pintar(); }
     if(detalle.ult!==x.id&&!D.mias.some(function(z){ return z.id===x.id; })){ detalle.ult=x.id; interes(grupo(x),2); }
+    var neg=esNeg(x), gal=neg?x.fotos.slice(1):x.fotos;
     var wa=tel591(x.whatsapp||x.telefono), msg='Hola '+(x.anunciante||'')+', vi su publicación «'+x.titulo+'» en el Mercado de residentes de Bramar.';
     r.innerHTML='<div class="mk mk-det"><button type="button" class="mk-back" data-a="volver">‹ Volver</button>'+
-      (x.fotos.length?'<div class="mk-fotos" id="mk-fotos">'+x.fotos.map(function(f){ return '<img src="'+foto(f,1200)+'" alt="">'; }).join('')+'</div>'+(x.fotos.length>1?'<div class="mk-dots" id="mk-dots">'+x.fotos.map(function(f,i){ return '<i class="'+(i?'':'on')+'"></i>'; }).join('')+'</div>':''):'')+
-      '<h3>'+esc(x.titulo)+'</h3><span style="font-size:12.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--brass)">'+esc(x.categoria)+'</span>'+
+      (neg?'<div class="mk-hero"><img src="'+foto(x.fotos[0],1600)+'" alt=""><div><small>'+esc(x.categoria)+'</small><h3>'+esc(x.titulo)+'</h3>'+(lema(x)?'<p>'+esc(lema(x))+'</p>':'')+'</div></div>':'')+
+      (gal.length?'<div class="mk-fotos" id="mk-fotos">'+gal.map(function(f){ return '<img src="'+foto(f,1200)+'" alt="">'; }).join('')+'</div>'+(gal.length>1?'<div class="mk-dots" id="mk-dots">'+gal.map(function(f,i){ return '<i class="'+(i?'':'on')+'"></i>'; }).join('')+'</div>':''):'')+
+      (neg?'':'<h3>'+esc(x.titulo)+'</h3><span style="font-size:12.5px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;color:var(--brass)">'+esc(x.categoria)+'</span>')+
       (precioTxt(x)?'<div class="pr">'+esc(precioTxt(x))+'</div>':'')+(x.descripcion?'<p class="ds">'+esc(x.descripcion)+'</p>':'')+(x.ubicacion?'<p class="ds" style="margin-top:8px">Ubicación: '+esc(x.ubicacion)+'</p>':'')+
-      '<div class="wh"><b>'+esc(x.anunciante)+'</b>'+(x.edificio?'Vecino de '+esc(x.edificio):'')+'</div><div class="mk-acts">'+
+      '<div class="wh"><b>'+esc(x.anunciante)+'</b>'+(x.oficial?'Anuncio verificado por Bramar':x.edificio?'Vecino de '+esc(x.edificio):'')+'</div><div class="mk-acts">'+
       (wa?'<a class="mk-btn wa" target="_blank" rel="noopener" href="https://wa.me/'+wa+'?text='+encodeURIComponent(msg)+'">WhatsApp</a>':'')+
       (x.telefono?'<a class="mk-btn l" href="tel:+'+tel591(x.telefono)+'">Llamar</a>':'')+
       (x.facebook?'<a class="mk-btn l" target="_blank" rel="noopener nofollow ugc" href="'+esc(x.facebook)+'">Facebook</a>':'')+
@@ -254,17 +279,25 @@
 #mk-ad .h button{border:0;background:none;font:inherit;font-size:14px;color:var(--navy);text-decoration:underline;text-underline-offset:3px;cursor:pointer;min-height:36px;padding:0}\
 #mk-ad .tr{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}\
 #mk-ad .tr::-webkit-scrollbar{display:none}\
-#mk-ad .sl{flex:0 0 100%;scroll-snap-align:start;display:grid;grid-template-columns:92px 1fr;gap:14px;align-items:center;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}\
-#mk-ad .sl img{width:92px;height:92px;border-radius:14px;object-fit:cover;background:var(--sand)}\
+#mk-ad .sl{flex:0 0 100%;height:132px;scroll-snap-align:start;display:grid;grid-template-columns:104px 1fr;gap:14px;align-items:center;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}\
+#mk-ad .sl img{width:112px;height:112px;border-radius:14px;object-fit:cover;background:var(--sand)}\
 #mk-ad .sl div{min-width:0}\
 #mk-ad .sl small{display:block;font-size:12.5px;color:var(--muted)}\
 #mk-ad .sl strong{display:block;font-size:16px;font-weight:500;color:var(--ink);line-height:1.3;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\
 #mk-ad .sl em{display:block;font-style:normal;font-size:14.5px;font-weight:500;color:var(--navy);margin-top:2px}\
 #mk-ad .sl span{display:block;font-size:13px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}\
+#mk-ad .sl.ban{display:block;position:relative;border-radius:14px;overflow:hidden;background:#0A335D;color:#fff}\
+#mk-ad .sl.ban img{position:absolute;inset:0;width:100%;height:100%;border-radius:0}\
+#mk-ad .sl.ban::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(5,20,38,.95) 0%,rgba(5,20,38,.8) 50%,rgba(5,20,38,.2) 100%)}\
+#mk-ad .sl.ban div{position:absolute;z-index:1;inset:0;padding:14px 16px;gap:3px;display:flex;flex-direction:column;justify-content:center;max-width:82%}\
+#mk-ad .sl.ban small{line-height:1.3;color:#B08A4E;font-size:11px;font-weight:500;letter-spacing:.14em;text-transform:uppercase}\
+#mk-ad .sl.ban strong{color:#fff;font-size:20px;line-height:1.25;font-weight:500;letter-spacing:-.01em}\
+#mk-ad .sl.ban span{color:rgba(255,255,255,.85);font-size:13px;line-height:1.4}\
+#mk-ad .sl.ban u{align-self:flex-start;text-decoration:none;margin-top:6px;font-size:12.5px;line-height:1.4;font-weight:500;background:#fff;color:#0A335D;border-radius:6px;padding:4px 10px}\
 #mk-ad .dt{display:flex;gap:5px;justify-content:center;margin-top:12px}\
 #mk-ad .dt i{width:6px;height:6px;border-radius:50%;background:var(--line);transition:width .3s,background .3s}\
 #mk-ad .dt i.on{width:16px;border-radius:3px;background:var(--navy)}\
-#mk-ad .sk{height:92px;border-radius:14px;background:linear-gradient(90deg,var(--sand) 25%,#faf8f4 50%,var(--sand) 75%);background-size:200% 100%;animation:mkSk 1.2s infinite}\
+#mk-ad .sk{height:132px;border-radius:14px;background:linear-gradient(90deg,var(--sand) 25%,#faf8f4 50%,var(--sand) 75%);background-size:200% 100%;animation:mkSk 1.2s infinite}\
 @keyframes mkSk{to{background-position:-200% 0}}';
   var adSt=document.createElement('style'); adSt.textContent=AD_CSS; document.head.appendChild(adSt);
   var adClave='', adTimer=null;
@@ -314,6 +347,7 @@
       var grid=$('.profile .grid'); var old=$('#mk-ad'); if(old) old.remove(); if(!L||!L.length||!grid) return;
       var el=document.createElement('div'); el.id='mk-ad'; el.setAttribute('role','region'); el.setAttribute('aria-label','Publicaciones de vecinos e inmuebles');
       el.innerHTML='<div class="h"><b>Para usted</b><button type="button" data-ad="todo">Ver mercado</button></div><div class="tr">'+L.map(function(x){
+        if(esNeg(x)) return '<button type="button" class="sl ban" data-ad="'+esc(x.id)+'"><img src="'+foto(x.fotos[0],900)+'" alt="" loading="lazy"><div><small>'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</small><strong>'+esc(x.titulo)+'</strong>'+(lema(x)?'<span>'+esc(lema(x))+'</span>':'')+'<u>Ver negocio</u></div></button>';
         return '<button type="button" class="sl" data-ad="'+esc(x.id)+'"'+(x.inm?' data-inm="1"':'')+'><img src="'+foto(x.fotos[0],240)+'" alt="" loading="lazy"><div><small>'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</small><strong>'+esc(x.titulo)+'</strong>'+(precioTxt(x)?'<em>'+esc(precioTxt(x))+'</em>':'')+'<span>'+esc(x.anunciante)+'</span></div></button>'; }).join('')+'</div>'+
         (L.length>1?'<div class="dt">'+L.map(function(x,i){ return '<i class="'+(i?'':'on')+'"></i>'; }).join('')+'</div>':'');
       grid.parentNode.insertBefore(el,grid);

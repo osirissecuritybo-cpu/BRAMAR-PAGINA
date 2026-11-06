@@ -1312,6 +1312,14 @@ function mkDatos_(r, cfg) {
   if (!d.telefono && !d.whatsapp) throw new Error('Escriba un teléfono o WhatsApp de contacto.');
   return d;
 }
+/* anuncio propio de Bramar o de una empresa aliada: se publica al instante, visible en todos los edificios */
+function pubCrearOficial_(entrada, fotos, destacado) {
+  const cfg = pubCfg_(), datos = Object.assign(mkDatos_(entrada || {}, cfg), { edificio: 'Bramar Group' });
+  const o = { id: pubId_('m'), modulo: 'mk', estado: 'publicado', creado: new Date().toISOString(), vence: pubVence_(cfg.vigenciaMk),
+    destacado: !!destacado, edificio_id: 'bramar', dueno: 'bramar|oficial|admin', telefono: datos.telefono, titulo: datos.titulo, datos: datos,
+    fotos: pubFotos_(fotos, PUB_MAX_FOTOS.mk, []), reportes: [] };
+  pubGuardar_(o); return o;
+}
 function mkAvisar_(datos, yo, editada) {
   try { const to = destinatarios_(yo.pid); if (to) MailApp.sendEmail({ to: to, name: 'Portal Bramar', subject: (editada ? 'Publicación editada' : 'Nueva publicación') + ' en el mercado por revisar · ' + datos.titulo,
     htmlBody: '<div style="font-family:Arial,sans-serif;font-size:15px;color:#0B2440"><p>Un residente ' + (editada ? 'editó' : 'envió') + ' una publicación al Mercado de residentes:</p><p><b>' + datos.titulo + '</b><br>' + datos.categoria + ' · ' + (yo.edificio || '') + ' · Depto ' + yo.dep + '</p><p>Apruébela o recházela en Gestión LUKA → Publicaciones → Por revisar.</p></div>' }); } catch (e) {}
@@ -1319,7 +1327,7 @@ function mkAvisar_(datos, yo, editada) {
 function mkTarjeta_(o, mio) {
   const d = o.datos || {}, t = { id: o.id, titulo: d.titulo, categoria: d.categoria, descripcion: d.descripcion, precio: d.precio, moneda: d.moneda, precioTexto: d.precioTexto,
     telefono: d.telefono, whatsapp: d.whatsapp, facebook: d.facebook, instagram: d.instagram, web: d.web, ubicacion: d.ubicacion, anunciante: d.anunciante,
-    edificio: d.edificio, alcance: d.alcance, fotos: o.fotos || [], creado: o.creado, destacado: o.destacado, ejemplo: !!d.ejemplo };
+    edificio: d.edificio, alcance: d.alcance, fotos: o.fotos || [], creado: o.creado, destacado: o.destacado, ejemplo: !!d.ejemplo, oficial: o.edificio_id === 'bramar' && !d.ejemplo };
   if (mio) { t.estado = pubEstado_(o); t.vence = o.vence; t.motivo = d.motivo || ''; }
   return t;
 }
@@ -1420,6 +1428,11 @@ function lkPub_(u, d) {
         fotos: pubFotos_(d.fotos, PUB_MAX_FOTOS[mod], []), reportes: [] };
       pubGuardar_(o); return json({ ok: true, id: o.id });
     }
+    if (op === 'crear') {
+      // anuncio propio de Bramar (o de una empresa aliada) en el mercado de residentes: se publica al instante
+      const o = pubCrearOficial_(d.datos, d.fotos, d.destacado);
+      lkLog_(u, 'Publicaciones', 'Publicó un anuncio de Bramar', o.titulo); return json({ ok: true, id: o.id });
+    }
     if (op === 'borrar_ejemplos') {
       const lock0 = LockService.getScriptLock(); lock0.waitLock(20000);
       try { const E = pubTodas_().filter(function (x) { return (x.datos || {}).ejemplo; }).sort(function (a, b) { return b.fila - a.fila; });
@@ -1445,6 +1458,7 @@ function lkPub_(u, d) {
         if (o.datos && o.datos.motivo) nd.motivo = o.datos.motivo; if (o.datos && o.datos.ejemplo) nd.ejemplo = true; o.datos = nd; o.titulo = nd.titulo; o.telefono = nd.telefono;
         if (Array.isArray(d.orden)) { const ok = d.orden.filter(function (id) { return o.fotos.indexOf(id) >= 0; });
           o.fotos.forEach(function (id) { if (ok.indexOf(id) < 0) { try { DriveApp.getFileById(id).setTrashed(true); } catch (e) {} } }); o.fotos = ok; }
+        if (Array.isArray(d.fotos) && d.fotos.length) o.fotos = pubFotos_(d.fotos, PUB_MAX_FOTOS[o.modulo] || 8, o.fotos);
       } else return json({ ok: false, error: 'Acción no válida.' });
       pubGuardar_(o); lkLog_(u, 'Publicaciones', ({ estado: 'Cambió estado a ' + d.estado, destacar: d.valor ? 'Destacó' : 'Quitó destacado', renovar: 'Renovó', limpiar_reportes: 'Descartó reportes', editar: 'Editó' })[op] || op, t);
       return json({ ok: true });
