@@ -25858,6 +25858,15 @@ button.lkrp-b:hover{border-color:#1E4E86}
 #lkp .lkp-tab{flex:0 0 auto;min-height:40px;padding:0 16px;border-radius:12px;border:1px solid #E3EAF2;background:#fff;color:#0B2440;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 #lkp .lkp-tab.on{background:#0B2440;border-color:#0B2440;color:#fff}
 #lkp .lkp-b{padding:20px 22px 26px;min-height:62vh;box-sizing:border-box}
+#lkp .lkp-prev{position:relative;max-width:420px;height:220px;border-radius:16px;overflow:hidden;background:#111;margin-top:10px}
+#lkp .lkp-prev img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+#lkp .lkp-prev::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.62) 42%,rgba(0,0,0,0) 78%)}
+#lkp .lkp-prev div{position:absolute;z-index:1;left:0;right:0;bottom:0;padding:16px 18px;display:flex;align-items:flex-end;gap:14px;color:#fff}
+#lkp .lkp-prev p{flex:1;min-width:0;margin:0}
+#lkp .lkp-prev small{display:block;font-size:13px;opacity:.9}
+#lkp .lkp-prev b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:23px;line-height:1.18;font-weight:500;margin-top:3px}
+#lkp .lkp-prev u{flex:0 0 auto;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#fff;color:#0A335D;text-decoration:none;font-size:22px}
+#lkp .lkp-cnt{float:right;font-weight:400;color:#64748b}
 #lkp .lkp-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
 #lkp .lkp-bar input,#lkp .lkp-bar select{min-height:40px;border:1px solid #D9E2EC;border-radius:10px;padding:0 10px;font:inherit;font-size:14px;background:#fff;color:#0B2440}
 #lkp .lkp-bar input{flex:1;min-width:180px}
@@ -26010,14 +26019,18 @@ button.lkrp-b:hover{border-color:#1E4E86}
       '<label class="f" style="justify-content:flex-end"><span><input type="checkbox" data-k="financiamiento"'+(d.financiamiento?' checked':'')+'> Financiamiento</span></label>'+
       '<label class="f full">Descripción<textarea data-k="descripcion">'+esc(d.descripcion||'')+'</textarea></label><label class="f full">Características (separadas por coma)<input data-k="caracteristicas" value="'+esc((d.caracteristicas||[]).join(', '))+'"></label>'+
       inp('anunciante','Anunciante')+inp('telefono','Teléfono','','tel')+inp('whatsapp','WhatsApp','','tel')+inp('enlace','Enlace externo','full')+'</div>'
-      :'<div class="lkp-g">'+inp('titulo','Título','full')+'<label class="f">Categoría<select data-k="categoria">'+CFG.mkCategorias.map(function(c){ return '<option'+(c===d.categoria?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select></label>'+
-      '<label class="f">Visible para<select data-k="alcance">'+opt({todos:'Todos los edificios',edificio:'Solo su edificio'},d.alcance)+'</select></label>'+inp('precio','Precio','','decimal')+'<label class="f">Moneda<select data-k="moneda">'+opt({Bs:'Bolivianos',USD:'Dólares'},d.moneda)+'</select></label>'+inp('precioTexto','Nota de precio')+
+      :'<div class="lkp-g"><label class="f full">Título <span class="lkp-cnt" id="lkp-tc"></span><input data-k="titulo" maxlength="45" value="'+esc(d.titulo||'')+'"></label><label class="f">Categoría<select data-k="categoria">'+CFG.mkCategorias.map(function(c){ return '<option'+(c===d.categoria?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select></label>'+
+      '<label class="f">Visible para<select data-k="alcance">'+opt({todos:'Todos los edificios',edificio:'Solo su edificio'},d.alcance)+'</select></label><p class="lkp-note full" id="lkp-ch" style="grid-column:1/-1;margin:-4px 0 0"></p>'+inp('precio','Precio','','decimal')+'<label class="f">Moneda<select data-k="moneda">'+opt({Bs:'Bolivianos',USD:'Dólares'},d.moneda)+'</select></label>'+inp('precioTexto','Nota de precio')+
       '<label class="f full">Descripción<textarea data-k="descripcion">'+esc(d.descripcion||'')+'</textarea></label>'+inp('anunciante','Anunciante')+inp('telefono','Teléfono','','tel')+inp('whatsapp','WhatsApp','','tel')+inp('ubicacion','Ubicación')+inp('facebook','Facebook')+inp('instagram','Instagram')+inp('web','Página web','full')+'</div>';
     b.innerHTML='<button type="button" class="lkp-back" data-a="cancelar">‹ Volver sin guardar</button><h3 style="margin-top:8px">'+(esNuevo?'Nuevo anuncio':'Editar publicación')+'</h3>'+
       (esNuevo?'<p class="lkp-note">Negocios, servicios, emprendimientos y gastronomía se muestran como pancarta: use una foto horizontal y una primera frase corta en la descripción, que sale como lema.</p>':'')+html+
-      '<h4>Fotos · la primera es la principal</h4><div class="lkp-gal" id="lkp-fo"></div><input type="file" id="lkp-fin" accept="image/jpeg,image/png,image/webp" multiple hidden><div class="lkp-pie" style="justify-content:flex-start;margin-top:8px"><button type="button" class="btn" id="lkp-fadd">Agregar fotos</button></div><p class="lkp-msg" id="lkp-msg"></p>'+
+      (inm?'':'<h4>Así se verá</h4><div class="lkp-prev" id="lkp-pv"><img alt="" id="lkp-pvi" hidden><div><p><small id="lkp-pvc"></small><b id="lkp-pvt"></b></p><u aria-hidden="true">›</u></div></div>')+'<h4>Fotos · la primera es la principal</h4><div class="lkp-gal" id="lkp-fo"></div><input type="file" id="lkp-fin" accept="image/jpeg,image/png,image/webp" multiple hidden><div class="lkp-pie" style="justify-content:flex-start;margin-top:8px"><button type="button" class="btn" id="lkp-fadd">Agregar fotos</button></div><p class="lkp-msg" id="lkp-msg"></p>'+
       '<div class="lkp-pie"><button type="button" class="btn" data-a="cancelar">Cancelar</button><button type="button" class="btn primary" id="lkp-g">'+(esNuevo?'Publicar anuncio':'Guardar cambios')+'</button></div>';
-    var fotos=function(){ $('lkp-fo').innerHTML=(FO.map(function(f,i){ return '<div><img src="'+foto(f,300)+'" alt="">'+(i===0?'<span class="pri">Principal</span>':'')+'<span class="ctl">'+(i?'<button type="button" data-p="'+i+'" title="Hacer principal">★</button>':'')+'<button type="button" data-q="'+i+'" title="Quitar">×</button></span></div>'; }).join('')+
+    var AYU={'Servicios para edificios':'Administración, seguridad, limpieza, jardinería, mantenimiento de ascensores o piscinas.','Servicios profesionales':'Abogados, contadores, médicos, psicólogos, arquitectos, clases y tutorías.','Servicios técnicos':'Plomería, electricidad, refrigeración, cerrajería, reparación de equipos.','Gastronomía':'Comida, repostería, catering y bebidas.','Emprendimientos':'Marcas propias y negocios que están empezando.','Tiendas y productos':'Artículos nuevos o usados, ropa, muebles, electrodomésticos.','Vehículos':'Autos, motos y bicicletas.'};
+    var prev=function(){ if(inm||!$('lkp-pv')) return; var t=b.querySelector('[data-k=titulo]'), c=b.querySelector('[data-k=categoria]'), im=$('lkp-pvi'), src=FO.length?foto(FO[0],900):(NF[0]||'');
+      $('lkp-pvt').textContent=t.value||'Título del anuncio'; $('lkp-pvc').textContent=c.value; $('lkp-tc').textContent=t.value.length+'/45'; $('lkp-ch').textContent=AYU[c.value]||''; if(src){ im.src=src; im.hidden=false; } else im.hidden=true; };
+    b.oninput=prev; b.onchange=prev;
+    var fotos=function(){ setTimeout(prev,0); $('lkp-fo').innerHTML=(FO.map(function(f,i){ return '<div><img src="'+foto(f,300)+'" alt="">'+(i===0?'<span class="pri">Principal</span>':'')+'<span class="ctl">'+(i?'<button type="button" data-p="'+i+'" title="Hacer principal">★</button>':'')+'<button type="button" data-q="'+i+'" title="Quitar">×</button></span></div>'; }).join('')+
       NF.map(function(u,i){ return '<div><img src="'+u+'" alt="">'+(!FO.length&&i===0?'<span class="pri">Principal</span>':'<span class="pri">Nueva</span>')+'<span class="ctl"><button type="button" data-nq="'+i+'" title="Quitar">×</button></span></div>'; }).join(''))||'<p class="lkp-note">Sin fotos.</p>'; };
     $('lkp-fo').onclick=function(e){ var t=e.target; if(t.dataset.p){ FO.unshift(FO.splice(+t.dataset.p,1)[0]); fotos(); } if(t.dataset.q){ FO.splice(+t.dataset.q,1); fotos(); } if(t.dataset.nq){ NF.splice(+t.dataset.nq,1); fotos(); } };
     var achicar=function(file){ return new Promise(function(res,rej){ if(!/^image\/(jpeg|png|webp)$/.test(file.type)) return rej(new Error('Solo fotos JPG, PNG o WEBP.'));
@@ -26358,7 +26371,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261106155931'; window.LUKA_BUILD=B;
+(function(){ var B='20261106162421'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }

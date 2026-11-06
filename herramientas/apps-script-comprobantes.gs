@@ -1112,7 +1112,7 @@ const PUB_CFG_DEF = {
     { id: 'anticretico', nombre: 'En anticrético', operacion: 'anticretico', tipos: [], situaciones: [] },
     { id: 'otros', nombre: 'Casas, terrenos, oficinas y más', operacion: '', tipos: ['casa', 'terreno', 'oficina', 'local', 'galpon', 'edificio', 'otro'], situaciones: [] }
   ],
-  mkCategorias: ['Negocios', 'Servicios profesionales', 'Emprendimientos', 'Productos', 'Inmuebles en venta', 'Inmuebles en alquiler', 'Vehículos', 'Servicios técnicos', 'Gastronomía', 'Otros']
+  mkCategorias: ['Servicios para edificios', 'Servicios profesionales', 'Servicios técnicos', 'Gastronomía', 'Emprendimientos', 'Tiendas y productos', 'Inmuebles en venta', 'Inmuebles en alquiler', 'Vehículos', 'Otros']
 };
 function pubCfg_() { const c = lkLeer_('PUB_CFG', null) || {}; const o = {}; Object.keys(PUB_CFG_DEF).forEach(function (k) { o[k] = c[k] != null ? c[k] : PUB_CFG_DEF[k]; }); return o; }
 function pubHoja_() {
