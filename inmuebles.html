@@ -494,7 +494,9 @@ footer a{color:#fff}
   $('#t-prev').onclick=function(){ var t=$('#secnav'); t.scrollBy({left:-t.clientWidth*.7,behavior:'smooth'}); };
   $('#t-next').onclick=function(){ var t=$('#secnav'); t.scrollBy({left:t.clientWidth*.7,behavior:'smooth'}); };
   function lista(){ $('#grid').innerHTML=new Array(8).join('<div class="skel"></div>');
-    cargar().then(function(){ var p=new URLSearchParams(location.search); sec=p.get('s')||sec; pintarSecciones(); pintarLista(); })
+    cargar().then(function(){ var p=new URLSearchParams(location.search); sec=p.get('s')||sec;
+      if(simOp&&history.state&&history.state.sim){ var z=SECC.filter(function(s){ return s.operacion===simOp; })[0]; if(z){ sec=z.id; mostrados=POR_PAG; } simOp=null; }
+      pintarSecciones(); pintarLista(); })
       .catch(function(){ $('#grid').innerHTML='<div class="empty" style="grid-column:1/-1"><b>No pudimos cargar los inmuebles</b>Revise su conexión e intente de nuevo.<br><button class="btn navy" type="button" onclick="location.reload()">Reintentar</button></div>'; }); }
   $('#secnav').addEventListener('click',function(e){ var b=e.target.closest('[data-s]'); if(!b) return; sec=b.dataset.s; mostrados=POR_PAG; pintarSecciones(); pintarLista();
     try{ history.replaceState(history.state,'',sec?'?s='+encodeURIComponent(sec):'inmuebles.html'); }catch(x){} b.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); });
@@ -512,7 +514,7 @@ footer a{color:#fff}
     var f=$('#ficha'); f.innerHTML='<button class="back" type="button" data-volver><svg aria-hidden="true"><use href="#i-left"/></svg>Volver</button><div class="skel" style="margin-top:16px;aspect-ratio:16/7"></div>';
     api({action:'pub_inm_ver',id:id}).then(function(j){
       if(!j.ok){ f.innerHTML='<button class="back" type="button" data-volver><svg aria-hidden="true"><use href="#i-left"/></svg>Volver</button><div class="empty"><b>Esta publicación ya no está disponible</b>Puede que se haya vendido, alquilado o retirado.</div>'; return; }
-      contacto(j.contacto); var x=j.inmueble; galeria=x.fotos||[]; gi=0; document.title=x.titulo+' · Bramar Inmuebles';
+      contacto(j.contacto); var x=j.inmueble; simOp=x.operacion||simOp; galeria=x.fotos||[]; gi=0; document.title=x.titulo+' · Bramar Inmuebles';
       var dm=x.tipo==='monoambiente'?'Monoambiente':(x.dormitorios||'');
       var facts=[['Operación',OPS[x.operacion]],['Inmueble',TIPOS[x.tipo]],['Situación',SIT[x.situacion]],['Dormitorios',dm],['Baños',x.banos||''],['Garajes',x.garajes||''],['Sup. construida',x.sup?miles(x.sup)+' m²':''],['Sup. terreno',x.supTerreno?miles(x.supTerreno)+' m²':''],['Entrega',x.entrega],['Financiamiento',x.financiamiento?'Sí':'']].filter(function(a){ return a[1]!==''&&a[1]!=null&&a[1]!==undefined; });
       var msg='Hola Bramar, me interesa el inmueble '+x.codigo+': «'+x.titulo+'». ¿Me pueden dar más información?';
@@ -582,6 +584,9 @@ footer a{color:#fff}
 
   /* ---------- navegación (con historial: el botón atrás funciona) ---------- */
   function mostrar(v){ ['lista','ficha','pub'].forEach(function(k){ $('#v-'+k).hidden=k!==v; }); }
+  var simOp=null;
+  (function(){ var p=new URLSearchParams(location.search), id=p.get('id');
+    if(id&&p.get('sim')&&!(history.state&&history.state.v)){ try{ history.replaceState({v:'inicio',sim:1},'','inmuebles.html'); history.pushState({v:'ficha'},'','?id='+encodeURIComponent(id)); }catch(e){} } })();
   function ruta(){ var p=new URLSearchParams(location.search);
     if(p.get('id')){ mostrar('ficha'); ficha(p.get('id')); window.scrollTo(0,0); }
     else if(p.get('publicar')){ mostrar('pub'); document.title='Publica tu inmueble · Bramar Group'; if(!$('#ph-grid').children.length) pintarFotos(); window.scrollTo(0,0); }

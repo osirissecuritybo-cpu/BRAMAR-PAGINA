@@ -85,6 +85,7 @@
 #mk .mk-f input,#mk .mk-f textarea{min-height:48px;border:1px solid var(--line);border-radius:12px;padding:10px 14px;font:inherit;font-size:15.5px;font-weight:400;color:var(--ink);background:#fff;width:100%;box-sizing:border-box}\
 #mk .mk-f textarea{min-height:110px;resize:vertical}\
 #mk .mk-f h4{grid-column:1/-1;margin:10px 0 0;font-size:15px;font-weight:500;color:var(--navy)}\
+#mk .mk-sim{margin:14px 0 0;font-size:15px;font-weight:500;color:var(--navy)}\
 #mk .mk-cnt{float:right;font-size:12.5px;color:var(--muted);font-weight:400}\
 #mk .mk-hint{grid-column:1/-1;margin:-4px 0 0;font-size:13.5px;color:var(--muted,#5b6472)}\
 #mk .mk-ph{grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:10px}\
@@ -154,7 +155,7 @@
     if(vista==='mias') mias(); else vitrina(); }
   function vitrina(){ var b=$('#mk-body');
     var cats=D.categorias.filter(function(c){ return D.publicaciones.some(function(x){ return x.categoria===c; }); });
-    b.innerHTML='<div class="mk-bar"><input type="search" id="mk-q" placeholder="Buscar: tortas, plomero, clases…" value="'+esc(q)+'"><div class="dd"><select id="mk-cat" aria-label="Categoría"><option value="">Todas las categorías</option>'+cats.map(function(c){ return '<option'+(c===cat?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select></div></div><div id="mk-list"></div>'; ddInit(b);
+    b.innerHTML='<div class="mk-bar"><input type="search" id="mk-q" placeholder="Buscar: tortas, plomero, clases…" value="'+esc(q)+'"><div class="dd"><select id="mk-cat" aria-label="Categoría"><option value="">Todas las categorías</option>'+cats.map(function(c){ return '<option'+(c===cat?' selected':'')+'>'+esc(c)+'</option>'; }).join('')+'</select></div></div>'+(simDe?'<p class="mk-sim" id="mk-sim">Más como «'+esc(simDe.titulo)+'» en '+esc(simDe.categoria)+'</p>':'')+'<div id="mk-list"></div>'; ddInit(b);
     var lista=function(){ var t=q.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
       var L=D.publicaciones.filter(function(x){ if(cat&&x.categoria!==cat) return false; if(!t) return true; var s=[x.titulo,x.descripcion,x.categoria,x.anunciante].join(' ').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,''); return t.split(/\s+/).every(function(w){ return s.indexOf(w)>=0; }); });
       $('#mk-list').innerHTML=L.length?'<div class="mk-grid">'+L.slice(0,mostrados).map(function(x){ if(esNeg(x)) return '<article class="mk-c ban" data-id="'+esc(x.id)+'" tabindex="0" role="button" aria-label="'+esc(x.titulo)+'">'+
@@ -165,8 +166,8 @@
         (precioTxt(x)?'<span class="pr">'+esc(precioTxt(x))+'</span>':'')+'<span class="ds">'+esc(x.descripcion)+'</span><span class="wh">'+esc(x.anunciante)+(x.edificio?' · '+esc(x.edificio):'')+'</span></div></article>'; }).join('')+'</div>'+
         (L.length>mostrados?'<div class="mk-more"><button type="button" class="mk-btn l" data-a="mas">Ver más</button></div>':'')
         :'<div class="mk-empty"><b>'+(D.publicaciones.length?'Nada coincide con su búsqueda':'Todavía no hay publicaciones')+'</b>'+(D.publicaciones.length?'Pruebe con otra palabra o categoría.':'Sea el primero en mostrar su negocio a sus vecinos.')+(D.publicaciones.length?'':'<br><button type="button" class="mk-btn" data-a="nuevo">Publicar mi negocio</button>')+'</div>'; };
-    $('#mk-q').oninput=function(){ q=this.value; mostrados=24; lista(); };
-    $('#mk-cat').onchange=function(){ cat=this.value; mostrados=24; lista(); if(cat) interes(grupo({categoria:cat}),1); };
+    $('#mk-q').oninput=function(){ q=this.value; mostrados=24; simDe=null; var n=$('#mk-sim'); if(n) n.remove(); lista(); };
+    $('#mk-cat').onchange=function(){ cat=this.value; mostrados=24; simDe=null; var n=$('#mk-sim'); if(n) n.remove(); lista(); if(cat) interes(grupo({categoria:cat}),1); };
     lista(); }
   var aviso='';
   function mias(){ var b=$('#mk-body'), hoy=new Date().toISOString(), av=aviso;
@@ -278,36 +279,32 @@
     if(sec&&sec.classList.contains('m-open')&&(vista==='detalle'||vista==='form')){ salir(); return true; } return false; };
   /* ---------- inicio: vitrina que pasa sola (publicidad de los vecinos) ---------- */
   var AD_CSS='\
-#mk-ad{background:var(--paper);border-radius:20px;padding:14px var(--g,16px) 12px;overflow:hidden;margin:16px 0 0}\
-#mk-ad .h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}\
-#mk-ad .h b{font-size:15px;font-weight:500;color:var(--navy)}\
-#mk-ad .h button{border:0;background:none;font:inherit;font-size:14px;color:var(--navy);text-decoration:underline;text-underline-offset:3px;cursor:pointer;min-height:36px;padding:0}\
-#mk-ad .tr{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch}\
+#mk-ad{margin:16px 0 0}\
+#mk-ad .h{margin:0 0 8px;font-size:13px;color:var(--muted)}\
+#mk-ad .tr{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;-webkit-overflow-scrolling:touch;border-radius:var(--adr,20px)}\
 #mk-ad .tr::-webkit-scrollbar{display:none}\
-#mk-ad .sl{flex:0 0 100%;height:clamp(184px,30vw,236px);scroll-snap-align:start;display:grid;grid-template-columns:clamp(150px,26vw,210px) 1fr;gap:16px;align-items:center;border:0;background:none;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}\
-#mk-ad .sl img{width:100%;aspect-ratio:1;border-radius:16px;object-fit:cover;background:var(--sand)}\
-#mk-ad .sl div{min-width:0}\
-#mk-ad .sl small{display:block;font-size:13px;color:var(--muted)}\
-#mk-ad .sl strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:18px;font-weight:500;color:var(--ink);line-height:1.3;margin-top:2px}\
-#mk-ad .sl em{display:block;font-style:normal;font-size:16px;font-weight:500;color:var(--navy);margin-top:4px}\
-#mk-ad .sl span{display:block;font-size:14px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:2px}\
-#mk-ad .sl.ban{display:block;position:relative;border-radius:16px;overflow:hidden;background:#111;color:#fff}\
-#mk-ad .sl.ban img{position:absolute;inset:0;width:100%;height:100%;aspect-ratio:auto;border-radius:0}\
-#mk-ad .sl.ban::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.62) 42%,rgba(0,0,0,0) 78%)}\
-#mk-ad .sl.ban div{position:absolute;z-index:1;left:0;right:0;bottom:0;padding:16px 16px 16px 18px;display:flex;align-items:flex-end;gap:14px}\
-#mk-ad .sl.ban div p{flex:1;min-width:0;margin:0}\
-#mk-ad .sl.ban small{color:#fff;opacity:.9;font-size:13px;font-weight:500;letter-spacing:.03em}\
-#mk-ad .sl.ban strong{color:#fff;font-size:clamp(20px,5.4vw,26px);line-height:1.18;letter-spacing:-.01em;margin-top:3px}\
-#mk-ad .sl.ban u{flex:0 0 auto;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#fff;color:#0A335D;text-decoration:none}\
-#mk-ad .sl.ban u svg{width:20px;height:20px}\
-#mk-ad .dt{display:flex;gap:5px;justify-content:center;margin-top:12px}\
+#mk-ad .sl{flex:0 0 100%;height:var(--adh,190px);scroll-snap-align:start;position:relative;display:block;overflow:hidden;border:0;padding:0;margin:0;background:#111;color:#fff;text-align:left;font:inherit;cursor:pointer}\
+#mk-ad .sl img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}\
+#mk-ad .sl::after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.88) 0%,rgba(0,0,0,.6) 42%,rgba(0,0,0,0) 78%)}\
+#mk-ad .sl div{position:absolute;z-index:1;left:0;right:0;bottom:0;padding:16px 16px 16px 20px;display:flex;align-items:flex-end;gap:14px}\
+#mk-ad .sl p{flex:1;min-width:0;margin:0}\
+#mk-ad .sl small{display:block;color:#fff;opacity:.9;font-size:13px;font-weight:500;letter-spacing:.03em}\
+#mk-ad .sl strong{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:#fff;font-size:clamp(20px,5.4vw,26px);font-weight:500;line-height:1.18;letter-spacing:-.01em;margin-top:3px}\
+#mk-ad .sl em{display:block;font-style:normal;font-size:16px;font-weight:500;color:#fff;margin-top:4px}\
+#mk-ad .sl u{flex:0 0 auto;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;background:#fff;color:#0A335D;text-decoration:none}\
+#mk-ad .sl u svg{width:20px;height:20px}\
+#mk-ad .dt{display:flex;gap:5px;justify-content:center;margin-top:10px}\
 #mk-ad .dt i{width:6px;height:6px;border-radius:50%;background:var(--line);transition:width .3s,background .3s}\
 #mk-ad .dt i.on{width:16px;border-radius:3px;background:var(--navy)}\
-#mk-ad .sk{height:clamp(184px,30vw,236px);border-radius:14px;background:linear-gradient(90deg,var(--sand) 25%,#faf8f4 50%,var(--sand) 75%);background-size:200% 100%;animation:mkSk 1.2s infinite}\
+#mk-ad .sk{height:var(--adh,190px);border-radius:var(--adr,20px);background:linear-gradient(90deg,var(--sand) 25%,#faf8f4 50%,var(--sand) 75%);background-size:200% 100%;animation:mkSk 1.2s infinite}\
 @keyframes mkSk{to{background-position:-200% 0}}';
   var adSt=document.createElement('style'); adSt.textContent=AD_CSS; document.head.appendChild(adSt);
   var adClave='', adTimer=null;
-  function abrirPub(id){ P=id; window.__bramarPortal.abrir('mk'); setTimeout(function(){ sub('detalle'); },0); }
+  /* desde el anuncio: abre la publicación y, al volver, muestra las de la misma categoría */
+  var simDe=null;
+  function abrirPub(id){ var x=D&&D.publicaciones.filter(function(z){ return z.id===id; })[0];
+    if(x){ simDe=x; cat=x.categoria; q=''; mostrados=24; } vista='vitrina'; volverA='vitrina'; P=id;
+    window.__bramarPortal.abrir('mk'); setTimeout(function(){ sub('detalle'); },0); }
   /* grupo de interés: la categoría del mercado; todo lo que es inmueble cuenta como «Inmuebles» */
   function grupo(x){ return x.inm||/^inmueble/i.test(x.categoria||'')?'Inmuebles':(x.categoria||'Otros'); }
   function interes(g,peso){ if(!g) return; try{ D&&D.gustos&&(D.gustos[g]=(D.gustos[g]||0)+peso); }catch(e){} call({action:'mk_interes',grupo:g,peso:peso}).catch(function(){}); }
@@ -333,6 +330,7 @@
   function anuncios(){ var bp=window.__bramarPortal, s=bp&&bp.ses(), perfil=$('#view-profile'), grid=$('.profile .grid');
     var visible=perfil&&!perfil.hidden&&s;
     if(!visible){ var v=$('#mk-ad'); if(v) v.remove(); adClave=''; return; }
+    medirAd($('#mk-ad'));
     var clave=s.b+'|'+s.d+'|'+s.modo; if(adClave===clave) return; adClave=clave; D=null;
     /* al instante: lo último que vio este residente (guardado en el teléfono); la nube lo actualiza por detrás */
     var ck='bramar.mkad.'+clave, c=null; try{ c=JSON.parse(localStorage.getItem(ck)||'null'); }catch(e){}
@@ -347,16 +345,19 @@
       var ids=function(A){ return (A||[]).map(function(x){ return x.id; }).join(','); };
       if(!c||ids(c.L)!==ids(L)||!$('#mk-ad .sl')) pintarAd(L);
     }).catch(function(){ adClave=''; var v=$('#mk-ad.cargando'); if(v) v.remove(); }); }
+  /* el anuncio mide lo mismo que la tarjeta de la deuda (ancho, alto y esquinas) */
+  function medirAd(el){ var d=$('.profile .p-debt'); if(!el||!d||!d.offsetHeight) return; var cs=getComputedStyle(d);
+    el.style.setProperty('--adh',d.offsetHeight+'px'); el.style.setProperty('--adr',cs.borderTopLeftRadius); el.style.maxWidth=d.offsetWidth+'px'; }
+  window.addEventListener('resize',function(){ medirAd($('#mk-ad')); });
   function reservarAd(){ var grid=$('.profile .grid'); if(!grid||$('#mk-ad')) return; var el=document.createElement('div'); el.id='mk-ad'; el.className='cargando';
-    el.innerHTML='<div class="h"><b>Para usted</b></div><div class="sk"></div>'; grid.parentNode.insertBefore(el,grid); }
+    el.innerHTML='<div class="h">Espacio publicitario</div><div class="sk"></div>'; grid.parentNode.insertBefore(el,grid); medirAd(el); }
   function pintarAd(L){
       var grid=$('.profile .grid'); var old=$('#mk-ad'); if(old) old.remove(); if(!L||!L.length||!grid) return;
-      var el=document.createElement('div'); el.id='mk-ad'; el.setAttribute('role','region'); el.setAttribute('aria-label','Publicaciones de vecinos e inmuebles');
-      el.innerHTML='<div class="h"><b>Para usted</b><button type="button" data-ad="todo">Ver mercado</button></div><div class="tr">'+L.map(function(x){
-        if(esNeg(x)) return '<button type="button" class="sl ban" data-ad="'+esc(x.id)+'" aria-label="'+esc(x.titulo)+'. Ver negocio"><img src="'+foto(x.fotos[0],1000)+'" alt="" loading="lazy"><div><p><small>'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</small><strong>'+esc(x.titulo)+'</strong></p><u aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></u></div></button>';
-        return '<button type="button" class="sl" data-ad="'+esc(x.id)+'"'+(x.inm?' data-inm="1"':'')+'><img src="'+foto(x.fotos[0],240)+'" alt="" loading="lazy"><div><small>'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</small><strong>'+esc(x.titulo)+'</strong>'+(precioTxt(x)?'<em>'+esc(precioTxt(x))+'</em>':'')+'<span>'+esc(x.anunciante)+'</span></div></button>'; }).join('')+'</div>'+
+      var el=document.createElement('div'); el.id='mk-ad'; el.setAttribute('role','region'); el.setAttribute('aria-label','Espacio publicitario');
+      el.innerHTML='<div class="h">Espacio publicitario</div><div class="tr">'+L.map(function(x){
+        return '<button type="button" class="sl" data-ad="'+esc(x.id)+'"'+(x.inm?' data-inm="1"':'')+' aria-label="'+esc(x.titulo)+'"><img src="'+foto(x.fotos[0],1000)+'" alt="" loading="lazy"><div><p><small>'+esc(x.categoria)+(x.ejemplo?' · Ejemplo':'')+'</small><strong>'+esc(x.titulo)+'</strong>'+(!esNeg(x)&&precioTxt(x)?'<em>'+esc(precioTxt(x))+'</em>':'')+'</p><u aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></u></div></button>'; }).join('')+'</div>'+
         (L.length>1?'<div class="dt">'+L.map(function(x,i){ return '<i class="'+(i?'':'on')+'"></i>'; }).join('')+'</div>':'');
-      grid.parentNode.insertBefore(el,grid);
+      grid.parentNode.insertBefore(el,grid); medirAd(el);
       var tr=el.querySelector('.tr'), dots=el.querySelectorAll('.dt i'), i=0, pausa=0;
       var marcar=function(){ var k=Math.round(tr.scrollLeft/tr.clientWidth); [].forEach.call(dots,function(d,j){ d.classList.toggle('on',j===k); }); i=k; };
       tr.addEventListener('scroll',function(){ clearTimeout(tr._t); tr._t=setTimeout(marcar,80); },{passive:true});
@@ -368,7 +369,7 @@
       el.addEventListener('click',function(e){ var b=e.target.closest('[data-ad]'); if(!b) return;
         if(b.dataset.ad==='todo'){ vista='vitrina'; window.__bramarPortal.abrir('mk'); return; }
         var x=L.filter(function(z){ return z.id===b.dataset.ad; })[0]; if(x) interes(grupo(x),2);
-        if(b.dataset.inm) window.open('inmuebles.html?id='+encodeURIComponent(b.dataset.ad),'_blank','noopener'); else abrirPub(b.dataset.ad); });
+        if(b.dataset.inm) window.open('inmuebles.html?id='+encodeURIComponent(b.dataset.ad)+'&sim=1','_blank','noopener'); else abrirPub(b.dataset.ad); });
   }
 
   setInterval(anuncios,400);
