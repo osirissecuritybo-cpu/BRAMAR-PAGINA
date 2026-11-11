@@ -26382,7 +26382,22 @@ button.lkrp-b:hover{border-color:#1E4E86}
           if(w){ try{ w.location=d.output('bloburl'); return; }catch(e){} } d.save(nombre); })
         .catch(function(e){ if(w) try{ w.close(); }catch(x){} toast(e.message||'No se pudo generar el PDF','error'); }); }; }
   function jsPDFlib(){ return (window.jspdf&&window.jspdf.jsPDF)?Promise.resolve(window.jspdf.jsPDF):window.loadLib(window.LIB.jspdf).then(function(){ return window.jspdf.jsPDF; }); }
-  function hacerPdf(V,o){ return jsPDFlib().then(function(J){
+  /* logo del PDF: el del edificio de las tareas (si son de uno solo); si no, el de Bramar */
+  var LOGOS={};
+  function idActual(){ try{ return (typeof LOCAL_DATA_KEY==='string'&&LOCAL_DATA_KEY.indexOf('luka-b-')===0)?LOCAL_DATA_KEY.slice(7):''; }catch(e){ return ''; } }
+  function logoDe(V){ var ids={}; V.forEach(function(t){ ids[t.edificio||'']=1; }); var k=Object.keys(ids);
+    if(k.length!==1||!k[0]) return Promise.resolve(window.__lkLogo||'');
+    var id=k[0];
+    if(id===idActual()){ try{ if(DATA&&DATA.config&&DATA.config.logo) return Promise.resolve(DATA.config.logo); }catch(e){} }
+    if(LOGOS[id]!=null) return Promise.resolve(LOGOS[id]||window.__lkLogo||'');
+    return window.lukaApi({action:'lk_cargar',id:id}).then(function(j){ var lg=''; try{ var dd=JSON.parse(j.data); lg=(dd.config&&dd.config.logo)||''; }catch(e){} LOGOS[id]=lg; return lg||window.__lkLogo||''; })
+      .catch(function(){ return window.__lkLogo||''; }); }
+  /* se pasa a PNG con su proporción real (sirve para JPG, PNG o SVG) */
+  function logoPng(src){ return new Promise(function(res){ if(!src) return res(null); var im=new Image(); im.onload=function(){ try{
+      var w=im.naturalWidth||im.width||300, h=im.naturalHeight||im.height||150, k=Math.min(1,900/Math.max(w,h)); if(w*k<300){ k=300/w; }
+      var c=document.createElement('canvas'); c.width=Math.round(w*k); c.height=Math.round(h*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height);
+      res({src:c.toDataURL('image/png'),w:c.width,h:c.height}); }catch(e){ res(null); } }; im.onerror=function(){ res(null); }; im.src=src; }); }
+  function hacerPdf(V,o){ return Promise.all([jsPDFlib(),logoDe(V).then(logoPng)]).then(function(rr){ var J=rr[0], LG=rr[1];
     var doc=new J({unit:'pt',format:'letter'}), W=612, H=792, L=48, R=W-48, AZ=[11,36,64], NG=[0,0,0], GR=[90,100,112];
     var rob=false; try{ var FU=window.__lkFuentes||{}; Object.keys(FU).forEach(function(k){ doc.addFileToVFS(k+'.ttf',FU[k]); });
       [['Roboto-Regular','Roboto','normal'],['Roboto-Medium','Roboto','medium'],['Roboto-Bold','Roboto','bold'],['RobotoCondensed-Bold','RobotoC','bold']].forEach(function(f){ if(FU[f[0]]) { doc.addFont(f[0]+'.ttf',f[1],f[2]); rob=true; } }); }catch(e){ rob=false; }
@@ -26392,7 +26407,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
       if(lleno){ doc.setLineWidth(1.6); doc.line(x+2.5,y+s*.55,x+s*.42,y+s-3); doc.line(x+s*.42,y+s-3,x+s-2.5,y+3); } };
     var pagina=1, y;
     var cabeza=function(titulo,sub){
-      var lg=window.__lkLogo; if(lg){ try{ doc.addImage(lg,'PNG',L,34,92,40,undefined,'FAST'); }catch(e){} }
+      if(LG){ try{ var bw=130, bh=50, k2=Math.min(bw/LG.w,bh/LG.h), lw=LG.w*k2, lh=LG.h*k2; doc.addImage(LG.src,'PNG',L,30+(bh-lh)/2,lw,lh,undefined,'FAST'); }catch(e){} }
       F('cond'); doc.setFontSize(18); col(AZ); doc.text(String(titulo).toUpperCase(),R,52,{align:'right',charSpace:.6});
       F('normal'); doc.setFontSize(9.5); col(GR); doc.text(sub||('Emitida el '+fLarga(hoy())),R,67,{align:'right'});
       doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(1.4); doc.line(L,84,R,84);
@@ -26773,7 +26788,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261111131059'; window.LUKA_BUILD=B;
+(function(){ var B='20261111131959'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
