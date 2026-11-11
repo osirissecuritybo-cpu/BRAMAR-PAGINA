@@ -26143,6 +26143,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 #lkc .lkc-sec{padding:9px 14px;background:#F6F8FB;font-size:12.5px;font-weight:600;color:#5B6B7F;border-top:1px solid #E3EAF2}
 #lkc .lkc-sec:first-child{border-top:0}
 #lkc .lkc-row{display:grid;grid-template-columns:28px 34px 1fr auto;gap:10px;align-items:start;padding:12px 14px;border-top:1px solid #EEF2F7;background:#fff}
+#lkc .lkc-row.alta{box-shadow:inset 4px 0 0 #0B2440}
 #lkc .lkc-row.drag{opacity:.45}
 #lkc .lkc-row.sobre{box-shadow:inset 0 3px 0 #0B2440}
 #lkc .lkc-h{cursor:grab;color:#98A6B5;display:grid;place-items:center;height:34px;touch-action:none}
@@ -26233,7 +26234,10 @@ button.lkrp-b:hover{border-color:#1E4E86}
   var IDN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
   var IGR='<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>';
 
-  function ordenadas(L){ return L.slice().sort(function(a,b){ return (a.orden||0)-(b.orden||0) || String(a.creado).localeCompare(String(b.creado)); }); }
+  /* prioridad alta siempre arriba; dentro de cada prioridad, el orden que eligió el usuario */
+  var RANGO={alta:0,normal:1,baja:2};
+  function rango(t){ var x=RANGO[t.prioridad]; return x==null?1:x; }
+  function ordenadas(L){ return L.slice().sort(function(a,b){ return rango(a)-rango(b) || (a.orden||0)-(b.orden||0) || String(a.creado).localeCompare(String(b.creado)); }); }
   function visibles(){ var q=filtro.q.toLowerCase();
     return ordenadas((T||[]).filter(function(t){
       if(filtro.est==='pend'&&t.estado==='hecho') return false; if(filtro.est==='hecho'&&t.estado!=='hecho') return false;
@@ -26287,7 +26291,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     if(PRI[t.prioridad]) meta.push('<span class="'+(t.prioridad==='alta'?'alta':'')+'">'+PRI[t.prioridad]+'</span>');
     if(pasos.length) meta.push('<span>'+ok+' de '+pasos.length+' pasos</span>');
     if(hecho&&t.hechoPor) meta.push('<span>Hecha por '+esc(t.hechoPor)+'</span>');
-    return '<div class="lkc-row'+(hecho?' hecho':'')+'" data-id="'+esc(t.id)+'"'+(hecho?'':' draggable="true"')+'>'+
+    return '<div class="lkc-row'+(hecho?' hecho':'')+(!hecho&&t.prioridad==='alta'?' alta':'')+'" data-id="'+esc(t.id)+'"'+(hecho?'':' draggable="true"')+'>'+
       '<span class="lkc-h" title="Arrastre para ordenar">'+(hecho?'':IGR)+'</span>'+
       '<button type="button" class="lkc-ck'+(hecho?' on':t.estado==='proceso'?' mid':'')+'" data-a="ck" aria-label="'+(hecho?'Marcar como pendiente':'Marcar como hecha')+'">'+ICK+'</button>'+
       '<div class="lkc-tx"><b>'+esc(t.titulo)+'</b><div class="lkc-meta">'+meta.join('')+'</div>'+(t.detalle?'<p class="lkc-det">'+esc(t.detalle)+'</p>':'')+
@@ -26301,7 +26305,8 @@ button.lkrp-b:hover{border-color:#1E4E86}
     .catch(function(e){ toast(e.message||'No se pudo guardar','error'); cargar().then(function(){ pintar(); }).catch(function(){}); throw e; }); }
   function setEstado(t,est){ t.estado=est; if(est==='hecho'){ t.hechoPor=(usuario()||{}).nombre||''; } else delete t.hechoPor; guardarLocal(); pintar(); enviar({op:'estado',id:t.id,estado:est}).catch(function(){}); }
   function mover(id,dir){ var V=visibles().filter(function(t){ return t.estado!=='hecho'; }), i=V.map(function(t){ return t.id; }).indexOf(id), j=i+dir;
-    if(i<0||j<0||j>=V.length) return; var ids=V.map(function(t){ return t.id; }); var x=ids.splice(i,1)[0]; ids.splice(j,0,x); reordenar(ids); }
+    if(i<0||j<0||j>=V.length) return;
+    if(rango(V[i])!==rango(V[j])){ toast(dir<0?'Ya está primera entre las de su prioridad. Para subirla más, cámbiele la prioridad.':'Ya está última entre las de su prioridad.','info'); return; } var ids=V.map(function(t){ return t.id; }); var x=ids.splice(i,1)[0]; ids.splice(j,0,x); reordenar(ids); }
   function reordenar(ids){ var L=ids.map(buscar).filter(Boolean), nums=L.map(function(t){ return t.orden||0; }).sort(function(a,b){ return a-b; });
     L.forEach(function(t,i){ t.orden=nums[i]; }); for(var i=1;i<L.length;i++) if(L[i].orden<=L[i-1].orden) L[i].orden=L[i-1].orden+0.001;
     guardarLocal(); lista(); enviar({op:'orden',ids:ids}).catch(function(){}); }
@@ -26788,7 +26793,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261111131959'; window.LUKA_BUILD=B;
+(function(){ var B='20261111132420'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
