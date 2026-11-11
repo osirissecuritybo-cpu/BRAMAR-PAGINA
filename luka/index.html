@@ -26373,10 +26373,11 @@ button.lkrp-b:hover{border-color:#1E4E86}
       '<div class="lkc-g" style="margin-top:12px"><label class="dos">Entregar a<input id="lkc-pa2" maxlength="60" value="'+esc(filtro.resp||'')+'" placeholder="Ej.: Conserje de Limco II"></label>'+
       '<label class="dos">Título<input id="lkc-pt" maxlength="60" value="Lista de pendientes"></label></div>'+
       '<div class="lkc-chk"><label><input type="checkbox" id="lkc-pd" checked> Incluir detalle y pasos</label><label><input type="checkbox" id="lkc-pf" checked> Espacio para firmas</label><label><input type="checkbox" id="lkc-po"> Líneas para observaciones</label></div>'+
+      '<div class="lkc-chk" style="margin-top:2px"><label><input type="checkbox" id="lkc-pl"'+(filtro.resp?' checked':'')+'> Hoja extra para el responsable: cuánto tardará, qué día lo hará y qué materiales hay que comprar</label></div>'+
       '<div class="lkc-pie" style="justify-content:flex-start"><button type="button" class="btn primary" id="lkc-pg"'+(V.length?'':' disabled')+'>Generar PDF</button><button type="button" class="btn" id="lkc-pc">Cerrar</button></div></div>';
     $('lkc-pc').onclick=function(){ pdfAbierto=false; panelPdf(); };
     $('lkc-pg').onclick=function(){ var w=null; try{ w=window.open('','_blank'); if(w) w.document.write('<p style="font-family:sans-serif;padding:24px">Preparando el PDF…</p>'); }catch(e){}
-      hacerPdf(visibles(),{para:$('lkc-pa2').value.trim(),titulo:$('lkc-pt').value.trim()||'Lista de pendientes',detalle:$('lkc-pd').checked,firmas:$('lkc-pf').checked,obs:$('lkc-po').checked})
+      hacerPdf(visibles(),{para:$('lkc-pa2').value.trim(),titulo:$('lkc-pt').value.trim()||'Lista de pendientes',detalle:$('lkc-pd').checked,firmas:$('lkc-pf').checked,obs:$('lkc-po').checked,plan:$('lkc-pl').checked})
         .then(function(d){ var nombre=('Cronograma '+($('lkc-pa2').value.trim()||'')+' '+hoy()).replace(/\s+/g,' ').trim()+'.pdf';
           if(w){ try{ w.location=d.output('bloburl'); return; }catch(e){} } d.save(nombre); })
         .catch(function(e){ if(w) try{ w.close(); }catch(x){} toast(e.message||'No se pudo generar el PDF','error'); }); }; }
@@ -26390,12 +26391,14 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var caja=function(x,y,s,lleno){ doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(1); doc.rect(x,y,s,s);
       if(lleno){ doc.setLineWidth(1.6); doc.line(x+2.5,y+s*.55,x+s*.42,y+s-3); doc.line(x+s*.42,y+s-3,x+s-2.5,y+3); } };
     var pagina=1, y;
-    var encabezado=function(primera){
+    var cabeza=function(titulo,sub){
       var lg=window.__lkLogo; if(lg){ try{ doc.addImage(lg,'PNG',L,34,92,40,undefined,'FAST'); }catch(e){} }
-      F('cond'); doc.setFontSize(18); col(AZ); doc.text(String(o.titulo).toUpperCase(),R,52,{align:'right',charSpace:.6});
-      F('normal'); doc.setFontSize(9.5); col(GR); doc.text('Emitida el '+fLarga(hoy()),R,67,{align:'right'});
+      F('cond'); doc.setFontSize(18); col(AZ); doc.text(String(titulo).toUpperCase(),R,52,{align:'right',charSpace:.6});
+      F('normal'); doc.setFontSize(9.5); col(GR); doc.text(sub||('Emitida el '+fLarga(hoy())),R,67,{align:'right'});
       doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(1.4); doc.line(L,84,R,84);
-      y=104;
+      y=104; };
+    var encabezado=function(primera){
+      cabeza(o.titulo,o.plan?'Hoja de tareas · se la queda el responsable · '+fCorta(hoy())+' '+hoy().slice(0,4):'');
       if(primera){
         var info=[]; if(o.para) info.push(['ENTREGAR A',o.para]);
         var eds={}; V.forEach(function(t){ eds[t.edificioNombre||'General']=1; }); info.push(['EDIFICIO',Object.keys(eds).join(', ')]);
@@ -26411,6 +26414,51 @@ button.lkrp-b:hover{border-color:#1E4E86}
       doc.text('RESPONSABLE',R-196,y,{charSpace:.6}); doc.text('FECHA LÍMITE',R-86,y,{charSpace:.6});
       doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(.8); doc.line(L,y+6,R,y+6); y+=22; };
     var pie=function(){ F('normal'); doc.setFontSize(8.5); col(GR); doc.text('Bramar Group · Cronograma',L,H-28); };
+    /* hoja que llena el responsable y devuelve: cuánto tardará cada tarea, qué día la hará y qué hay que comprar */
+    var raya=function(x1,yy,x2){ doc.setDrawColor(150,160,172); doc.setLineWidth(.6); doc.line(x1,yy,x2,yy); };
+    var hojaPlan=function(){
+      var cabPlan=function(primera){ cabeza('Planificación y materiales','Hoja para llenar y devolver a la administración');
+        if(primera){
+          var cw=(R-L)/3, eds={}; V.forEach(function(t){ eds[t.edificioNombre||'General']=1; });
+          [['RESPONSABLE',o.para||''],['EDIFICIO',Object.keys(eds).join(', ')],['FECHA DE ENTREGA','']].forEach(function(it,i){ var x=L+i*cw;
+            F('cond'); doc.setFontSize(7.5); col(AZ); doc.text(it[0],x,y,{charSpace:.8});
+            if(it[1]){ F('medium'); doc.setFontSize(11); col(NG); doc.text(doc.splitTextToSize(it[1],cw-12).slice(0,2),x,y+15); }
+            else raya(x,y+16,x+cw-24); });
+          y+=40;
+          F('normal'); doc.setFontSize(9.5); col([40,48,58]);
+          doc.text(doc.splitTextToSize('Escriba cuánto tiempo le tomará cada tarea y qué día piensa hacerla. Abajo anote los materiales que hay que comprar.',R-L),L,y); y+=26; }
+        F('cond'); doc.setFontSize(7.5); col(AZ);
+        doc.text('N°',L,y,{charSpace:.6}); doc.text('TAREA',L+26,y,{charSpace:.6}); doc.text('TIEMPO QUE TOMARÁ',R-246,y,{charSpace:.6}); doc.text('FECHA EN QUE LA HARÁ',R-112,y,{charSpace:.6});
+        doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(.8); doc.line(L,y+6,R,y+6); y+=24; };
+      cabPlan(true);
+      var TW2=R-246-(L+26)-16, pend=V.filter(function(t){ return t.estado!=='hecho'; });
+      (pend.length?pend:V).forEach(function(t){ var k=V.indexOf(t)+1;
+        F('medium'); doc.setFontSize(10.5); var tl=doc.splitTextToSize(t.titulo,TW2).slice(0,3), alto=Math.max(30,tl.length*13+14);
+        if(y+alto>H-80){ pie(); doc.addPage(); cabPlan(false); }
+        F('medium'); doc.setFontSize(10); col(AZ); doc.text(String(k),L,y+4);
+        F('medium'); doc.setFontSize(10.5); col(NG); doc.text(tl,L+26,y+4);
+        if(t.fecha){ F('normal'); doc.setFontSize(8.5); col(AZ); doc.text('Límite: '+fCorta(t.fecha)+' '+t.fecha.slice(0,4),L+26,y+4+tl.length*13); }
+        // tiempo: ____ días ____ horas
+        var xt=R-246; raya(xt,y+6,xt+34); F('normal'); doc.setFontSize(9); col(GR); doc.text('días',xt+38,y+5); raya(xt+64,y+6,xt+98); doc.text('horas',xt+102,y+5);
+        // fecha: ___ / ___ / ______
+        var xf=R-112; raya(xf,y+6,xf+20); doc.text('/',xf+24,y+5); raya(xf+32,y+6,xf+52); doc.text('/',xf+56,y+5); raya(xf+64,y+6,xf+110);
+        y+=alto; doc.setDrawColor(222,228,236); doc.setLineWidth(.5); doc.line(L,y-10,R,y-10); });
+      // materiales
+      var filas=8, altoMat=46+filas*24+90;
+      if(y+altoMat>H-60){ pie(); doc.addPage(); cabeza('Planificación y materiales','Hoja para llenar y devolver a la administración'); }
+      y+=10; F('cond'); doc.setFontSize(9); col(AZ); doc.text('MATERIALES QUE HAY QUE COMPRAR',L,y,{charSpace:.8}); y+=16;
+      var cM=[L,L+24,R-226,R-150,R-76];
+      F('cond'); doc.setFontSize(7.5); col(AZ);
+      doc.text('N°',cM[0],y,{charSpace:.6}); doc.text('MATERIAL',cM[1],y,{charSpace:.6}); doc.text('CANTIDAD',cM[2],y,{charSpace:.6}); doc.text('PARA TAREA N°',cM[3],y,{charSpace:.6}); doc.text('COSTO APROX.',cM[4],y,{charSpace:.6});
+      doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(.8); doc.line(L,y+6,R,y+6); y+=6;
+      var libre=Math.max(filas,Math.floor((H-150-y)/24));
+      for(var i=1;i<=libre;i++){ y+=24; F('normal'); doc.setFontSize(9); col(GR); doc.text(String(i),cM[0],y-6);
+        doc.setDrawColor(210,218,228); doc.setLineWidth(.5); doc.line(L,y,R,y); }
+      // firmas
+      var fy=H-88, c1=L, c2=(L+R)/2+20, ww=(R-L)/2-20;
+      doc.setDrawColor(NG[0],NG[1],NG[2]); doc.setLineWidth(.8); doc.line(c1,fy,c1+ww,fy); doc.line(c2,fy,c2+ww,fy);
+      F('cond'); doc.setFontSize(7.5); col(AZ); doc.text('RESPONSABLE'+(o.para?' · '+o.para.toUpperCase():''),c1,fy+13,{charSpace:.8}); doc.text('REVISADO POR LA ADMINISTRACIÓN',c2,fy+13,{charSpace:.8});
+      F('normal'); doc.setFontSize(9); col(GR); doc.text('Nombre, firma y fecha',c1,fy+26); doc.text('Nombre, firma y fecha',c2,fy+26); };
     var salto=function(alto){ if(y+alto>H-60){ pie(); doc.addPage(); pagina++; encabezado(false); } };
     encabezado(true);
     var TX=L+66, TW=R-196-TX-14;
@@ -26443,6 +26491,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
       doc.setDrawColor(NG[0],NG[1],NG[2]); doc.setLineWidth(.8); doc.line(c1,fy,c1+ww,fy); doc.line(c2,fy,c2+ww,fy);
       F('cond'); doc.setFontSize(7.5); col(AZ); doc.text('ENTREGADO POR',c1,fy+13,{charSpace:.8}); doc.text('RECIBIDO POR'+(o.para?' · '+o.para.toUpperCase():''),c2,fy+13,{charSpace:.8});
       F('normal'); doc.setFontSize(9); col(GR); doc.text('Nombre y firma',c1,fy+26); doc.text('Nombre, firma y fecha',c2,fy+26); }
+    if(o.plan){ pie(); doc.addPage(); hojaPlan(); }
     pie();
     var tot=doc.getNumberOfPages(); for(var pg=1;pg<=tot;pg++){ doc.setPage(pg); F('normal'); doc.setFontSize(8.5); col(GR); doc.text('Página '+pg+' de '+tot,R,H-28,{align:'right'}); }
     return doc; }); }
@@ -26724,7 +26773,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261111130429'; window.LUKA_BUILD=B;
+(function(){ var B='20261111131059'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
