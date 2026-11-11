@@ -565,6 +565,7 @@ function luka_(d) {
       return json({ ok: true, avisos: String(e.avisos || '').split(',').filter(Boolean), drive: String(e.drive || '').split(',').filter(Boolean), carpeta: e.carpeta || '', url: url, cuenta: lkCuentaServidor_() });
     } finally { lock.releaseLock(); }
   }
+  if (a === 'lk_crono') return lkCrono_(u, d);
   if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un administrador puede hacer esto.' });
   if (a === 'lk_actividad') {
     const sh = lkHojaLog_(), n = sh.getLastRow();
@@ -1014,6 +1015,84 @@ function portal_(d) {
     return json({ ok: true, id: id, total: total, ocupadas: ocup });
   }
   return json({ ok: false, error: 'Acción desconocida.' });
+}
+
+/* ===================== Cronograma: pendientes y tareas =====================
+   Un archivo en Drive («LUKA Datos/LUKA_CRONOGRAMA.json»). Cada tarea tiene responsable, edificio,
+   fecha límite, prioridad, pasos y estado. El coordinador general ve todas; los demás usuarios ven
+   las de sus edificios y las que ellos mismos crearon. */
+function lkCronoArchivo_() {
+  const P = lkProps_(); let id = P.getProperty('LUKA_CRONO_FILE');
+  if (id) { try { const f = DriveApp.getFileById(id); if (!f.isTrashed()) return f; } catch (e) {} }
+  const f = lkCarpeta_().createFile('LUKA_CRONOGRAMA.json', JSON.stringify({ v: 1, tareas: [] }), 'application/json');
+  P.setProperty('LUKA_CRONO_FILE', f.getId()); return f;
+}
+function lkCrono_(u, d) {
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const f = lkCronoArchivo_(); let C;
+    try { C = JSON.parse(f.getBlob().getDataAsString('UTF-8')); } catch (e) { return json({ ok: false, error: 'No se pudo leer el cronograma.' }); }
+    C.tareas = C.tareas || [];
+    const todos = u.rol === 'admin' || (u.eds || []).indexOf('*') >= 0;
+    const ve = function (t) { return todos || t.por === u.u || (t.edificio && puedeVer_(u, t.edificio)); };
+    const E = lkEdificios_();
+    const txt = function (v, n) { return String(v == null ? '' : v).replace(/[\u0000-\u0008\u000B-\u001F]/g, '').trim().slice(0, n); };
+    const fecha = function (v) { v = String(v || ''); return /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : ''; };
+    const salida = function (extra) {
+      const V = C.tareas.filter(ve);
+      const resp = {}; V.forEach(function (t) { if (t.responsable) resp[t.responsable] = 1; });
+      return json(Object.assign({ ok: true, v: C.v, tareas: V, responsables: Object.keys(resp).sort() }, extra || {}));
+    };
+    const guardar = function (detalle) { C.v = (C.v || 0) + 1; C.upd = new Date().toISOString(); f.setContent(JSON.stringify(C)); if (detalle) lkLog_(u, 'Cronograma', detalle[0], detalle[1] || ''); };
+    const op = d.op || 'lista';
+    if (op === 'lista') return salida();
+    const buscar = function (id) { const t = C.tareas.filter(function (x) { return x.id === String(id || ''); })[0]; if (!t || !ve(t)) throw new Error('Tarea no encontrada.'); return t; };
+    const marcar = function (t, est) {
+      if (['pendiente', 'proceso', 'hecho'].indexOf(est) < 0) return;
+      t.estado = est;
+      if (est === 'hecho') { t.hechoEn = new Date().toISOString(); t.hechoPor = u.n; } else { delete t.hechoEn; delete t.hechoPor; }
+    };
+    if (op === 'guardar') {
+      const x = d.tarea || {};
+      const titulo = txt(x.titulo, 140); if (!titulo) return json({ ok: false, error: 'Escriba qué hay que hacer.' });
+      let ed = txt(x.edificio, 80); if (ed && !E[ed]) ed = '';
+      if (ed && !puedeVer_(u, ed)) return json({ ok: false, error: 'No tiene acceso a ese edificio.' });
+      const pasos = (Array.isArray(x.pasos) ? x.pasos : []).slice(0, 40).map(function (p) { return { t: txt(p && p.t, 200), ok: !!(p && p.ok) }; }).filter(function (p) { return p.t; });
+      const datos = { titulo: titulo, detalle: txt(x.detalle, 2000), edificio: ed, edificioNombre: ed ? E[ed].name : '', responsable: txt(x.responsable, 60),
+        fecha: fecha(x.fecha), prioridad: ['alta', 'normal', 'baja'].indexOf(x.prioridad) >= 0 ? x.prioridad : 'normal', pasos: pasos };
+      let t;
+      if (x.id) { t = buscar(x.id); Object.assign(t, datos); t.editado = new Date().toISOString(); t.editadoPor = u.n; if (x.estado) marcar(t, x.estado); guardar(['Editó una tarea', titulo]); }
+      else {
+        const min = C.tareas.reduce(function (m, y) { return Math.min(m, y.orden || 0); }, 0);
+        t = Object.assign({ id: 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), estado: 'pendiente', creado: new Date().toISOString(), por: u.u, porNombre: u.n,
+          orden: d.alInicio ? min - 1 : C.tareas.reduce(function (m, y) { return Math.max(m, y.orden || 0); }, 0) + 1 }, datos);
+        if (x.estado) marcar(t, x.estado);
+        C.tareas.push(t); guardar(['Agregó una tarea', titulo]);
+      }
+      return salida({ id: t.id });
+    }
+    if (op === 'estado') { const t = buscar(d.id); marcar(t, d.estado); guardar(d.estado === 'hecho' ? ['Completó una tarea', t.titulo] : null); return salida(); }
+    if (op === 'paso') {
+      const t = buscar(d.id), p = (t.pasos || [])[+d.i]; if (!p) return json({ ok: false, error: 'Paso no encontrado.' });
+      p.ok = !!d.ok; guardar(null); return salida();
+    }
+    if (op === 'orden') {
+      // d.ids: las tareas visibles en el nuevo orden; se reparten los mismos números de orden que ya tenían
+      const ids = (d.ids || []).map(String), L = ids.map(function (id) { return C.tareas.filter(function (x) { return x.id === id && ve(x); })[0]; }).filter(Boolean);
+      const nums = L.map(function (t) { return t.orden || 0; }).sort(function (a, b) { return a - b; });
+      L.forEach(function (t, i) { t.orden = nums[i]; });
+      // si había números repetidos, se separan para que el orden quede fijo
+      for (let i = 1; i < L.length; i++) if (L[i].orden <= L[i - 1].orden) L[i].orden = L[i - 1].orden + 0.001;
+      guardar(null); return salida();
+    }
+    if (op === 'eliminar') { const t = buscar(d.id); C.tareas = C.tareas.filter(function (x) { return x !== t; }); guardar(['Eliminó una tarea', t.titulo]); return salida(); }
+    if (op === 'quitar_hechas') {
+      const antes = C.tareas.length; C.tareas = C.tareas.filter(function (x) { return !(x.estado === 'hecho' && ve(x)); });
+      guardar(['Quitó las tareas hechas', String(antes - C.tareas.length)]); return salida({ quitadas: antes - C.tareas.length });
+    }
+    return json({ ok: false, error: 'Acción no válida.' });
+  } catch (e) { return json({ ok: false, error: String(e.message || e) }); }
+  finally { lock.releaseLock(); }
 }
 
 /* ===================== Bramar Group · notas de cobranza y recibos a edificios =====================
