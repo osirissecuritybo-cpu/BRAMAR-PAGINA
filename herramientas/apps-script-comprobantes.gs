@@ -1087,8 +1087,33 @@ function lkCrono_(u, d) {
     }
     if (op === 'eliminar') { const t = buscar(d.id); C.tareas = C.tareas.filter(function (x) { return x !== t; }); guardar(['Eliminó una tarea', t.titulo]); return salida(); }
     if (op === 'quitar_hechas') {
-      const antes = C.tareas.length; C.tareas = C.tareas.filter(function (x) { return !(x.estado === 'hecho' && ve(x)); });
-      guardar(['Quitó las tareas hechas', String(antes - C.tareas.length)]); return salida({ quitadas: antes - C.tareas.length });
+      // no borra: las archiva (se pueden ver en «Archivadas» y devolver)
+      const ids = []; C.tareas.forEach(function (x) { if (x.estado === 'hecho' && !x.archivada && ve(x)) { x.archivada = true; ids.push(x.id); } });
+      guardar(['Archivó las tareas hechas', String(ids.length)]); return salida({ archivadas: ids });
+    }
+    if (op === 'desarchivar') {
+      const ids = (d.ids || []).map(String); let n = 0;
+      C.tareas.forEach(function (x) { if (ids.indexOf(x.id) >= 0 && ve(x)) { delete x.archivada; if (d.pendiente) { x.estado = 'pendiente'; delete x.hechoEn; delete x.hechoPor; } n++; } });
+      guardar(['Devolvió tareas archivadas', String(n)]); return salida();
+    }
+    if (op === 'reponer') {
+      // deshacer: vuelve las tareas indicadas a como estaban y quita las que se habían creado
+      const quitar = (d.quitar || []).map(String);
+      C.tareas = C.tareas.filter(function (x) { return !(quitar.indexOf(x.id) >= 0 && ve(x)); });
+      (d.tareas || []).forEach(function (x) {
+        if (!x || !x.id) return; if (x.edificio && !puedeVer_(u, x.edificio)) return;
+        const t = JSON.parse(JSON.stringify(x)); t.titulo = txt(t.titulo, 140) || 'Tarea'; if (!t.por) t.por = u.u;
+        const i = C.tareas.map(function (y) { return y.id; }).indexOf(t.id);
+        if (i >= 0) { if (ve(C.tareas[i])) C.tareas[i] = t; } else C.tareas.push(t);
+      });
+      guardar(['Deshizo un cambio en el cronograma', '']); return salida();
+    }
+    if (op === 'restaurar') {
+      // deshacer una eliminación: vuelve la tarea tal como estaba
+      const x = d.tarea || {}; if (!x.id || C.tareas.some(function (y) { return y.id === x.id; })) return salida();
+      if (x.edificio && !puedeVer_(u, x.edificio)) return json({ ok: false, error: 'No tiene acceso a ese edificio.' });
+      const t = JSON.parse(JSON.stringify(x)); t.titulo = txt(t.titulo, 140) || 'Tarea'; if (!t.por) t.por = u.u;
+      C.tareas.push(t); guardar(['Recuperó una tarea', t.titulo]); return salida();
     }
     return json({ ok: false, error: 'Acción no válida.' });
   } catch (e) { return json({ ok: false, error: String(e.message || e) }); }
