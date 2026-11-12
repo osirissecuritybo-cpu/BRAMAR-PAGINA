@@ -26939,20 +26939,20 @@ button.lkrp-b:hover{border-color:#1E4E86}
       var exp=lista('mes'), ade=lista('adelanto');
       if(exp.length){ var me=red(exp.reduce(function(a,m){ return a+(+m.monto||0); },0)); partes.push({motivo:'Expensas',mes:meses(exp),monto:me}); }
       if(ade.length){ var ma=red(ade.reduce(function(a,m){ return a+(+m.monto||0); },0)); partes.push({motivo:'Adelanto de expensas',mes:meses(ade),monto:ma}); }
-      if((+an.ascensor||0)>0.005) partes.push({motivo:'Cuota extraordinaria ascensor',mes:'Cuota extraordinaria',monto:red(an.ascensor)});
+      if((+an.ascensor||0)>0.005) partes.push({motivo:'Cuota extraordinaria',mes:'Ascensor',monto:red(an.ascensor)});
       (an.cargos||[]).forEach(function(c){ if(c&&(+c.montoAplicado||0)>0.005) partes.push({motivo:c.nombre||'Multa o cargo',mes:c.fecha?'Cargo del '+fCorta(c.fecha):'Multa o cargo',monto:red(c.montoAplicado)}); });
       partes.forEach(function(x){ usado+=x.monto; });
       var resto=red((+p.monto||0)-usado);
       if(!partes.length) partes.push({motivo:String(p.concepto||'Pago').split(' · ')[0],mes:(p.meses_pagados||[]).join(', '),monto:red(p.monto)});
       else if(Math.abs(resto)>0.009) partes.push({motivo:resto>0?'Saldo a favor':'Ajuste',mes:'',monto:resto});
-      partes.forEach(function(x,k){ R.push(Object.assign({},base,x,{parte:k,partes:partes.length})); }); }); });
+      R.push(Object.assign({},base,{monto:red(p.monto),motivo:partes.map(function(x){ return x.motivo; }).join(', '),mes:partes.map(function(x){ return x.mes; }).filter(Boolean).join(', '),partes:partes})); }); });
     var RES={}; (DATA.reservasSociales||[]).forEach(function(r){ if(r&&r.id) RES[r.id]=r; });
     (DATA.diario||[]).forEach(function(m){ if(!m||m.tipo!=='ingreso'||m.pagoId) return;
       var r=m.reservaId?RES[m.reservaId]:null;
       R.push({fecha:String(m.fecha||'').slice(0,10),nombre:(r&&(r.responsable||r.nombre))||m.nombre||propietario(m.depto)||'',depto:m.depto||(r&&r.depto)||'',metodo:m.metodo||(r&&(r.metodo||r.medio))||'',
         monto:+m.monto||0,motivo:m.motivo||cap(m.categoria)||'Ingreso',mes:r?('Reserva del '+fCorta(r.fecha)):(m.fecha?cap(MES[+String(m.fecha).slice(5,7)-1])+' '+String(m.fecha).slice(0,4):''),
-        obs:m.obs||m.nota||'',recibo:m.recibo||'',otro:true}); });
-    return R.sort(function(a,b){ return a.fecha.localeCompare(b.fecha)||String(a.recibo).localeCompare(String(b.recibo))||((a.parte||0)-(b.parte||0)); }); }
+        obs:m.obs||m.nota||'',recibo:m.recibo||'',otro:true}); R[R.length-1].partes=[{motivo:R[R.length-1].motivo,mes:R[R.length-1].mes,monto:R[R.length-1].monto}]; });
+    return R.sort(function(a,b){ return a.fecha.localeCompare(b.fecha)||String(a.recibo).localeCompare(String(b.recibo)); }); }
 
   /* ---------- panel (fijo, arriba del reporte diario) ---------- */
   var filtro=null;
@@ -27001,7 +27001,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var F=function(w){ if(!rob){ doc.setFont('helvetica',w==='normal'?'normal':'bold'); return; } if(w==='cond') doc.setFont('RobotoC','bold'); else doc.setFont('Roboto',w); };
     var col=function(c){ doc.setTextColor(c[0],c[1],c[2]); };
     /* columnas: fecha, nombre, depto, método, cantidad, motivo, mes que corresponde, observación */
-    var C=[], xx=Lm; [['FECHA',50],['N° RECIBO',46],['NOMBRE',108],['DEPTO',36],['MÉTODO',60],['CANTIDAD',64,1],['MOTIVO',104],['MES O PAGO CORRESPONDIENTE',118],['OBSERVACIÓN',0]].forEach(function(c){ var w=c[1]||(R-xx); C.push({t:c[0],x:xx,w:w,der:c[2]}); xx+=w+(c[2]?10:4); });
+    var C=[], xx=Lm; [['FECHA',54],['N° RECIBO',42],['NOMBRE',92],['DEPTO',32],['MÉTODO',54],['CANTIDAD',60,1],['MOTIVO',148],['MES O PAGO CORRESPONDIENTE',108],['OBSERVACIÓN',0]].forEach(function(c){ var w=c[1]||(R-xx); C.push({t:c[0],x:xx,w:w,der:c[2]}); xx+=w+(c[2]?10:4); });
     var y=0;
     var cab=function(){
       if(LG){ try{ var bw=120, bh=44, k=Math.min(bw/LG.w,bh/LG.h); doc.addImage(LG.src,'PNG',Lm,26+(bh-LG.h*k)/2,LG.w*k,LG.h*k,undefined,'FAST'); }catch(e){} }
@@ -27014,26 +27014,31 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var pie=function(){ F('normal'); doc.setFontSize(8); col(GR); doc.text('Gestión LUKA · Lista de ingresos · emitida el '+fLarga(hoy()),Lm,H-22); };
     cab();
     var tot=0, porMet={}, porMot={};
-    var zebra=0, ultimoRec=null;
-    L.forEach(function(r,i){ if(!(r.parte&&r.recibo===ultimoRec)) zebra++; ultimoRec=r.recibo;
+    L.forEach(function(r,i){
       F('normal'); doc.setFontSize(8.6);
-      var cel=[fCorta(r.fecha),r.recibo||'',r.nombre||'Sin nombre',r.depto||'',r.metodo||'',money(r.monto),r.motivo,r.mes,r.parte?'':r.obs].map(function(t,k){ return doc.splitTextToSize(String(t||''),C[k].w-4).slice(0,4); });
-      var alto=Math.max.apply(null,cel.map(function(c){ return c.length; }))*10.5+8;
+      var sp=function(t,k){ return doc.splitTextToSize(String(t||''),C[k].w-4); };
+      var fijos=[sp(fCorta(r.fecha),0),sp(r.recibo,1),sp(r.nombre||'Sin nombre',2).slice(0,3),sp(r.depto,3),sp(r.metodo,4),[money(r.monto)],null,null,sp(r.obs,8).slice(0,5)];
+      var P=r.partes||[{motivo:r.motivo,mes:r.mes,monto:r.monto}], varias=P.length>1;
+      /* cada concepto: «Expensas · Bs 1.100,00» y al lado los meses que cubre */
+      var bloques=P.map(function(x){ var m=sp(varias?x.motivo+' · '+money(x.monto):x.motivo,6), me=sp(x.mes,7); return {m:m,me:me,n:Math.max(m.length,me.length)}; });
+      var lineas=Math.max(bloques.reduce(function(a,b){ return a+b.n; },0)+(varias?(P.length-1)*0.35:0),Math.max.apply(null,fijos.filter(Boolean).map(function(c){ return c.length; })));
+      var alto=lineas*10.5+8;
       if(y+alto>H-70){ pie(); doc.addPage(); cab(); }
-      if(zebra%2===1){ doc.setFillColor(246,248,251); doc.rect(Lm,y-9,R-Lm,alto,'F'); }
-      var sigue=r.parte>0;
-      cel.forEach(function(c,k){ col(sigue&&k<5?GR:(k===5?NG:(k===0||k===3?AZ:NG))); if(k===5) F('medium'); else F('normal'); doc.setFontSize(8.6);
+      if(i%2===0){ doc.setFillColor(246,248,251); doc.rect(Lm,y-9,R-Lm,alto,'F'); }
+      fijos.forEach(function(c,k){ if(!c) return; col(k===5?NG:(k===0||k===3?AZ:NG)); F(k===5?'medium':'normal'); doc.setFontSize(8.6);
         if(C[k].der) doc.text(c,C[k].x+C[k].w,y,{align:'right'}); else doc.text(c,C[k].x,y); });
-      y+=alto; tot+=r.monto; var m=r.metodo||'Método no indicado'; porMet[m]=(porMet[m]||0)+r.monto; var mo=r.otro?(/^alquiler/i.test(r.motivo)?'Alquiler de áreas sociales':'Otros ingresos'):r.motivo; porMot[mo]=(porMot[mo]||0)+r.monto; });
+      var yy=y; bloques.forEach(function(b){ F('normal'); doc.setFontSize(8.6); col(NG); doc.text(b.m,C[6].x,yy); doc.text(b.me,C[7].x,yy); yy+=b.n*10.5+(varias?3.7:0); });
+      y+=alto; tot+=r.monto; var m=r.metodo||'Método no indicado'; porMet[m]=(porMet[m]||0)+r.monto;
+      P.forEach(function(x){ var mo=r.otro?(/^alquiler/i.test(x.motivo)?'Alquiler de áreas sociales':'Otros ingresos'):x.motivo; porMot[mo]=(porMot[mo]||0)+x.monto; }); });
     /* totales */
     var KM=Object.keys(porMet).sort(), KC=Object.keys(porMot).sort(), filas=Math.max(KM.length,KC.length)+2; if(y+filas*15+40>H-50){ pie(); doc.addPage(); cab(); }
     doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(1); doc.line(Lm,y-4,R,y-4); y+=12;
     var xL=C[5].x+C[5].w, xC=C[6].x, xCv=C[7].x+C[7].w, y0=y;
-    F('cond'); doc.setFontSize(7); col(AZ); doc.text('POR MÉTODO',C[4].x,y,{charSpace:.5}); doc.text('POR CONCEPTO',xC,y,{charSpace:.5}); y+=13;
-    var yA=y; KM.forEach(function(m){ F('normal'); doc.setFontSize(9); col(GR); doc.text(m,C[4].x,yA); col(NG); doc.text(money(porMet[m]),xL,yA,{align:'right'}); yA+=15; });
+    F('cond'); doc.setFontSize(7); col(AZ); doc.text('POR MÉTODO',C[3].x,y,{charSpace:.5}); doc.text('POR CONCEPTO',xC,y,{charSpace:.5}); y+=13;
+    var yA=y; KM.forEach(function(m){ F('normal'); doc.setFontSize(9); col(GR); doc.text(m,C[3].x,yA); col(NG); doc.text(money(porMet[m]),xL,yA,{align:'right'}); yA+=15; });
     var yB=y; KC.forEach(function(m){ F('normal'); doc.setFontSize(9); col(GR); doc.text(doc.splitTextToSize(m,xCv-xC-80)[0],xC,yB); col(NG); doc.text(money(porMot[m]),xCv,yB,{align:'right'}); yB+=15; });
     y=Math.max(yA,yB);
-    F('bold'); doc.setFontSize(11); col(AZ); doc.text('TOTAL INGRESOS ('+L.length+')',C[4].x-130,y+4); doc.text(money(tot),xL,y+4,{align:'right'});
+    F('bold'); doc.setFontSize(11); col(AZ); doc.text('TOTAL INGRESOS ('+L.length+(L.length===1?' recibo)':' recibos)'),C[3].x-150,y+4); doc.text(money(tot),xL,y+4,{align:'right'});
     pie();
     var n=doc.getNumberOfPages(); for(var pg=1;pg<=n;pg++){ doc.setPage(pg); F('normal'); doc.setFontSize(8); col(GR); doc.text('Página '+pg+' de '+n,R,H-22,{align:'right'}); }
     return doc; }); }
@@ -27052,7 +27057,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261112104757'; window.LUKA_BUILD=B;
+(function(){ var B='20261112105153'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
