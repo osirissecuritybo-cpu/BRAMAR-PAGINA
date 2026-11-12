@@ -26903,8 +26903,146 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </script>
 
 <script>
+/* ============================================================================
+   GESTIÓN LUKA · Lista de ingresos en PDF.
+   Fecha del pago, nombre, depto, método, cantidad, motivo, mes o pago al que
+   corresponde y observación. Toma los pagos registrados (un renglón por recibo,
+   sin los anulados) y los demás ingresos del reporte diario que no vienen de un
+   pago (alquiler de áreas, otros ingresos). Filtros por fechas y método.
+   ============================================================================ */
+(function(){
+  if(window.__lkIngresos) return; window.__lkIngresos=1;
+  function $(id){ return document.getElementById(id); }
+  function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function toast(m,t){ try{ showToast(m,t||'info'); }catch(e){} }
+  var MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  function hoy(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function fCorta(f){ f=String(f||'').slice(0,10); var p=f.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:f; }
+  function fLarga(f){ var p=String(f).split('-'); return +p[2]+' de '+MES[+p[1]-1]+' de '+p[0]; }
+  function money(n){ return 'Bs '+(Math.round((+n||0)*100)/100).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
+  function nd(s){ return String(s==null?'':s).toUpperCase().replace(/\s+/g,'').replace(/^DEPTO\.?|^DPTO\.?/,''); }
+  function edificio(){ try{ return (typeof buildingName==='function'?buildingName():'')||DATA.config.nombreEdificio||'Edificio'; }catch(e){ return 'Edificio'; } }
+  function propietario(dep){ try{ var a=((DATA.config.portal||{}).deptos||{})[nd(dep)]||{}; return (a.propietario||'').trim(); }catch(e){ return ''; } }
+  function cap(s){ s=String(s||''); return s.charAt(0).toUpperCase()+s.slice(1); }
+
+  /* ---------- renglones ---------- */
+  function renglones(){ var R=[];
+    (DATA.deptos||[]).forEach(function(d){ (d.pagos_registrados||[]).forEach(function(p){ if(!p||p.anulado||p._anulado) return;
+      var mc=p.meses_cubiertos||[], an=p._anula||{}, mot=[], meses=[];
+      if(mc.some(function(m){ return m.tipo==='mes'; })) mot.push('Expensas');
+      if(mc.some(function(m){ return m.tipo==='adelanto'; })) mot.push('Adelanto de expensas');
+      if((+an.ascensor||0)>0.005) mot.push('Cuota extraordinaria ascensor');
+      (an.cargos||[]).forEach(function(c){ if(c&&c.nombre) mot.push(c.nombre); });
+      if(!mot.length) mot.push(String(p.concepto||'Pago').split(' · ')[0]);
+      var MI=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+      mc.slice().sort(function(a,b){ return (+a.anio-+b.anio)||(MI.indexOf(String(a.mes).toLowerCase())-MI.indexOf(String(b.mes).toLowerCase())); })
+        .forEach(function(m){ var t=m.mes+' '+m.anio+(m.parcial?' (parcial)':''); if(meses.indexOf(t)<0) meses.push(t); });
+      if(!meses.length&&(p.meses_pagados||[]).length) meses=p.meses_pagados.slice();
+      if((+an.ascensor||0)>0.005&&!meses.length) meses.push('Cuota ascensor');
+      R.push({fecha:String(p.fecha||'').slice(0,10),nombre:p.a_nombre||propietario(d.depto)||'',depto:d.depto||p.depto||'',metodo:p.metodo||'',monto:+p.monto||0,
+        motivo:mot.join(', '),mes:meses.join(', '),obs:[p.obs||'',p.recibo_no?'Recibo '+p.recibo_no:''].filter(Boolean).join(' · '),recibo:p.recibo_no||''}); }); });
+    var RES={}; (DATA.reservasSociales||[]).forEach(function(r){ if(r&&r.id) RES[r.id]=r; });
+    (DATA.diario||[]).forEach(function(m){ if(!m||m.tipo!=='ingreso'||m.pagoId) return;
+      var r=m.reservaId?RES[m.reservaId]:null;
+      R.push({fecha:String(m.fecha||'').slice(0,10),nombre:(r&&(r.responsable||r.nombre))||m.nombre||propietario(m.depto)||'',depto:m.depto||(r&&r.depto)||'',metodo:m.metodo||(r&&(r.metodo||r.medio))||'',
+        monto:+m.monto||0,motivo:m.motivo||cap(m.categoria)||'Ingreso',mes:r?('Reserva del '+fCorta(r.fecha)):(m.fecha?cap(MES[+String(m.fecha).slice(5,7)-1])+' '+String(m.fecha).slice(0,4):''),
+        obs:[m.obs||m.nota||'',m.recibo?'Recibo '+m.recibo:''].filter(Boolean).join(' · '),recibo:m.recibo||'',otro:true}); });
+    return R.sort(function(a,b){ return a.fecha.localeCompare(b.fecha)||String(a.recibo).localeCompare(String(b.recibo)); }); }
+
+  /* ---------- panel (fijo, arriba del reporte diario) ---------- */
+  var filtro=null;
+  function panel(){ var v=$('view-diario'); if(!v) return; var p=$('lki-panel');
+    if(p){ p.remove(); return; }
+    var d=new Date(), ini=hoy().slice(0,8)+'01', fin=hoy();
+    filtro=filtro||{desde:ini,hasta:fin,metodo:'',otros:true};
+    var mets={}; renglones().forEach(function(r){ if(r.metodo) mets[r.metodo]=1; });
+    p=document.createElement('div'); p.id='lki-panel';
+    p.innerHTML='<style>#lki-panel{background:#fff;border:1px solid #0B2440;border-radius:14px;padding:16px 18px;margin:0 0 16px;color:#0B2440}#lki-panel h3{margin:0 0 4px;font-size:16px}#lki-panel p{margin:0;font-size:13px;color:#5B6B7F}'+
+      '#lki-panel .g{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 12px;margin-top:12px}#lki-panel label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600;color:#5B6B7F}'+
+      '#lki-panel input,#lki-panel select{min-height:42px;border:1px solid #D9E2EC;border-radius:10px;padding:0 10px;font:inherit;font-size:14px;color:#0B2440;background:#fff}#lki-panel .ck{flex-direction:row;align-items:center;gap:8px;font-weight:500;color:#0B2440}'+
+      '#lki-panel .ck input{min-height:0;width:18px;height:18px;accent-color:#0B2440}#lki-panel .pie{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}#lki-panel .res{margin-top:10px;font-size:13.5px;color:#0B2440}'+
+      '@media(max-width:760px){#lki-panel .g{grid-template-columns:1fr 1fr}#lki-panel .pie .btn{flex:1;min-height:46px}}</style>'+
+      '<h3>Lista de ingresos en PDF</h3><p>Fecha del pago, nombre, depto, método, cantidad, motivo, mes que corresponde y observación.</p>'+
+      '<div class="g"><label>Desde<input type="date" id="lki-d" value="'+filtro.desde+'"></label><label>Hasta<input type="date" id="lki-h" value="'+filtro.hasta+'"></label>'+
+      '<label>Método de pago<select id="lki-m"><option value="">Todos</option>'+Object.keys(mets).sort().map(function(m){ return '<option'+(m===filtro.metodo?' selected':'')+'>'+esc(m)+'</option>'; }).join('')+'</select></label>'+
+      '<label class="ck" style="align-self:end;min-height:42px"><input type="checkbox" id="lki-o"'+(filtro.otros?' checked':'')+'> Incluir otros ingresos (áreas sociales, varios)</label></div>'+
+      '<div class="res" id="lki-r"></div><div class="pie"><button type="button" class="btn primary" id="lki-g">Generar PDF</button><button type="button" class="btn" id="lki-x">Cerrar</button></div>';
+    var main=v.querySelector('.diario-form-card')||v.firstElementChild; v.insertBefore(p,v.firstChild);
+    var leer=function(){ filtro={desde:$('lki-d').value,hasta:$('lki-h').value,metodo:$('lki-m').value,otros:$('lki-o').checked}; var L=lista(); $('lki-r').textContent=L.length?(L.length+(L.length===1?' ingreso':' ingresos')+' · total '+money(L.reduce(function(a,r){ return a+r.monto; },0))):'No hay ingresos en ese período.'; return L; };
+    ['lki-d','lki-h','lki-m','lki-o'].forEach(function(id){ $(id).onchange=leer; }); leer();
+    $('lki-x').onclick=function(){ p.remove(); };
+    $('lki-g').onclick=function(){ var L=leer(); if(!L.length){ toast('No hay ingresos en ese período.','info'); return; }
+      var w=null; try{ w=window.open('','_blank'); if(w) w.document.write('<p style="font-family:sans-serif;padding:24px">Preparando el PDF…</p>'); }catch(e){}
+      pdf(L).then(function(doc){ var nombre=('Ingresos '+edificio()+' '+filtro.desde+' a '+filtro.hasta).replace(/[\\/:*?"<>|]/g,'')+'.pdf'; if(w){ try{ w.location=doc.output('bloburl'); return; }catch(e){} } doc.save(nombre); })
+        .catch(function(e){ if(w) try{ w.close(); }catch(x){} toast(e.message||'No se pudo generar el PDF','error'); }); };
+    p.scrollIntoView({behavior:'smooth',block:'start'}); }
+  function lista(){ var F=filtro; return renglones().filter(function(r){
+      if(F.desde&&r.fecha<F.desde) return false; if(F.hasta&&r.fecha>F.hasta) return false;
+      if(F.metodo&&r.metodo!==F.metodo) return false; if(!F.otros&&r.otro) return false;
+      return true; }); }
+  window.lukaListaIngresos=function(){ if(typeof switchView==='function'&&$('view-diario')&&$('view-diario').style.display==='none') switchView('diario'); setTimeout(panel,50); };
+
+  /* ---------- PDF ---------- */
+  function jsPDFlib(){ return (window.jspdf&&window.jspdf.jsPDF)?Promise.resolve(window.jspdf.jsPDF):window.loadLib(window.LIB.jspdf).then(function(){ return window.jspdf.jsPDF; }); }
+  function logoPng(src){ return new Promise(function(res){ if(!src) return res(null); var im=new Image(); im.onload=function(){ try{
+      var w=im.naturalWidth||300, h=im.naturalHeight||150, k=Math.min(1,900/Math.max(w,h)); if(w*k<300) k=300/w;
+      var c=document.createElement('canvas'); c.width=Math.round(w*k); c.height=Math.round(h*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); res({src:c.toDataURL('image/png'),w:c.width,h:c.height}); }catch(e){ res(null); } };
+      im.onerror=function(){ res(null); }; im.src=src; }); }
+  function pdf(L){ var lg=''; try{ lg=(DATA.config&&DATA.config.logo)||''; }catch(e){}
+    return Promise.all([jsPDFlib(),logoPng(lg||window.__lkLogo||'')]).then(function(rr){ var J=rr[0], LG=rr[1];
+    var doc=new J({unit:'pt',format:'letter',orientation:'landscape'}), W=792, H=612, Lm=36, R=W-36, AZ=[11,36,64], NG=[0,0,0], GR=[90,100,112];
+    var rob=false; try{ var FU=window.__lkFuentes||{}; Object.keys(FU).forEach(function(k){ doc.addFileToVFS(k+'.ttf',FU[k]); });
+      [['Roboto-Regular','Roboto','normal'],['Roboto-Medium','Roboto','medium'],['Roboto-Bold','Roboto','bold'],['RobotoCondensed-Bold','RobotoC','bold']].forEach(function(f){ if(FU[f[0]]){ doc.addFont(f[0]+'.ttf',f[1],f[2]); rob=true; } }); }catch(e){ rob=false; }
+    var F=function(w){ if(!rob){ doc.setFont('helvetica',w==='normal'?'normal':'bold'); return; } if(w==='cond') doc.setFont('RobotoC','bold'); else doc.setFont('Roboto',w); };
+    var col=function(c){ doc.setTextColor(c[0],c[1],c[2]); };
+    /* columnas: fecha, nombre, depto, método, cantidad, motivo, mes que corresponde, observación */
+    var C=[{t:'FECHA',x:Lm,w:52},{t:'NOMBRE',x:Lm+56,w:118},{t:'DEPTO',x:Lm+178,w:40},{t:'MÉTODO',x:Lm+222,w:66},{t:'CANTIDAD',x:Lm+292,w:66,der:1},{t:'MOTIVO',x:Lm+366,w:110},{t:'MES O PAGO CORRESPONDIENTE',x:Lm+480,w:130},{t:'OBSERVACIÓN',x:Lm+614,w:R-(Lm+614)}];
+    var y=0;
+    var cab=function(){
+      if(LG){ try{ var bw=120, bh=44, k=Math.min(bw/LG.w,bh/LG.h); doc.addImage(LG.src,'PNG',Lm,26+(bh-LG.h*k)/2,LG.w*k,LG.h*k,undefined,'FAST'); }catch(e){} }
+      F('cond'); doc.setFontSize(17); col(AZ); doc.text('LISTA DE INGRESOS',R,44,{align:'right',charSpace:.6});
+      F('normal'); doc.setFontSize(9.5); col(GR); doc.text(edificio()+' · del '+fLarga(filtro.desde)+' al '+fLarga(filtro.hasta)+(filtro.metodo?' · '+filtro.metodo:''),R,59,{align:'right'});
+      doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(1.3); doc.line(Lm,76,R,76);
+      y=94; F('cond'); doc.setFontSize(7); col(AZ);
+      C.forEach(function(c){ if(c.der) doc.text(c.t,c.x+c.w,y,{align:'right',charSpace:.5}); else doc.text(c.t,c.x,y,{charSpace:.5}); });
+      doc.setLineWidth(.8); doc.line(Lm,y+5,R,y+5); y+=18; };
+    var pie=function(){ F('normal'); doc.setFontSize(8); col(GR); doc.text('Gestión LUKA · Lista de ingresos · emitida el '+fLarga(hoy()),Lm,H-22); };
+    cab();
+    var tot=0, porMet={};
+    L.forEach(function(r,i){
+      F('normal'); doc.setFontSize(8.6);
+      var cel=[fCorta(r.fecha),r.nombre||'Sin nombre',r.depto||'',r.metodo||'',money(r.monto),r.motivo,r.mes,r.obs].map(function(t,k){ return doc.splitTextToSize(String(t||''),C[k].w-4).slice(0,4); });
+      var alto=Math.max.apply(null,cel.map(function(c){ return c.length; }))*10.5+8;
+      if(y+alto>H-70){ pie(); doc.addPage(); cab(); }
+      if(i%2===0){ doc.setFillColor(246,248,251); doc.rect(Lm,y-9,R-Lm,alto,'F'); }
+      cel.forEach(function(c,k){ col(k===4?NG:(k===0||k===2?AZ:NG)); if(k===4) F('medium'); else F('normal'); doc.setFontSize(8.6);
+        if(C[k].der) doc.text(c,C[k].x+C[k].w,y,{align:'right'}); else doc.text(c,C[k].x,y); });
+      y+=alto; tot+=r.monto; var m=r.metodo||'Método no indicado'; porMet[m]=(porMet[m]||0)+r.monto; });
+    /* totales */
+    var filas=Object.keys(porMet).length+1; if(y+filas*16+30>H-50){ pie(); doc.addPage(); cab(); }
+    doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(1); doc.line(Lm,y-4,R,y-4); y+=12;
+    var xL=C[4].x+C[4].w;
+    Object.keys(porMet).sort().forEach(function(m){ F('normal'); doc.setFontSize(9); col(GR); doc.text(m,C[3].x,y); col(NG); doc.text(money(porMet[m]),xL,y,{align:'right'}); y+=15; });
+    F('bold'); doc.setFontSize(11); col(AZ); doc.text('TOTAL INGRESOS ('+L.length+')',C[3].x-120,y+4); doc.text(money(tot),xL,y+4,{align:'right'});
+    pie();
+    var n=doc.getNumberOfPages(); for(var pg=1;pg<=n;pg++){ doc.setPage(pg); F('normal'); doc.setFontSize(8); col(GR); doc.text('Página '+pg+' de '+n,R,H-22,{align:'right'}); }
+    return doc; }); }
+
+  /* ---------- botón en «Descargas» de la barra superior ---------- */
+  var ICO='<span class="dl-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span>';
+  function boton(){ var slot=$('topbar-download-slot')||document.querySelector('#lk-dl .lk-pop-p')||null; var b=$('btn-lista-ingresos');
+    var ref=$('btn-diario-pdf-profesional');
+    if(!b&&ref&&ref.parentNode){ b=document.createElement('button'); b.className='btn-descarga-top'; b.id='btn-lista-ingresos'; b.type='button';
+      b.innerHTML=ICO+'<span class="dl-text">Lista de ingresos<span class="dl-hint">Pagos y otros ingresos · PDF</span></span>'; b.onclick=function(){ try{ var p=document.querySelector('.lk-pop.open'); if(p) p.classList.remove('open'); }catch(e){} window.lukaListaIngresos(); };
+      ref.parentNode.insertBefore(b,ref.nextSibling); }
+    if(b&&ref){ var vis=getComputedStyle(ref).display!=='none'||(function(){ try{ var a=document.querySelector('.sidebar-nav .nav-item.active'); return a&&(a.dataset.view==='diario'||a.dataset.view==='lista'); }catch(e){ return false; } })(); b.style.display=vis?'':'none'; } }
+  setInterval(boton,1500); boton();
+})();
+</script>
+
+<script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261112103534'; window.LUKA_BUILD=B;
+(function(){ var B='20261112104101'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
