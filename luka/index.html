@@ -26952,7 +26952,11 @@ button.lkrp-b:hover{border-color:#1E4E86}
       R.push({fecha:String(m.fecha||'').slice(0,10),nombre:(r&&(r.responsable||r.nombre))||m.nombre||propietario(m.depto)||'',depto:m.depto||(r&&r.depto)||'',metodo:m.metodo||(r&&(r.metodo||r.medio))||'',
         monto:+m.monto||0,motivo:m.motivo||cap(m.categoria)||'Ingreso',mes:r?('Reserva del '+fCorta(r.fecha)):(m.fecha?cap(MES[+String(m.fecha).slice(5,7)-1])+' '+String(m.fecha).slice(0,4):''),
         obs:m.obs||m.nota||'',recibo:m.recibo||'',otro:true}); R[R.length-1].partes=[{motivo:R[R.length-1].motivo,mes:R[R.length-1].mes,monto:R[R.length-1].monto}]; });
-    return R.sort(function(a,b){ return a.fecha.localeCompare(b.fecha)||String(a.recibo).localeCompare(String(b.recibo)); }); }
+    /* orden sucesivo por número de recibo (005990, 005991…); los que no tienen número van al final, por fecha */
+    var num=function(r){ var m=String(r.recibo||'').match(/\d+/); return m?parseInt(m[0],10):null; };
+    return R.sort(function(a,b){ var x=num(a), y=num(b);
+      if(x!=null&&y!=null&&x!==y) return x-y; if(x!=null&&y==null) return -1; if(x==null&&y!=null) return 1;
+      return a.fecha.localeCompare(b.fecha); }); }
 
   /* ---------- panel (fijo, arriba del reporte diario) ---------- */
   var filtro=null;
@@ -27057,7 +27061,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261112105153'; window.LUKA_BUILD=B;
+(function(){ var B='20261112105351'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
