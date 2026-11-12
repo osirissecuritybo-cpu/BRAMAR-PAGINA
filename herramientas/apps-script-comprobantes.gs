@@ -565,6 +565,14 @@ function luka_(d) {
       return json({ ok: true, avisos: String(e.avisos || '').split(',').filter(Boolean), drive: String(e.drive || '').split(',').filter(Boolean), carpeta: e.carpeta || '', url: url, cuenta: lkCuentaServidor_() });
     } finally { lock.releaseLock(); }
   }
+  if (a === 'lk_anulaciones') {
+    // pagos anulados de un edificio, según el registro de actividad (para la lista de ingresos)
+    const E = lkEdificios_()[d.id]; if (!E || !puedeVer_(u, d.id)) return json({ ok: false, error: 'Edificio no encontrado.' });
+    const sh = lkHojaLog_(), n = sh.getLastRow(); if (n < 2) return json({ ok: true, anulaciones: [] });
+    const out = sh.getRange(2, 1, n - 1, 5).getValues().filter(function (r) { return String(r[2]) === String(E.name) && /^Anul[oó] un pago/i.test(String(r[3])); })
+      .map(function (r) { return { fecha: r[0] instanceof Date ? r[0].toISOString() : String(r[0]), usuario: String(r[1]).replace(/\s*\(.*\)$/, ''), detalle: String(r[4]) }; });
+    return json({ ok: true, anulaciones: out });
+  }
   if (a === 'lk_crono') return lkCrono_(u, d);
   if (u.rol !== 'admin') return json({ ok: false, error: 'Solo un administrador puede hacer esto.' });
   if (a === 'lk_actividad') {

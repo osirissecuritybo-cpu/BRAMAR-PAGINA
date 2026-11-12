@@ -26974,21 +26974,48 @@ button.lkrp-b:hover{border-color:#1E4E86}
       '<h3>Lista de ingresos en PDF</h3><p>Fecha del pago, N° de recibo, nombre, depto, método, cantidad, motivo, mes que corresponde y observación.</p>'+
       '<div class="g"><label>Desde<input type="date" id="lki-d" value="'+filtro.desde+'"></label><label>Hasta<input type="date" id="lki-h" value="'+filtro.hasta+'"></label>'+
       '<label>Método de pago<select id="lki-m"><option value="">Todos</option>'+Object.keys(mets).sort().map(function(m){ return '<option'+(m===filtro.metodo?' selected':'')+'>'+esc(m)+'</option>'; }).join('')+'</select></label>'+
-      '<label class="ck" style="align-self:end;min-height:42px"><input type="checkbox" id="lki-o"'+(filtro.otros?' checked':'')+'> Incluir otros ingresos (áreas sociales, varios)</label></div>'+
+      '<label class="ck" style="align-self:end;min-height:42px"><input type="checkbox" id="lki-o"'+(filtro.otros?' checked':'')+'> Incluir otros ingresos (áreas sociales, varios)</label>'+
+      '<label class="ck" style="min-height:42px"><input type="checkbox" id="lki-a"'+(filtro.anulados===false?'':' checked')+'> Mostrar recibos anulados</label></div>'+
       '<div class="res" id="lki-r"></div><div class="pie"><button type="button" class="btn primary" id="lki-g">Generar PDF</button><button type="button" class="btn" id="lki-x">Cerrar</button></div>';
     var main=v.querySelector('.diario-form-card')||v.firstElementChild; v.insertBefore(p,v.firstChild);
-    var leer=function(){ filtro={desde:$('lki-d').value,hasta:$('lki-h').value,metodo:$('lki-m').value,otros:$('lki-o').checked}; var L=lista(); $('lki-r').textContent=L.length?(L.length+(L.length===1?' ingreso':' ingresos')+' · total '+money(L.reduce(function(a,r){ return a+r.monto; },0))):'No hay ingresos en ese período.'; return L; };
-    ['lki-d','lki-h','lki-m','lki-o'].forEach(function(id){ $(id).onchange=leer; }); leer();
+    var leer=function(){ filtro={desde:$('lki-d').value,hasta:$('lki-h').value,metodo:$('lki-m').value,otros:$('lki-o').checked,anulados:$('lki-a').checked}; var L=lista(), V=L.filter(function(r){ return !r.anulado; }), A=L.length-V.length;
+      $('lki-r').textContent=L.length?(V.length+(V.length===1?' recibo':' recibos')+' · total '+money(V.reduce(function(a,r){ return a+r.monto; },0))+(A?' · '+A+(A===1?' anulado':' anulados')+' (no suman)':'')):'No hay ingresos en ese período.'; return L; };
+    ['lki-d','lki-h','lki-m','lki-o','lki-a'].forEach(function(id){ $(id).onchange=leer; }); leer();
+    cargarAnulaciones().then(function(){ if(document.body.contains(p)) leer(); });
     $('lki-x').onclick=function(){ p.remove(); };
     $('lki-g').onclick=function(){ var L=leer(); if(!L.length){ toast('No hay ingresos en ese período.','info'); return; }
       var w=null; try{ w=window.open('','_blank'); if(w) w.document.write('<p style="font-family:sans-serif;padding:24px">Preparando el PDF…</p>'); }catch(e){}
       pdf(L).then(function(doc){ var nombre=('Ingresos '+edificio()+' '+filtro.desde+' a '+filtro.hasta).replace(/[\\/:*?"<>|]/g,'')+'.pdf'; if(w){ try{ w.location=doc.output('bloburl'); return; }catch(e){} } doc.save(nombre); })
         .catch(function(e){ if(w) try{ w.close(); }catch(x){} toast(e.message||'No se pudo generar el PDF','error'); }); };
     p.scrollIntoView({behavior:'smooth',block:'start'}); }
-  function lista(){ var F=filtro; return renglones().filter(function(r){
+  function lista(){ var F=filtro; var num=function(r){ var m=String(r.recibo||'').match(/\d+/); return m?parseInt(m[0],10):null; };
+    return renglones().concat(F.anulados===false?[]:anulados()).sort(function(a,b){ var x=num(a), y=num(b);
+      if(x!=null&&y!=null&&x!==y) return x-y; if(x!=null&&y==null) return -1; if(x==null&&y!=null) return 1; return String(a.fecha).localeCompare(String(b.fecha)); }).filter(function(r){
       if(F.desde&&r.fecha<F.desde) return false; if(F.hasta&&r.fecha>F.hasta) return false;
-      if(F.metodo&&r.metodo!==F.metodo) return false; if(!F.otros&&r.otro) return false;
+      if(F.metodo&&r.metodo!==F.metodo&&!r.anulado) return false; if(!F.otros&&r.otro) return false;
       return true; }); }
+  /* desde ahora, cada pago anulado queda guardado (LUKA lo quita de los pagos al anular) */
+  function envolverAnular(){ var a0=window.anularPago; if(typeof a0!=='function'||a0.__lki) return !!(a0&&a0.__lki);
+    var w=function(d,p){ try{ if(d&&p){ DATA.pagosAnulados=DATA.pagosAnulados||[]; var quien=''; try{ var u=window.lukaUsuario&&window.lukaUsuario(); quien=(u&&u.nombre)||''; }catch(e){}
+        DATA.pagosAnulados.push({recibo:p.recibo_no||'',depto:d.depto||p.depto||'',nombre:p.a_nombre||propietario(d.depto)||'',metodo:p.metodo||'',monto:+p.monto||0,fechaPago:String(p.fecha||'').slice(0,10),
+          concepto:p.concepto||'',obs:p.obs||'',fechaAnulacion:hoy(),por:quien}); } }catch(e){} return a0.apply(this,arguments); };
+    w.__lki=1; window.anularPago=w; return true; }
+  if(!envolverAnular()){ var na=0, ia=setInterval(function(){ if(envolverAnular()||++na>40) clearInterval(ia); },250); }
+  /* anulaciones anteriores: se leen del registro de actividad del edificio */
+  var ANUL=null;
+  function idActual(){ try{ return (typeof LOCAL_DATA_KEY==='string'&&LOCAL_DATA_KEY.indexOf('luka-b-')===0)?LOCAL_DATA_KEY.slice(7):''; }catch(e){ return ''; } }
+  function cargarAnulaciones(){ var id=idActual(); if(!id||!window.lukaApi) return Promise.resolve([]);
+    return window.lukaApi({action:'lk_anulaciones',id:id}).then(function(j){ ANUL=(j.anulaciones||[]).map(function(a){ var m=String(a.detalle).match(/Depto\s+(\S+)\s+·\s+Bs\.?\s*([\d.,]+)\s+·\s+recibo\s*(\S*)/i);
+        if(!m) return null; return {depto:m[1],monto:+String(m[2]).replace(/\./g,'').replace(',','.')||0,recibo:m[3]||'',fechaAnulacion:String(a.fecha).slice(0,10),por:a.usuario}; }).filter(Boolean); return ANUL; })
+      .catch(function(){ ANUL=ANUL||[]; return ANUL; }); }
+  function anulados(){ var L=[], visto={};
+    (DATA.pagosAnulados||[]).forEach(function(a){ visto[a.recibo+'|'+a.depto+'|'+Math.round(a.monto)]=1; L.push(a); });
+    (ANUL||[]).forEach(function(a){ var k=a.recibo+'|'+a.depto+'|'+Math.round(a.monto); if(visto[k]) return; visto[k]=1; L.push(a); });
+    (DATA.recibosAnulados||[]).forEach(function(a){ var no=String(a.no||''); if(L.some(function(x){ return String(x.recibo).replace(/\D/g,'')===no.replace(/\D/g,''); })) return;
+      L.push({recibo:no,depto:'',monto:0,fechaAnulacion:String(a.fecha||'').slice(0,10),por:a.por||'',obs:a.motivo||''}); });
+    return L.map(function(a){ return {fecha:a.fechaPago||a.fechaAnulacion||'',recibo:a.recibo,nombre:a.nombre||propietario(a.depto)||'',depto:a.depto,metodo:a.metodo||'',monto:0,anulado:true,montoOriginal:+a.monto||0,
+      motivo:'RECIBO ANULADO'+(a.monto?' · era '+money(a.monto):''),mes:a.concepto?String(a.concepto).split(' · ')[0]:'',
+      obs:['Anulado el '+fCorta(a.fechaAnulacion||'')+(a.por?' por '+a.por:''),a.obs||''].filter(Boolean).join(' · '),partes:[{motivo:'RECIBO ANULADO'+(a.monto?' · era '+money(a.monto):''),mes:a.concepto?String(a.concepto).split(' · ')[0]:'',monto:0}]}; }); }
   window.lukaListaIngresos=function(){ if(typeof switchView==='function'&&$('view-diario')&&$('view-diario').style.display==='none') switchView('diario'); setTimeout(panel,50); };
 
   /* ---------- PDF ---------- */
@@ -27017,11 +27044,11 @@ button.lkrp-b:hover{border-color:#1E4E86}
       doc.setLineWidth(.8); doc.line(Lm,y+5,R,y+5); y+=18; };
     var pie=function(){ F('normal'); doc.setFontSize(8); col(GR); doc.text('Gestión LUKA · Lista de ingresos · emitida el '+fLarga(hoy()),Lm,H-22); };
     cab();
-    var tot=0, porMet={}, porMot={};
+    var tot=0, porMet={}, porMot={}, nAn=0, nVal=0;
     L.forEach(function(r,i){
       F('normal'); doc.setFontSize(8.6);
       var sp=function(t,k){ return doc.splitTextToSize(String(t||''),C[k].w-4); };
-      var fijos=[sp(fCorta(r.fecha),0),sp(r.recibo,1),sp(r.nombre||'Sin nombre',2).slice(0,3),sp(r.depto,3),sp(r.metodo,4),[money(r.monto)],null,null,sp(r.obs,8).slice(0,5)];
+      var fijos=[sp(fCorta(r.fecha),0),sp(r.recibo,1),sp(r.nombre||(r.anulado?'':'Sin nombre'),2).slice(0,3),sp(r.depto,3),sp(r.metodo,4),[r.anulado?'ANULADO':money(r.monto)],null,null,sp(r.obs,8).slice(0,5)];
       var P=r.partes||[{motivo:r.motivo,mes:r.mes,monto:r.monto}], varias=P.length>1;
       /* cada concepto: «Expensas · Bs 1.100,00» y al lado los meses que cubre */
       var bloques=P.map(function(x){ var m=sp(varias?x.motivo+' · '+money(x.monto):x.motivo,6), me=sp(x.mes,7); return {m:m,me:me,n:Math.max(m.length,me.length)}; });
@@ -27029,10 +27056,10 @@ button.lkrp-b:hover{border-color:#1E4E86}
       var alto=lineas*10.5+8;
       if(y+alto>H-70){ pie(); doc.addPage(); cab(); }
       if(i%2===0){ doc.setFillColor(246,248,251); doc.rect(Lm,y-9,R-Lm,alto,'F'); }
-      fijos.forEach(function(c,k){ if(!c) return; col(k===5?NG:(k===0||k===3?AZ:NG)); F(k===5?'medium':'normal'); doc.setFontSize(8.6);
+      fijos.forEach(function(c,k){ if(!c) return; col(r.anulado?(k===5?[160,30,30]:GR):(k===5?NG:(k===0||k===3?AZ:NG))); F(k===5?(r.anulado?'bold':'medium'):'normal'); doc.setFontSize(8.6);
         if(C[k].der) doc.text(c,C[k].x+C[k].w,y,{align:'right'}); else doc.text(c,C[k].x,y); });
-      var yy=y; bloques.forEach(function(b){ F('normal'); doc.setFontSize(8.6); col(NG); doc.text(b.m,C[6].x,yy); doc.text(b.me,C[7].x,yy); yy+=b.n*10.5+(varias?3.7:0); });
-      y+=alto; tot+=r.monto; var m=r.metodo||'Método no indicado'; porMet[m]=(porMet[m]||0)+r.monto;
+      var yy=y; bloques.forEach(function(b){ F(r.anulado?'medium':'normal'); doc.setFontSize(8.6); col(r.anulado?[160,30,30]:NG); doc.text(b.m,C[6].x,yy); doc.text(b.me,C[7].x,yy); yy+=b.n*10.5+(varias?3.7:0); });
+      y+=alto; if(r.anulado){ nAn++; return; } nVal++; tot+=r.monto; var m=r.metodo||'Método no indicado'; porMet[m]=(porMet[m]||0)+r.monto;
       P.forEach(function(x){ var mo=r.otro?(/^alquiler/i.test(x.motivo)?'Alquiler de áreas sociales':'Otros ingresos'):x.motivo; porMot[mo]=(porMot[mo]||0)+x.monto; }); });
     /* totales */
     var KM=Object.keys(porMet).sort(), KC=Object.keys(porMot).sort(), filas=Math.max(KM.length,KC.length)+2; if(y+filas*15+40>H-50){ pie(); doc.addPage(); cab(); }
@@ -27042,7 +27069,9 @@ button.lkrp-b:hover{border-color:#1E4E86}
     var yA=y; KM.forEach(function(m){ F('normal'); doc.setFontSize(9); col(GR); doc.text(m,C[3].x,yA); col(NG); doc.text(money(porMet[m]),xL,yA,{align:'right'}); yA+=15; });
     var yB=y; KC.forEach(function(m){ F('normal'); doc.setFontSize(9); col(GR); doc.text(doc.splitTextToSize(m,xCv-xC-80)[0],xC,yB); col(NG); doc.text(money(porMot[m]),xCv,yB,{align:'right'}); yB+=15; });
     y=Math.max(yA,yB);
-    F('bold'); doc.setFontSize(11); col(AZ); doc.text('TOTAL INGRESOS ('+L.length+(L.length===1?' recibo)':' recibos)'),C[3].x-150,y+4); doc.text(money(tot),xL,y+4,{align:'right'});
+    F('bold'); doc.setFontSize(11); col(AZ); doc.text('TOTAL INGRESOS ('+nVal+(nVal===1?' recibo)':' recibos)'),C[3].x-150,y+4);
+    doc.text(money(tot),xL,y+4,{align:'right'});
+    if(nAn){ F('normal'); doc.setFontSize(8.5); col([160,30,30]); doc.text(nAn+(nAn===1?' recibo anulado':' recibos anulados')+' en la lista: no suman al total.',C[3].x-150,y+20); }
     pie();
     var n=doc.getNumberOfPages(); for(var pg=1;pg<=n;pg++){ doc.setPage(pg); F('normal'); doc.setFontSize(8); col(GR); doc.text('Página '+pg+' de '+n,R,H-22,{align:'right'}); }
     return doc; }); }
@@ -27061,7 +27090,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261112105351'; window.LUKA_BUILD=B;
+(function(){ var B='20261112112031'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
