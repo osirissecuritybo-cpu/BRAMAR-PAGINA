@@ -26464,16 +26464,23 @@ button.lkrp-b:hover{border-color:#1E4E86}
         var xf=R-112; raya(xf,y+6,xf+20); doc.text('/',xf+24,y+5); raya(xf+32,y+6,xf+52); doc.text('/',xf+56,y+5); raya(xf+64,y+6,xf+110);
         y+=alto; doc.setDrawColor(222,228,236); doc.setLineWidth(.5); doc.line(L,y-10,R,y-10); });
       // materiales
-      var filas=8, altoMat=46+filas*24+90;
+      var filas=8, altoMat=46+filas*24+90+86;
       if(y+altoMat>H-60){ pie(); doc.addPage(); cabeza('Planificación y materiales','Hoja para llenar y devolver a la administración'); }
       y+=10; F('cond'); doc.setFontSize(9); col(AZ); doc.text('MATERIALES QUE HAY QUE COMPRAR',L,y,{charSpace:.8}); y+=16;
       var cM=[L,L+24,R-226,R-150,R-76];
       F('cond'); doc.setFontSize(7.5); col(AZ);
       doc.text('N°',cM[0],y,{charSpace:.6}); doc.text('MATERIAL',cM[1],y,{charSpace:.6}); doc.text('CANTIDAD',cM[2],y,{charSpace:.6}); doc.text('PARA TAREA N°',cM[3],y,{charSpace:.6}); doc.text('COSTO APROX.',cM[4],y,{charSpace:.6});
       doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(.8); doc.line(L,y+6,R,y+6); y+=6;
-      var libre=Math.max(filas,Math.floor((H-150-y)/24));
+      var libre=Math.max(filas,Math.floor((H-236-y)/24));
       for(var i=1;i<=libre;i++){ y+=24; F('normal'); doc.setFontSize(9); col(GR); doc.text(String(i),cM[0],y-6);
         doc.setDrawColor(210,218,228); doc.setLineWidth(.5); doc.line(L,y,R,y); }
+      // entrega de materiales: quién los entregó y quién los recibió
+      var by=Math.max(y+30,H-196);
+      F('cond'); doc.setFontSize(9); col(AZ); doc.text('ENTREGA DE MATERIALES',L,by,{charSpace:.8});
+      var ly=by+34, e1=L, e2=L+212, e3=L+392;
+      doc.setDrawColor(NG[0],NG[1],NG[2]); doc.setLineWidth(.8); doc.line(e1,ly,e1+196,ly); doc.line(e2,ly,e2+164,ly); doc.line(e3,ly,R,ly);
+      F('cond'); doc.setFontSize(7.5); col(AZ); doc.text('NOMBRE DEL ENCARGADO',e1,ly+13,{charSpace:.8}); doc.text('FIRMA',e2,ly+13,{charSpace:.8}); doc.text('FECHA DE RECEPCIÓN',e3,ly+13,{charSpace:.8});
+      F('normal'); doc.setFontSize(9); col(GR); doc.text('Quien recibe el material',e1,ly+25); doc.text('Recibí conforme todo lo anotado arriba',e2,ly+25); doc.text('__ / __ / ____',e3,ly+25);
       // firmas
       var fy=H-88, c1=L, c2=(L+R)/2+20, ww=(R-L)/2-20;
       doc.setDrawColor(NG[0],NG[1],NG[2]); doc.setLineWidth(.8); doc.line(c1,fy,c1+ww,fy); doc.line(c2,fy,c2+ww,fy);
@@ -26793,7 +26800,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261111132420'; window.LUKA_BUILD=B;
+(function(){ var B='20261112101427'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
