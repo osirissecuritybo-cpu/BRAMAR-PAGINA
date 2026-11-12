@@ -8992,11 +8992,11 @@ function openPayModal(deptoCode) {
       </div>
 
       <div class="form-field">
-        <label>Método de pago</label>
+        <label>Método de pago <span id="pf-metodo-aviso" style="font-weight:600;color:#B42318;display:none">· elija uno</span></label>
         <div class="radio-group" id="pf-metodo-group">
           <label class="radio-opt"><input type="radio" name="metodo" value="Efectivo"> Efectivo</label>
           <label class="radio-opt"><input type="radio" name="metodo" value="Transferencia"> Transferencia</label>
-          <label class="radio-opt checked"><input type="radio" name="metodo" value="QR" checked> QR</label>
+          <label class="radio-opt"><input type="radio" name="metodo" value="QR"> QR</label>
           <label class="radio-opt"><input type="radio" name="metodo" value="Cheque"> Cheque</label>
         </div>
       </div>
@@ -9008,7 +9008,7 @@ function openPayModal(deptoCode) {
 
       <div class="form-field">
         <label>Recibido por (opcional)</label>
-        <input type="text" id="pf-recibido" placeholder="Nombre del administrador o encargado" value="CTA: BANCO SOLIDARIO S.A  2084917 - 000 - 001">
+        <input type="text" id="pf-recibido" placeholder="Nombre del administrador o encargado" value="">
       </div>
 
       <div class="form-field">
@@ -9035,6 +9035,7 @@ function openPayModal(deptoCode) {
   };
   document.querySelectorAll('#pf-metodo-group .radio-opt').forEach(opt => {
     opt.addEventListener('click', () => {
+      { const g = document.getElementById('pf-metodo-group'), av = document.getElementById('pf-metodo-aviso'); if (g) g.style.outline = ''; if (av) av.style.display = 'none'; }
       document.querySelectorAll('#pf-metodo-group .radio-opt').forEach(o => o.classList.remove('checked'));
       opt.classList.add('checked');
       const metodo = opt.querySelector('input').value;
@@ -9227,7 +9228,15 @@ function openPayModal(deptoCode) {
         return;
       }
     }
-    const metodo = document.querySelector('#pf-metodo-group input[name="metodo"]:checked').value;
+    /* el método de pago no viene marcado: hay que elegirlo cada vez, para no registrar QR por error */
+    const metodoSel = document.querySelector('#pf-metodo-group input[name="metodo"]:checked');
+    if (!metodoSel) {
+      showSaveToast(icon('alertTriangle', 15) + ' Elija el método de pago: efectivo, transferencia, QR o cheque.');
+      const g = document.getElementById('pf-metodo-group'), av = document.getElementById('pf-metodo-aviso');
+      if (av) av.style.display = ''; if (g) { g.style.outline = '2px solid #B42318'; g.style.outlineOffset = '4px'; g.style.borderRadius = '10px'; g.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+      return;
+    }
+    const metodo = metodoSel.value;
     const fecha = document.getElementById('pf-fecha').value || todayISO();
     const recibido = document.getElementById('pf-recibido').value.trim();
     const obs = document.getElementById('pf-obs').value.trim();
@@ -26874,7 +26883,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261112102348'; window.LUKA_BUILD=B;
+(function(){ var B='20261112102835'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
