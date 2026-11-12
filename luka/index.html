@@ -26830,7 +26830,15 @@ button.lkrp-b:hover{border-color:#1E4E86}
   function toast(m,t){ try{ showToast(m,t||'info'); }catch(e){} }
   function clave(){ try{ return LOCAL_DATA_KEY; }catch(e){ return ''; } }
   function foto(){ try{ return JSON.stringify(DATA); }catch(e){ return null; } }
-  function push(etiqueta,run){ pila.push({etiqueta:etiqueta||'el último cambio',run:run,t:Date.now()}); if(pila.length>MAX) pila.shift(); boton(); }
+  function push(etiqueta,run,extra){ pila.push(Object.assign({etiqueta:etiqueta||'el último cambio',run:run,t:Date.now()},extra||{})); if(pila.length>MAX) pila.shift(); boton(); }
+  /* lo REGISTRADO nunca se deshace con Ctrl+Z: pagos, recibos, anulaciones, movimientos del diario, reservas,
+     garantías y cargos. Si un cambio toca algo de eso, funciona como tope: no se puede volver más atrás. */
+  function huella(txt){ try{ var D=JSON.parse(txt), h=[];
+      Object.keys(D).forEach(function(k){ if(/Counter$/.test(k)) h.push(k+'='+D[k]); });
+      (D.deptos||[]).forEach(function(d){ (d.pagos_registrados||[]).forEach(function(p){ h.push((d.id||d.depto)+':'+p.id+':'+(p.anulado?1:0)+':'+(p.monto||0)); }); });
+      return h.join('|'); }catch(e){ return ''; } }
+  var ultimoDespues=null;
+  function topeDatos(){ pila=pila.filter(function(x){ return x.tipo!=='datos'; }); boton(); }
   window.lukaDeshacer={ push:push, puede:function(){ return pila.length>0; }, deshacer:deshacer };
 
   /* el estado de antes se toma al empezar cada interacción del usuario (antes de que el clic cambie algo) */
@@ -26842,14 +26850,21 @@ button.lkrp-b:hover{border-color:#1E4E86}
   function envolver(){ var orig=window.saveDataLocal; if(typeof orig!=='function'||orig.__undo) return !!(orig&&orig.__undo);
     var w=async function(){
       if(!aplicando&&base&&baseClave===clave()&&Date.now()-ultimaAccion<8000){ var ahora=foto();
-        if(ahora&&ahora!==base){ var antes=base, k=baseClave; push(etiquetaVista(),function(){ volverDatos(antes,k); }); base=ahora; } }
+        if(ahora&&ahora!==base){ var antes=base, k=baseClave;
+          /* si los datos cambiaron por fuera del usuario (otro equipo, sincronización) desde el último paso, no se puede volver más atrás */
+          if(ultimoDespues&&ultimoDespues!==antes) topeDatos();
+          if(huella(antes)!==huella(ahora)) topeDatos();   // se registró o anuló algo: queda fijo
+          else push(etiquetaVista(),function(){ volverDatos(antes,k,ahora); },{tipo:'datos',despues:ahora});
+          ultimoDespues=ahora; base=ahora; } }
       return orig.apply(this,arguments); };
     w.__undo=1; window.saveDataLocal=w; return true; }
   if(!envolver()){ var n=0, iv=setInterval(function(){ if(envolver()||++n>40) clearInterval(iv); },250); }
   function etiquetaVista(){ var t=$('topbar-title'); return 'el último cambio'+(t&&t.textContent?' en '+t.textContent.split('·')[0].trim():''); }
 
-  function volverDatos(antes,k){
+  function volverDatos(antes,k,despues){
     if(k!==clave()){ toast('Ese cambio era de otro edificio: ábralo para deshacerlo.','info'); return; }
+    if(despues&&foto()!==despues){ topeDatos(); toast('Hubo cambios después (de otro equipo o registros nuevos). Para no perderlos, ese paso ya no se deshace.','error'); return; }
+    if(huella(antes)!==huella(foto())){ topeDatos(); toast('Deshacer no toca pagos ni recibos ya registrados. Use «Anular recibo» si hace falta.','error'); return; }
     aplicando=true;
     try{
       DATA=JSON.parse(antes);
@@ -26859,10 +26874,16 @@ button.lkrp-b:hover{border-color:#1E4E86}
       try{ renderSummary(); }catch(e){} try{ renderGrid(); }catch(e){}
       try{ if(typeof refreshDiarioIfOpen==='function') refreshDiarioIfOpen(); }catch(e){}
       try{ var a=document.querySelector('.sidebar-nav .nav-item.active'), v=a?a.dataset.view:'lista'; if(typeof switchView==='function') switchView(v); }catch(e){}
-      Promise.resolve(window.saveDataLocal()).catch(function(){}).then(function(){ try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); }catch(e){} aplicando=false; base=foto(); baseClave=clave(); });
+      Promise.resolve(window.saveDataLocal()).catch(function(){}).then(function(){ try{ if(typeof autosaveIfLinked==='function') autosaveIfLinked(); }catch(e){} aplicando=false; base=foto(); baseClave=clave(); ultimoDespues=base; });
     }catch(e){ aplicando=false; toast('No se pudo deshacer: '+e.message,'error'); } }
 
-  function deshacer(){ var x=pila.pop(); boton(); if(!x){ toast('No hay nada para deshacer.','info'); return; }
+  var seguidos=0, ultimoUndo=0;
+  function deshacer(){ var x=pila[pila.length-1];
+    if(!x){ toast('Nada más para deshacer. Los pagos, recibos y registros guardados no se deshacen.','info'); return; }
+    var ahora=Date.now(); seguidos=(ahora-ultimoUndo<4000)?seguidos+1:1; ultimoUndo=ahora;
+    var min=Math.round((ahora-x.t)/60000);
+    if((min>=10||seguidos>3)&&!confirm('¿Deshacer '+x.etiqueta+(min>=1?' (de hace '+min+' min)':'')+'?')){ seguidos=0; return; }
+    pila.pop(); boton();
     try{ x.run(); toast('Se deshizo: '+x.etiqueta,'success'); }catch(e){ toast('No se pudo deshacer: '+e.message,'error'); } }
 
   /* teclado: Ctrl+Z / ⌘Z fuera de los campos de texto */
@@ -26883,7 +26904,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261112102835'; window.LUKA_BUILD=B;
+(function(){ var B='20261112103534'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
