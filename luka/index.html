@@ -27217,11 +27217,21 @@ button.lkrp-b:hover{border-color:#1E4E86}
       // expensas en 3 columnas
       if(x.meses.length){ F('cond'); doc.setFontSize(7.5); col(AZ); doc.text('EXPENSAS · '+x.meses.length+(x.meses.length===1?' MES':' MESES')+(x.meses.length>1?' · DE '+x.desde.toUpperCase()+' A '+x.hasta.toUpperCase():''),Lm,y,{charSpace:.5}); y+=6;
         doc.setDrawColor(210,218,228); doc.setLineWidth(.5); doc.line(Lm,y,R,y); y+=12;
-        var cw=(R-Lm)/3;
-        for(var i=0;i<x.meses.length;i+=3){ if(salto(14)){ F('cond'); doc.setFontSize(7.5); col(AZ); doc.text('DEPTO '+x.depto+' · EXPENSAS (CONTINUACIÓN)',Lm,y,{charSpace:.5}); y+=16; }
-          for(var c=0;c<3;c++){ var m=x.meses[i+c]; if(!m) break; var cx=Lm+c*cw;
-            F('normal'); doc.setFontSize(9.5); col(NG); doc.text(m.mes+' '+m.anio,cx,y); doc.text(money(m.monto),cx+cw-14,y,{align:'right'}); }
-          y+=14; }
+        /* calendario: una fila por año, una columna por mes; el monto aparece en los meses que debe */
+        var porA={}; x.meses.forEach(function(m){ var a=+m.anio, k=MES.indexOf(String(m.mes).toLowerCase()); if(k<0) return; (porA[a]=porA[a]||{})[k]=(porA[a][k]||0)+m.monto; });
+        var anios=Object.keys(porA).map(Number).sort(), wA=40, wS=74, wM=(R-Lm-wA-wS)/12;
+        var cabCal=function(){ doc.setFillColor(238,242,247); doc.rect(Lm,y-9,R-Lm,14,'F'); F('cond'); doc.setFontSize(7.5); col(AZ); doc.text('AÑO',Lm+4,y);
+          MC.forEach(function(mn,k){ doc.text(mn.toUpperCase(),Lm+wA+wM*k+wM/2,y,{align:'center'}); }); doc.text('SUBTOTAL',R-4,y,{align:'right'}); y+=15; };
+        cabCal();
+        anios.forEach(function(a){ if(salto(16)){ F('cond'); doc.setFontSize(7.5); col(AZ); doc.text('DEPTO '+x.depto+' · EXPENSAS (CONTINUACIÓN)',Lm,y,{charSpace:.5}); y+=14; cabCal(); }
+          var fila=porA[a], st=0;
+          F('bold'); doc.setFontSize(9.5); col(AZ); doc.text(String(a),Lm+4,y);
+          for(var k=0;k<12;k++){ var cx=Lm+wA+wM*k+wM/2;
+            if(fila[k]!=null){ st+=fila[k]; F('normal'); doc.setFontSize(9); col(NG); doc.text((Math.round(fila[k]*100)/100).toLocaleString('es-BO'),cx,y,{align:'center'}); }
+            else { F('normal'); doc.setFontSize(9); doc.setTextColor(200,206,214); doc.text('·',cx,y,{align:'center'}); } }
+          F('medium'); doc.setFontSize(9.5); col(NG); doc.text(money(st),R-4,y,{align:'right'});
+          doc.setDrawColor(226,231,238); doc.setLineWidth(.5); doc.line(Lm,y+5,R,y+5); y+=16; });
+        F('normal'); doc.setFontSize(8); col(GR); doc.text('Montos en Bs. Un punto (·) significa que ese mes no tiene deuda.',Lm,y+1); y+=14;
         F('medium'); doc.setFontSize(9.5); col(AZ); doc.text('Subtotal expensas',Lm,y+2); doc.text(money(x.tExp),R,y+2,{align:'right'}); y+=18; }
       // cuotas, multas y cargos
       if(x.cargos.length||x.asc>0.004){ salto(30+x.cargos.length*14);
@@ -27266,7 +27276,7 @@ button.lkrp-b:hover{border-color:#1E4E86}
 
 <script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261121133239'; window.LUKA_BUILD=B;
+(function(){ var B='20261121133452'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
