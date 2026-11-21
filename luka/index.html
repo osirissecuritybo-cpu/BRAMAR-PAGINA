@@ -9831,10 +9831,10 @@ function colLetter(n) { // 0-based -> A, B, ... AA
   return s;
 }
 // Style ids (cellXfs order below):
-const XS = { DEFAULT: 0, TITLE: 1, SUBTITLE: 2, HEADER: 3, CELL: 4, NUM: 5, GOOD: 6, WARN: 7, SERIOUS: 8, CRIT: 9, TOTAL: 10, TOTALNUM: 11, KPI_L: 12, KPI_V: 13, CELL_B: 14, GOODN: 15, WARNN: 16, CRITN: 17 };
+const XS = { DEFAULT: 0, TITLE: 1, SUBTITLE: 2, HEADER: 3, CELL: 4, NUM: 5, GOOD: 6, WARN: 7, SERIOUS: 8, CRIT: 9, TOTAL: 10, TOTALNUM: 11, KPI_L: 12, KPI_V: 13, CELL_B: 14, GOODN: 15, WARNN: 16, CRITN: 17, BS: 18, TOTALBS: 19, SECCION: 20, SUBT: 21, SUBTBS: 22, CRITBS: 23 };
 const STYLES_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-<numFmts count="1"><numFmt numFmtId="164" formatCode="#,##0"/></numFmts>
+<numFmts count="2"><numFmt numFmtId="164" formatCode="#,##0"/><numFmt numFmtId="165" formatCode="&quot;Bs&quot; #,##0.00"/></numFmts>
 <fonts count="7">
 <font><sz val="11"/><name val="Calibri"/></font>
 <font><b/><sz val="16"/><color rgb="FF0E2C4D"/><name val="Calibri"/></font>
@@ -9860,7 +9860,7 @@ const STYLES_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <border><left style="thin"><color rgb="FFB9C2D4"/></left><right style="thin"><color rgb="FFB9C2D4"/></right><top style="thin"><color rgb="FFB9C2D4"/></top><bottom style="thin"><color rgb="FFB9C2D4"/></bottom><diagonal/></border>
 </borders>
 <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-<cellXfs count="18">
+<cellXfs count="24">
 <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
 <xf numFmtId="0" fontId="1" fillId="0" borderId="0"/>
 <xf numFmtId="0" fontId="2" fillId="0" borderId="0"/>
@@ -9879,6 +9879,12 @@ const STYLES_XML = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <xf numFmtId="164" fontId="5" fillId="3" borderId="1" applyAlignment="1"><alignment horizontal="right"/></xf>
 <xf numFmtId="164" fontId="0" fillId="4" borderId="1" applyAlignment="1"><alignment horizontal="right"/></xf>
 <xf numFmtId="164" fontId="6" fillId="6" borderId="1" applyAlignment="1"><alignment horizontal="right"/></xf>
+<xf numFmtId="165" fontId="0" fillId="0" borderId="1" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="right"/></xf>
+<xf numFmtId="165" fontId="4" fillId="7" borderId="1" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="right"/></xf>
+<xf numFmtId="0" fontId="3" fillId="2" borderId="1" applyAlignment="1"><alignment horizontal="left" vertical="center"/></xf>
+<xf numFmtId="0" fontId="4" fillId="8" borderId="1"/>
+<xf numFmtId="165" fontId="4" fillId="8" borderId="1" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="right"/></xf>
+<xf numFmtId="165" fontId="6" fillId="6" borderId="1" applyNumberFormat="1" applyAlignment="1"><alignment horizontal="right"/></xf>
 </cellXfs>
 </styleSheet>`;
 
@@ -27089,8 +27095,178 @@ button.lkrp-b:hover{border-color:#1E4E86}
 </script>
 
 <script>
+/* ============================================================================
+   GESTIÓN LUKA · Deudas detalladas por departamento (Excel y PDF).
+   · Un depto: desde su ficha (botones «Excel» y «PDF» junto a Pagar / Plan / Aviso).
+   · Todo el edificio: en Descargas, «Deudas por depto» (resumen + detalle de cada uno).
+   Detalle: cada mes de expensa adeudado con su monto, cuotas extraordinarias,
+   multas y cargos con su fecha, subtotales y total.
+   ============================================================================ */
+(function(){
+  if(window.__lkDeudas) return; window.__lkDeudas=1;
+  function $(id){ return document.getElementById(id); }
+  function toast(m,t){ try{ showToast(m,t||'info'); }catch(e){} }
+  var MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  var MC=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+  function hoy(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function fLarga(f){ var p=String(f).split('-'); return +p[2]+' de '+MES[+p[1]-1]+' de '+p[0]; }
+  function fCorta(f){ f=String(f||'').slice(0,10); var p=f.split('-'); return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:f; }
+  function money(n){ return 'Bs '+(Math.round((+n||0)*100)/100).toFixed(2).replace('.',',').replace(/\B(?=(\d{3})+(?!\d))/g,'.'); }
+  function red(n){ return Math.round((+n||0)*100)/100; }
+  function nd(s){ return String(s==null?'':s).toUpperCase().replace(/\s+/g,'').replace(/^DEPTO\.?|^DPTO\.?/,''); }
+  function edificio(){ try{ return (typeof buildingName==='function'?buildingName():'')||DATA.config.nombreEdificio||'Edificio'; }catch(e){ return 'Edificio'; } }
+  function persona(dep){ try{ var a=((DATA.config.portal||{}).deptos||{})[nd(dep)]||{}; return {prop:(a.propietario||'').trim(),inq:(a.inquilino||'').trim()}; }catch(e){ return {prop:'',inq:''}; } }
+  function mIdx(m){ var i=MES.indexOf(String(m.mes||'').toLowerCase()); return (+m.anio||0)*12+(i<0?0:i); }
+
+  /* ---------- deuda de un depto, ítem por ítem ---------- */
+  function deuda(d){
+    var meses=(d.meses_adeudados||[]).slice().sort(function(a,b){ return mIdx(a)-mIdx(b); }).map(function(m){ return {mes:m.mes,anio:m.anio,monto:red(m.monto)}; });
+    var cargos=(d.cargos_extra||[]).filter(function(c){ return (+c.monto||0)>0.004; }).slice().sort(function(a,b){ return String(a.fecha||'').localeCompare(String(b.fecha||'')); })
+      .map(function(c){ return {nombre:c.nombre||'Cargo',fecha:String(c.fecha||'').slice(0,10),monto:red(c.monto)}; });
+    var asc=red(d.ascensor_debt);
+    var tExp=red(meses.reduce(function(a,m){ return a+m.monto; },0)), tCar=red(cargos.reduce(function(a,c){ return a+c.monto; },0));
+    var p=persona(d.depto);
+    return {depto:d.depto,bloque:String(d.bloque||'').replace(/^bloque\s+/i,'Bloque '),prop:p.prop,inq:p.inq,meses:meses,cargos:cargos,asc:asc,tExp:tExp,tCar:tCar,
+      total:red(tExp+tCar+asc),desde:meses[0]?meses[0].mes+' '+meses[0].anio:'',hasta:meses.length?meses[meses.length-1].mes+' '+meses[meses.length-1].anio:''}; }
+  function todos(){ return (DATA.deptos||[]).map(deuda).sort(function(a,b){ return String(a.depto).localeCompare(String(b.depto),'es',{numeric:true}); }); }
+
+  /* ---------- Excel (con el generador de LUKA: encabezados, bordes, montos en Bs) ---------- */
+  function hojaDetalle(L, unSolo){
+    var H=function(t){ return {v:t,s:XS.HEADER}; }, T=function(t,s){ return {v:t,s:s||XS.CELL}; }, B=function(v,s){ return {v:red(v),n:1,s:s||XS.BS}; };
+    var rows=[[{v:'DEUDAS DETALLADAS POR DEPARTAMENTO',s:XS.TITLE}],[{v:edificio()+' · al '+fLarga(hoy()),s:XS.SUBTITLE}],[''],[H('Concepto'),H('Período / detalle'),H('Monto')]], merges=['A1:C1','A2:C2'];
+    L.filter(function(x){ return unSolo||x.total>0.004; }).forEach(function(x){
+      var r=rows.length+1;
+      rows.push([{v:'DEPTO '+x.depto+(x.bloque?' · '+x.bloque:'')+(x.prop?' · '+x.prop:'')+(x.inq?' (inquilino: '+x.inq+')':''),s:XS.SECCION},{v:'',s:XS.SECCION},{v:'',s:XS.SECCION}]); merges.push('A'+r+':C'+r);
+      x.meses.forEach(function(m){ rows.push([T('Expensa'),T(m.mes+' '+m.anio),B(m.monto)]); });
+      if(x.meses.length) rows.push([T('Subtotal expensas ('+x.meses.length+(x.meses.length===1?' mes)':' meses)'),XS.SUBT),T(x.desde+(x.meses.length>1?' a '+x.hasta:''),XS.SUBT),B(x.tExp,XS.SUBTBS)]);
+      if(x.asc>0.004) rows.push([T('Cuota extraordinaria'),T('Ascensor'),B(x.asc)]);
+      x.cargos.forEach(function(c){ rows.push([T(/ascensor/i.test(c.nombre)?'Cuota extraordinaria':'Multa / cargo'),T(c.nombre+(c.fecha?' · cargado el '+fCorta(c.fecha):'')),B(c.monto)]); });
+      if(x.cargos.length||x.asc>0.004) rows.push([T('Subtotal cuotas, multas y cargos',XS.SUBT),T('',XS.SUBT),B(x.tCar+x.asc,XS.SUBTBS)]);
+      if(!x.total) rows.push([T('Sin deuda'),T('Al día'),B(0)]);
+      rows.push([T('TOTAL DEPTO '+x.depto,XS.TOTAL),T('',XS.TOTAL),B(x.total,XS.TOTALBS)]); rows.push(['']); });
+    return {rows:rows,colWidths:[36,46,16],merges:merges}; }
+  function hojaResumen(L){
+    var H=function(t){ return {v:t,s:XS.HEADER}; }, T=function(t,s){ return {v:t==null?'':t,s:s||XS.CELL}; }, B=function(v,s){ return {v:red(v),n:1,s:s||XS.BS}; };
+    var rows=[[{v:'RESUMEN DE DEUDAS',s:XS.TITLE}],[{v:edificio()+' · al '+fLarga(hoy()),s:XS.SUBTITLE}],[''],
+      [H('Depto'),H('Bloque'),H('Propietario'),H('Meses adeudados'),H('Desde'),H('Hasta'),H('Expensas'),H('Cuotas, multas y cargos'),H('Total deuda'),H('Estado')]];
+    var t={e:0,c:0,t:0,n:0};
+    L.forEach(function(x){ var est=x.total<=0.004?'Al día':(x.meses.length>=3?'En mora ('+x.meses.length+' meses)':'Pendiente');
+      rows.push([T(x.depto,XS.CELL_B),T(x.bloque),T(x.prop),{v:x.meses.length,n:1,s:XS.NUM},T(x.desde),T(x.hasta),B(x.tExp),B(x.tCar+x.asc),B(x.total,x.total>0.004?XS.CRITBS:XS.BS),
+        {v:est,s:x.total<=0.004?XS.GOOD:(x.meses.length>=3?XS.CRIT:XS.WARN)}]);
+      t.e+=x.tExp; t.c+=x.tCar+x.asc; t.t+=x.total; if(x.total>0.004) t.n++; });
+    rows.push([T('TOTAL',XS.TOTAL),T('',XS.TOTAL),T(t.n+' deptos con deuda',XS.TOTAL),T('',XS.TOTAL),T('',XS.TOTAL),T('',XS.TOTAL),B(t.e,XS.TOTALBS),B(t.c,XS.TOTALBS),B(t.t,XS.TOTALBS),T('',XS.TOTAL)]);
+    return {rows:rows,colWidths:[9,11,30,10,16,16,15,16,16,20],merges:['A1:J1','A2:J2']}; }
+  function excel(L, unSolo){
+    try{
+      var hojas=unSolo?[Object.assign({name:'Depto '+L[0].depto},hojaDetalle(L,true))]:[Object.assign({name:'Resumen'},hojaResumen(L)),Object.assign({name:'Detalle por depto'},hojaDetalle(L,false))];
+      var blob=buildXlsx(hojas), url=URL.createObjectURL(blob), a=document.createElement('a');
+      a.href=url; a.download=(unSolo?'Deuda depto '+L[0].depto+' ':'Deudas por depto ')+edificio()+' '+hoy()+'.xlsx'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function(){ URL.revokeObjectURL(url); },4000);
+      toast('Excel descargado','success');
+    }catch(e){ toast('No se pudo generar el Excel: '+e.message,'error'); } }
+
+  /* ---------- PDF ---------- */
+  function jsPDFlib(){ return (window.jspdf&&window.jspdf.jsPDF)?Promise.resolve(window.jspdf.jsPDF):window.loadLib(window.LIB.jspdf).then(function(){ return window.jspdf.jsPDF; }); }
+  function logoPng(src){ return new Promise(function(res){ if(!src) return res(null); var im=new Image(); im.onload=function(){ try{
+      var w=im.naturalWidth||300, h=im.naturalHeight||150, k=Math.min(1,900/Math.max(w,h)); if(w*k<300) k=300/w;
+      var c=document.createElement('canvas'); c.width=Math.round(w*k); c.height=Math.round(h*k); c.getContext('2d').drawImage(im,0,0,c.width,c.height); res({src:c.toDataURL('image/png'),w:c.width,h:c.height}); }catch(e){ res(null); } };
+      im.onerror=function(){ res(null); }; im.src=src; }); }
+  function pdf(L, unSolo){ var lg=''; try{ lg=(DATA.config&&DATA.config.logo)||''; }catch(e){}
+    return Promise.all([jsPDFlib(),logoPng(lg||window.__lkLogo||'')]).then(function(rr){ var J=rr[0], LG=rr[1];
+    var doc=new J({unit:'pt',format:'letter'}), W=612, H=792, Lm=44, R=W-44, AZ=[11,36,64], NG=[0,0,0], GR=[90,100,112], RJ=[160,30,30];
+    var rob=false; try{ var FU=window.__lkFuentes||{}; Object.keys(FU).forEach(function(k){ doc.addFileToVFS(k+'.ttf',FU[k]); });
+      [['Roboto-Regular','Roboto','normal'],['Roboto-Medium','Roboto','medium'],['Roboto-Bold','Roboto','bold'],['RobotoCondensed-Bold','RobotoC','bold']].forEach(function(f){ if(FU[f[0]]){ doc.addFont(f[0]+'.ttf',f[1],f[2]); rob=true; } }); }catch(e){ rob=false; }
+    var F=function(w){ if(!rob){ doc.setFont('helvetica',w==='normal'?'normal':'bold'); return; } if(w==='cond') doc.setFont('RobotoC','bold'); else doc.setFont('Roboto',w); };
+    var col=function(c){ doc.setTextColor(c[0],c[1],c[2]); };
+    var y=0, titulo=unSolo?'ESTADO DE DEUDA':'DEUDAS POR DEPARTAMENTO';
+    var cab=function(){
+      if(LG){ try{ var bw=120, bh=46, k=Math.min(bw/LG.w,bh/LG.h); doc.addImage(LG.src,'PNG',Lm,28+(bh-LG.h*k)/2,LG.w*k,LG.h*k,undefined,'FAST'); }catch(e){} }
+      F('cond'); doc.setFontSize(17); col(AZ); doc.text(titulo,R,48,{align:'right',charSpace:.6});
+      F('normal'); doc.setFontSize(9.5); col(GR); doc.text(edificio()+' · al '+fLarga(hoy()),R,63,{align:'right'});
+      doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(1.3); doc.line(Lm,80,R,80); y=100; };
+    var pie=function(){ F('normal'); doc.setFontSize(8); col(GR); doc.text('Gestión LUKA · '+(unSolo?'Estado de deuda':'Deudas por departamento'),Lm,H-24); };
+    var salto=function(n){ if(y+n>H-60){ pie(); doc.addPage(); cab(); return true; } return false; };
+    cab();
+    /* resumen del edificio */
+    if(!unSolo){ var conD=L.filter(function(x){ return x.total>0.004; }), tt=conD.reduce(function(a,x){ return a+x.total; },0);
+      var corto=function(t){ var p=String(t||'').split(' '); var k=MES.indexOf(String(p[0]).toLowerCase()); return k<0?t:MC[k]+' '+p[1]; };
+      var X={dep:Lm,prop:Lm+46,mes:Lm+214,per:Lm+222,exp:Lm+392,car:Lm+458,tot:R};
+      F('cond'); doc.setFontSize(7); col(AZ);
+      doc.text('DEPTO',X.dep,y,{charSpace:.4}); doc.text('PROPIETARIO',X.prop,y,{charSpace:.4}); doc.text('MESES',X.mes,y,{align:'right',charSpace:.4}); doc.text('PERÍODO ADEUDADO',X.per,y,{charSpace:.4});
+      doc.text('EXPENSAS',X.exp,y,{align:'right',charSpace:.4}); doc.text('CUOTAS/MULTAS',X.car,y,{align:'right',charSpace:.4}); doc.text('TOTAL',X.tot,y,{align:'right',charSpace:.4});
+      doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(.8); doc.line(Lm,y+5,R,y+5); y+=18;
+      conD.forEach(function(x,i){ salto(16); if(i%2===0){ doc.setFillColor(246,248,251); doc.rect(Lm,y-10,R-Lm,15,'F'); }
+        F('medium'); doc.setFontSize(9); col(AZ); doc.text(String(x.depto),X.dep,y);
+        F('normal'); col(NG); doc.text(doc.splitTextToSize(x.prop||'',160)[0]||'',X.prop,y); doc.text(String(x.meses.length),X.mes,y,{align:'right'});
+        doc.text(x.desde?(corto(x.desde)+(x.meses.length>1?' a '+corto(x.hasta):'')):'',X.per,y);
+        doc.text(money(x.tExp),X.exp,y,{align:'right'}); doc.text(money(x.tCar+x.asc),X.car,y,{align:'right'}); F('bold'); col(RJ); doc.text(money(x.total),X.tot,y,{align:'right'}); y+=15; });
+      salto(40); doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(1); doc.line(Lm,y-6,R,y-6); y+=8;
+      F('bold'); doc.setFontSize(11); col(AZ); doc.text('DEUDA TOTAL DEL EDIFICIO · '+conD.length+(conD.length===1?' depto':' deptos'),Lm,y); doc.text(money(tt),R,y,{align:'right'});
+      y+=16; F('normal'); doc.setFontSize(8.5); col(GR); doc.text((L.length-conD.length)+' deptos al día. Detalle de cada depto en las páginas siguientes.',Lm,y);
+      pie(); doc.addPage(); cab(); }
+    /* detalle de cada depto */
+    L.filter(function(x){ return unSolo||x.total>0.004; }).forEach(function(x,k){
+      var filasMes=Math.ceil(x.meses.length/3), altoMin=60+Math.min(filasMes,6)*14;
+      salto(altoMin);
+      // encabezado del depto
+      doc.setFillColor(AZ[0],AZ[1],AZ[2]); doc.rect(Lm,y-12,R-Lm,22,'F');
+      F('bold'); doc.setFontSize(11); doc.setTextColor(255,255,255); doc.text('DEPTO '+x.depto+(x.bloque?'  ·  '+x.bloque:''),Lm+10,y+3);
+      doc.text(money(x.total),R-10,y+3,{align:'right'});
+      y+=24;
+      if(x.prop||x.inq){ F('normal'); doc.setFontSize(9); col(GR); doc.text([x.prop?'Propietario: '+x.prop:'',x.inq?'Inquilino: '+x.inq:''].filter(Boolean).join('   ·   '),Lm,y); y+=14; }
+      if(!x.total){ F('normal'); doc.setFontSize(10); col(NG); doc.text('Sin deuda: el departamento está al día.',Lm,y); y+=20; return; }
+      // expensas en 3 columnas
+      if(x.meses.length){ F('cond'); doc.setFontSize(7.5); col(AZ); doc.text('EXPENSAS · '+x.meses.length+(x.meses.length===1?' MES':' MESES')+(x.meses.length>1?' · DE '+x.desde.toUpperCase()+' A '+x.hasta.toUpperCase():''),Lm,y,{charSpace:.5}); y+=6;
+        doc.setDrawColor(210,218,228); doc.setLineWidth(.5); doc.line(Lm,y,R,y); y+=12;
+        var cw=(R-Lm)/3;
+        for(var i=0;i<x.meses.length;i+=3){ if(salto(14)){ F('cond'); doc.setFontSize(7.5); col(AZ); doc.text('DEPTO '+x.depto+' · EXPENSAS (CONTINUACIÓN)',Lm,y,{charSpace:.5}); y+=16; }
+          for(var c=0;c<3;c++){ var m=x.meses[i+c]; if(!m) break; var cx=Lm+c*cw;
+            F('normal'); doc.setFontSize(9.5); col(NG); doc.text(m.mes+' '+m.anio,cx,y); doc.text(money(m.monto),cx+cw-14,y,{align:'right'}); }
+          y+=14; }
+        F('medium'); doc.setFontSize(9.5); col(AZ); doc.text('Subtotal expensas',Lm,y+2); doc.text(money(x.tExp),R,y+2,{align:'right'}); y+=18; }
+      // cuotas, multas y cargos
+      if(x.cargos.length||x.asc>0.004){ salto(30+x.cargos.length*14);
+        F('cond'); doc.setFontSize(7.5); col(AZ); doc.text('CUOTAS EXTRAORDINARIAS, MULTAS Y CARGOS',Lm,y,{charSpace:.5}); y+=6; doc.setDrawColor(210,218,228); doc.setLineWidth(.5); doc.line(Lm,y,R,y); y+=12;
+        if(x.asc>0.004){ F('normal'); doc.setFontSize(9.5); col(NG); doc.text('Cuota extraordinaria · Ascensor',Lm,y); doc.text(money(x.asc),R,y,{align:'right'}); y+=14; }
+        x.cargos.forEach(function(c){ salto(14); F('normal'); doc.setFontSize(9.5); col(NG); doc.text(c.nombre+(c.fecha?' · cargado el '+fCorta(c.fecha):''),Lm,y); doc.text(money(c.monto),R,y,{align:'right'}); y+=14; });
+        F('medium'); doc.setFontSize(9.5); col(AZ); doc.text('Subtotal cuotas, multas y cargos',Lm,y+2); doc.text(money(x.tCar+x.asc),R,y+2,{align:'right'}); y+=18; }
+      // total
+      doc.setDrawColor(AZ[0],AZ[1],AZ[2]); doc.setLineWidth(1); doc.line(Lm,y-6,R,y-6);
+      F('bold'); doc.setFontSize(11.5); col(RJ); doc.text('TOTAL ADEUDADO',Lm,y+8); doc.text(money(x.total),R,y+8,{align:'right'}); y+=34; });
+    if(unSolo){ salto(70); F('normal'); doc.setFontSize(8.5); col(GR); doc.text(doc.splitTextToSize('Este detalle muestra la deuda registrada en Gestión LUKA a la fecha de emisión. Si ya realizó un pago que no figura aquí, por favor envíe el comprobante a la administración.',R-Lm),Lm,y); }
+    pie();
+    var n=doc.getNumberOfPages(); for(var pg=1;pg<=n;pg++){ doc.setPage(pg); F('normal'); doc.setFontSize(8); col(GR); doc.text('Página '+pg+' de '+n,R,H-24,{align:'right'}); }
+    return doc; }); }
+  function abrirPdf(L, unSolo){ var w=null; try{ w=window.open('','_blank'); if(w) w.document.write('<p style="font-family:sans-serif;padding:24px">Preparando el PDF…</p>'); }catch(e){}
+    pdf(L,unSolo).then(function(doc){ var nombre=(unSolo?'Deuda depto '+L[0].depto+' ':'Deudas por depto ')+edificio()+' '+hoy()+'.pdf'; if(w){ try{ w.location=doc.output('bloburl'); return; }catch(e){} } doc.save(nombre); })
+      .catch(function(e){ if(w) try{ w.close(); }catch(x){} toast(e.message||'No se pudo generar el PDF','error'); }); }
+  window.lukaDeudas={ excel:function(dep){ var L=dep?todos().filter(function(x){ return String(x.depto)===String(dep); }):todos(); if(!L.length) return toast('No hay departamentos.','info'); excel(L,!!dep); },
+    pdf:function(dep){ var L=dep?todos().filter(function(x){ return String(x.depto)===String(dep); }):todos(); if(!L.length) return toast('No hay departamentos.','info'); abrirPdf(L,!!dep); } };
+
+  /* ---------- botones ---------- */
+  var IX='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13l4 5M12 13l-4 5"/></svg>';
+  var IP='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>';
+  function botones(){
+    /* en la ficha del depto */
+    var acts=document.querySelector('#modal-content .f41-acts'), h2=document.querySelector('#modal-content > h2');
+    if(acts&&h2&&!acts.querySelector('.lkd-b')){ var dep=h2.textContent.trim();
+      [['Excel',IX,'excel'],['PDF',IP,'pdf']].forEach(function(b){ var x=document.createElement('button'); x.type='button'; x.className='btn lkd-b'; x.title='Deuda detallada en '+b[0]; x.innerHTML=b[1]+' '+b[0];
+        x.onclick=function(){ window.lukaDeudas[b[2]](dep); }; acts.appendChild(x); }); }
+    /* en Descargas (vista Departamentos) */
+    var ref=$('btn-lista-estado-cuenta-pdf');
+    if(ref&&ref.parentNode&&!$('btn-deudas-xlsx')){
+      [['btn-deudas-xlsx','Deudas por depto','Detalle de cada depto · Excel',IX,'excel'],['btn-deudas-pdf','Deudas por depto','Detalle de cada depto · PDF',IP,'pdf']].forEach(function(b){
+        var x=document.createElement('button'); x.className='btn-descarga-top'; x.id=b[0]; x.type='button';
+        x.innerHTML='<span class="dl-icon">'+b[3]+'</span><span class="dl-text">'+b[1]+'<span class="dl-hint">'+b[2]+'</span></span>';
+        x.onclick=function(){ try{ var p=document.querySelector('.lk-pop.open'); if(p) p.classList.remove('open'); }catch(e){} window.lukaDeudas[b[4]](); };
+        ref.parentNode.insertBefore(x,ref.nextSibling); }); }
+    var vis=ref&&getComputedStyle(ref).display!=='none'; ['btn-deudas-xlsx','btn-deudas-pdf'].forEach(function(id){ var x=$(id); if(x) x.style.display=vis?'':'none'; }); }
+  setInterval(botones,800); botones();
+})();
+</script>
+
+<script>
 /* versión publicada: si hay una más nueva, se descarga y se recarga sola (nadie ve versiones viejas) */
-(function(){ var B='20261112112031'; window.LUKA_BUILD=B;
+(function(){ var B='20261121133239'; window.LUKA_BUILD=B;
   function revisar(){ fetch('version.txt?'+Date.now(),{cache:'no-store'}).then(function(r){ return r.ok?r.text():''; }).then(function(v){ v=(v||'').trim();
     if(!v||v===B) return; var k='luka.recargado.'+v; try{ if(sessionStorage.getItem(k)) return; sessionStorage.setItem(k,'1'); }catch(e){}
     fetch(location.pathname,{cache:'reload'}).then(function(){ location.reload(); }); }).catch(function(){}); }
